@@ -57,7 +57,7 @@ async function showMain() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display  = 'flex';
     await loadUsers();
-    await loadLogFiles();
+    await loadLogDates();
 }
 
 async function checkAuth() {
@@ -87,7 +87,7 @@ function switchTab(tab) {
         tab === 'users' ? 'Пользователи' : 'Логи';
 
     if (tab === 'logs') {
-        loadLogFiles();
+        loadLogDates();
     }
 }
 
@@ -251,16 +251,21 @@ async function confirmDelete() {
 
 // ─── Логи ─────────────────────────────────────────────────────────────────
 
-async function loadLogFiles() {
-    const select = document.getElementById('log-file-select');
+async function loadLogDates() {
+    const select = document.getElementById('log-date-select');
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/logs`);
-        const files = await resp.json();
+        const resp = await fetch(`${BASE_URL}/admin/api/logs/dates`);
+        const dates = await resp.json();
 
         const prev = select.value;
-        select.innerHTML = files.length
-            ? files.map(f => `<option value="${esc(f.name)}">${esc(f.name)} (${formatSize(f.size)})</option>`).join('')
-            : '<option value="">Нет файлов логов</option>';
+        if (!dates.length) {
+            select.innerHTML = '<option value="">Нет логов</option>';
+        } else {
+            select.innerHTML = dates.map(d => {
+                const sources = d.sources.map(s => s === 'bot' ? 'Бот' : 'Панель').join(' + ');
+                return `<option value="${d.date}">${d.date} (${sources}, ${formatSize(d.size)})</option>`;
+            }).join('');
+        }
 
         const changed = prev !== select.value;
         if (changed || !select.value) {
@@ -276,30 +281,37 @@ async function loadLogFiles() {
 }
 
 function renderLogLines(lines) {
-    return lines.map(line => {
-        const trimmed = line.trimEnd();
+    return lines.map(item => {
+        const trimmed = item.text.trimEnd();
         let cls = 'log-line';
+        if (item.source === 'bot') cls += ' source-bot';
+        if (item.source === 'panel') cls += ' source-panel';
         if (trimmed.includes('| ERROR'))   cls += ' level-ERROR';
         if (trimmed.includes('| WARNING')) cls += ' level-WARNING';
         if (trimmed.includes('| INFO'))    cls += ' level-INFO';
         if (trimmed.includes('| DEBUG'))   cls += ' level-DEBUG';
-        return `<div class="${cls}">${colorize(esc(trimmed))}</div>`;
+        const badge = item.source === 'bot'
+            ? '<span class="log-src-badge bot">БОТ</span>'
+            : '<span class="log-src-badge panel">ПАН</span>';
+        return `<div class="${cls}">${badge}${colorize(esc(trimmed))}</div>`;
     }).join('');
 }
 
 async function loadLogContent(forceScroll) {
     try {
-        var filename = document.getElementById('log-file-select').value;
+        var dateVal  = document.getElementById('log-date-select').value;
         var level    = document.getElementById('log-level-filter').value;
         var lines    = document.getElementById('log-lines-count').value;
         var search   = document.getElementById('log-search').value;
         var container = document.getElementById('log-container');
         var footer    = document.getElementById('log-footer');
 
-        if (!filename) return;
+        if (!dateVal) return;
 
+        var source = document.getElementById('log-source-filter').value;
         var params = new URLSearchParams({lines: lines, level: level, search: search});
-        var resp = await fetch(BASE_URL + '/admin/api/logs/' + filename + '?' + params);
+        if (source) params.set('source', source);
+        var resp = await fetch(BASE_URL + '/admin/api/logs/' + dateVal + '?' + params);
         var data = await resp.json();
 
         if (data.error) return;
@@ -317,7 +329,7 @@ async function loadLogContent(forceScroll) {
         }
 
         var newCount = data.lines.length;
-        var fileChanged = filename !== lastLogFilename;
+        var fileChanged = dateVal !== lastLogFilename;
         var isAppend = !fileChanged && !forceScroll && !search && !level;
 
         if (isAppend && lastTotalLines > 0 && data.total_lines > lastTotalLines) {
@@ -332,9 +344,9 @@ async function loadLogContent(forceScroll) {
 
         lastLogLines = newCount;
         lastTotalLines = data.total_lines;
-        lastLogFilename = filename;
+        lastLogFilename = dateVal;
 
-        footer.innerHTML = '<span>Показано: ' + data.lines.length + ' из ' + data.total_lines + '</span><span>' + esc(filename) + '</span>';
+        footer.innerHTML = '<span>Показано: ' + data.lines.length + ' из ' + data.total_lines + '</span><span>' + esc(dateVal) + '</span>';
 
         if (forceScroll || fileChanged || !userScrolledUp) {
             container.scrollTop = container.scrollHeight;
@@ -342,6 +354,14 @@ async function loadLogContent(forceScroll) {
     } catch (e) {
         console.error('loadLogContent error:', e);
     }
+}
+
+function onLogDateChange() {
+    lastLogLines = 0;
+    lastTotalLines = 0;
+    lastLogFilename = '';
+    userScrolledUp = false;
+    loadLogContent(true);
 }
 
 function onLogRefresh() {
@@ -359,7 +379,7 @@ function toggleAutoRefresh() {
     var checkbox = document.getElementById('auto-refresh-toggle');
     if (checkbox.checked) {
         logAutoRefreshTimer = setInterval(function() {
-            var el = document.getElementById('log-file-select');
+            var el = document.getElementById('log-date-select');
             if (el && el.value) {
                 loadLogContent(false);
             }
@@ -425,7 +445,7 @@ document.getElementById('log-container').addEventListener('scroll', function() {
     userScrolledUp = !atBottom;
 });
 
-document.getElementById('log-file-select').addEventListener('change', function() {
+document.getElementById('log-date-select').addEventListener('change', function() {
     lastLogLines = 0;
     lastTotalLines = 0;
     lastLogFilename = '';
