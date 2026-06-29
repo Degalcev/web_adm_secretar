@@ -55,43 +55,41 @@ document.getElementById('login-max-id').addEventListener('keydown', e => {
 // ─── Инициализация ────────────────────────────────────────────────────────
 async function showMain() {
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-screen').style.display  = 'flex';
+    document.getElementById('main-screen').style.display = 'flex';
     await loadUsers();
-    await loadLogDates();
+}
+
+function showLogin() {
+    document.getElementById('main-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
 }
 
 async function checkAuth() {
     try {
         if (window.WebApp && window.WebApp.initDataUnsafe && window.WebApp.initDataUnsafe.user) {
             const maxId = window.WebApp.initDataUnsafe.user.user_id;
-            if (maxId) {
-                document.getElementById('login-max-id').value = maxId;
-            }
+            if (maxId) document.getElementById('login-max-id').value = maxId;
         }
     } catch (e) {}
-
     const resp = await fetch(`${BASE_URL}/admin/api/users`);
-    if (resp.status === 200) {
-        showMain();
-    }
+    if (resp.status === 200) showMain();
 }
 
-// ─── Табы ─────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    const labels = { users: 'Пользователи', logs: 'Логи', organizers: 'Организаторы', locations: 'Локации' };
-    document.getElementById('topbar-tab-label').textContent = labels[tab] || tab;
-    if (tab === 'logs') loadLogDates();
-    if (tab === 'organizers') loadOrganizers();
-    if (tab === 'locations') loadLocations();
-}
+// ─── Sidebar Navigation ──────────────────────────────────────────────────
+let currentPage = 'users';
 
-function showLogin() {
-    document.getElementById('main-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+function switchPage(page) {
+    currentPage = page;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+    if (navItem) navItem.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pageEl = document.getElementById(`page-${page}`);
+    if (pageEl) pageEl.classList.add('active');
+    if (page === 'users') loadUsers();
+    if (page === 'organizers') loadOrganizers();
+    if (page === 'locations') loadLocations();
+    if (page === 'logs') loadLogDates();
 }
 
 // ─── Пользователи ─────────────────────────────────────────────────────────
@@ -107,6 +105,14 @@ async function loadUsers() {
     }
     allUsers = await resp.json();
     renderUsers(allUsers);
+    updateStats(allUsers);
+}
+
+function updateStats(users) {
+    document.getElementById('stat-total-users').textContent = users.length;
+    document.getElementById('stat-admins').textContent = users.filter(u => u.status === 'admin').length;
+    document.getElementById('stat-users').textContent = users.filter(u => u.status !== 'admin').length;
+    document.getElementById('stat-shown').textContent = users.length;
 }
 
 function renderUsers(users) {
@@ -143,6 +149,7 @@ function filterUsers() {
         String(u.max_id || '').includes(q)
     );
     renderUsers(filtered);
+    document.getElementById('stat-shown').textContent = filtered.length;
 }
 
 // ─── Модалка ──────────────────────────────────────────────────────────────
