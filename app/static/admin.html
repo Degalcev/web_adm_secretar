@@ -139,6 +139,22 @@
           <button class="btn btn-outline" onclick="openAddOrganizerModal()">+ Добавить</button>
         </div>
       </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Всего организаторов</div>
+          <div class="stat-value" id="stat-total-org">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Показано</div>
+          <div class="stat-value" id="stat-shown-org">0</div>
+        </div>
+      </div>
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-org" placeholder="Поиск по названию..." oninput="filterOrganizers()">
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -165,6 +181,22 @@
         </div>
         <div class="page-actions">
           <button class="btn btn-outline" onclick="openAddLocationModal()">+ Добавить</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Всего локаций</div>
+          <div class="stat-value" id="stat-total-loc">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Показано</div>
+          <div class="stat-value" id="stat-shown-loc">0</div>
+        </div>
+      </div>
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-loc" placeholder="Поиск по названию..." oninput="filterLocations()">
         </div>
       </div>
       <div class="table-wrap">

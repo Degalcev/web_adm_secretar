@@ -286,19 +286,24 @@ tbody td { padding: 12px 16px; font-size: 14px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 
 .btn-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--muted);
   cursor: pointer;
-  padding: 5px 10px;
-  font-size: 13px;
   transition: all 0.15s;
+  padding: 0;
 }
 .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
-.btn-icon.danger:hover { border-color: var(--danger); color: var(--danger); }
+.btn-icon.danger { color: var(--danger); border-color: rgba(239,68,68,0.3); }
+.btn-icon.danger:hover { border-color: var(--danger); background: rgba(239,68,68,0.08); }
 
-.actions { display: flex; gap: 6px; }
+.actions { display: flex; gap: 8px; }
 
 /* ─── Modal ─────────────────────────────────────────────────────────── */
 .modal-overlay {
