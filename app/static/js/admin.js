@@ -83,6 +83,9 @@ function switchPage(page) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navItem) navItem.classList.add('active');
+    document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+    const mobileNavItem = document.querySelector(`.mobile-nav-item[data-page="${page}"]`);
+    if (mobileNavItem) mobileNavItem.classList.add('active');
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');

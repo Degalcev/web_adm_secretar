@@ -292,6 +292,7 @@
         <div class="log-filters-actions">
           <label class="auto-refresh-label">
             <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()">
+            <span class="toggle-track"></span>
             <span>Авто 5с</span>
           </label>
           <button class="btn btn-ghost btn-sm" onclick="refreshLogs()">Обновить</button>
@@ -402,6 +403,26 @@
     </div>
   </div>
 </div>
+
+<!-- ─── Mobile Bottom Nav ─────────────────────────────────────────────── -->
+<nav class="mobile-nav" id="mobile-nav">
+  <a class="mobile-nav-item active" data-page="users" onclick="switchPage('users')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    <span>Пользователи</span>
+  </a>
+  <a class="mobile-nav-item" data-page="organizers" onclick="switchPage('organizers')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    <span>Организаторы</span>
+  </a>
+  <a class="mobile-nav-item" data-page="locations" onclick="switchPage('locations')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    <span>Локации</span>
+  </a>
+  <a class="mobile-nav-item" data-page="logs" onclick="switchPage('logs')">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span>Логи</span>
+  </a>
+</nav>
 
 <div class="toast" id="toast"></div>
 
