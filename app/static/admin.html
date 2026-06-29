@@ -55,6 +55,14 @@
       <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       Логи
     </button>
+    <button class="tab-btn" data-tab="organizers" onclick="switchTab('organizers')">
+      <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Организаторы
+    </button>
+    <button class="tab-btn" data-tab="locations" onclick="switchTab('locations')">
+      <svg class="tab-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Локации
+    </button>
   </div>
 
   <!-- ─── Таб: Пользователи ────────────────────────────────────────────── -->
@@ -216,6 +224,60 @@
     </div>
   </div>
 
+  <!-- ─── Таб: Организаторы ──────────────────────────────────────────── -->
+  <div class="tab-content" id="tab-organizers">
+    <div class="content">
+      <div class="toolbar">
+        <h2>Организаторы</h2>
+        <button class="btn btn-primary" onclick="openAddOrganizerModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Короткое имя</th>
+              <th>URL</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="organizers-tbody">
+            <tr><td colspan="4" class="empty-state">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Таб: Локации ──────────────────────────────────────────────── -->
+  <div class="tab-content" id="tab-locations">
+    <div class="content">
+      <div class="toolbar">
+        <h2>Локации</h2>
+        <button class="btn btn-primary" onclick="openAddLocationModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Название</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="locations-tbody">
+            <tr><td colspan="2" class="empty-state">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Футер -->
   <div class="page-footer">
     <span>
@@ -281,6 +343,54 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Сохранить
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal:Organizer ──────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="organizer-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="org-modal-title">Добавить организатора</h3>
+      <button class="modal-close" onclick="closeOrganizerModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="f-org-name" placeholder="Организатор">
+    </div>
+    <div class="form-group">
+      <label>Короткое имя</label>
+      <input type="text" id="f-org-short-name" placeholder="org_short">
+    </div>
+    <div class="form-group">
+      <label>Базовый URL</label>
+      <input type="text" id="f-org-base-url" placeholder="https://example.com">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOrganizerModal()">Отмена</button>
+      <button class="btn btn-primary" id="org-modal-save-btn" onclick="saveOrganizer()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal:Location ───────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="location-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="loc-modal-title">Добавить локацию</h3>
+      <button class="modal-close" onclick="closeLocationModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="f-loc-name" placeholder="Название локации">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeLocationModal()">Отмена</button>
+      <button class="btn btn-primary" id="loc-modal-save-btn" onclick="saveLocation()">Сохранить</button>
     </div>
   </div>
 </div>

@@ -1,7 +1,7 @@
 from loguru import logger
 from sqlalchemy import select
 
-from database.models import async_session, User
+from database.models import async_session, User, Organizer, Location
 
 
 async def get_user(user_max_id=None):
@@ -17,3 +17,25 @@ async def get_user_by_max_id(max_id: int):
     async with async_session() as session:
         result = await session.scalar(select(User).where(User.max_id == max_id))
         return result
+
+
+async def get_organizers():
+    async with async_session() as session:
+        result = await session.scalars(select(Organizer))
+        return list(result)
+
+
+async def get_organizer_by_id(organizer_id: str):
+    async with async_session() as session:
+        return await session.scalar(select(Organizer).where(Organizer.id == organizer_id))
+
+
+async def get_locations():
+    async with async_session() as session:
+        result = await session.scalars(select(Location))
+        return list(result)
+
+
+async def get_location_by_id(location_id: str):
+    async with async_session() as session:
+        return await session.scalar(select(Location).where(Location.id == location_id))
