@@ -1,0 +1,7 @@
+aiohttp
+asyncpg
+loguru
+sqlalchemy[asyncio]
+argon2-cffi
+python-dotenv
+sshtunnel
