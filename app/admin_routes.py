@@ -1,7 +1,7 @@
 from aiohttp import web
 from loguru import logger
-from database.requests import get_user, get_user_by_max_id
-from database.sending import add_user, update_user, delete_user
+from database.requests import get_user, get_user_by_max_id, get_organizers, get_organizer_by_id, get_locations, get_location_by_id
+from database.sending import add_user, update_user, delete_user, add_organizer, update_organizer, delete_organizer, add_location, update_location, delete_location
 from functools import wraps
 from pathlib import Path
 from argon2 import PasswordHasher
@@ -57,6 +57,14 @@ def setup_admin_routes(app: web.Application):
     app.router.add_get(  '/api/check-admin-status/{max_id}', check_admin_status)
     app.router.add_get(  '/admin/api/logs/dates',           get_log_dates)
     app.router.add_get(  '/admin/api/logs/{date}',          get_log_by_date)
+    app.router.add_get(  '/admin/api/organizers',           get_organizers_handler)
+    app.router.add_post( '/admin/api/organizers',           create_organizer_handler)
+    app.router.add_put(  '/admin/api/organizers/{id}',      update_organizer_handler)
+    app.router.add_delete('/admin/api/organizers/{id}',     delete_organizer_handler)
+    app.router.add_get(  '/admin/api/locations',            get_locations_handler)
+    app.router.add_post( '/admin/api/locations',            create_location_handler)
+    app.router.add_put(  '/admin/api/locations/{id}',       update_location_handler)
+    app.router.add_delete('/admin/api/locations/{id}',      delete_location_handler)
 
 
 # ─── Страница ─────────────────────────────────────────────────────────────────
@@ -227,6 +235,109 @@ async def delete_user_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления пользователя: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+# ─── CRUD Организаторы ──────────────────────────────────────────────────────
+
+@admin_required
+async def get_organizers_handler(request: web.Request) -> web.Response:
+    try:
+        items = await get_organizers()
+        data = [{'id': o.id, 'name': o.name or '', 'short_name': o.short_name or '', 'base_url': o.base_url or ''} for o in items]
+        return web.json_response(data)
+    except Exception as e:
+        logger.error('Ошибка получения организаторов: {}', repr(e))
+        return web.json_response([], status=500)
+
+
+@admin_required
+async def create_organizer_handler(request: web.Request) -> web.Response:
+    try:
+        data = await request.json()
+        new_id = await add_organizer(
+            name=data.get('name', ''),
+            short_name=data.get('short_name', ''),
+            base_url=data.get('base_url', ''),
+        )
+        return web.json_response({'ok': True, 'id': new_id})
+    except Exception as e:
+        logger.error('Ошибка создания организатора: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+async def update_organizer_handler(request: web.Request) -> web.Response:
+    try:
+        item_id = request.match_info['id']
+        data = await request.json()
+        await update_organizer(
+            organizer_id=item_id,
+            name=data.get('name'),
+            short_name=data.get('short_name'),
+            base_url=data.get('base_url'),
+        )
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка обновления организатора: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+async def delete_organizer_handler(request: web.Request) -> web.Response:
+    try:
+        item_id = request.match_info['id']
+        await delete_organizer(item_id)
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка удаления организатора: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+# ─── CRUD Локации ───────────────────────────────────────────────────────────
+
+@admin_required
+async def get_locations_handler(request: web.Request) -> web.Response:
+    try:
+        items = await get_locations()
+        data = [{'id': l.id, 'name': l.name or ''} for l in items]
+        return web.json_response(data)
+    except Exception as e:
+        logger.error('Ошибка получения локаций: {}', repr(e))
+        return web.json_response([], status=500)
+
+
+@admin_required
+async def create_location_handler(request: web.Request) -> web.Response:
+    try:
+        data = await request.json()
+        new_id = await add_location(name=data.get('name', ''))
+        return web.json_response({'ok': True, 'id': new_id})
+    except Exception as e:
+        logger.error('Ошибка создания локации: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+async def update_location_handler(request: web.Request) -> web.Response:
+    try:
+        item_id = request.match_info['id']
+        data = await request.json()
+        await update_location(location_id=item_id, name=data.get('name'))
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка обновления локации: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+async def delete_location_handler(request: web.Request) -> web.Response:
+    try:
+        item_id = request.match_info['id']
+        await delete_location(item_id)
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка удаления локации: {}', repr(e))
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 

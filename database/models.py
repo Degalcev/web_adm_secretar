@@ -78,6 +78,32 @@ class User(Base):
     max_fsm_user_message_id = mapped_column(String())
 
 
+class Organizer(Base):
+    __tablename__ = 'organizers'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name       = mapped_column(String(40))
+    short_name = mapped_column(String(20), nullable=True)
+    base_url   = mapped_column(String())
+    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_organizer_name', 'name'),
+    )
+
+
+class Location(Base):
+    __tablename__ = 'locations'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name       = mapped_column(String(20))
+    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_location_name', 'name'),
+    )
+
+
 async def async_main():
     try:
         async with engine.begin() as conn:

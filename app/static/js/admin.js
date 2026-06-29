@@ -80,15 +80,18 @@ async function checkAuth() {
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     document.getElementById(`tab-${tab}`).classList.add('active');
-    document.getElementById('topbar-tab-label').textContent =
-        tab === 'users' ? 'Пользователи' : 'Логи';
+    const labels = { users: 'Пользователи', logs: 'Логи', organizers: 'Организаторы', locations: 'Локации' };
+    document.getElementById('topbar-tab-label').textContent = labels[tab] || tab;
+    if (tab === 'logs') loadLogDates();
+    if (tab === 'organizers') loadOrganizers();
+    if (tab === 'locations') loadLocations();
+}
 
-    if (tab === 'logs') {
-        loadLogDates();
-    }
+function showLogin() {
+    document.getElementById('main-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
 }
 
 // ─── Пользователи ─────────────────────────────────────────────────────────
@@ -233,20 +236,207 @@ function closeConfirm() {
 }
 
 async function confirmDelete() {
+    if (deletingOrgId) { await confirmDeleteOrg(); return; }
+    if (deletingLocId) { await confirmDeleteLoc(); return; }
     if (!deletingId) return;
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/users/${deletingId}`, {method: 'DELETE'});
         const data = await resp.json();
-        if (data.ok) {
-            closeConfirm();
-            await loadUsers();
-            showToast('Пользователь удалён', 'success');
-        } else {
-            showToast(data.error || 'Ошибка', 'error');
-        }
-    } catch(e) {
-        showToast('Ошибка сети', 'error');
+        if (data.ok) { closeConfirm(); await loadUsers(); showToast('Пользователь удалён', 'success'); }
+        else { showToast(data.error || 'Ошибка', 'error'); }
+    } catch(e) { showToast('Ошибка сети', 'error'); }
+}
+
+// ─── Организаторы ─────────────────────────────────────────────────────────
+let allOrganizers = [];
+let editingOrgId = null;
+let deletingOrgId = null;
+
+async function loadOrganizers() {
+    const tbody = document.getElementById('organizers-tbody');
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Загрузка...</td></tr>';
+    const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
+    if (resp.status === 401) { showLogin(); return; }
+    allOrganizers = await resp.json();
+    renderOrganizers(allOrganizers);
+}
+
+function renderOrganizers(items) {
+    const tbody = document.getElementById('organizers-tbody');
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Нет организаторов</td></tr>';
+        return;
     }
+    tbody.innerHTML = items.map(o => `
+        <tr>
+            <td>${esc(o.name) || '<span style="color:var(--muted)">—</span>'}</td>
+            <td style="font-family:monospace;color:var(--muted)">${esc(o.short_name) || '—'}</td>
+            <td style="font-family:monospace;color:var(--muted);font-size:13px">${esc(o.base_url) || '—'}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn-icon" onclick="openEditOrganizerModal('${o.id}')">✏️ Изменить</button>
+                    <button class="btn-icon danger" onclick="openConfirmOrg('${o.id}','${esc(o.name)}')">🗑 Удалить</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openAddOrganizerModal() {
+    editingOrgId = null;
+    document.getElementById('org-modal-title').textContent = 'Добавить организатора';
+    document.getElementById('f-org-name').value = '';
+    document.getElementById('f-org-short-name').value = '';
+    document.getElementById('f-org-base-url').value = '';
+    document.getElementById('organizer-modal').classList.add('show');
+}
+
+function openEditOrganizerModal(id) {
+    const o = allOrganizers.find(x => x.id === id);
+    if (!o) return;
+    editingOrgId = id;
+    document.getElementById('org-modal-title').textContent = 'Редактировать организатора';
+    document.getElementById('f-org-name').value = o.name || '';
+    document.getElementById('f-org-short-name').value = o.short_name || '';
+    document.getElementById('f-org-base-url').value = o.base_url || '';
+    document.getElementById('organizer-modal').classList.add('show');
+}
+
+function closeOrganizerModal() {
+    document.getElementById('organizer-modal').classList.remove('show');
+}
+
+async function saveOrganizer() {
+    const btn = document.getElementById('org-modal-save-btn');
+    btn.disabled = true;
+    const payload = {
+        name: document.getElementById('f-org-name').value.trim(),
+        short_name: document.getElementById('f-org-short-name').value.trim(),
+        base_url: document.getElementById('f-org-base-url').value.trim(),
+    };
+    try {
+        let resp;
+        if (editingOrgId) {
+            resp = await fetch(`${BASE_URL}/admin/api/organizers/${editingOrgId}`, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+        } else {
+            resp = await fetch(`${BASE_URL}/admin/api/organizers`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+        }
+        const data = await resp.json();
+        if (data.ok) { closeOrganizerModal(); await loadOrganizers(); showToast(editingOrgId ? 'Обновлено' : 'Добавлено', 'success'); }
+        else { showToast(data.error || 'Ошибка', 'error'); }
+    } catch(e) { showToast('Ошибка сети', 'error'); }
+    btn.disabled = false;
+}
+
+function openConfirmOrg(id, name) {
+    deletingOrgId = id;
+    document.getElementById('confirm-text').textContent = `Организатор «${name}» будет удалён.`;
+    document.getElementById('confirm-overlay').classList.add('show');
+}
+
+async function confirmDeleteOrg() {
+    if (!deletingOrgId) return;
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/organizers/${deletingOrgId}`, {method: 'DELETE'});
+        const data = await resp.json();
+        if (data.ok) { closeConfirm(); await loadOrganizers(); showToast('Удалено', 'success'); }
+        else { showToast(data.error || 'Ошибка', 'error'); }
+    } catch(e) { showToast('Ошибка сети', 'error'); }
+}
+
+// ─── Локации ───────────────────────────────────────────────────────────────
+let allLocations = [];
+let editingLocId = null;
+let deletingLocId = null;
+
+async function loadLocations() {
+    const tbody = document.getElementById('locations-tbody');
+    tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Загрузка...</td></tr>';
+    const resp = await fetch(`${BASE_URL}/admin/api/locations`);
+    if (resp.status === 401) { showLogin(); return; }
+    allLocations = await resp.json();
+    renderLocations(allLocations);
+}
+
+function renderLocations(items) {
+    const tbody = document.getElementById('locations-tbody');
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Нет локаций</td></tr>';
+        return;
+    }
+    tbody.innerHTML = items.map(l => `
+        <tr>
+            <td>${esc(l.name) || '<span style="color:var(--muted)">—</span>'}</td>
+            <td>
+                <div class="actions">
+                    <button class="btn-icon" onclick="openEditLocationModal('${l.id}')">✏️ Изменить</button>
+                    <button class="btn-icon danger" onclick="openConfirmLoc('${l.id}','${esc(l.name)}')">🗑 Удалить</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openAddLocationModal() {
+    editingLocId = null;
+    document.getElementById('loc-modal-title').textContent = 'Добавить локацию';
+    document.getElementById('f-loc-name').value = '';
+    document.getElementById('location-modal').classList.add('show');
+}
+
+function openEditLocationModal(id) {
+    const l = allLocations.find(x => x.id === id);
+    if (!l) return;
+    editingLocId = id;
+    document.getElementById('loc-modal-title').textContent = 'Редактировать локацию';
+    document.getElementById('f-loc-name').value = l.name || '';
+    document.getElementById('location-modal').classList.add('show');
+}
+
+function closeLocationModal() {
+    document.getElementById('location-modal').classList.remove('show');
+}
+
+async function saveLocation() {
+    const btn = document.getElementById('loc-modal-save-btn');
+    btn.disabled = true;
+    const payload = { name: document.getElementById('f-loc-name').value.trim() };
+    try {
+        let resp;
+        if (editingLocId) {
+            resp = await fetch(`${BASE_URL}/admin/api/locations/${editingLocId}`, {
+                method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+        } else {
+            resp = await fetch(`${BASE_URL}/admin/api/locations`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+        }
+        const data = await resp.json();
+        if (data.ok) { closeLocationModal(); await loadLocations(); showToast(editingLocId ? 'Обновлено' : 'Добавлено', 'success'); }
+        else { showToast(data.error || 'Ошибка', 'error'); }
+    } catch(e) { showToast('Ошибка сети', 'error'); }
+    btn.disabled = false;
+}
+
+function openConfirmLoc(id, name) {
+    deletingLocId = id;
+    document.getElementById('confirm-text').textContent = `Локация «${name}» будет удалена.`;
+    document.getElementById('confirm-overlay').classList.add('show');
+}
+
+async function confirmDeleteLoc() {
+    if (!deletingLocId) return;
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/locations/${deletingLocId}`, {method: 'DELETE'});
+        const data = await resp.json();
+        if (data.ok) { closeConfirm(); await loadLocations(); showToast('Удалено', 'success'); }
+        else { showToast(data.error || 'Ошибка', 'error'); }
+    } catch(e) { showToast('Ошибка сети', 'error'); }
 }
 
 // ─── Логи ─────────────────────────────────────────────────────────────────
