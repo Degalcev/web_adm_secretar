@@ -822,6 +822,29 @@ tbody td {
   justify-content: space-between;
 }
 
+/* ─── Source badges ──────────────────────────────────────────────────── */
+.log-src-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-right: 6px;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.log-src-badge.bot {
+    background: rgba(245,158,11,0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245,158,11,0.3);
+}
+.log-src-badge.panel {
+    background: rgba(79,110,247,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(79,110,247,0.3);
+}
+
 /* ─── Адаптивность ───────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .content { padding: 12px 12px; }

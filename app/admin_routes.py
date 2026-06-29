@@ -9,7 +9,7 @@ from argon2.exceptions import VerifyMismatchError
 import secrets
 import os
 from datetime import datetime
-from config import DEFAULT_ADMIN_PASSWORD, PROJECT_ROOT
+from config import DEFAULT_ADMIN_PASSWORD, PROJECT_ROOT, BOT_LOGS_DIR
 
 ph = PasswordHasher()
 
@@ -55,8 +55,8 @@ def setup_admin_routes(app: web.Application):
     app.router.add_put(  '/admin/api/users/{id}',           update_user_handler)
     app.router.add_delete('/admin/api/users/{id}',          delete_user_handler)
     app.router.add_get(  '/api/check-admin-status/{max_id}', check_admin_status)
-    app.router.add_get(  '/admin/api/logs',                 get_log_files)
-    app.router.add_get(  '/admin/api/logs/{filename}',      get_log_content)
+    app.router.add_get(  '/admin/api/logs/dates',           get_log_dates)
+    app.router.add_get(  '/admin/api/logs/{date}',          get_log_by_date)
 
 
 # ─── Страница ─────────────────────────────────────────────────────────────────
@@ -233,62 +233,59 @@ async def delete_user_handler(request: web.Request) -> web.Response:
 # ─── Логи ────────────────────────────────────────────────────────────────────
 
 LOGS_DIR = os.path.join(PROJECT_ROOT, 'logs')
-_LOGS_DIR_REAL = None
+
+LOG_SOURCES = {
+    'panel': LOGS_DIR,
+    'bot':   BOT_LOGS_DIR,
+}
+
+_LOGS_DIR_REALS: dict[str, str] = {}
 
 
-def _get_logs_dir_real() -> str:
-    global _LOGS_DIR_REAL
-    if _LOGS_DIR_REAL is None:
-        _LOGS_DIR_REAL = os.path.realpath(LOGS_DIR)
-    return _LOGS_DIR_REAL
+def _get_logs_dir_real(source: str) -> str:
+    if source not in _LOGS_DIR_REALS:
+        _LOGS_DIR_REALS[source] = os.path.realpath(LOG_SOURCES[source])
+    return _LOGS_DIR_REALS[source]
 
 
-def _safe_log_path(filename: str) -> str | None:
-    if '/' in filename or '\\' in filename or filename.startswith('.'):
-        return None
-    if not filename.endswith('.log'):
-        return None
-
-    filepath = os.path.join(LOGS_DIR, filename)
-
-    if not os.path.realpath(filepath).startswith(_get_logs_dir_real() + os.sep):
-        return None
-
-    return filepath
+def _scan_dates() -> list[dict]:
+    dates: dict[str, dict] = {}
+    for source, logs_dir in LOG_SOURCES.items():
+        if not os.path.exists(logs_dir):
+            continue
+        for f in os.listdir(logs_dir):
+            if not f.endswith('.log'):
+                continue
+            match = __import__('re').match(r'bot_(\d{4}-\d{2}-\d{2})\.log', f)
+            if not match:
+                continue
+            date_str = match.group(1)
+            filepath = os.path.join(logs_dir, f)
+            stat = os.stat(filepath)
+            if date_str not in dates:
+                dates[date_str] = {'date': date_str, 'size': 0, 'sources': []}
+            dates[date_str]['size'] += stat.st_size
+            if source not in dates[date_str]['sources']:
+                dates[date_str]['sources'].append(source)
+    result = sorted(dates.values(), key=lambda x: x['date'], reverse=True)
+    return result
 
 
 @admin_required
-async def get_log_files(request: web.Request) -> web.Response:
+async def get_log_dates(request: web.Request) -> web.Response:
     try:
-        if not os.path.exists(LOGS_DIR):
-            return web.json_response([])
-
-        files = []
-        for f in sorted(os.listdir(LOGS_DIR), reverse=True):
-            if f.endswith('.log'):
-                stat = os.stat(os.path.join(LOGS_DIR, f))
-                files.append({
-                    'name':     f,
-                    'size':     stat.st_size,
-                    'modified': datetime.fromtimestamp(stat.st_mtime).isoformat()
-                })
-        return web.json_response(files)
+        return web.json_response(_scan_dates())
     except Exception as e:
-        logger.error('Ошибка получения списка логов: {}', repr(e))
+        logger.error('Ошибка получения списка дат: {}', repr(e))
         return web.json_response([], status=500)
 
 
 @admin_required
-async def get_log_content(request: web.Request) -> web.Response:
+async def get_log_by_date(request: web.Request) -> web.Response:
     try:
-        filename = request.match_info['filename']
-        filepath = _safe_log_path(filename)
-
-        if filepath is None:
-            return web.json_response({'error': 'Недопустимое имя файла'}, status=400)
-
-        if not os.path.exists(filepath):
-            return web.json_response({'error': 'Файл не найден'}, status=404)
+        date_str = request.match_info['date']
+        if not __import__('re').match(r'^\d{4}-\d{2}-\d{2}$', date_str):
+            return web.json_response({'error': 'Неверный формат даты'}, status=400)
 
         try:
             n = max(1, int(request.query.get('lines', '500')))
@@ -297,33 +294,41 @@ async def get_log_content(request: web.Request) -> web.Response:
 
         level_filter = request.query.get('level', '').strip()
         search       = request.query.get('search', '').strip()
+        source_filter = request.query.get('source', '').strip()
 
-        with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
-            all_lines = f.readlines()
+        all_lines: list[dict] = []
+        stats = {'total': 0, 'ERROR': 0, 'WARNING': 0, 'INFO': 0, 'DEBUG': 0}
 
-        stats = {'total': len(all_lines), 'ERROR': 0, 'WARNING': 0, 'INFO': 0, 'DEBUG': 0}
-        for line in all_lines:
-            for level in ('ERROR', 'WARNING', 'INFO', 'DEBUG'):
-                if f'| {level}' in line:
-                    stats[level] += 1
-                    break
+        sources = [source_filter] if source_filter in LOG_SOURCES else list(LOG_SOURCES)
+        for source in sources:
+            filepath = os.path.join(LOG_SOURCES[source], f'bot_{date_str}.log')
+            if not os.path.exists(filepath):
+                continue
+            with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+                for line in f:
+                    stats['total'] += 1
+                    for level in ('ERROR', 'WARNING', 'INFO', 'DEBUG'):
+                        if f'| {level}' in line:
+                            stats[level] += 1
+                            break
+                    all_lines.append({'text': line, 'source': source})
 
-        total_lines_in_file = len(all_lines)
+        all_lines.sort(key=lambda x: x['text'][:19])
 
+        filtered = all_lines
         if level_filter and level_filter in ('ERROR', 'WARNING', 'INFO', 'DEBUG'):
-            all_lines = [l for l in all_lines if f'| {level_filter}' in l]
-
+            filtered = [l for l in filtered if f'| {level_filter}' in l['text']]
         if search:
             search_lower = search.lower()
-            all_lines = [l for l in all_lines if search_lower in l.lower()]
+            filtered = [l for l in filtered if search_lower in l['text'].lower()]
 
-        recent_lines = all_lines[-n:]
+        recent = filtered[-n:]
 
         return web.json_response({
-            'filename':       filename,
-            'lines':          recent_lines,
-            'total_lines':    total_lines_in_file,
-            'filtered_lines': len(all_lines),
+            'date':           date_str,
+            'lines':          [{'text': l['text'], 'source': l['source']} for l in recent],
+            'total_lines':    stats['total'],
+            'filtered_lines': len(filtered),
             'stats':          stats,
         })
 
