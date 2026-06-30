@@ -74,24 +74,31 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
+  gap: 6px;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  white-space: nowrap;
 }
 
-.badge-dot { width: 6px; height: 6px; border-radius: 50%; }
-.badge.green { background: rgba(74, 222, 128, 0.1); color: var(--success); }
+.badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.badge.green { background: rgba(74, 222, 128, 0.1); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.2); }
 .badge.green .badge-dot { background: var(--success); }
-.badge.amber { background: rgba(251, 191, 36, 0.1); color: var(--warning); }
+.badge.amber { background: rgba(251, 191, 36, 0.1); color: var(--warning); border: 1px solid rgba(251, 191, 36, 0.2); }
 .badge.amber .badge-dot { background: var(--warning); }
-.badge.red { background: rgba(248, 113, 113, 0.1); color: var(--danger); }
+.badge.red { background: rgba(248, 113, 113, 0.1); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.2); }
 .badge.red .badge-dot { background: var(--danger); }
-.badge.purple { background: rgba(133, 119, 242, 0.1); color: var(--accent-ambient); }
+.badge.purple { background: rgba(133, 119, 242, 0.1); color: var(--accent-ambient); border: 1px solid rgba(133, 119, 242, 0.2); }
 .badge.purple .badge-dot { background: var(--accent-ambient); }
-.badge-admin { background: rgba(34, 211, 238, 0.1); color: var(--accent); }
-.badge-user { background: rgba(139, 148, 158, 0.1); color: var(--fg-muted); }
+.badge-admin { background: rgba(34, 211, 238, 0.12); color: var(--accent); border: 1px solid rgba(34, 211, 238, 0.25); }
+.badge-user { background: rgba(139, 148, 158, 0.1); color: var(--fg-muted); border: 1px solid rgba(139, 148, 158, 0.15); }
 
 /* ─── Buttons ───────────────────────────────────────────────────────── */
 .btn {
