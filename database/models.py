@@ -147,7 +147,24 @@ class Event(Base):
     )
 
 
-async def   async_main():
+class Document(Base):
+    __tablename__ = 'documents'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id   = mapped_column(String(), ForeignKey('events.id'), nullable=True)
+    name       = mapped_column(String(80))
+    size       = mapped_column(Integer(), default=0)
+    file_path  = mapped_column(String(), nullable=True)
+    content    = mapped_column(LargeBinary(), nullable=True)
+    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_document_event_id', 'event_id'),
+        Index('idx_document_name', 'name'),
+    )
+
+
+async def async_main():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)
