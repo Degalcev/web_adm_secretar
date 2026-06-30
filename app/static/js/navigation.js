@@ -7,24 +7,30 @@ function toggleGroup(header) {
     const wasOpen = group.classList.contains('open');
     group.classList.toggle('open');
 
-    // Если группа открылась и нет активного элемента — активировать первый
+    // Если группа открылась — перейти на первый пункт
     if (!wasOpen && group.classList.contains('open')) {
-        const firstItem = group.querySelector('.nav-item:not(.active)');
+        const firstItem = group.querySelector('.nav-item');
         if (firstItem) {
-            const page = firstItem.dataset.page;
-            if (page) switchPage(page);
+            const href = firstItem.dataset.href;
+            if (href) navigateTo(href);
         }
     }
 }
 
 function switchPage(page) {
     currentPage = page;
+
+    // Подсветка активного пункта меню
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navItem) navItem.classList.add('active');
+
+    // Показать нужную страницу
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
+
+    // Загрузить данные
     if (page === 'users') loadUsers();
     if (page === 'organizers') loadOrganizers();
     if (page === 'locations') loadLocations();

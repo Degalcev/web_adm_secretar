@@ -63,8 +63,8 @@
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="nav-group-items">
-          <a class="nav-item" data-page="vks-active" onclick="switchPage('vks-active')">Текущие</a>
-          <a class="nav-item" data-page="vks-completed" onclick="switchPage('vks-completed')">Завершённые</a>
+          <a class="nav-item" data-page="vks-active" data-href="/conferences/">Текущие</a>
+          <a class="nav-item" data-page="vks-completed" data-href="/conferences/completed/">Завершённые</a>
         </div>
       </div>
 
@@ -75,10 +75,10 @@
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="nav-group-items">
-          <a class="nav-item" data-page="users" onclick="switchPage('users')">Пользователи</a>
-          <a class="nav-item" data-page="organizers" onclick="switchPage('organizers')">Организаторы</a>
-          <a class="nav-item" data-page="locations" onclick="switchPage('locations')">Локации</a>
-          <a class="nav-item" data-page="logs" onclick="switchPage('logs')">Логи</a>
+          <a class="nav-item" data-page="users" data-href="/admin/users/">Пользователи</a>
+          <a class="nav-item" data-page="organizers" data-href="/admin/organizers/">Организаторы</a>
+          <a class="nav-item" data-page="locations" data-href="/admin/locations/">Локации</a>
+          <a class="nav-item" data-page="logs" data-href="/admin/logs/">Логи</a>
         </div>
       </div>
 
@@ -89,7 +89,7 @@
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="nav-group-items">
-          <a class="nav-item" data-page="settings" onclick="switchPage('settings')">Общие</a>
+          <a class="nav-item" data-page="settings" data-href="/settings/general/">Общие</a>
         </div>
       </div>
 
@@ -547,6 +547,7 @@
 <!-- JS модули (порядок важен: utils первым) -->
 <script src="/static/js/utils.js"></script>
 <script src="/static/js/auth.js"></script>
+<script src="/static/js/router.js"></script>
 <script src="/static/js/navigation.js"></script>
 <script src="/static/js/users.js"></script>
 <script src="/static/js/organizers.js"></script>
