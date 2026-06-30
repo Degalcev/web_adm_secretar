@@ -99,7 +99,8 @@
 .form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   width: 100%;
   padding: 0.625rem 0.875rem;
   background: var(--bg);
@@ -112,8 +113,14 @@
   transition: border-color var(--motion-fast) var(--ease-standard);
 }
 .form-group input:focus,
-.form-group select:focus { border-color: var(--accent); }
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--accent); }
 .form-group select option { background: var(--bg-elevated); }
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
 
 .modal-footer { display: flex; gap: 0.625rem; justify-content: flex-end; margin-top: 1.5rem; }
 
