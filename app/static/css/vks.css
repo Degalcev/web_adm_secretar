@@ -182,11 +182,28 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.vks-doc-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.08), transparent);
+  transition: left 0.5s ease;
+}
+
+.vks-doc-item:hover::before {
+  left: 100%;
 }
 
 .vks-doc-item:hover {
   border-color: var(--accent);
-  background: var(--accent-bg);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.12), rgba(151, 117, 250, 0.08), transparent);
   color: var(--fg);
 }
 
@@ -330,11 +347,29 @@
 .event-doc-downloadable {
   cursor: pointer;
   transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.event-doc-downloadable::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.08), transparent);
+  transition: left 0.5s ease;
+}
+
+.event-doc-downloadable:hover::before {
+  left: 100%;
 }
 
 .event-doc-downloadable:hover {
   border-color: var(--accent);
-  background: var(--accent-bg);
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.12), rgba(151, 117, 250, 0.08), transparent);
+  color: var(--fg);
 }
 
 .event-doc-pending {
