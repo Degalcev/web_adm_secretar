@@ -5,13 +5,13 @@
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.08) 0%, transparent 60%);
+  background: var(--bg);
 }
 
 .login-box {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 48px 40px;
   width: 100%;
   max-width: 400px;
@@ -19,7 +19,7 @@
 }
 
 .login-logo { display: flex; justify-content: center; margin-bottom: 24px; }
-.login-box h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; letter-spacing: -0.5px; }
+.login-box h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; text-align: center; }
 .login-box p { font-size: 14px; color: var(--muted); margin-bottom: 32px; text-align: center; }
 
 .login-box label {
@@ -28,7 +28,7 @@
   font-weight: 600;
   color: var(--text2);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   margin-bottom: 8px;
 }
 
@@ -42,12 +42,9 @@
   font-size: 14px;
   outline: none;
   margin-bottom: 20px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s;
 }
-.login-box input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-bg);
-}
+.login-box input:focus { border-color: var(--accent); }
 
 .login-error { font-size: 13px; color: var(--danger); margin-bottom: 16px; display: none; }
 
@@ -72,8 +69,8 @@
   border-bottom: 1px solid var(--border);
 }
 
-.sidebar-brand { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-.sidebar-sub { font-size: 10px; font-weight: 600; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+.sidebar-brand { font-size: 16px; font-weight: 700; color: var(--text); }
+.sidebar-sub { font-size: 10px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
 .sidebar-nav { flex: 1; padding: 16px 12px; }
 
@@ -118,12 +115,12 @@
 }
 
 .page-title { display: flex; align-items: center; gap: 16px; }
-.page-title h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+.page-title h1 { font-size: 24px; font-weight: 700; }
 
 .page-icon {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--accent-bg);
   display: flex;
   align-items: center;
