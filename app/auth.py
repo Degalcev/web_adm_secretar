@@ -47,13 +47,17 @@ def require_csrf(handler):
     @wraps(handler)
     async def wrapper(request: web.Request):
         if request.method in ('POST', 'PUT', 'DELETE'):
-            token = request.cookies.get('csrf_token')
-            try:
-                data = await request.json()
-                form_token = data.get('csrf_token')
-            except Exception:
-                form_token = None
-            if not token or token != form_token:
+            cookie_token = request.cookies.get('csrf_token')
+            header_token = request.headers.get('X-CSRF-Token')
+            form_token = header_token
+            if not form_token:
+                try:
+                    data = await request.json()
+                    form_token = data.get('csrf_token')
+                except Exception:
+                    pass
+            if not cookie_token or cookie_token != form_token:
+                logger.warning('CSRF token invalid: cookie={}, form={}', cookie_token, form_token)
                 return web.json_response({'error': 'CSRF token invalid'}, status=403)
         return await handler(request)
     return wrapper

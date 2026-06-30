@@ -10,28 +10,31 @@
 - **База данных**: PostgreSQL (asyncpg) + SQLAlchemy async
 - **Авторизация**: argon2-cffi, сессии в PostgreSQL
 - **Логирование**: loguru
-- **Frontend**: Vanilla JS/CSS (модульная структура, стиль SharX Panel)
+- **Frontend**: Vanilla JS/CSS (SPA с клиентским роутингом)
 - **Деплой**: paramiko SSH к VPS
 
 ## Архитектура
 ```
 app/
+├── __init__.py
 ├── auth.py              # Авторизация, CSRF, rate limiting, сессии
-├── server.py            # Точка входа aiohttp
+├── server.py            # Точка входа aiohttp (SPA маршруты + API)
 ├── routes/
-│   ├── __init__.py
+│   ├── __init__.py      # Экспорт всех setup_*_routes
 │   ├── users.py         # CRUD пользователей
 │   ├── organizers.py    # CRUD организаторов
 │   ├── locations.py     # CRUD локаций
 │   ├── logs.py          # Просмотр логов
-│   └── vks.py           # CRUD событий ВКС + документы
+│   ├── vks.py           # CRUD событий ВКС
+│   └── documents.py     # CRUD документов к событиям
 └── static/
-    ├── admin.html
-    ├── css/ (base, layout, components, tables, modals, logs, vks, settings, responsive)
-    └── js/ (utils, auth, navigation, users, organizers, locations, logs, vks, settings, app)
+    ├── index.html       # SPA entry point
+    ├── css/ (base, layout, components, tables, modals, logs, vks, settings, filters, responsive)
+    └── js/ (utils, auth, router, navigation, users, organizers, locations, logs, vks, settings, app)
 
 database/
-├── models.py            # User, Organizer, Location, Session, Event
+├── __init__.py
+├── models.py            # User, Organizer, Location, Session, Event, Document
 ├── requests.py          # Запросы (чтение)
 └── sending.py           # Операции (запись)
 
@@ -39,34 +42,48 @@ deploy/
 ├── deploy.py            # Скрипт деплоя (test/prod)
 ├── .env.test            # Конфиг тестовой среды
 ├── .env.prod            # Конфиг продакшена
-├── nginx/               # Конфиги nginx
-└── systemd/             # Systemd сервисы
+├── nginx/
+│   ├── test.conf        # Nginx тест (catch-all на порт 8082)
+│   └── prod.conf        # Nginx прод (SSL, /admin → 8080)
+└── systemd/
+    ├── web-admin.service
+    └── web-admin-test.service
 ```
+
+## Модели базы данных
+- **User** — пользователи бота (tg_id, max_id, name, status, fsm_id, chat_id, notification)
+- **Organizer** — организаторы ВКС (name, base_url, short_name)
+- **Location** — локации (name)
+- **Session** — сессии админки (token, user_id, ip_address, expires_at)
+- **Event** — события ВКС (date, time, organizer_id, location_id, url, description, completed, doc_id, notification, locked_by)
+- **Document** — документы к событиям (event_id, name, size, file_path, content)
 
 ## Базы данных
 - **vks_db** — продакшен (бот + админка)
-- **test_db** — тестовая (разработка, UTF8, структура = vks_db)
+- **test_db** — тестовая (разработка, структура = vks_db)
 
 ## Ссылки
 - Тест: `http://45.90.217.225/admin` (nginx → порт 8082)
 - Продакшен: `https://bot.dlab.run/admin` (nginx → порт 8080)
 - GitHub: `https://github.com/Degalcev/web_adm_secretar`
 
+## Карта сайта (SPA маршруты)
+- `/` — страница авторизации
+- `/admin/` — главная админки
+- `/admin/users/` — пользователи
+- `/admin/organizers/` — организаторы
+- `/admin/locations/` — локации
+- `/admin/logs/` — логи
+- `/conferences/` — текущие ВКС
+- `/conferences/completed/` — завершённые ВКС
+- `/settings/` — настройки
+- `/settings/general/` — общие настройки (темы)
+
 ## Меню sidebar
 - **ВКС** (раскрывающееся) → Текущие, Завершённые
 - **Администрирование** (раскрывающееся) → Пользователи, Организаторы, Локации, Логи
 - **Настройки** (раскрывающееся) → Общие (выбор темы)
 - Кнопка "Выйти" внизу навигации
-
-## Карта сайта
-- **Страница авторизации**: /
-- **Страница ВКС Текущие**: /conferences/
-- **Страница ВКС Завершённые**: /conferences/completed/
-- **Страница Администрирование Пользователи**: /admin/users/
-- **Страница Администрирование Организаторы**: /admin/organizers/
-- **Страница Администрирование Локации**: /admin/locations/
-- **Страница Администрирование Локации**: /admin/logs/
-- **Страница Настройки Общие**: /settings/general/
 
 ## Темы (8 штук из sharx-themes-demo)
 default, midnight, ember, boreal, web, xuiClassic, starWars, vision
@@ -90,3 +107,10 @@ default, midnight, ember, boreal, web, xuiClassic, starWars, vision
 - python-async, sqlalchemy-async, web-frontend
 - security-auth, devops-ssh, loguru-logging
 - java-development, graphics-ui
+
+## Конфигурация (config.py)
+- SSH_SERVER, SSH_USER_NAME, SSH_USER_PASSWORD — SSH туннель (опционально)
+- DB_USER, DB_USER_PASSWORD, DB_NAME, DB_HOST, DB_PORT — подключение к PostgreSQL
+- WEBAPP_HOST, WEBAPP_PORT — хост и порт веб-сервера
+- DEFAULT_ADMIN_PASSWORD — пароль администратора по умолчанию
+- BOT_LOGS_DIR — директория логов бота

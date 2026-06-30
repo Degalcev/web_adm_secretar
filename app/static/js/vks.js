@@ -3,6 +3,8 @@
 let allEvents = [];
 let editingEventId = null;
 let deletingEventId = null;
+let pendingFiles = [];
+let removedDocIds = [];
 
 async function ensureOrgsAndLocs() {
     if (!window.allOrganizers || !window.allOrganizers.length) {
@@ -273,6 +275,8 @@ function resetVksCompletedFilters() {
 
 async function openAddEventModal() {
     editingEventId = null;
+    pendingFiles = [];
+    removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
     document.getElementById('f-event-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('f-event-time').value = '';
@@ -281,9 +285,9 @@ async function openAddEventModal() {
     await loadEventSelects();
     document.getElementById('f-event-organizer').value = '';
     document.getElementById('f-event-location').value = '';
-    // Очистить документы
-    document.getElementById('f-event-docs-group').style.display = 'none';
-    document.getElementById('f-event-docs').innerHTML = '';
+    document.getElementById('f-event-docs-group').style.display = 'block';
+    document.getElementById('event-doc-upload').value = '';
+    refreshEventDocs();
     document.getElementById('event-modal').classList.add('show');
 }
 
@@ -291,6 +295,8 @@ async function openEditEventModal(id) {
     const e = allEvents.find(x => x.id === id);
     if (!e) return;
     editingEventId = id;
+    pendingFiles = [];
+    removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
@@ -299,104 +305,61 @@ async function openEditEventModal(id) {
     await loadEventSelects();
     document.getElementById('f-event-organizer').value = e.organizer_id || '';
     document.getElementById('f-event-location').value = e.location_id || '';
-
-    // Загрузка документов
-    const docsGroup = document.getElementById('f-event-docs-group');
-    const docsContainer = document.getElementById('f-event-docs');
-    if (e.documents && e.documents.length) {
-        docsGroup.style.display = 'block';
-        docsContainer.innerHTML = e.documents.map(d => {
-            const ext = (d.name || '').split('.').pop().toLowerCase();
-            const icon = getDocIcon(ext);
-            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a></div>`;
-        }).join('');
-    } else {
-        docsGroup.style.display = 'none';
-        docsContainer.innerHTML = '';
-    }
-
+    document.getElementById('f-event-docs-group').style.display = 'block';
+    document.getElementById('event-doc-upload').value = '';
+    refreshEventDocs();
     document.getElementById('event-modal').classList.add('show');
 }
 
 function closeEventModal() {
     document.getElementById('event-modal').classList.remove('show');
+    pendingFiles = [];
+    removedDocIds = [];
 }
 
-async function uploadDocument() {
-    const fileInput = document.getElementById('event-doc-upload');
-    const file = fileInput.files[0];
-    if (!file || !editingEventId) return;
+function refreshEventDocs() {
+    const docsContainer = document.getElementById('f-event-docs');
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const existing = (editingEventId)
+        ? (allEvents.find(x => x.id === editingEventId)?.documents || [])
+            .filter(d => !removedDocIds.includes(d.id))
+        : [];
 
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const all = [
+        ...existing.map(d => ({ id: d.id, name: d.name, size: d.size, pending: false })),
+        ...pendingFiles.map((f, i) => ({ id: `pending-${i}`, name: f.name, size: f.size, pending: true }))
+    ];
 
-    try {
-        const resp = await fetch(`${BASE_URL}/admin/api/events/${editingEventId}/documents`, {
-            method: 'POST',
-            headers: { 'X-CSRF-Token': csrfToken },
-            body: formData
-        });
-        const data = await resp.json();
-        if (data.ok) {
-            showToast('Документ загружен', 'success');
-            // Обновить список документов в модалке
-            await loadAllEvents();
-            const e = allEvents.find(x => x.id === editingEventId);
-            if (e && e.documents) {
-                const docsGroup = document.getElementById('f-event-docs-group');
-                const docsContainer = document.getElementById('f-event-docs');
-                docsGroup.style.display = 'block';
-                docsContainer.innerHTML = e.documents.map(d => {
-                    const ext = (d.name || '').split('.').pop().toLowerCase();
-                    const icon = getDocIcon(ext);
-                    return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="deleteDocument('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div>`;
-                }).join('');
-            }
-            fileInput.value = '';
-        } else {
-            showToast(data.error || 'Ошибка', 'error');
-        }
-    } catch (e) {
-        showToast('Ошибка сети', 'error');
+    if (all.length) {
+        docsContainer.innerHTML = all.map(d => {
+            const ext = (d.name || '').split('.').pop().toLowerCase();
+            const icon = getDocIcon(ext);
+            const action = d.pending
+                ? `<button class="event-doc-delete" onclick="removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
+                : `<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
+            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}${d.pending ? '<span class="event-doc-pending">новый</span>' : ''}${action}</div>`;
+        }).join('');
+    } else {
+        docsContainer.innerHTML = '<div class="event-docs-empty">Нет документов</div>';
     }
 }
 
-async function deleteDocument(docId) {
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
-    try {
-        const resp = await fetch(`${BASE_URL}/admin/api/documents/${docId}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ csrf_token: csrfToken })
-        });
-        const data = await resp.json();
-        if (data.ok) {
-            showToast('Документ удалён', 'success');
-            await loadAllEvents();
-            const e = allEvents.find(x => x.id === editingEventId);
-            if (e && e.documents) {
-                const docsContainer = document.getElementById('f-event-docs');
-                const docsGroup = document.getElementById('f-event-docs-group');
-                if (e.documents.length) {
-                    docsGroup.style.display = 'block';
-                    docsContainer.innerHTML = e.documents.map(d => {
-                        const ext = (d.name || '').split('.').pop().toLowerCase();
-                        const icon = getDocIcon(ext);
-                        return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="deleteDocument('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div>`;
-                    }).join('');
-                } else {
-                    docsGroup.style.display = 'none';
-                    docsContainer.innerHTML = '';
-                }
-            }
-        } else {
-            showToast(data.error || 'Ошибка', 'error');
-        }
-    } catch (e) {
-        showToast('Ошибка сети', 'error');
+function addPendingFiles(fileList) {
+    for (const f of fileList) {
+        pendingFiles.push(f);
     }
+    refreshEventDocs();
+}
+
+function removePendingFile(id) {
+    const idx = parseInt(id.replace('pending-', ''), 10);
+    pendingFiles.splice(idx, 1);
+    refreshEventDocs();
+}
+
+function removeExistingDoc(docId) {
+    removedDocIds.push(docId);
+    refreshEventDocs();
 }
 
 async function loadEventSelects() {
@@ -435,7 +398,6 @@ async function saveEvent() {
     const btn = document.getElementById('event-modal-save-btn');
     btn.disabled = true;
 
-    // Валидация обязательных полей
     const date = document.getElementById('f-event-date').value;
     const time = document.getElementById('f-event-time').value;
     const organizer = document.getElementById('f-event-organizer').value;
@@ -447,37 +409,46 @@ async function saveEvent() {
     if (!location) { showToast('Выберите локацию', 'error'); btn.disabled = false; return; }
 
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const formData = new FormData();
+    formData.append('date', date);
+    formData.append('time', time);
+    formData.append('organizer_id', organizer);
+    formData.append('location_id', location);
+    formData.append('url', document.getElementById('f-event-url').value.trim());
+    formData.append('description', document.getElementById('f-event-desc').value.trim());
+    formData.append('csrf_token', csrfToken);
 
-    const payload = {
-        date: date,
-        time: time,
-        organizer_id: organizer,
-        location_id: location,
-        url: document.getElementById('f-event-url').value.trim(),
-        description: document.getElementById('f-event-desc').value.trim(),
-        csrf_token: csrfToken,
-    };
+    if (editingEventId) {
+        const existing = allEvents.find(x => x.id === editingEventId)?.documents || [];
+        const keepIds = existing.filter(d => !removedDocIds.includes(d.id)).map(d => d.id);
+        formData.append('keep_doc_ids', keepIds.join(','));
+    }
+
+    for (const f of pendingFiles) {
+        formData.append('files', f, f.name);
+    }
 
     try {
         let resp;
         if (editingEventId) {
             resp = await fetch(`${BASE_URL}/admin/api/events/${editingEventId}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'PUT', headers: { 'X-CSRF-Token': csrfToken }, body: formData
             });
         } else {
             resp = await fetch(`${BASE_URL}/admin/api/events`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: formData
             });
         }
         const data = await resp.json();
         if (data.ok) {
+            const wasEditing = !!editingEventId;
             closeEventModal();
             await loadAllEvents();
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
             if (activeBoard) renderVksBoard('vks-board-active', 'active');
             if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
-            showToast(editingEventId ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
+            showToast(wasEditing ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
         }
