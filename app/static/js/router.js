@@ -12,7 +12,6 @@ const ROUTES = {
     '/settings/general/':       { page: 'settings',       title: 'Настройки' },
 };
 
-// Обратный маппинг: page -> route
 const PAGE_TO_ROUTE = {};
 Object.entries(ROUTES).forEach(([path, conf]) => {
     if (conf.page !== 'login' && !PAGE_TO_ROUTE[conf.page]) {
@@ -21,6 +20,7 @@ Object.entries(ROUTES).forEach(([path, conf]) => {
 });
 
 let currentRoute = null;
+let routerInitialized = false;
 
 function getRouteFromURL() {
     const path = window.location.pathname;
@@ -56,6 +56,9 @@ function handlePopState() {
 }
 
 function initRouter() {
+    if (routerInitialized) return;
+    routerInitialized = true;
+
     window.addEventListener('popstate', handlePopState);
 
     document.addEventListener('click', (e) => {
@@ -66,7 +69,7 @@ function initRouter() {
         }
     });
 
-    // Начальный роут
+    // Начальный роут (если не логин)
     const initialPath = getRouteFromURL();
     if (initialPath !== '/') {
         navigateTo(initialPath, false);

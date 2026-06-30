@@ -20,7 +20,7 @@ async function login() {
     const data = await resp.json();
 
     if (data.ok) {
-        showMain();
+        navigateTo('/conferences/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -29,9 +29,7 @@ async function login() {
 
 async function logout() {
     await fetch(`${BASE_URL}/admin/logout`, { method: 'POST' });
-    document.getElementById('main-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
-    history.pushState(null, '', '/');
+    navigateTo('/');
 }
 
 async function checkAuth() {
@@ -42,14 +40,20 @@ async function checkAuth() {
         }
     } catch (e) { /* ignore */ }
     const resp = await fetch(`${BASE_URL}/admin/api/users`);
-    if (resp.status === 200) showMain();
+    if (resp.status === 200) {
+        // Авторизован — перейти на текущий URL или conferences
+        const path = getRouteFromURL();
+        if (path === '/') {
+            navigateTo('/conferences/', false);
+        } else {
+            navigateTo(path, false);
+        }
+    }
 }
 
 function showMain() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
-    // Инициализировать роутер и перейти на текущий URL
-    initRouter();
 }
 
 function showLogin() {
