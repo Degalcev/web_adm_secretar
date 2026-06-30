@@ -104,7 +104,9 @@ function renderVksBoard(boardId, filter) {
             if (e.documents && e.documents.length) {
                 html += `<div class="vks-card-docs">`;
                 e.documents.forEach(d => {
-                    html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${esc(d.name)}${d.size ? ' (' + formatSize(d.size) + ')' : ''}</span>`;
+                    const ext = (d.name || '').split('.').pop().toLowerCase();
+                    const icon = getDocIcon(ext);
+                    html += `<span class="vks-tag">${icon} ${esc(d.name)}${d.size ? ' (' + formatSize(d.size) + ')' : ''}</span>`;
                 });
                 html += `</div>`;
             }
@@ -132,6 +134,21 @@ function getOrganizerName(id) {
 function getLocationName(id) {
     const l = (window.allLocations || []).find(x => x.id === id);
     return l ? l.name : '';
+}
+
+function getDocIcon(ext) {
+    const icons = {
+        pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        doc: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        docx: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        xls: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        xlsx: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        ppt: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        pptx: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        txt: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+        zip: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2"><path d="M21 8v13H3V3h13l5 5z"/><path d="M12 3v6h6"/></svg>',
+    };
+    return icons[ext] || icons.txt;
 }
 
 function filterVksListActive() {
@@ -169,6 +186,22 @@ async function openEditEventModal(id) {
     await loadEventSelects();
     document.getElementById('f-event-organizer').value = e.organizer_id || '';
     document.getElementById('f-event-location').value = e.location_id || '';
+
+    // Загрузка документов
+    const docsGroup = document.getElementById('f-event-docs-group');
+    const docsContainer = document.getElementById('f-event-docs');
+    if (e.documents && e.documents.length) {
+        docsGroup.style.display = 'block';
+        docsContainer.innerHTML = e.documents.map(d => {
+            const ext = (d.name || '').split('.').pop().toLowerCase();
+            const icon = getDocIcon(ext);
+            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
+        }).join('');
+    } else {
+        docsGroup.style.display = 'none';
+        docsContainer.innerHTML = '';
+    }
+
     document.getElementById('event-modal').classList.add('show');
 }
 
