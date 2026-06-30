@@ -31,6 +31,7 @@ async function logout() {
     await fetch(`${BASE_URL}/admin/logout`, { method: 'POST' });
     document.getElementById('main-screen').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
+    history.pushState(null, '', '/');
 }
 
 async function checkAuth() {
@@ -47,7 +48,8 @@ async function checkAuth() {
 function showMain() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'flex';
-    loadUsers();
+    // Инициализировать роутер и перейти на текущий URL
+    initRouter();
 }
 
 function showLogin() {
