@@ -1,0 +1,74 @@
+/* ─── Modal ─────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+}
+
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-header h3 { font-size: 17px; font-weight: 700; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+.modal-close:hover { color: var(--text); }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 13px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus { border-color: var(--accent); }
+.form-group select option { background: var(--surface); }
+
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* ─── Confirm ───────────────────────────────────────────────────────── */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
+}
+.confirm-overlay.show { display: flex; }
+
+.confirm-box {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px; max-width: 360px; width: 100%; text-align: center;
+}
+.confirm-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(239,68,68,0.1); color: var(--danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+.confirm-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
+.confirm-box p { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ─── Toast ─────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 18px; font-size: 14px; color: var(--text); z-index: 300;
+  transform: translateY(80px); opacity: 0; transition: all 0.25s ease; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error { border-color: var(--danger); color: var(--danger); }
