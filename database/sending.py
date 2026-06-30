@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime, timedelta
 
 from loguru import logger
 from sqlalchemy import update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location
+from database.models import async_session, User, Organizer, Location, Session
 
 
 async def add_user(**kwargs) -> str:
@@ -138,4 +139,56 @@ async def delete_location(location_id: str):
         except Exception as e:
             await session.rollback()
             logger.error('Ошибка удаления локации: {}', repr(e))
+            raise
+
+
+# ─── Сессии ─────────────────────────────────────────────────────────────
+
+async def create_session(token: str, user_id: str, ip_address: str = None, user_agent: str = None, expires_hours: int = 24) -> str:
+    new_id = str(uuid.uuid4())
+    new_session = Session(
+        id=new_id,
+        token=token,
+        user_id=user_id,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        expires_at=datetime.utcnow() + timedelta(hours=expires_hours)
+    )
+    async with async_session() as session:
+        try:
+            session.add(new_session)
+            await session.commit()
+            logger.info('Сессия создана для пользователя {}', user_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка создания сессии: {}', repr(e))
+            raise
+
+
+async def delete_session(token: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Session).where(Session.token == token)
+            )
+            await session.commit()
+            logger.info('Сессия удалена')
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления сессии: {}', repr(e))
+            raise
+
+
+async def cleanup_expired_sessions():
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Session).where(Session.expires_at < datetime.utcnow())
+            )
+            await session.commit()
+            logger.info('Просроченные сессии удалены')
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка очистки сессий: {}', repr(e))
             raise
