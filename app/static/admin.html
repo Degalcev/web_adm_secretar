@@ -230,11 +230,11 @@
           </div>
         </div>
         <div class="log-filters-actions">
-          <label class="toggle-wrap">
-            <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()">
-            <span class="toggle-switch"></span>
+          <div class="toggle-wrap">
+            <input type="checkbox" id="auto-refresh-toggle" class="toggle-input" onchange="toggleAutoRefresh()">
+            <label for="auto-refresh-toggle" class="toggle-track"></label>
             <span class="toggle-text">Авто 5с</span>
-          </label>
+          </div>
           <button class="btn btn-ghost btn-sm" onclick="refreshLogs()">Обновить</button>
         </div>
       </div>
