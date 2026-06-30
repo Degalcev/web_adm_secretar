@@ -88,7 +88,7 @@ async def get_event_by_id(event_id: str):
 
 async def get_documents_by_event_id(event_id: str):
     async with async_session() as session:
-        result = await session.scalars(
+        result = await session.execute(
             select(Document.id, Document.name, Document.size).where(Document.event_id == event_id)
         )
         return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]

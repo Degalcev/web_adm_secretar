@@ -180,6 +180,14 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vks-doc-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--fg);
 }
 
 .vks-doc-item svg {
@@ -317,6 +325,16 @@
 .event-doc-delete:hover {
   color: var(--danger);
   background: rgba(248, 113, 113, 0.1);
+}
+
+.event-doc-downloadable {
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.event-doc-downloadable:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
 }
 
 .event-doc-pending {
