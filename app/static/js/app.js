@@ -26,4 +26,5 @@ document.getElementById('log-date-select').addEventListener('change', function (
 });
 
 // Запуск
+initTheme();
 checkAuth();
