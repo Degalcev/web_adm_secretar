@@ -54,7 +54,7 @@
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-group open">
+      <div class="nav-group">
         <div class="nav-group-header" onclick="toggleGroup(this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Мероприятия
@@ -62,10 +62,12 @@
         </div>
         <div class="nav-group-items">
           <a class="nav-item" data-page="vks" onclick="switchPage('vks')">ВКС</a>
+          <a class="nav-item" data-page="vks-active" onclick="switchPage('vks-active')">Текущие</a>
+          <a class="nav-item" data-page="vks-completed" onclick="switchPage('vks-completed')">Завершённые</a>
         </div>
       </div>
 
-      <div class="nav-group open">
+      <div class="nav-group">
         <div class="nav-group-header" onclick="toggleGroup(this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00 .73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 00 2.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00 .73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
           Администрирование
@@ -261,7 +263,7 @@
       <div class="page-header">
         <div class="page-title">
           <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-          <h1>ВКС</h1>
+          <h1>ВКС — Все</h1>
         </div>
         <div class="page-actions">
           <button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>
@@ -282,6 +284,51 @@
       </div>
 
       <div class="vks-board" id="vks-board">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- ─── VKS Active Page ─────────────────────────────────────────── -->
+    <div class="page" id="page-vks-active">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <h1>Текущие ВКС</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-vks-active" placeholder="Поиск по описанию..." oninput="filterVksListActive()">
+        </div>
+      </div>
+
+      <div class="vks-board" id="vks-board-active">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- ─── VKS Completed Page ──────────────────────────────────────── -->
+    <div class="page" id="page-vks-completed">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <h1>Завершённые ВКС</h1>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-vks-completed" placeholder="Поиск по описанию..." oninput="filterVksListCompleted()">
+        </div>
+      </div>
+
+      <div class="vks-board" id="vks-board-completed">
         <div class="empty-state">Загрузка...</div>
       </div>
     </div>

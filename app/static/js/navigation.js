@@ -19,5 +19,7 @@ function switchPage(page) {
     if (page === 'organizers') loadOrganizers();
     if (page === 'locations') loadLocations();
     if (page === 'logs') loadLogDates();
-    if (page === 'vks') loadEvents();
+    if (page === 'vks') { currentVksFilter = ''; loadEvents(); }
+    if (page === 'vks-active') { currentVksFilter = 'active'; loadEventsForPage('vks-board-active', 'active'); }
+    if (page === 'vks-completed') { currentVksFilter = 'completed'; loadEventsForPage('vks-board-completed', 'completed'); }
 }
