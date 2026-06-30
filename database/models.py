@@ -83,6 +83,7 @@ class Organizer(Base):
 
     id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
     name       = mapped_column(String(100))
+    short_name = mapped_column(String(20), nullable=True)
     base_url   = mapped_column(String(), nullable=True)
     updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

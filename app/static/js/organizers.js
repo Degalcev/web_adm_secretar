@@ -6,7 +6,7 @@ let deletingOrgId = null;
 
 async function loadOrganizers() {
     const tbody = document.getElementById('organizers-tbody');
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Загрузка...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Загрузка...</td></tr>';
     const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
     if (resp.status === 401) { showLogin(); return; }
     allOrganizers = await resp.json();
@@ -18,12 +18,13 @@ async function loadOrganizers() {
 function renderOrganizers(items) {
     const tbody = document.getElementById('organizers-tbody');
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Нет организаторов</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Нет организаторов</td></tr>';
         return;
     }
     tbody.innerHTML = items.map(o => `
         <tr>
             <td>${esc(o.name) || '<span style="color:var(--muted)">—</span>'}</td>
+            <td style="font-family:monospace;color:var(--muted)">${esc(o.short_name) || '—'}</td>
             <td style="font-family:monospace;color:var(--muted);font-size:13px">${esc(o.base_url) || '—'}</td>
             <td>
                 <div class="actions">
@@ -43,6 +44,7 @@ function filterOrganizers() {
     const q = document.getElementById('search-org').value.toLowerCase();
     const filtered = allOrganizers.filter(o =>
         (o.name || '').toLowerCase().includes(q) ||
+        (o.short_name || '').toLowerCase().includes(q) ||
         (o.base_url || '').toLowerCase().includes(q)
     );
     renderOrganizers(filtered);
@@ -53,6 +55,7 @@ function openAddOrganizerModal() {
     editingOrgId = null;
     document.getElementById('org-modal-title').textContent = 'Добавить организатора';
     document.getElementById('f-org-name').value = '';
+    document.getElementById('f-org-short-name').value = '';
     document.getElementById('f-org-base-url').value = '';
     document.getElementById('organizer-modal').classList.add('show');
 }
@@ -63,6 +66,7 @@ function openEditOrganizerModal(id) {
     editingOrgId = id;
     document.getElementById('org-modal-title').textContent = 'Редактировать организатора';
     document.getElementById('f-org-name').value = o.name || '';
+    document.getElementById('f-org-short-name').value = o.short_name || '';
     document.getElementById('f-org-base-url').value = o.base_url || '';
     document.getElementById('organizer-modal').classList.add('show');
 }
@@ -76,6 +80,7 @@ async function saveOrganizer() {
     btn.disabled = true;
     const payload = {
         name: document.getElementById('f-org-name').value.trim(),
+        short_name: document.getElementById('f-org-short-name').value.trim(),
         base_url: document.getElementById('f-org-base-url').value.trim(),
     };
     try {
