@@ -104,6 +104,23 @@ class Location(Base):
     )
 
 
+class Session(Base):
+    __tablename__ = 'sessions'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    token      = mapped_column(String(64), unique=True, nullable=False)
+    user_id    = mapped_column(String(), ForeignKey('users.id'), nullable=False)
+    ip_address = mapped_column(String(45), nullable=True)
+    user_agent = mapped_column(String(500), nullable=True)
+    created_at = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at = mapped_column(DateTime, nullable=False)
+
+    __table_args__ = (
+        Index('idx_session_token', 'token'),
+        Index('idx_session_expires', 'expires_at'),
+    )
+
+
 async def async_main():
     try:
         async with engine.begin() as conn:

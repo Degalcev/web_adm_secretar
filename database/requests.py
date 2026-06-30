@@ -1,7 +1,8 @@
+from datetime import datetime
 from loguru import logger
 from sqlalchemy import select
 
-from database.models import async_session, User, Organizer, Location
+from database.models import async_session, User, Organizer, Location, Session
 
 
 async def get_user(user_max_id=None):
@@ -39,3 +40,20 @@ async def get_locations():
 async def get_location_by_id(location_id: str):
     async with async_session() as session:
         return await session.scalar(select(Location).where(Location.id == location_id))
+
+
+async def get_session_by_token(token: str):
+    async with async_session() as session:
+        result = await session.scalar(
+            select(Session).where(
+                Session.token == token,
+                Session.expires_at > datetime.utcnow()
+            )
+        )
+        return result
+
+
+async def get_user_by_id(user_id: str):
+    async with async_session() as session:
+        result = await session.scalar(select(User).where(User.id == user_id))
+        return result
