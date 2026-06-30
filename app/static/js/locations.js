@@ -36,12 +36,17 @@ function renderLocations(items) {
 }
 
 function filterLocations() {
-    const q = document.getElementById('search-loc').value.toLowerCase();
+    const name = (document.getElementById('f-loc-name')?.value || '').toLowerCase();
     const filtered = allLocations.filter(l =>
-        (l.name || '').toLowerCase().includes(q)
+        (l.name || '').toLowerCase().includes(name)
     );
     renderLocations(filtered);
     document.getElementById('stat-shown-loc').textContent = filtered.length;
+}
+
+function resetLocFilters() {
+    document.getElementById('f-loc-name').value = '';
+    filterLocations();
 }
 
 function openAddLocationModal() {
