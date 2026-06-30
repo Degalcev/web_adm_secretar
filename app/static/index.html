@@ -571,9 +571,15 @@
         <div class="modal-section-header">
           <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <span>Документы</span>
+          <label class="event-doc-upload-btn" id="event-doc-upload-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Загрузить
+            <input type="file" id="event-doc-upload" style="display:none" onchange="uploadDocument()">
+          </label>
         </div>
         <div class="modal-section-body">
           <div id="f-event-docs" class="event-docs-list"></div>
+          <div id="f-event-docs-empty" class="event-docs-empty" style="display:none">Нет документов</div>
         </div>
       </div>
     </div>

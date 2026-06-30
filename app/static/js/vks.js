@@ -322,6 +322,83 @@ function closeEventModal() {
     document.getElementById('event-modal').classList.remove('show');
 }
 
+async function uploadDocument() {
+    const fileInput = document.getElementById('event-doc-upload');
+    const file = fileInput.files[0];
+    if (!file || !editingEventId) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/events/${editingEventId}/documents`, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken },
+            body: formData
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            showToast('Документ загружен', 'success');
+            // Обновить список документов в модалке
+            await loadAllEvents();
+            const e = allEvents.find(x => x.id === editingEventId);
+            if (e && e.documents) {
+                const docsGroup = document.getElementById('f-event-docs-group');
+                const docsContainer = document.getElementById('f-event-docs');
+                docsGroup.style.display = 'block';
+                docsContainer.innerHTML = e.documents.map(d => {
+                    const ext = (d.name || '').split('.').pop().toLowerCase();
+                    const icon = getDocIcon(ext);
+                    return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="deleteDocument('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div>`;
+                }).join('');
+            }
+            fileInput.value = '';
+        } else {
+            showToast(data.error || 'Ошибка', 'error');
+        }
+    } catch (e) {
+        showToast('Ошибка сети', 'error');
+    }
+}
+
+async function deleteDocument(docId) {
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/documents/${docId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ csrf_token: csrfToken })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            showToast('Документ удалён', 'success');
+            await loadAllEvents();
+            const e = allEvents.find(x => x.id === editingEventId);
+            if (e && e.documents) {
+                const docsContainer = document.getElementById('f-event-docs');
+                const docsGroup = document.getElementById('f-event-docs-group');
+                if (e.documents.length) {
+                    docsGroup.style.display = 'block';
+                    docsContainer.innerHTML = e.documents.map(d => {
+                        const ext = (d.name || '').split('.').pop().toLowerCase();
+                        const icon = getDocIcon(ext);
+                        return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="deleteDocument('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div>`;
+                    }).join('');
+                } else {
+                    docsGroup.style.display = 'none';
+                    docsContainer.innerHTML = '';
+                }
+            }
+        } else {
+            showToast(data.error || 'Ошибка', 'error');
+        }
+    } catch (e) {
+        showToast('Ошибка сети', 'error');
+    }
+}
+
 async function loadEventSelects() {
     await ensureOrgsAndLocs();
 
