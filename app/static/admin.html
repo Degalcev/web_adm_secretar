@@ -510,10 +510,10 @@
       <h3 id="event-modal-title">Добавить ВКС</h3>
       <button class="modal-close" onclick="closeEventModal()">&times;</button>
     </div>
-    <div class="form-group"><label>Дата</label><input type="date" id="f-event-date"></div>
-    <div class="form-group"><label>Время</label><input type="time" id="f-event-time"></div>
-    <div class="form-group"><label>Организатор</label><select id="f-event-organizer"><option value="">Не указан</option></select></div>
-    <div class="form-group"><label>Локация</label><select id="f-event-location"><option value="">Не указана</option></select></div>
+    <div class="form-group"><label>Дата *</label><input type="date" id="f-event-date" required></div>
+    <div class="form-group"><label>Время *</label><input type="time" id="f-event-time" required></div>
+    <div class="form-group"><label>Организатор *</label><select id="f-event-organizer" required><option value="">Не указан</option></select></div>
+    <div class="form-group"><label>Локация *</label><select id="f-event-location" required><option value="">Не указана</option></select></div>
     <div class="form-group"><label>URL</label><input type="text" id="f-event-url" placeholder="https://meet.example.com/..."></div>
     <div class="form-group"><label>Описание</label><input type="text" id="f-event-desc" placeholder="Описание ВКС"></div>
     <div class="form-group" id="f-event-docs-group" style="display:none">

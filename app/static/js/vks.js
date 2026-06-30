@@ -216,6 +216,9 @@ async function openAddEventModal() {
     await loadEventSelects();
     document.getElementById('f-event-organizer').value = '';
     document.getElementById('f-event-location').value = '';
+    // Очистить документы
+    document.getElementById('f-event-docs-group').style.display = 'none';
+    document.getElementById('f-event-docs').innerHTML = '';
     document.getElementById('event-modal').classList.add('show');
 }
 
@@ -290,13 +293,27 @@ async function saveEvent() {
     const btn = document.getElementById('event-modal-save-btn');
     btn.disabled = true;
 
+    // Валидация обязательных полей
+    const date = document.getElementById('f-event-date').value;
+    const time = document.getElementById('f-event-time').value;
+    const organizer = document.getElementById('f-event-organizer').value;
+    const location = document.getElementById('f-event-location').value;
+
+    if (!date) { showToast('Укажите дату', 'error'); btn.disabled = false; return; }
+    if (!time) { showToast('Укажите время', 'error'); btn.disabled = false; return; }
+    if (!organizer) { showToast('Выберите организатора', 'error'); btn.disabled = false; return; }
+    if (!location) { showToast('Выберите локацию', 'error'); btn.disabled = false; return; }
+
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+
     const payload = {
-        date: document.getElementById('f-event-date').value,
-        time: document.getElementById('f-event-time').value || null,
-        organizer_id: document.getElementById('f-event-organizer').value || null,
-        location_id: document.getElementById('f-event-location').value || null,
+        date: date,
+        time: time,
+        organizer_id: organizer,
+        location_id: location,
         url: document.getElementById('f-event-url').value.trim(),
         description: document.getElementById('f-event-desc').value.trim(),
+        csrf_token: csrfToken,
     };
 
     try {
@@ -329,10 +346,11 @@ async function saveEvent() {
 }
 
 async function completeEvent(id) {
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${id}`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true })
+            body: JSON.stringify({ completed: true, csrf_token: csrfToken })
         });
         const data = await resp.json();
         if (data.ok) {
@@ -356,8 +374,13 @@ function openConfirmEvent(id) {
 
 async function confirmDeleteEvent() {
     if (!deletingEventId) return;
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, { method: 'DELETE' });
+        const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf_token: csrfToken })
+        });
         const data = await resp.json();
         if (data.ok) {
             closeConfirm();
