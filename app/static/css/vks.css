@@ -273,3 +273,48 @@
   background: var(--surface-strong);
   color: var(--accent);
 }
+
+.event-doc-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.event-doc-upload-btn:hover {
+  background: var(--accent-ambient);
+}
+
+.event-docs-empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+}
+
+.event-doc-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.event-doc-delete:hover {
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.1);
+}
