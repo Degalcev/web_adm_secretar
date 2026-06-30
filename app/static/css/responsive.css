@@ -1,9 +1,19 @@
 /* ─── Responsive ────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sidebar { display: none; }
-  .content-area { padding: 16px; }
-  .page-header { flex-direction: column; align-items: stretch; gap: 12px; }
-  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .content-area { padding: 20px; }
+  .page-header { flex-direction: column; align-items: stretch; gap: 16px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 16px; }
+  .stat-value { font-size: 24px; }
   .log-filters-main { flex-direction: column; }
   .log-filter-group, .log-filter-narrow, .log-search-wrap { min-width: 100%; flex: none; }
+  .modal { margin: 12px; padding: 24px; }
+}
+
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stat-card { padding: 14px 12px; }
+  .stat-value { font-size: 22px; }
+  .page-title h1 { font-size: 22px; }
 }

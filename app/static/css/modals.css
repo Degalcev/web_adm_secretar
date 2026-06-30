@@ -2,7 +2,8 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
   display: none;
   align-items: center;
   justify-content: center;
@@ -14,61 +15,74 @@
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   width: 100%;
   max-width: 440px;
-  padding: 28px;
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+  animation: modalIn 0.2s ease;
 }
 
-.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.modal-header h3 { font-size: 17px; font-weight: 700; }
-.modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
-.modal-close:hover { color: var(--text); }
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
 
-.form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.modal-header h3 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.modal-close { background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer; padding: 4px 8px; border-radius: var(--radius-sm); transition: all 0.15s; }
+.modal-close:hover { color: var(--text); background: var(--surface3); }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 10px 13px;
+  padding: 12px 16px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text);
   font-size: 14px;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .form-group input:focus,
-.form-group select:focus { border-color: var(--accent); }
+.form-group select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
 .form-group select option { background: var(--surface); }
 
-.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+.modal-footer { display: flex; gap: 12px; justify-content: flex-end; margin-top: 28px; }
 
 /* ─── Confirm ───────────────────────────────────────────────────────── */
 .confirm-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
   display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px;
 }
 .confirm-overlay.show { display: flex; }
 
 .confirm-box {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-  padding: 28px; max-width: 360px; width: 100%; text-align: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 32px; max-width: 380px; width: 100%; text-align: center;
+  box-shadow: var(--shadow-lg); animation: modalIn 0.2s ease;
 }
-.confirm-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(239,68,68,0.1); color: var(--danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-.confirm-box h3 { font-size: 17px; font-weight: 700; margin-bottom: 10px; }
-.confirm-box p { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+.confirm-icon { width: 60px; height: 60px; border-radius: 50%; background: var(--danger-bg); color: var(--danger); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.confirm-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.confirm-box p { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+.confirm-actions { display: flex; gap: 12px; justify-content: center; }
 
 /* ─── Toast ─────────────────────────────────────────────────────────── */
 .toast {
   position: fixed; bottom: 24px; right: 24px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 12px 18px; font-size: 14px; color: var(--text); z-index: 300;
-  transform: translateY(80px); opacity: 0; transition: all 0.25s ease; pointer-events: none;
+  padding: 14px 20px; font-size: 14px; font-weight: 500; color: var(--text); z-index: 300;
+  transform: translateY(80px); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none; box-shadow: var(--shadow-lg);
 }
 .toast.show { transform: translateY(0); opacity: 1; }
-.toast.success { border-color: var(--success); color: var(--success); }
-.toast.error { border-color: var(--danger); color: var(--danger); }
+.toast.success { border-color: var(--success); color: var(--success); background: var(--surface); }
+.toast.error { border-color: var(--danger); color: var(--danger); background: var(--surface); }
