@@ -2,6 +2,11 @@
 
 let currentPage = 'users';
 
+function toggleGroup(header) {
+    const group = header.parentElement;
+    group.classList.toggle('open');
+}
+
 function switchPage(page) {
     currentPage = page;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
