@@ -58,15 +58,9 @@ function renderVksBoard(boardId, filter) {
         events = events.filter(e => e.completed);
     }
 
-    if (dateVal) {
-        events = events.filter(e => e.date === dateVal);
-    }
-    if (orgVal) {
-        events = events.filter(e => e.organizer_id === orgVal);
-    }
-    if (locVal) {
-        events = events.filter(e => e.location_id === locVal);
-    }
+    if (dateVal) events = events.filter(e => e.date === dateVal);
+    if (orgVal) events = events.filter(e => e.organizer_id === orgVal);
+    if (locVal) events = events.filter(e => e.location_id === locVal);
     if (descVal) {
         events = events.filter(e =>
             (e.description || '').toLowerCase().includes(descVal) ||
@@ -74,82 +68,144 @@ function renderVksBoard(boardId, filter) {
         );
     }
 
-    const grouped = {};
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-
-    events.forEach(e => {
-        const dateKey = e.date || 'Без даты';
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(e);
-    });
-
     if (!events.length) {
         board.innerHTML = '<div class="empty-state">Нет событий</div>';
         return;
     }
 
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const dayAfter = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+
+    // Разделяем на блоки
+    const missed = [];      // Пропущенные (прошедшие, не завершённые)
+    const todayEvents = []; // Сегодня
+    const tomorrowEvents = []; // Завтра
+    const dayAfterEvents = []; // Послезавтра
+    const soon = [];        // Остальные будущие
+
+    events.forEach(e => {
+        if (!e.date) {
+            missed.push(e);
+        } else if (e.date < today) {
+            missed.push(e);
+        } else if (e.date === today) {
+            todayEvents.push(e);
+        } else if (e.date === tomorrow) {
+            tomorrowEvents.push(e);
+        } else if (e.date === dayAfter) {
+            dayAfterEvents.push(e);
+        } else {
+            soon.push(e);
+        }
+    });
+
+    // Сортируем внутри каждого блока по времени
+    const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
+    missed.sort(sortByTime);
+    todayEvents.sort(sortByTime);
+    tomorrowEvents.sort(sortByTime);
+    dayAfterEvents.sort(sortByTime);
+    soon.sort((a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b));
+
     let html = '';
-    const sortedDates = Object.keys(grouped).sort((a, b) => {
-        if (a === 'Без даты') return 1;
-        if (b === 'Без даты') return -1;
-        return filter === 'completed' ? b.localeCompare(a) : a.localeCompare(b);
-    });
 
-    sortedDates.forEach(dateKey => {
-        let label = dateKey;
-        if (dateKey === today) label = 'Сегодня';
-        else if (dateKey === tomorrow) label = 'Завтра';
+    // Блок "Пропущенные"
+    if (missed.length) {
+        html += renderVksBlock('Пропущенные', missed, 'missed');
+    }
 
-        html += `<div class="vks-date-group">`;
-        html += `<div class="vks-date-header">${label} <span class="vks-date-count">${grouped[dateKey].length}</span></div>`;
+    // Блок "Сегодня"
+    if (todayEvents.length) {
+        html += renderVksBlock('Сегодня', todayEvents, 'today');
+    }
 
-        grouped[dateKey].forEach(e => {
-            const time = e.time || '--:--';
-            const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
-            const loc = e.location_id ? getLocationName(e.location_id) : '';
-            const docCount = e.documents ? e.documents.length : 0;
+    // Блок "Завтра"
+    if (tomorrowEvents.length) {
+        html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
+    }
 
-            html += `<div class="vks-card ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
-            html += `<div class="vks-card-left">`;
-            html += `<div class="vks-card-time">${time}</div>`;
-            if (e.completed) {
-                html += `<div class="vks-card-status badge green"><span class="badge-dot"></span>Завершено</div>`;
-            } else {
-                html += `<div class="vks-card-status badge amber"><span class="badge-dot"></span>В работе</div>`;
-            }
-            html += `</div>`;
-            html += `<div class="vks-card-body">`;
-            if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
-            html += `<div class="vks-card-meta">`;
-            if (org) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
-            if (loc) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
-            if (docCount > 0) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount} док.</span>`;
-            html += `</div>`;
-            if (e.url) html += `<a class="vks-card-url" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Открыть ссылку</a>`;
-            if (e.documents && e.documents.length) {
-                html += `<div class="vks-card-docs">`;
-                e.documents.forEach(d => {
-                    const ext = (d.name || '').split('.').pop().toLowerCase();
-                    const icon = getDocIcon(ext);
-                    html += `<div class="vks-doc-item">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
-                });
-                html += `</div>`;
-            }
-            html += `</div>`;
-            html += `<div class="vks-card-actions">`;
-            if (!e.completed) {
-                html += `<button class="btn-icon" onclick="event.stopPropagation();completeEvent('${e.id}')" title="Завершить" style="color:var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
-            }
-            html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
-            html += `</div>`;
-            html += `</div>`;
-        });
+    // Блок "Послезавтра"
+    if (dayAfterEvents.length) {
+        html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
+    }
 
-        html += `</div>`;
-    });
+    // Блок "Скоро"
+    if (soon.length) {
+        html += renderVksBlock('Скоро', soon, 'soon');
+    }
 
     board.innerHTML = html;
+}
+
+function renderVksBlock(title, events, type) {
+    let html = `<div class="vks-date-group vks-block-${type}">`;
+    html += `<div class="vks-date-header">`;
+    if (type === 'missed') {
+        html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+    } else if (type === 'today') {
+        html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    } else if (type === 'tomorrow') {
+        html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    } else if (type === 'day-after') {
+        html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    } else {
+        html += `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+    }
+    html += `${title} <span class="vks-date-count">${events.length}</span>`;
+    html += `</div>`;
+
+    events.forEach(e => {
+        html += renderVksCard(e, type);
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+function renderVksCard(e, blockType) {
+    const time = e.time || '--:--';
+    const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
+    const loc = e.location_id ? getLocationName(e.location_id) : '';
+    const docCount = e.documents ? e.documents.length : 0;
+
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
+    html += `<div class="vks-card-left">`;
+    html += `<div class="vks-card-time">${time}</div>`;
+    if (blockType === 'missed' && !e.completed) {
+        html += `<div class="vks-card-status badge red"><span class="badge-dot"></span>Пропущено</div>`;
+    } else if (e.completed) {
+        html += `<div class="vks-card-status badge green"><span class="badge-dot"></span>Завершено</div>`;
+    } else {
+        html += `<div class="vks-card-status badge amber"><span class="badge-dot"></span>В работе</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="vks-card-body">`;
+    if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
+    html += `<div class="vks-card-meta">`;
+    if (org) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
+    if (loc) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
+    if (docCount > 0) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount} док.</span>`;
+    html += `</div>`;
+    if (e.url) html += `<a class="vks-card-url" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Открыть ссылку</a>`;
+    if (e.documents && e.documents.length) {
+        html += `<div class="vks-card-docs">`;
+        e.documents.forEach(d => {
+            const ext = (d.name || '').split('.').pop().toLowerCase();
+            const icon = getDocIcon(ext);
+            html += `<div class="vks-doc-item">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
+        });
+        html += `</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="vks-card-actions">`;
+    if (!e.completed) {
+        html += `<button class="btn-icon" onclick="event.stopPropagation();completeEvent('${e.id}')" title="Завершить" style="color:var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
+    }
+    html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
+    html += `</div>`;
+    html += `</div>`;
+    return html;
 }
 
 function getOrganizerName(id) {

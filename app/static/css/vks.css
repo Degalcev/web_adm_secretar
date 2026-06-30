@@ -191,6 +191,35 @@
   justify-content: center;
 }
 
+/* ─── VKS Block Styles ─────────────────────────────────────────────── */
+.vks-block-missed .vks-card {
+  border-left: 3px solid var(--danger);
+}
+
+.vks-block-missed .vks-date-header {
+  color: var(--danger);
+}
+
+.vks-block-today .vks-date-header {
+  color: var(--accent);
+}
+
+.vks-block-tomorrow .vks-date-header {
+  color: var(--warning);
+}
+
+.vks-block-day-after .vks-date-header {
+  color: var(--success);
+}
+
+.vks-block-soon .vks-date-header {
+  color: var(--fg-muted);
+}
+
+.vks-missed {
+  opacity: 0.7;
+}
+
 /* ─── Event Docs in Modal ──────────────────────────────────────────── */
 .event-docs-list {
   display: flex;
