@@ -84,3 +84,13 @@ async def get_events_by_date_range(start_date: date, end_date: date):
 async def get_event_by_id(event_id: str):
     async with async_session() as session:
         return await session.scalar(select(Event).where(Event.id == event_id))
+
+
+async def get_documents_by_event_id(event_id: str):
+    async with async_session() as session:
+        from sqlalchemy import text
+        result = await session.execute(
+            text("SELECT id, name, size FROM documents WHERE event_id = :eid"),
+            {'eid': event_id}
+        )
+        return [dict(row) for row in result]

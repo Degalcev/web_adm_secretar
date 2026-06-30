@@ -138,6 +138,11 @@
   transform: translateX(100%);
 }
 
+.nav-group.open > .nav-group-header {
+  background: linear-gradient(90deg, rgba(34, 211, 238, 0.08), rgba(151, 117, 250, 0.05), transparent);
+  color: var(--accent);
+}
+
 .nav-group-header svg {
   width: 18px;
   height: 18px;

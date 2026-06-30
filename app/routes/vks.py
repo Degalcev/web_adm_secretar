@@ -3,7 +3,7 @@ from loguru import logger
 from datetime import date, datetime
 
 from app.auth import admin_required, require_csrf
-from database.requests import get_events, get_event_by_id
+from database.requests import get_events, get_event_by_id, get_documents_by_event_id
 from database.sending import add_event, update_event, delete_event
 
 
@@ -20,6 +20,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
 
         data = []
         for e in events:
+            docs = await get_documents_by_event_id(e.id)
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -31,6 +32,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'description': e.description or '',
                 'completed': e.completed,
                 'notification': e.notification,
+                'documents': docs,
             })
         return web.json_response(data)
     except Exception as e:

@@ -126,6 +126,19 @@
 }
 .vks-card-url:hover { text-decoration: underline; }
 
+.vks-card-docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.vks-card-docs .vks-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .vks-card-actions {
   display: flex;
   gap: 0.375rem;

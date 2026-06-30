@@ -57,11 +57,10 @@
       <div class="nav-group">
         <div class="nav-group-header" onclick="toggleGroup(this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          Мероприятия
+          ВКС
           <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
         <div class="nav-group-items">
-          <a class="nav-item" data-page="vks" onclick="switchPage('vks')">ВКС</a>
           <a class="nav-item" data-page="vks-active" onclick="switchPage('vks-active')">Текущие</a>
           <a class="nav-item" data-page="vks-completed" onclick="switchPage('vks-completed')">Завершённые</a>
         </div>
@@ -256,36 +255,6 @@
 
       <div class="log-container" id="log-container"><div class="empty-state">Выберите дату</div></div>
       <div class="log-footer" id="log-footer"></div>
-    </div>
-
-    <!-- ─── VKS Page ────────────────────────────────────────────────── -->
-    <div class="page" id="page-vks">
-      <div class="page-header">
-        <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-          <h1>ВКС — Все</h1>
-        </div>
-        <div class="page-actions">
-          <button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>
-        </div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-card clickable" onclick="filterVksEvents('')"><div class="stat-label">Всего</div><div class="stat-value" id="stat-total-vks">0</div></div>
-        <div class="stat-card clickable stat-info" onclick="filterVksEvents('active')"><div class="stat-label">Текущие</div><div class="stat-value" id="stat-active-vks">0</div></div>
-        <div class="stat-card clickable stat-success" onclick="filterVksEvents('completed')"><div class="stat-label">Завершённые</div><div class="stat-value" id="stat-completed-vks">0</div></div>
-      </div>
-
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search-vks" placeholder="Поиск по описанию..." oninput="filterVksList()">
-        </div>
-      </div>
-
-      <div class="vks-board" id="vks-board">
-        <div class="empty-state">Загрузка...</div>
-      </div>
     </div>
 
     <!-- ─── VKS Active Page ─────────────────────────────────────────── -->

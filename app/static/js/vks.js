@@ -2,48 +2,47 @@
 
 let allEvents = [];
 let editingEventId = null;
-let currentVksFilter = '';
+let deletingEventId = null;
 
-async function loadEvents() {
-    const board = document.getElementById('vks-board');
-    if (board) board.innerHTML = '<div class="empty-state">Загрузка...</div>';
+async function ensureOrgsAndLocs() {
+    if (!window.allOrganizers || !window.allOrganizers.length) {
+        try {
+            const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
+            if (resp.ok) window.allOrganizers = await resp.json();
+        } catch (e) { window.allOrganizers = []; }
+    }
+    if (!window.allLocations || !window.allLocations.length) {
+        try {
+            const resp = await fetch(`${BASE_URL}/admin/api/locations`);
+            if (resp.ok) window.allLocations = await resp.json();
+        } catch (e) { window.allLocations = []; }
+    }
+}
 
+async function loadAllEvents() {
+    await ensureOrgsAndLocs();
     const resp = await fetch(`${BASE_URL}/admin/api/events`);
     if (resp.status === 401) { showLogin(); return; }
     allEvents = await resp.json();
-    updateVksStats();
-    renderVksBoard('vks-board', '');
 }
 
-async function loadEventsForPage(boardId, filter) {
-    const board = document.getElementById(boardId);
-    if (board) board.innerHTML = '<div class="empty-state">Загрузка...</div>';
-
-    if (!allEvents.length) {
-        const resp = await fetch(`${BASE_URL}/admin/api/events`);
-        if (resp.status === 401) { showLogin(); return; }
-        allEvents = await resp.json();
-    }
-    renderVksBoard(boardId, filter);
+async function loadVksActive() {
+    await loadAllEvents();
+    const board = document.getElementById('vks-board-active');
+    if (board) renderVksBoard('vks-board-active', 'active');
 }
 
-function updateVksStats() {
-    const active = allEvents.filter(e => !e.completed);
-    const completed = allEvents.filter(e => e.completed);
-    const totalEl = document.getElementById('stat-total-vks');
-    const activeEl = document.getElementById('stat-active-vks');
-    const completedEl = document.getElementById('stat-completed-vks');
-    if (totalEl) totalEl.textContent = allEvents.length;
-    if (activeEl) activeEl.textContent = active.length;
-    if (completedEl) completedEl.textContent = completed.length;
+async function loadVksCompleted() {
+    await loadAllEvents();
+    const board = document.getElementById('vks-board-completed');
+    if (board) renderVksBoard('vks-board-completed', 'completed');
 }
 
 function renderVksBoard(boardId, filter) {
     const board = document.getElementById(boardId);
     if (!board) return;
 
-    const searchId = boardId === 'vks-board' ? 'search-vks' :
-                     boardId === 'vks-board-active' ? 'search-vks-active' : 'search-vks-completed';
+    const searchId = boardId === 'vks-board-active' ? 'search-vks-active' : 'search-vks-completed';
     const q = (document.getElementById(searchId)?.value || '').toLowerCase();
 
     let events = [...allEvents];
@@ -96,19 +95,25 @@ function renderVksBoard(boardId, filter) {
             const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
             const loc = e.location_id ? getLocationName(e.location_id) : '';
 
-            html += `<div class="vks-card ${e.completed ? 'completed' : ''}">`;
+            html += `<div class="vks-card ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
             html += `<div class="vks-card-time">${time}</div>`;
             html += `<div class="vks-card-body">`;
             if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
             if (org || loc) html += `<div class="vks-card-meta">${org ? '<span class="vks-tag">' + esc(org) + '</span>' : ''}${loc ? '<span class="vks-tag">' + esc(loc) + '</span>' : ''}</div>`;
-            if (e.url) html += `<a class="vks-card-url" href="${esc(e.url)}" target="_blank">Ссылка</a>`;
+            if (e.url) html += `<a class="vks-card-url" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()">Ссылка</a>`;
+            if (e.documents && e.documents.length) {
+                html += `<div class="vks-card-docs">`;
+                e.documents.forEach(d => {
+                    html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${esc(d.name)}${d.size ? ' (' + formatSize(d.size) + ')' : ''}</span>`;
+                });
+                html += `</div>`;
+            }
             html += `</div>`;
             html += `<div class="vks-card-actions">`;
-            html += `<button class="btn-icon" onclick="openEditEventModal('${e.id}')" title="Изменить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`;
             if (!e.completed) {
-                html += `<button class="btn-icon" onclick="completeEvent('${e.id}')" title="Завершить" style="color:var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
+                html += `<button class="btn-icon" onclick="event.stopPropagation();completeEvent('${e.id}')" title="Завершить" style="color:var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
             }
-            html += `<button class="btn-icon danger" onclick="openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
+            html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
             html += `</div>`;
             html += `</div>`;
         });
@@ -120,26 +125,13 @@ function renderVksBoard(boardId, filter) {
 }
 
 function getOrganizerName(id) {
-    const o = (typeof allOrganizers !== 'undefined') ? allOrganizers.find(x => x.id === id) : null;
+    const o = (window.allOrganizers || []).find(x => x.id === id);
     return o ? o.short_name || o.name : '';
 }
 
 function getLocationName(id) {
-    const l = (typeof allLocations !== 'undefined') ? allLocations.find(x => x.id === id) : null;
+    const l = (window.allLocations || []).find(x => x.id === id);
     return l ? l.name : '';
-}
-
-function filterVksEvents(status) {
-    currentVksFilter = status;
-    document.querySelectorAll('#page-vks .stat-card').forEach(c => c.classList.remove('active'));
-    if (status && event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
-    renderVksBoard('vks-board', status);
-}
-
-function filterVksList() {
-    renderVksBoard('vks-board', currentVksFilter);
 }
 
 function filterVksListActive() {
@@ -185,27 +177,16 @@ function closeEventModal() {
 }
 
 async function loadEventSelects() {
-    if (typeof allOrganizers === 'undefined' || !allOrganizers.length) {
-        try {
-            const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
-            if (resp.ok) window.allOrganizers = await resp.json();
-        } catch (e) { /* ignore */ }
-    }
-    if (typeof allLocations === 'undefined' || !allLocations.length) {
-        try {
-            const resp = await fetch(`${BASE_URL}/admin/api/locations`);
-            if (resp.ok) window.allLocations = await resp.json();
-        } catch (e) { /* ignore */ }
-    }
+    await ensureOrgsAndLocs();
 
     const orgSelect = document.getElementById('f-event-organizer');
     const locSelect = document.getElementById('f-event-location');
 
     orgSelect.innerHTML = '<option value="">Не указан</option>' +
-        (allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+        (window.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
 
     locSelect.innerHTML = '<option value="">Не указана</option>' +
-        (allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+        (window.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
 }
 
 async function saveEvent() {
@@ -235,7 +216,11 @@ async function saveEvent() {
         const data = await resp.json();
         if (data.ok) {
             closeEventModal();
-            await loadEvents();
+            await loadAllEvents();
+            const activeBoard = document.getElementById('vks-board-active');
+            const completedBoard = document.getElementById('vks-board-completed');
+            if (activeBoard) renderVksBoard('vks-board-active', 'active');
+            if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
             showToast(editingEventId ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
@@ -254,7 +239,8 @@ async function completeEvent(id) {
         });
         const data = await resp.json();
         if (data.ok) {
-            await loadEvents();
+            await loadAllEvents();
+            renderVksBoard('vks-board-active', 'active');
             showToast('ВКС завершено', 'success');
         }
     } catch (e) {
@@ -271,14 +257,19 @@ function openConfirmEvent(id) {
     document.getElementById('confirm-overlay').classList.add('show');
 }
 
-let deletingEventId = null;
-
 async function confirmDeleteEvent() {
     if (!deletingEventId) return;
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, { method: 'DELETE' });
         const data = await resp.json();
-        if (data.ok) { closeConfirm(); await loadEvents(); showToast('Удалено', 'success'); }
-        else { showToast(data.error || 'Ошибка', 'error'); }
+        if (data.ok) {
+            closeConfirm();
+            await loadAllEvents();
+            renderVksBoard('vks-board-active', 'active');
+            renderVksBoard('vks-board-completed', 'completed');
+            showToast('Удалено', 'success');
+        } else {
+            showToast(data.error || 'Ошибка', 'error');
+        }
     } catch (e) { showToast('Ошибка сети', 'error'); }
 }
