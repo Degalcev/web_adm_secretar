@@ -15,37 +15,40 @@ from app.routes import (
 
 STATIC_PATH = Path(__file__).parent / 'static'
 
+# Все SPA маршруты
+SPA_PATHS = [
+    '/',
+    '/admin/',
+    '/admin/users/',
+    '/admin/organizers/',
+    '/admin/locations/',
+    '/admin/logs/',
+    '/conferences/',
+    '/conferences/completed/',
+    '/settings/',
+    '/settings/general/',
+]
+
 
 async def start_webapp(host='0.0.0.0', port=8080):
     app = web.Application()
 
-    # Auth routes
-    app.router.add_get('/admin', admin_page)
+    # Auth API routes
     app.router.add_post('/admin/login', admin_login)
     app.router.add_post('/admin/logout', admin_logout)
 
-    # SPA routes - отдают тот же HTML
-    spa_routes = [
-        '/',
-        '/admin/users',
-        '/admin/organizers',
-        '/admin/locations',
-        '/admin/logs',
-        '/conferences',
-        '/conferences/completed',
-        '/settings',
-        '/settings/general',
-    ]
-    for route in spa_routes:
-        app.router.add_get(route, admin_page)
+    # SPA routes - отдают index.html
+    for path in SPA_PATHS:
+        app.router.add_get(path, index_page)
 
-    # Resource routes
+    # Resource API routes
     setup_users_routes(app)
     setup_organizers_routes(app)
     setup_locations_routes(app)
     setup_logs_routes(app)
     setup_vks_routes(app)
 
+    # Статика
     if STATIC_PATH.exists():
         app.router.add_static('/static', path=str(STATIC_PATH), name='static')
         logger.info('Статика: {}', STATIC_PATH)
@@ -60,11 +63,11 @@ async def start_webapp(host='0.0.0.0', port=8080):
     return runner
 
 
-async def admin_page(request: web.Request) -> web.Response:
-    html_path = Path(__file__).parent / 'static' / 'admin.html'
+async def index_page(request: web.Request) -> web.Response:
+    html_path = Path(__file__).parent / 'static' / 'index.html'
     if not html_path.exists():
-        logger.error('Файл admin.html не найден по пути: {}', html_path)
-        return web.Response(text='Admin page not found', status=404)
+        logger.error('Файл index.html не найден по пути: {}', html_path)
+        return web.Response(text='Page not found', status=404)
     return web.Response(
         text=html_path.read_text(encoding='utf-8'),
         content_type='text/html'
