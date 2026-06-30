@@ -46,6 +46,13 @@ database/
 3. Продакшен: `https://bot.dlab.run/admin` (порт 8080)
 4. GitHub: `https://github.com/Degalcev/web_adm_secretar`
 5. При разработке использовать test_db
+6. **ОБЯЗАТЕЛЬНО**: Перед любой задачей читать скилы из `.mimocode/skills/` и при необходимости использовать агентов из `.mimocode/agents/`
+
+## Порядок работы
+1. Получил задачу → читаю `.mimocode/skills/` (подходящий скилл)
+2. Определяю нужен ли агент → `.mimocode/agents/`
+3. Выполняю по паттернам из скила
+4. Если задача сложная — dispatch subagent'а с описанием из агента
 
 ## Скилы и агенты
 См. `.mimocode/skills/` и `.mimocode/agents/`
