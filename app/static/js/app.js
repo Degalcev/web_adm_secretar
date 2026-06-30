@@ -25,6 +25,18 @@ document.getElementById('log-date-select').addEventListener('change', function (
     loadLogContent(true);
 });
 
+// ─── Автообновление при смене дня ──────────────────────────────────
+let _currentDay = new Date().toISOString().split('T')[0];
+
+function _checkDayChange() {
+    const today = new Date().toISOString().split('T')[0];
+    if (today !== _currentDay) {
+        _currentDay = today;
+        if (typeof loadVksActive === 'function') loadVksActive();
+    }
+}
+setInterval(_checkDayChange, 60000);
+
 // Запуск
 initTheme();
 initRouter();

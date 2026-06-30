@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from app.auth import admin_required, require_csrf
 from database.requests import get_events, get_event_by_id, get_documents_by_event_id
-from database.sending import add_event, update_event, delete_event
+from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
 
 @admin_required
@@ -34,28 +34,61 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'notification': e.notification,
                 'documents': docs,
             })
+        logger.debug('Загружено {} событий', len(data))
         return web.json_response(data)
     except Exception as e:
         logger.error('Ошибка получения событий: {}', repr(e))
         return web.json_response([], status=500)
 
 
+async def _parse_event_from_multipart(request: web.Request) -> dict:
+    """Парсит multipart форму: поля события + файлы."""
+    reader = await request.multipart()
+    fields = {}
+    files = []
+
+    while True:
+        part = await reader.next()
+        if part is None:
+            break
+
+        if part.name == 'files':
+            filename = part.filename
+            content = await part.read()
+            files.append({'name': filename, 'size': len(content), 'content': content})
+            logger.debug('Получен файл: {} ({} байт)', filename, len(content))
+        else:
+            value = (await part.read()).decode('utf-8')
+            fields[part.name] = value
+
+    return {'fields': fields, 'files': files}
+
+
 @admin_required
 @require_csrf
 async def create_event_handler(request: web.Request) -> web.Response:
     try:
-        data = await request.json()
+        parsed = await _parse_event_from_multipart(request)
+        fields = parsed['fields']
+        files = parsed['files']
+
         event_id = await add_event(
-            type=data.get('type', 'ВКС'),
-            date=datetime.strptime(data['date'], '%Y-%m-%d').date() if data.get('date') else None,
-            time=datetime.strptime(data['time'], '%H:%M').time() if data.get('time') else None,
-            organizer_id=data.get('organizer_id'),
-            location_id=data.get('location_id'),
-            url=data.get('url', ''),
-            description=data.get('description', ''),
-            completed=data.get('completed', False),
-            notification=data.get('notification', True),
+            type=fields.get('type', 'ВКС'),
+            date=datetime.strptime(fields['date'], '%Y-%m-%d').date() if fields.get('date') else None,
+            time=datetime.strptime(fields['time'], '%H:%M').time() if fields.get('time') else None,
+            organizer_id=fields.get('organizer_id'),
+            location_id=fields.get('location_id'),
+            url=fields.get('url', ''),
+            description=fields.get('description', ''),
+            completed=fields.get('completed', 'false') == 'true',
+            notification=fields.get('notification', 'true') == 'true',
         )
+        logger.info('Событие создано: {}', event_id)
+
+        for f in files:
+            await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
+            logger.info('Документ {} привязан к событию {}', f['name'], event_id)
+
         return web.json_response({'ok': True, 'id': event_id})
     except Exception as e:
         logger.error('Ошибка создания события: {}', repr(e))
@@ -67,16 +100,38 @@ async def create_event_handler(request: web.Request) -> web.Response:
 async def update_event_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
-        data = await request.json()
+        parsed = await _parse_event_from_multipart(request)
+        fields = parsed['fields']
+        files = parsed['files']
+
         update_data = {}
-        if 'date' in data:
-            update_data['date'] = datetime.strptime(data['date'], '%Y-%m-%d').date() if data['date'] else None
-        if 'time' in data:
-            update_data['time'] = datetime.strptime(data['time'], '%H:%M').time() if data['time'] else None
+        if 'date' in fields:
+            update_data['date'] = datetime.strptime(fields['date'], '%Y-%m-%d').date() if fields['date'] else None
+        if 'time' in fields:
+            update_data['time'] = datetime.strptime(fields['time'], '%H:%M').time() if fields['time'] else None
         for field in ['type', 'organizer_id', 'location_id', 'url', 'description', 'completed', 'notification']:
-            if field in data:
-                update_data[field] = data[field]
+            if field in fields:
+                if field in ('completed', 'notification'):
+                    update_data[field] = fields[field] == 'true'
+                else:
+                    update_data[field] = fields[field]
+
         await update_event(event_id=event_id, **update_data)
+        logger.info('Событие обновлено: {}', event_id)
+
+        keep_ids = fields.get('keep_doc_ids', '')
+        keep_list = [x.strip() for x in keep_ids.split(',') if x.strip()] if keep_ids else []
+
+        existing_docs = await get_documents_by_event_id(event_id)
+        for doc in existing_docs:
+            if doc['id'] not in keep_list:
+                await delete_document(doc['id'])
+                logger.info('Документ {} удалён из события {}', doc['id'], event_id)
+
+        for f in files:
+            await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
+            logger.info('Документ {} добавлен в событие {}', f['name'], event_id)
+
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка обновления события: {}', repr(e))
@@ -89,6 +144,7 @@ async def delete_event_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
         await delete_event(event_id)
+        logger.info('Событие удалено: {}', event_id)
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления события: {}', repr(e))

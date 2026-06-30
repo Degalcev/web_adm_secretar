@@ -2,7 +2,7 @@ from datetime import datetime, date
 from loguru import logger
 from sqlalchemy import select, and_
 
-from database.models import async_session, User, Organizer, Location, Session, Event
+from database.models import async_session, User, Organizer, Location, Session, Event, Document
 
 
 async def get_user(user_max_id=None):
@@ -88,20 +88,17 @@ async def get_event_by_id(event_id: str):
 
 async def get_documents_by_event_id(event_id: str):
     async with async_session() as session:
-        from sqlalchemy import text
-        result = await session.execute(
-            text("SELECT id, name, size FROM documents WHERE event_id = :eid"),
-            {'eid': event_id}
+        result = await session.scalars(
+            select(Document.id, Document.name, Document.size).where(Document.event_id == event_id)
         )
         return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]
 
 
 async def get_document_by_id(doc_id: str):
     async with async_session() as session:
-        from sqlalchemy import text
         result = await session.execute(
-            text("SELECT id, name, size, file_path, content FROM documents WHERE id = :did"),
-            {'did': doc_id}
+            select(Document.id, Document.name, Document.size, Document.file_path, Document.content)
+            .where(Document.id == doc_id)
         )
         row = result.first()
         if row:

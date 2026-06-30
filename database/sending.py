@@ -5,7 +5,7 @@ from loguru import logger
 from sqlalchemy import update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location, Session, Event
+from database.models import async_session, User, Organizer, Location, Session, Event, Document
 
 
 async def add_user(**kwargs) -> str:
@@ -246,13 +246,10 @@ async def delete_event(event_id: str):
 
 async def add_document(event_id: str, name: str, size: int, content: bytes) -> str:
     new_id = str(uuid.uuid4())
-    from sqlalchemy import text
+    new_doc = Document(id=new_id, event_id=event_id, name=name, size=size, content=content)
     async with async_session() as session:
         try:
-            await session.execute(
-                text("INSERT INTO documents (id, event_id, name, size, content) VALUES (:id, :eid, :name, :size, :content)"),
-                {'id': new_id, 'eid': event_id, 'name': name, 'size': size, 'content': content}
-            )
+            session.add(new_doc)
             await session.commit()
             logger.info('Документ {} добавлен', name)
             return new_id
@@ -263,12 +260,10 @@ async def add_document(event_id: str, name: str, size: int, content: bytes) -> s
 
 
 async def delete_document(doc_id: str):
-    from sqlalchemy import text
     async with async_session() as session:
         try:
             await session.execute(
-                text("DELETE FROM documents WHERE id = :did"),
-                {'did': doc_id}
+                sql_delete(Document).where(Document.id == doc_id)
             )
             await session.commit()
             logger.info('Документ {} удалён', doc_id)
