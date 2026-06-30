@@ -53,6 +53,24 @@ async def update_organizer_handler(request: web.Request) -> web.Response:
 
 @admin_required
 @require_csrf
+async def update_organizer_handler(request: web.Request) -> web.Response:
+    try:
+        item_id = request.match_info['id']
+        data = await request.json()
+        await update_organizer(
+            organizer_id=item_id,
+            name=data.get('name'),
+            short_name=data.get('short_name'),
+            base_url=data.get('base_url'),
+        )
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка обновления организатора: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@admin_required
+@require_csrf
 async def delete_organizer_handler(request: web.Request) -> web.Response:
     try:
         item_id = request.match_info['id']

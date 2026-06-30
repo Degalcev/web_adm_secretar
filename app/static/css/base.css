@@ -1,22 +1,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:        #0a0a0f;
-  --surface:   #12121a;
-  --surface2:  #1a1a25;
-  --surface3:  #22222f;
-  --border:    #2a2a3a;
-  --border-h:  #3a3a4a;
-  --accent:    #6366f1;
-  --accent-l:  #818cf8;
-  --accent-bg: rgba(99,102,241,0.12);
+  --bg:        #0f172a;
+  --surface:   #1e293b;
+  --surface2:  #273548;
+  --surface3:  #334155;
+  --border:    #334155;
+  --border-h:  #475569;
+  --accent:    #06b6d4;
+  --accent-l:  #22d3ee;
+  --accent-bg: rgba(6,182,212,0.12);
   --danger:    #ef4444;
   --danger-bg: rgba(239,68,68,0.12);
   --success:   #22c55e;
   --success-bg:rgba(34,197,94,0.12);
   --warning:   #f59e0b;
   --warning-bg:rgba(245,158,11,0.12);
-  --text:      #f1f5f9;
+  --text:      #e2e8f0;
   --text2:     #94a3b8;
   --muted:     #64748b;
   --radius:    10px;
