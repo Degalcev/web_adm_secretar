@@ -10,7 +10,7 @@
 - **База данных**: PostgreSQL (asyncpg) + SQLAlchemy async
 - **Авторизация**: argon2-cffi, сессии в PostgreSQL
 - **Логирование**: loguru
-- **Frontend**: Vanilla JS/CSS (модульная структура)
+- **Frontend**: Vanilla JS/CSS (модульная структура, стиль SharX Panel)
 - **Деплой**: paramiko SSH к VPS
 
 ## Архитектура
@@ -24,21 +24,42 @@ app/
 │   ├── organizers.py    # CRUD организаторов
 │   ├── locations.py     # CRUD локаций
 │   ├── logs.py          # Просмотр логов
-│   └── vks.py           # CRUD событий ВКС
+│   └── vks.py           # CRUD событий ВКС + документы
 └── static/
     ├── admin.html
-    ├── css/ (base, layout, components, tables, modals, logs, vks, responsive)
-    └── js/ (utils, auth, navigation, users, organizers, locations, logs, vks, app)
+    ├── css/ (base, layout, components, tables, modals, logs, vks, settings, responsive)
+    └── js/ (utils, auth, navigation, users, organizers, locations, logs, vks, settings, app)
 
 database/
 ├── models.py            # User, Organizer, Location, Session, Event
 ├── requests.py          # Запросы (чтение)
 └── sending.py           # Операции (запись)
+
+deploy/
+├── deploy.py            # Скрипт деплоя (test/prod)
+├── .env.test            # Конфиг тестовой среды
+├── .env.prod            # Конфиг продакшена
+├── nginx/               # Конфиги nginx
+└── systemd/             # Systemd сервисы
 ```
 
 ## Базы данных
 - **vks_db** — продакшен (бот + админка)
-- **test_db** — тестовая (разработка, структура = vks_db)
+- **test_db** — тестовая (разработка, UTF8, структура = vks_db)
+
+## Ссылки
+- Тест: `http://45.90.217.225/admin` (nginx → порт 8082)
+- Продакшен: `https://bot.dlab.run/admin` (nginx → порт 8080)
+- GitHub: `https://github.com/Degalcev/web_adm_secretar`
+
+## Меню sidebar
+- **ВКС** (раскрывающееся) → Текущие, Завершённые
+- **Администрирование** (раскрывающееся) → Пользователи, Организаторы, Локации, Логи
+- **Настройки** (раскрывающееся) → Общие (выбор темы)
+- Кнопка "Выйти" внизу навигации
+
+## Темы (8 штук из sharx-themes-demo)
+default, midnight, ember, boreal, web, xuiClassic, starWars, vision
 
 ## Правила проекта
 1. Деплой через paramiko SSH на VPS
