@@ -121,7 +121,33 @@ class Session(Base):
     )
 
 
-async def async_main():
+class Event(Base):
+    __tablename__ = 'events'
+
+    id             = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    type           = mapped_column(String(20), default='ВКС')
+    date           = mapped_column(Date(), nullable=False)
+    time           = mapped_column(Time(), nullable=True)
+    organizer_id   = mapped_column(String(), ForeignKey('organizers.id'), nullable=True)
+    location_id    = mapped_column(String(), ForeignKey('locations.id'), nullable=True)
+    url            = mapped_column(String(), nullable=True)
+    description    = mapped_column(String(), nullable=True)
+    completed      = mapped_column(Boolean(), default=False)
+    doc_id         = mapped_column(String(), nullable=True)
+    notification   = mapped_column(Boolean(), default=True)
+    updated_at     = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    locked_by      = mapped_column(Integer(), nullable=True)
+    locked_at      = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index('idx_event_date', 'date'),
+        Index('idx_event_date_time', 'date', 'time'),
+        Index('idx_event_organizer_id', 'organizer_id'),
+        Index('idx_event_location_id', 'location_id'),
+    )
+
+
+async def   async_main():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)

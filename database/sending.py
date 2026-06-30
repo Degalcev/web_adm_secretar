@@ -5,7 +5,7 @@ from loguru import logger
 from sqlalchemy import update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location, Session
+from database.models import async_session, User, Organizer, Location, Session, Event
 
 
 async def add_user(**kwargs) -> str:
@@ -191,4 +191,52 @@ async def cleanup_expired_sessions():
         except Exception as e:
             await session.rollback()
             logger.error('Ошибка очистки сессий: {}', repr(e))
+            raise
+
+
+# ─── Events (ВКС) ─────────────────────────────────────────────────────
+
+async def add_event(**kwargs) -> str:
+    new_id = str(uuid.uuid4())
+    kwargs.setdefault('type', 'ВКС')
+    kwargs.setdefault('completed', False)
+    kwargs.setdefault('notification', True)
+    new_event = Event(id=new_id, **kwargs)
+    async with async_session() as session:
+        try:
+            session.add(new_event)
+            await session.commit()
+            logger.info('Событие {} добавлено', new_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления события: {}', repr(e))
+            raise
+
+
+async def update_event(event_id: str, **kwargs):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                update(Event).where(Event.id == event_id).values(**kwargs)
+            )
+            await session.commit()
+            logger.info('Событие {} обновлено', event_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка обновления события: {}', repr(e))
+            raise
+
+
+async def delete_event(event_id: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Event).where(Event.id == event_id)
+            )
+            await session.commit()
+            logger.info('Событие {} удалено', event_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления события: {}', repr(e))
             raise

@@ -153,9 +153,11 @@ function closeConfirm() {
     deletingId = null;
     deletingOrgId = null;
     deletingLocId = null;
+    deletingEventId = null;
 }
 
 async function confirmDelete() {
+    if (deletingEventId) { await confirmDeleteEvent(); return; }
     if (deletingOrgId) { await confirmDeleteOrg(); return; }
     if (deletingLocId) { await confirmDeleteLoc(); return; }
     if (!deletingId) return;
