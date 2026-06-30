@@ -176,8 +176,10 @@ function renderVksCard(e, blockType) {
     if (date) {
         const d = new Date(date);
         const day = d.getDate();
-        const month = d.toLocaleDateString('ru-RU', { month: 'short' });
-        html += `<div class="vks-card-date">${day} ${month}</div>`;
+        const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+        const month = monthNames[d.getMonth()];
+        const year = d.getFullYear();
+        html += `<div class="vks-card-date">${day} ${month} ${year}</div>`;
     }
     if (blockType === 'missed' && !e.completed) {
         html += `<div class="vks-card-status badge red"><span class="badge-dot"></span>Пропущено</div>`;
