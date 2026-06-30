@@ -94,3 +94,16 @@ async def get_documents_by_event_id(event_id: str):
             {'eid': event_id}
         )
         return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]
+
+
+async def get_document_by_id(doc_id: str):
+    async with async_session() as session:
+        from sqlalchemy import text
+        result = await session.execute(
+            text("SELECT id, name, size, file_path, content FROM documents WHERE id = :did"),
+            {'did': doc_id}
+        )
+        row = result.first()
+        if row:
+            return {'id': row[0], 'name': row[1], 'size': row[2], 'file_path': row[3], 'content': row[4]}
+        return None
