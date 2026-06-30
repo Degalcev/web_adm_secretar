@@ -4,7 +4,17 @@ let currentPage = 'users';
 
 function toggleGroup(header) {
     const group = header.parentElement;
+    const wasOpen = group.classList.contains('open');
     group.classList.toggle('open');
+
+    // Если группа открылась и нет активного элемента — активировать первый
+    if (!wasOpen && group.classList.contains('open')) {
+        const firstItem = group.querySelector('.nav-item:not(.active)');
+        if (firstItem) {
+            const page = firstItem.dataset.page;
+            if (page) switchPage(page);
+        }
+    }
 }
 
 function switchPage(page) {
