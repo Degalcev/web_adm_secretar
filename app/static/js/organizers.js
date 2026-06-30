@@ -38,14 +38,24 @@ function renderOrganizers(items) {
 }
 
 function filterOrganizers() {
-    const q = document.getElementById('search-org').value.toLowerCase();
+    const name = (document.getElementById('f-org-name')?.value || '').toLowerCase();
+    const short = (document.getElementById('f-org-short')?.value || '').toLowerCase();
+    const url = (document.getElementById('f-org-url')?.value || '').toLowerCase();
+
     const filtered = allOrganizers.filter(o =>
-        (o.name || '').toLowerCase().includes(q) ||
-        (o.short_name || '').toLowerCase().includes(q) ||
-        (o.base_url || '').toLowerCase().includes(q)
+        (o.name || '').toLowerCase().includes(name) &&
+        (o.short_name || '').toLowerCase().includes(short) &&
+        (o.base_url || '').toLowerCase().includes(url)
     );
     renderOrganizers(filtered);
     document.getElementById('stat-shown-org').textContent = filtered.length;
+}
+
+function resetOrgFilters() {
+    document.getElementById('f-org-name').value = '';
+    document.getElementById('f-org-short').value = '';
+    document.getElementById('f-org-url').value = '';
+    filterOrganizers();
 }
 
 function openAddOrganizerModal() {

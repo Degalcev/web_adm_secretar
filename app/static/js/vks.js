@@ -28,12 +28,14 @@ async function loadAllEvents() {
 
 async function loadVksActive() {
     await loadAllEvents();
+    populateVksFilters();
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
 }
 
 async function loadVksCompleted() {
     await loadAllEvents();
+    populateVksFilters();
     const board = document.getElementById('vks-board-completed');
     if (board) renderVksBoard('vks-board-completed', 'completed');
 }
@@ -42,8 +44,11 @@ function renderVksBoard(boardId, filter) {
     const board = document.getElementById(boardId);
     if (!board) return;
 
-    const searchId = boardId === 'vks-board-active' ? 'search-vks-active' : 'search-vks-completed';
-    const q = (document.getElementById(searchId)?.value || '').toLowerCase();
+    const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
+    const dateVal = document.getElementById(`${prefix}-date`)?.value || '';
+    const orgVal = document.getElementById(`${prefix}-org`)?.value || '';
+    const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
+    const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
 
     let events = [...allEvents];
 
@@ -53,10 +58,19 @@ function renderVksBoard(boardId, filter) {
         events = events.filter(e => e.completed);
     }
 
-    if (q) {
+    if (dateVal) {
+        events = events.filter(e => e.date === dateVal);
+    }
+    if (orgVal) {
+        events = events.filter(e => e.organizer_id === orgVal);
+    }
+    if (locVal) {
+        events = events.filter(e => e.location_id === locVal);
+    }
+    if (descVal) {
         events = events.filter(e =>
-            (e.description || '').toLowerCase().includes(q) ||
-            (e.url || '').toLowerCase().includes(q)
+            (e.description || '').toLowerCase().includes(descVal) ||
+            (e.url || '').toLowerCase().includes(descVal)
         );
     }
 
@@ -174,6 +188,22 @@ function filterVksListCompleted() {
     renderVksBoard('vks-board-completed', 'completed');
 }
 
+function resetVksActiveFilters() {
+    document.getElementById('f-vks-active-date').value = '';
+    document.getElementById('f-vks-active-org').value = '';
+    document.getElementById('f-vks-active-loc').value = '';
+    document.getElementById('f-vks-active-desc').value = '';
+    filterVksListActive();
+}
+
+function resetVksCompletedFilters() {
+    document.getElementById('f-vks-completed-date').value = '';
+    document.getElementById('f-vks-completed-org').value = '';
+    document.getElementById('f-vks-completed-loc').value = '';
+    document.getElementById('f-vks-completed-desc').value = '';
+    filterVksListCompleted();
+}
+
 // ─── Модалка события ──────────────────────────────────────────────────
 
 async function openAddEventModal() {
@@ -235,6 +265,25 @@ async function loadEventSelects() {
 
     locSelect.innerHTML = '<option value="">Не указана</option>' +
         (window.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+
+    // Заполнить фильтры VKS
+    populateVksFilters();
+}
+
+function populateVksFilters() {
+    const orgOptions = '<option value="">Все</option>' +
+        (window.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+    const locOptions = '<option value="">Все</option>' +
+        (window.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+
+    ['f-vks-active-org', 'f-vks-completed-org'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = orgOptions;
+    });
+    ['f-vks-active-loc', 'f-vks-completed-loc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = locOptions;
+    });
 }
 
 async function saveEvent() {

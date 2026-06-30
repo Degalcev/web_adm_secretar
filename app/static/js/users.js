@@ -48,14 +48,27 @@ function renderUsers(users) {
 }
 
 function filterUsers() {
-    const q = document.getElementById('search').value.toLowerCase();
+    const name = (document.getElementById('f-user-name')?.value || '').toLowerCase();
+    const tg = (document.getElementById('f-user-tg')?.value || '').toLowerCase();
+    const max = (document.getElementById('f-user-max')?.value || '').toLowerCase();
+    const status = document.getElementById('f-user-status')?.value || '';
+
     const filtered = allUsers.filter(u =>
-        (u.name || '').toLowerCase().includes(q) ||
-        String(u.tg_id || '').includes(q) ||
-        String(u.max_id || '').includes(q)
+        (u.name || '').toLowerCase().includes(name) &&
+        String(u.tg_id || '').includes(tg) &&
+        String(u.max_id || '').includes(max) &&
+        (!status || u.status === status)
     );
     renderUsers(filtered);
     document.getElementById('stat-shown').textContent = filtered.length;
+}
+
+function resetUserFilters() {
+    document.getElementById('f-user-name').value = '';
+    document.getElementById('f-user-tg').value = '';
+    document.getElementById('f-user-max').value = '';
+    document.getElementById('f-user-status').value = '';
+    filterUsers();
 }
 
 // ─── Модалка пользователя ────────────────────────────────────────────

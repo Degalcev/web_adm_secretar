@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="/static/css/responsive.css">
 <link rel="stylesheet" href="/static/css/vks.css">
 <link rel="stylesheet" href="/static/css/settings.css">
+<link rel="stylesheet" href="/static/css/filters.css">
 <script src="https://st.max.ru/js/max-web-app.js"></script>
 </head>
 <body>
@@ -133,10 +134,29 @@
         </div>
       </div>
 
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search" placeholder="Поиск по имени или ID..." oninput="filterUsers()">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Имя</span>
+          <input class="filter-input" id="f-user-name" placeholder="Фильтр по имени..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Telegram ID</span>
+          <input class="filter-input" id="f-user-tg" placeholder="Содержит..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">MAX ID</span>
+          <input class="filter-input" id="f-user-max" placeholder="Содержит..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Статус</span>
+          <select class="filter-select" id="f-user-status" onchange="filterUsers()">
+            <option value="">Все</option>
+            <option value="admin">Администратор</option>
+            <option value="user">Пользователь</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetUserFilters()">Сбросить</button>
         </div>
       </div>
 
@@ -167,10 +187,21 @@
         <div class="stat-card"><div class="stat-label">Всего организаторов</div><div class="stat-value" id="stat-total-org">0</div></div>
         <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-org">0</div></div>
       </div>
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search-org" placeholder="Поиск по названию..." oninput="filterOrganizers()">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Название</span>
+          <input class="filter-input" id="f-org-name" placeholder="Фильтр по названию..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Короткое имя</span>
+          <input class="filter-input" id="f-org-short" placeholder="Содержит..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">URL</span>
+          <input class="filter-input" id="f-org-url" placeholder="Содержит..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetOrgFilters()">Сбросить</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -196,10 +227,13 @@
         <div class="stat-card"><div class="stat-label">Всего локаций</div><div class="stat-value" id="stat-total-loc">0</div></div>
         <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-loc">0</div></div>
       </div>
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search-loc" placeholder="Поиск по названию..." oninput="filterLocations()">
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Название</span>
+          <input class="filter-input" id="f-loc-name" placeholder="Фильтр по названию..." oninput="filterLocations()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetLocFilters()">Сбросить</button>
         </div>
       </div>
       <div class="table-wrap">
@@ -279,10 +313,25 @@
         </div>
       </div>
 
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search-vks-active" placeholder="Поиск по описанию..." oninput="filterVksListActive()">
+      <div class="filter-bar">
+        <div class="filter-group narrow">
+          <span class="filter-label">Дата</span>
+          <input type="date" class="filter-input" id="f-vks-active-date" onchange="filterVksListActive()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Организатор</span>
+          <select class="filter-select" id="f-vks-active-org" onchange="filterVksListActive()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Локация</span>
+          <select class="filter-select" id="f-vks-active-loc" onchange="filterVksListActive()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">Описание</span>
+          <input class="filter-input" id="f-vks-active-desc" placeholder="Содержит..." oninput="filterVksListActive()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetVksActiveFilters()">Сбросить</button>
         </div>
       </div>
 
@@ -300,10 +349,25 @@
         </div>
       </div>
 
-      <div class="table-toolbar">
-        <div class="search-wrap">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="search-input" id="search-vks-completed" placeholder="Поиск по описанию..." oninput="filterVksListCompleted()">
+      <div class="filter-bar">
+        <div class="filter-group narrow">
+          <span class="filter-label">Дата</span>
+          <input type="date" class="filter-input" id="f-vks-completed-date" onchange="filterVksListCompleted()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Организатор</span>
+          <select class="filter-select" id="f-vks-completed-org" onchange="filterVksListCompleted()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Локация</span>
+          <select class="filter-select" id="f-vks-completed-loc" onchange="filterVksListCompleted()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">Описание</span>
+          <input class="filter-input" id="f-vks-completed-desc" placeholder="Содержит..." oninput="filterVksListCompleted()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetVksCompletedFilters()">Сбросить</button>
         </div>
       </div>
 
