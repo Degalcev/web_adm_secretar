@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d1117">
+  <title>SharX Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Montserrat:wght@100..900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --font-sans: 'Montserrat', system-ui, sans-serif;
+      --font-heading: 'Unbounded', system-ui, sans-serif;
+      --font-mono: 'Fira Mono', ui-monospace, monospace;
+
+      --bg: #0d1117;
+      --bg-elevated: #1c2128;
+      --surface: rgba(36, 44, 56, 0.55);
+      --surface-strong: rgba(36, 44, 56, 0.85);
+      --border: rgba(139, 148, 158, 0.15);
+      --border-strong: rgba(34, 211, 238, 0.25);
+      --fg: #c9d1d9;
+      --fg-muted: #8b949e;
+      --fg-subtle: rgba(201, 209, 217, 0.55);
+      --code-bg: rgba(36, 44, 56, 0.9);
+      --accent: #22d3ee;
+      --accent-ambient: #9775fa;
+      --section-gap: 2rem;
+      --motion-fast: 0.15s;
+      --motion-base: 0.22s;
+      --motion-slow: 0.42s;
+      --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      min-height: 100vh;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 60;
+    }
+
+    .sidebar-brand {
+      padding: 0 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sidebar-brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-ambient));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.875rem;
+      color: #fff;
+    }
+
+    .sidebar-brand-text {
+      font-family: var(--font-heading);
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+      padding: 0 0.75rem;
+    }
+
+    .sidebar-section {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-subtle);
+      padding: 1rem 0.75rem 0.5rem;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-md);
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all var(--motion-fast) var(--ease-standard);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-link::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.08), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s var(--ease-standard);
+    }
+
+    .sidebar-link:hover {
+      background: var(--surface-strong);
+      color: var(--fg);
+      transform: translateX(3px);
+    }
+
+    .sidebar-link:hover::before {
+      transform: translateX(100%);
+    }
+
+    .sidebar-link.active::before {
+      display: none;
+    }
+
+    .sidebar-link.active {
+      background: linear-gradient(90deg, rgba(34, 211, 238, 0.12), rgba(151, 117, 250, 0.08), transparent);
+      color: var(--accent);
+      border-left: 2px solid var(--accent);
+    }
+
+    .sidebar-link svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .sidebar-link.active svg {
+      opacity: 1;
+    }
+
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sidebar-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-ambient));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .sidebar-user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sidebar-user-name {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-user-role {
+      font-size: 0.6875rem;
+      color: var(--fg-subtle);
+    }
+
+    /* ── Main content ── */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      height: 64px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      gap: 1rem;
+      background: rgba(13, 17, 23, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .topbar-spacer {
+      flex: 1;
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0.5rem 1rem;
+      width: 280px;
+      transition: border-color var(--motion-fast) var(--ease-standard);
+    }
+
+    .topbar-search:focus-within {
+      border-color: var(--accent);
+    }
+
+    .topbar-search svg {
+      width: 16px;
+      height: 16px;
+      color: var(--fg-subtle);
+      flex-shrink: 0;
+    }
+
+    .topbar-search input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+
+    .topbar-search input::placeholder {
+      color: var(--fg-subtle);
+    }
+
+    .topbar-search kbd {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      color: var(--fg-subtle);
+      background: var(--surface-strong);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .topbar-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--motion-fast) var(--ease-standard);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topbar-icon-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.1), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s var(--ease-standard);
+    }
+
+    .topbar-icon-btn:hover {
+      background: var(--surface-strong);
+      color: var(--fg);
+      border-color: var(--border-strong);
+      transform: translateX(2px);
+    }
+
+    .topbar-icon-btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .topbar-icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ── Content ── */
+    .content {
+      padding: 2rem;
+      flex: 1;
+    }
+
+    .content-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .content-header h1 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .content-header p {
+      font-size: 0.875rem;
+      color: var(--fg-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: var(--section-gap);
+    }
+
+    .stat-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      transition: all var(--motion-fast) var(--ease-standard);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.06), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s var(--ease-standard);
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-strong);
+      transform: translateX(3px);
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(100%);
+    }
+
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-card-label {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+
+    .stat-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-card-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .stat-card-icon.purple {
+      background: rgba(133, 119, 242, 0.12);
+      color: var(--accent);
+    }
+
+    .stat-card-icon.cyan {
+      background: rgba(34, 211, 238, 0.12);
+      color: #22d3ee;
+    }
+
+    .stat-card-icon.green {
+      background: rgba(74, 222, 128, 0.12);
+      color: #4ade80;
+    }
+
+    .stat-card-icon.amber {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fbbf24;
+    }
+
+    .stat-card-value {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      line-height: 1.2;
+    }
+
+    .stat-card-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 0.5rem;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+    }
+
+    .stat-card-change.up {
+      background: rgba(74, 222, 128, 0.1);
+      color: #4ade80;
+    }
+
+    .stat-card-change.down {
+      background: rgba(248, 113, 113, 0.1);
+      color: #f87171;
+    }
+
+    /* ── Panels grid ── */
+    .panels-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      margin-bottom: var(--section-gap);
+    }
+
+    .panel {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .panel-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .panel-btn {
+      font-family: var(--font-sans);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.375rem 0.75rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all var(--motion-fast) var(--ease-standard);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.12), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s var(--ease-standard);
+    }
+
+    .panel-btn:hover {
+      background: var(--surface-strong);
+      color: var(--fg);
+      transform: translateX(2px);
+      border-color: var(--border-strong);
+    }
+
+    .panel-btn:hover::before {
+      transform: translateX(100%);
+    }
+
+    .panel-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .panel-btn.primary::before {
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+    }
+
+    .panel-btn.primary:hover {
+      background: var(--accent-ambient);
+      border-color: var(--accent-ambient);
+      transform: translateX(2px);
+    }
+
+    .panel-btn.primary:hover::before {
+      transform: translateX(100%);
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.875rem 1.25rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid #e5e7eb;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    thead th.sortable {
+      cursor: pointer;
+      transition: color var(--motion-fast) var(--ease-standard);
+    }
+
+    thead th.sortable:hover {
+      color: var(--fg);
+    }
+
+    .th-sort-icon {
+      display: inline-block;
+      margin-left: 0.35rem;
+      font-size: 0.625rem;
+      opacity: 0.5;
+      vertical-align: middle;
+    }
+
+    thead th.sortable:hover .th-sort-icon {
+      opacity: 1;
+    }
+
+    tbody td {
+      padding: 0.875rem 1.25rem;
+      font-size: 0.8125rem;
+      color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr {
+      transition: background var(--motion-fast) var(--ease-standard);
+    }
+
+    tbody tr:hover {
+      background: #f9fafb;
+    }
+
+    .table-name {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .table-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .table-name-text {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .table-name-sub {
+      font-size: 0.6875rem;
+      color: #9ca3af;
+    }
+
+    /* ── Status cell (dot + text + subtext) ── */
+    .status-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-dot.online { background: #22c55e; }
+    .status-dot.offline { background: #ef4444; }
+    .status-dot.depleting { background: #f59e0b; }
+
+    .status-text {
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .status-text.online { color: #16a34a; }
+    .status-text.offline { color: #dc2626; }
+    .status-text.depleting { color: #d97706; }
+
+    .status-sub {
+      font-size: 0.6875rem;
+      color: #9ca3af;
+      padding-left: 0.65rem;
+    }
+
+    /* ── Badge / Pill ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .badge.green {
+      background: rgba(74, 222, 128, 0.12);
+      color: #16a34a;
+    }
+
+    .badge.green .badge-dot { background: #22c55e; }
+
+    .badge.amber {
+      background: rgba(251, 191, 36, 0.12);
+      color: #d97706;
+    }
+
+    .badge.amber .badge-dot { background: #f59e0b; }
+
+    .badge.red {
+      background: rgba(248, 113, 113, 0.12);
+      color: #dc2626;
+    }
+
+    .badge.red .badge-dot { background: #ef4444; }
+
+    .badge.purple {
+      background: rgba(133, 119, 242, 0.12);
+      color: #7c3aed;
+    }
+
+    .badge.purple .badge-dot { background: #8b5cf6; }
+
+    .badge.blue {
+      background: rgba(59, 130, 246, 0.12);
+      color: #2563eb;
+    }
+
+    .badge.blue .badge-dot { background: #3b82f6; }
+
+    /* ── Muted text helper ── */
+    .text-muted { color: #9ca3af; }
+    .text-dash { color: #d1d5db; }
+
+    /* ── Activity list ── */
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--motion-fast) var(--ease-standard);
+    }
+
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+
+    .activity-item:hover {
+      background: var(--surface);
+    }
+
+    .activity-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-top: 0.375rem;
+      flex-shrink: 0;
+    }
+
+    .activity-dot.purple { background: var(--accent); }
+    .activity-dot.cyan { background: #22d3ee; }
+    .activity-dot.green { background: #4ade80; }
+    .activity-dot.amber { background: #fbbf24; }
+
+    .activity-text {
+      font-size: 0.8125rem;
+      color: var(--fg);
+      line-height: 1.4;
+    }
+
+    .activity-text strong {
+      font-weight: 600;
+    }
+
+    .activity-time {
+      font-size: 0.6875rem;
+      color: var(--fg-subtle);
+      margin-top: 0.125rem;
+    }
+
+    /* ── Chart placeholder ── */
+    .chart-placeholder {
+      padding: 1.25rem;
+      height: 200px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      border-radius: 4px 4px 0 0;
+      background: var(--accent);
+      opacity: 0.6;
+      transition: opacity var(--motion-fast) var(--ease-standard);
+      min-height: 8px;
+    }
+
+    .chart-bar:hover {
+      opacity: 1;
+    }
+
+    .chart-bar:nth-child(odd) {
+      background: var(--accent-ambient);
+    }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--fg-subtle);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .panels-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        margin-left: 0;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">SX</div>
+      <div class="sidebar-brand-text">SharX</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">Основные</div>
+      <a class="sidebar-link active" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Дашборд
+      </a>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Пользователи
+      </a>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Проекты
+      </a>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Документы
+      </a>
+
+      <div class="sidebar-section">Аналитика</div>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></svg>
+        Статистика
+      </a>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Логи
+      </a>
+
+      <div class="sidebar-section">Система</div>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Настройки
+      </a>
+      <a class="sidebar-link" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+        Выход
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">AD</div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name">Admin</div>
+          <div class="sidebar-user-role">Администратор</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <span class="topbar-title">Панель управления</span>
+      <span class="topbar-spacer"></span>
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+        <input type="text" placeholder="Поиск...">
+        <kbd>Ctrl K</kbd>
+      </div>
+      <button class="topbar-icon-btn" title="Уведомления">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </button>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <div class="content-header">
+        <h1>Обзор</h1>
+        <p>Добро пожаловать обратно. Вот что происходит сегодня.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Всего пользователей</span>
+            <div class="stat-card-icon purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value">12 847</div>
+          <div class="stat-card-change up">+12.5%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Активные сессии</span>
+            <div class="stat-card-icon cyan">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value">1 429</div>
+          <div class="stat-card-change up">+8.2%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Запросы в час</span>
+            <div class="stat-card-icon green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value">84.3K</div>
+          <div class="stat-card-change down">-3.1%</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <span class="stat-card-label">Время отклика</span>
+            <div class="stat-card-icon amber">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value">42ms</div>
+          <div class="stat-card-change up">+18.7%</div>
+        </div>
+      </div>
+
+      <!-- Panels row -->
+      <div class="panels-grid">
+
+        <!-- Table panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Последние проекты</span>
+            <div class="panel-actions">
+              <button class="panel-btn">Фильтр</button>
+              <button class="panel-btn primary">+ Новый</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable">Client Name <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Статус <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Состояние <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Трафик <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Последняя активность <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Last Connection Node <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Speed (Mbps) <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Назначенные подключения <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">Группа <span class="th-sort-icon">↕</span></th>
+                  <th class="sortable">HWID <span class="th-sort-icon">↕</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="table-name">
+                      <div class="table-avatar" style="background: linear-gradient(135deg, #8577f2, #6c52c7);">ВО</div>
+                      <div class="table-name-text">вова</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="status-cell">
+                      <div class="status-row">
+                        <span class="status-dot online"></span>
+                        <span class="status-text online">Онлайн</span>
+                      </div>
+                      <span class="status-sub">Только что</span>
+                    </div>
+                  </td>
+                  <td><span class="badge green"><span class="badge-dot"></span>Активен</span></td>
+                  <td>
+                    <span>1.38 GB ↑</span> · <span class="text-muted">319.98 MB ↓</span>
+                    <br><span class="text-muted" style="font-size:0.75rem;">∞</span>
+                  </td>
+                  <td class="text-muted">30 июн. 2026 г., 14:28</td>
+                  <td class="text-dash">—</td>
+                  <td class="text-muted">0.06 Mbps ↑ · 0.01 Mbps ↓</td>
+                  <td>
+                    <span>F1 Финляндия_Hysteria</span>
+                    <span class="badge blue" style="margin-left:0.35rem;font-size:0.625rem;">+1</span>
+                  </td>
+                  <td class="text-muted">Семья</td>
+                  <td class="text-muted">1 / 5</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="table-name">
+                      <div class="table-avatar" style="background: linear-gradient(135deg, #f472b6, #ec4899);">ЛЮ</div>
+                      <div class="table-name-text">любимка</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="status-cell">
+                      <div class="status-row">
+                        <span class="status-dot offline"></span>
+                        <span class="status-text offline">Офлайн</span>
+                      </div>
+                      <span class="status-sub">6 ч назад</span>
+                    </div>
+                  </td>
+                  <td><span class="badge green"><span class="badge-dot"></span>Активен</span></td>
+                  <td>
+                    <span>349.05 MB ↑</span> · <span class="text-muted">133.59 MB ↓</span>
+                    <br><span class="text-muted" style="font-size:0.75rem;">∞</span>
+                  </td>
+                  <td class="text-muted">30 июн. 2026 г., 07:30</td>
+                  <td class="text-dash">—</td>
+                  <td class="text-dash">—</td>
+                  <td>
+                    <span>F1 Финляндия_Hysteria</span>
+                    <span class="badge blue" style="margin-left:0.35rem;font-size:0.625rem;">+1</span>
+                  </td>
+                  <td class="text-muted">Семья</td>
+                  <td class="text-muted">1 / 3</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="table-name">
+                      <div class="table-avatar" style="background: linear-gradient(135deg, #22d3ee, #0891b2);">ДМ</div>
+                      <div class="table-name-text">Дмитрий</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="status-cell">
+                      <div class="status-row">
+                        <span class="status-dot online"></span>
+                        <span class="status-text online">Онлайн</span>
+                      </div>
+                      <span class="status-sub">5 мин назад</span>
+                    </div>
+                  </td>
+                  <td><span class="badge green"><span class="badge-dot"></span>Активен</span></td>
+                  <td>
+                    <span>2.14 GB ↑</span> · <span class="text-muted">891.22 MB ↓</span>
+                    <br><span class="text-muted" style="font-size:0.75rem;">∞</span>
+                  </td>
+                  <td class="text-muted">30 июн. 2026 г., 14:23</td>
+                  <td class="text-muted">Node-2</td>
+                  <td class="text-muted">0.12 Mbps ↑ · 0.03 Mbps ↓</td>
+                  <td>
+                    <span>DE Германия_VLESS</span>
+                    <span class="badge blue" style="margin-left:0.35rem;font-size:0.625rem;">+2</span>
+                  </td>
+                  <td class="text-muted">Рабочая</td>
+                  <td class="text-muted">2 / 5</td>
+                </tr>
+                <tr>
+                  <td>
+                    <div class="table-name">
+                      <div class="table-avatar" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">АЛ</div>
+                      <div class="table-name-text">Алексей</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="status-cell">
+                      <div class="status-row">
+                        <span class="status-dot depleting"></span>
+                        <span class="status-text depleting">Истекает</span>
+                      </div>
+                      <span class="status-sub">Завтра</span>
+                    </div>
+                  </td>
+                  <td><span class="badge amber"><span class="badge-dot"></span>Истекает</span></td>
+                  <td>
+                    <span>456.78 MB ↑</span> · <span class="text-muted">102.33 MB ↓</span>
+                    <br><span class="text-muted" style="font-size:0.75rem;">∞</span>
+                  </td>
+                  <td class="text-muted">30 июн. 2026 г., 12:15</td>
+                  <td class="text-dash">—</td>
+                  <td class="text-muted">0.02 Mbps ↑ · 0.00 Mbps ↓</td>
+                  <td>
+                    <span>FI Финляндия_Trojan</span>
+                  </td>
+                  <td class="text-muted">Семья</td>
+                  <td class="text-muted">1 / 3</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Activity panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Активность</span>
+            <button class="panel-btn">Все</button>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-dot purple"></div>
+              <div>
+                <div class="activity-text"><strong>Иван</strong> создал новый проект</div>
+                <div class="activity-time">2 минуты назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot cyan"></div>
+              <div>
+                <div class="activity-text"><strong>Мария</strong> обновила конфигурацию</div>
+                <div class="activity-time">15 минут назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Система</strong> развернула обновление</div>
+                <div class="activity-time">42 минуты назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot amber"></div>
+              <div>
+                <div class="activity-text"><strong>Алексей</strong> добавил участника</div>
+                <div class="activity-time">1 час назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot purple"></div>
+              <div>
+                <div class="activity-text"><strong>Елена</strong> закрыла задачу #247</div>
+                <div class="activity-time">2 часа назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot cyan"></div>
+              <div>
+                <div class="activity-text"><strong>Дмитрий</strong> запустил тестирование</div>
+                <div class="activity-time">3 часа назад</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-dot green"></div>
+              <div>
+                <div class="activity-text"><strong>Система</strong> создала резервную копию</div>
+                <div class="activity-time">6 часов назад</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Chart panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Нагрузка за 24 часа</span>
+          <div class="panel-actions">
+            <button class="panel-btn">Час</button>
+            <button class="panel-btn" style="background: var(--surface-strong); color: var(--fg);">День</button>
+            <button class="panel-btn">Неделя</button>
+          </div>
+        </div>
+        <div class="chart-placeholder" id="chart"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Generate random chart bars
+    const chart = document.getElementById('chart');
+    const barCount = 48;
+    for (let i = 0; i < barCount; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'chart-bar';
+      const h = 15 + Math.random() * 75;
+      bar.style.height = h + '%';
+      chart.appendChild(bar);
+    }
+  </script>
+
+</body>
+</html>

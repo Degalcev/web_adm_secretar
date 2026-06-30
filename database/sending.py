@@ -240,3 +240,39 @@ async def delete_event(event_id: str):
             await session.rollback()
             logger.error('Ошибка удаления события: {}', repr(e))
             raise
+
+
+# ─── Documents ────────────────────────────────────────────────────────
+
+async def add_document(event_id: str, name: str, size: int, content: bytes) -> str:
+    new_id = str(uuid.uuid4())
+    from sqlalchemy import text
+    async with async_session() as session:
+        try:
+            await session.execute(
+                text("INSERT INTO documents (id, event_id, name, size, content) VALUES (:id, :eid, :name, :size, :content)"),
+                {'id': new_id, 'eid': event_id, 'name': name, 'size': size, 'content': content}
+            )
+            await session.commit()
+            logger.info('Документ {} добавлен', name)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления документа: {}', repr(e))
+            raise
+
+
+async def delete_document(doc_id: str):
+    from sqlalchemy import text
+    async with async_session() as session:
+        try:
+            await session.execute(
+                text("DELETE FROM documents WHERE id = :did"),
+                {'did': doc_id}
+            )
+            await session.commit()
+            logger.info('Документ {} удалён', doc_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления документа: {}', repr(e))
+            raise
