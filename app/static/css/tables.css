@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .search-wrap {
@@ -16,52 +16,61 @@
 
 .search-wrap svg {
   position: absolute;
-  left: 14px;
-  color: var(--muted);
+  left: 12px;
+  color: var(--fg-subtle);
   pointer-events: none;
+  width: 16px;
+  height: 16px;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px 10px 40px;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 14px;
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color var(--motion-fast) var(--ease-standard);
 }
-.search-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-bg);
-}
+.search-input:focus { border-color: var(--accent); }
 
 .table-wrap {
-  background: var(--surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
 table { width: 100%; border-collapse: collapse; }
 
 thead th {
-  padding: 14px 18px;
+  padding: 0.75rem 1.25rem;
   text-align: left;
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--fg-subtle);
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-  user-select: none;
+  white-space: nowrap;
 }
 
-tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: var(--surface2); }
-tbody td { padding: 14px 18px; font-size: 14px; }
+tbody td {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+}
 
-.empty-state { text-align: center; padding: 56px 24px; color: var(--muted); font-size: 14px; }
+tbody tr:last-child td { border-bottom: none; }
+
+tbody tr {
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+
+tbody tr:hover { background: var(--surface); }
+
+.empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--fg-muted); font-size: 0.875rem; }

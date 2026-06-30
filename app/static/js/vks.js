@@ -2,7 +2,7 @@
 
 let allEvents = [];
 let editingEventId = null;
-let currentVksTab = 'active';
+let currentVksFilter = '';
 
 async function loadEvents() {
     const board = document.getElementById('vks-board');
@@ -27,9 +27,13 @@ function renderVksBoard() {
     const board = document.getElementById('vks-board');
     const q = (document.getElementById('search-vks')?.value || '').toLowerCase();
 
-    let events = currentVksTab === 'active'
-        ? allEvents.filter(e => !e.completed)
-        : allEvents.filter(e => e.completed);
+    let events = [...allEvents];
+
+    if (currentVksFilter === 'active') {
+        events = events.filter(e => !e.completed);
+    } else if (currentVksFilter === 'completed') {
+        events = events.filter(e => e.completed);
+    }
 
     if (q) {
         events = events.filter(e =>
@@ -58,7 +62,7 @@ function renderVksBoard() {
     const sortedDates = Object.keys(grouped).sort((a, b) => {
         if (a === 'Без даты') return 1;
         if (b === 'Без даты') return -1;
-        return currentVksTab === 'active' ? a.localeCompare(b) : b.localeCompare(a);
+        return currentVksFilter === 'completed' ? b.localeCompare(a) : a.localeCompare(b);
     });
 
     sortedDates.forEach(dateKey => {
@@ -98,7 +102,6 @@ function renderVksBoard() {
 }
 
 function getOrganizerName(id) {
-    // Используем глобальный массив allOrganizers из organizers.js
     const o = (typeof allOrganizers !== 'undefined') ? allOrganizers.find(x => x.id === id) : null;
     return o ? o.short_name || o.name : '';
 }
@@ -108,15 +111,8 @@ function getLocationName(id) {
     return l ? l.name : '';
 }
 
-function switchVksTab(tab) {
-    currentVksTab = tab;
-    document.querySelectorAll('.vks-tab').forEach(t => t.classList.remove('active'));
-    event.currentTarget.classList.add('active');
-    renderVksBoard();
-}
-
 function filterVksEvents(status) {
-    // Обновляем статистику
+    currentVksFilter = status;
     document.querySelectorAll('#page-vks .stat-card').forEach(c => c.classList.remove('active'));
     if (status && event && event.currentTarget) {
         event.currentTarget.classList.add('active');
@@ -163,7 +159,6 @@ function closeEventModal() {
 }
 
 async function loadEventSelects() {
-    // Загружаем организаторов и локации если ещё не загружены
     if (typeof allOrganizers === 'undefined' || !allOrganizers.length) {
         try {
             const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
