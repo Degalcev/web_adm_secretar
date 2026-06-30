@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1117">
 <title>VKS Secretar — Панель администратора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Montserrat:wght@100..900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/base.css">
 <link rel="stylesheet" href="/static/css/layout.css">
 <link rel="stylesheet" href="/static/css/components.css">
@@ -50,6 +54,13 @@
     </div>
 
     <nav class="sidebar-nav">
+      <div class="sidebar-section">Мероприятия</div>
+      <a class="nav-item" data-page="vks" onclick="switchPage('vks')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        ВКС
+      </a>
+
+      <div class="sidebar-section">Администрирование</div>
       <a class="nav-item active" data-page="users" onclick="switchPage('users')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Пользователи
@@ -65,10 +76,6 @@
       <a class="nav-item" data-page="logs" onclick="switchPage('logs')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Логи
-      </a>
-      <a class="nav-item" data-page="vks" onclick="switchPage('vks')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        ВКС
       </a>
     </nav>
 
@@ -252,11 +259,11 @@
     <div class="page" id="page-vks">
       <div class="page-header">
         <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
           <h1>ВКС</h1>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline" onclick="openAddEventModal()">+ Добавить</button>
+          <button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>
         </div>
       </div>
 
@@ -264,12 +271,6 @@
         <div class="stat-card clickable" onclick="filterVksEvents('')"><div class="stat-label">Всего</div><div class="stat-value" id="stat-total-vks">0</div></div>
         <div class="stat-card clickable stat-info" onclick="filterVksEvents('active')"><div class="stat-label">Текущие</div><div class="stat-value" id="stat-active-vks">0</div></div>
         <div class="stat-card clickable stat-success" onclick="filterVksEvents('completed')"><div class="stat-label">Завершённые</div><div class="stat-value" id="stat-completed-vks">0</div></div>
-      </div>
-
-      <!-- Sub-tabs -->
-      <div class="vks-tabs">
-        <button class="vks-tab active" onclick="switchVksTab('active')">Текущие</button>
-        <button class="vks-tab" onclick="switchVksTab('completed')">Завершённые</button>
       </div>
 
       <div class="table-toolbar">
