@@ -505,21 +505,79 @@
 
 <!-- ─── Modal: VKS Event ───────────────────────────────────────────────── -->
 <div class="modal-overlay" id="event-modal">
-  <div class="modal">
+  <div class="modal modal-lg">
     <div class="modal-header">
       <h3 id="event-modal-title">Добавить ВКС</h3>
       <button class="modal-close" onclick="closeEventModal()">&times;</button>
     </div>
-    <div class="form-group"><label>Дата *</label><input type="date" id="f-event-date" required></div>
-    <div class="form-group"><label>Время *</label><input type="time" id="f-event-time" required></div>
-    <div class="form-group"><label>Организатор *</label><select id="f-event-organizer" required><option value="">Не указан</option></select></div>
-    <div class="form-group"><label>Локация *</label><select id="f-event-location" required><option value="">Не указана</option></select></div>
-    <div class="form-group"><label>URL</label><input type="text" id="f-event-url" placeholder="https://meet.example.com/..."></div>
-    <div class="form-group"><label>Описание</label><input type="text" id="f-event-desc" placeholder="Описание ВКС"></div>
-    <div class="form-group" id="f-event-docs-group" style="display:none">
-      <label>Документы</label>
-      <div id="f-event-docs" class="event-docs-list"></div>
+
+    <div class="modal-body">
+      <!-- Основная информация -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <span>Основная информация</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>Дата *</label>
+              <input type="date" id="f-event-date" required>
+            </div>
+            <div class="form-group flex-1">
+              <label>Время *</label>
+              <input type="time" id="f-event-time" required>
+            </div>
+          </div>
+          <div class="form-group"><label>Описание</label><input type="text" id="f-event-desc" placeholder="Описание ВКС"></div>
+        </div>
+      </div>
+
+      <!-- Место проведения -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <span>Место проведения</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Организатор *</label>
+              <select id="f-event-organizer" required><option value="">Не указан</option></select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Локация *</label>
+              <select id="f-event-location" required><option value="">Не указана</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ссылка -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+          <span>Ссылка на встречу</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group">
+            <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Документы -->
+      <div class="modal-section" id="f-event-docs-group" style="display:none">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <span>Документы</span>
+        </div>
+        <div class="modal-section-body">
+          <div id="f-event-docs" class="event-docs-list"></div>
+        </div>
+      </div>
     </div>
+
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeEventModal()">Отмена</button>
       <button class="btn btn-primary" id="event-modal-save-btn" onclick="saveEvent()">Сохранить</button>

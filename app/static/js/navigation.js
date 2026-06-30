@@ -23,7 +23,14 @@ function switchPage(page) {
     // Подсветка активного пункта меню
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
-    if (navItem) navItem.classList.add('active');
+    if (navItem) {
+        navItem.classList.add('active');
+        // Открыть родительскую группу если закрыта
+        const group = navItem.closest('.nav-group');
+        if (group && !group.classList.contains('open')) {
+            group.classList.add('open');
+        }
+    }
 
     // Показать нужную страницу
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
