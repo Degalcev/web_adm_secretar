@@ -256,3 +256,20 @@
   color: var(--fg-muted);
   font-size: 0.75rem;
 }
+
+.event-doc-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.event-doc-download:hover {
+  background: var(--surface-strong);
+  color: var(--accent);
+}

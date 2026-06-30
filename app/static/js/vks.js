@@ -308,7 +308,7 @@ async function openEditEventModal(id) {
         docsContainer.innerHTML = e.documents.map(d => {
             const ext = (d.name || '').split('.').pop().toLowerCase();
             const icon = getDocIcon(ext);
-            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
+            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a></div>`;
         }).join('');
     } else {
         docsGroup.style.display = 'none';
