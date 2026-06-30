@@ -6,32 +6,51 @@ let currentVksFilter = '';
 
 async function loadEvents() {
     const board = document.getElementById('vks-board');
-    board.innerHTML = '<div class="empty-state">Загрузка...</div>';
+    if (board) board.innerHTML = '<div class="empty-state">Загрузка...</div>';
 
     const resp = await fetch(`${BASE_URL}/admin/api/events`);
     if (resp.status === 401) { showLogin(); return; }
     allEvents = await resp.json();
     updateVksStats();
-    renderVksBoard();
+    renderVksBoard('vks-board', '');
+}
+
+async function loadEventsForPage(boardId, filter) {
+    const board = document.getElementById(boardId);
+    if (board) board.innerHTML = '<div class="empty-state">Загрузка...</div>';
+
+    if (!allEvents.length) {
+        const resp = await fetch(`${BASE_URL}/admin/api/events`);
+        if (resp.status === 401) { showLogin(); return; }
+        allEvents = await resp.json();
+    }
+    renderVksBoard(boardId, filter);
 }
 
 function updateVksStats() {
     const active = allEvents.filter(e => !e.completed);
     const completed = allEvents.filter(e => e.completed);
-    document.getElementById('stat-total-vks').textContent = allEvents.length;
-    document.getElementById('stat-active-vks').textContent = active.length;
-    document.getElementById('stat-completed-vks').textContent = completed.length;
+    const totalEl = document.getElementById('stat-total-vks');
+    const activeEl = document.getElementById('stat-active-vks');
+    const completedEl = document.getElementById('stat-completed-vks');
+    if (totalEl) totalEl.textContent = allEvents.length;
+    if (activeEl) activeEl.textContent = active.length;
+    if (completedEl) completedEl.textContent = completed.length;
 }
 
-function renderVksBoard() {
-    const board = document.getElementById('vks-board');
-    const q = (document.getElementById('search-vks')?.value || '').toLowerCase();
+function renderVksBoard(boardId, filter) {
+    const board = document.getElementById(boardId);
+    if (!board) return;
+
+    const searchId = boardId === 'vks-board' ? 'search-vks' :
+                     boardId === 'vks-board-active' ? 'search-vks-active' : 'search-vks-completed';
+    const q = (document.getElementById(searchId)?.value || '').toLowerCase();
 
     let events = [...allEvents];
 
-    if (currentVksFilter === 'active') {
+    if (filter === 'active') {
         events = events.filter(e => !e.completed);
-    } else if (currentVksFilter === 'completed') {
+    } else if (filter === 'completed') {
         events = events.filter(e => e.completed);
     }
 
@@ -42,7 +61,6 @@ function renderVksBoard() {
         );
     }
 
-    // Группировка по дате
     const grouped = {};
     const today = new Date().toISOString().split('T')[0];
     const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -62,7 +80,7 @@ function renderVksBoard() {
     const sortedDates = Object.keys(grouped).sort((a, b) => {
         if (a === 'Без даты') return 1;
         if (b === 'Без даты') return -1;
-        return currentVksFilter === 'completed' ? b.localeCompare(a) : a.localeCompare(b);
+        return filter === 'completed' ? b.localeCompare(a) : a.localeCompare(b);
     });
 
     sortedDates.forEach(dateKey => {
@@ -117,11 +135,19 @@ function filterVksEvents(status) {
     if (status && event && event.currentTarget) {
         event.currentTarget.classList.add('active');
     }
-    renderVksBoard();
+    renderVksBoard('vks-board', status);
 }
 
 function filterVksList() {
-    renderVksBoard();
+    renderVksBoard('vks-board', currentVksFilter);
+}
+
+function filterVksListActive() {
+    renderVksBoard('vks-board-active', 'active');
+}
+
+function filterVksListCompleted() {
+    renderVksBoard('vks-board-completed', 'completed');
 }
 
 // ─── Модалка события ──────────────────────────────────────────────────

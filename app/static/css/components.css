@@ -14,6 +14,7 @@
   transition: all var(--motion-fast) var(--ease-standard);
   position: relative;
   overflow: hidden;
+  cursor: default;
 }
 
 .stat-card::before {
@@ -169,8 +170,21 @@
   cursor: pointer;
   transition: all var(--motion-fast) var(--ease-standard);
   padding: 0;
+  position: relative;
+  overflow: hidden;
 }
+
+.btn-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.4s var(--ease-standard);
+}
+
 .btn-icon:hover { border-color: var(--border-strong); color: var(--fg); background: var(--surface-strong); }
+.btn-icon:hover::before { transform: translateX(100%); }
 .btn-icon.danger { color: var(--danger); border-color: rgba(248, 113, 113, 0.3); }
 .btn-icon.danger:hover { border-color: var(--danger); background: rgba(248, 113, 113, 0.1); }
 
