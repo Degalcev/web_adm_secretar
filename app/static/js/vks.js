@@ -207,7 +207,7 @@ function renderVksCard(e, blockType) {
         e.documents.forEach(d => {
             const ext = (d.name || '').split('.').pop().toLowerCase();
             const icon = getDocIcon(ext);
-            html += `<div class="vks-doc-item" onclick="event.stopPropagation();window.open('${BASE_URL}/admin/api/documents/${d.id}/download','_blank')" style="cursor:pointer" title="Скачать ${esc(d.name)}">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
+            html += `<div class="vks-doc-item" onclick="event.stopPropagation();downloadDoc('${d.id}','${esc(d.name)}')" title="Скачать ${esc(d.name)}">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
         });
         html += `</div>`;
     }
@@ -341,7 +341,7 @@ function refreshEventDocs() {
             const action = d.pending
                 ? `<button class="event-doc-delete" onclick="event.stopPropagation();removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
                 : `<button class="event-doc-delete" onclick="event.stopPropagation();removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
-            const clickAttr = d.pending ? '' : `onclick="event.stopPropagation();window.open('${BASE_URL}/admin/api/documents/${d.id}/download','_blank')"`;
+            const clickAttr = d.pending ? '' : `onclick="event.stopPropagation();downloadDoc('${d.id}','${esc(d.name)}')"`;
             return `<div class="event-doc-item ${d.pending ? '' : 'event-doc-downloadable'}" ${clickAttr}>${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}${d.pending ? '<span class="event-doc-pending">новый</span>' : ''}${action}</div>`;
         }).join('');
     } else {
@@ -365,6 +365,24 @@ function removePendingFile(id) {
 function removeExistingDoc(docId) {
     removedDocIds.push(docId);
     refreshEventDocs();
+}
+
+async function downloadDoc(docId, fileName) {
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/documents/${docId}/download`);
+        if (!resp.ok) { showToast('Ошибка скачивания', 'error'); return; }
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName || 'document';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        showToast('Ошибка сети', 'error');
+    }
 }
 
 async function loadEventSelects() {

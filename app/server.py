@@ -32,7 +32,7 @@ SPA_PATHS = [
 
 
 async def start_webapp(host='0.0.0.0', port=8080):
-    app = web.Application()
+    app = web.Application(client_max_size=100 * 1024 * 1024)
 
     # Auth API routes
     app.router.add_post('/admin/login', admin_login)
