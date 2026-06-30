@@ -75,9 +75,12 @@ function renderVksBoard(boardId, filter) {
         return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const dayAfter = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1);
+    const tomorrow = `${tmr.getFullYear()}-${String(tmr.getMonth()+1).padStart(2,'0')}-${String(tmr.getDate()).padStart(2,'0')}`;
+    const da = new Date(now.getFullYear(), now.getMonth(), now.getDate()+2);
+    const dayAfter = `${da.getFullYear()}-${String(da.getMonth()+1).padStart(2,'0')}-${String(da.getDate()).padStart(2,'0')}`;
 
     // Разделяем на блоки
     const missed = [];      // Пропущенные (прошедшие, не завершённые)
@@ -204,7 +207,7 @@ function renderVksCard(e, blockType) {
         e.documents.forEach(d => {
             const ext = (d.name || '').split('.').pop().toLowerCase();
             const icon = getDocIcon(ext);
-            html += `<div class="vks-doc-item">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
+            html += `<div class="vks-doc-item" onclick="event.stopPropagation();window.open('${BASE_URL}/admin/api/documents/${d.id}/download','_blank')" style="cursor:pointer" title="Скачать ${esc(d.name)}">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
         });
         html += `</div>`;
     }
@@ -278,7 +281,8 @@ async function openAddEventModal() {
     pendingFiles = [];
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
-    document.getElementById('f-event-date').value = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
     document.getElementById('f-event-url').value = '';
     document.getElementById('f-event-desc').value = '';
@@ -335,9 +339,10 @@ function refreshEventDocs() {
             const ext = (d.name || '').split('.').pop().toLowerCase();
             const icon = getDocIcon(ext);
             const action = d.pending
-                ? `<button class="event-doc-delete" onclick="removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
-                : `<a class="event-doc-download" href="${BASE_URL}/admin/api/documents/${d.id}/download" title="Скачать" onclick="event.stopPropagation()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a><button class="event-doc-delete" onclick="removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
-            return `<div class="event-doc-item">${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}${d.pending ? '<span class="event-doc-pending">новый</span>' : ''}${action}</div>`;
+                ? `<button class="event-doc-delete" onclick="event.stopPropagation();removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
+                : `<button class="event-doc-delete" onclick="event.stopPropagation();removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
+            const clickAttr = d.pending ? '' : `onclick="event.stopPropagation();window.open('${BASE_URL}/admin/api/documents/${d.id}/download','_blank')"`;
+            return `<div class="event-doc-item ${d.pending ? '' : 'event-doc-downloadable'}" ${clickAttr}>${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}${d.pending ? '<span class="event-doc-pending">новый</span>' : ''}${action}</div>`;
         }).join('');
     } else {
         docsContainer.innerHTML = '<div class="event-docs-empty">Нет документов</div>';

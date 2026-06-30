@@ -26,10 +26,13 @@ document.getElementById('log-date-select').addEventListener('change', function (
 });
 
 // ─── Автообновление при смене дня ──────────────────────────────────
-let _currentDay = new Date().toISOString().split('T')[0];
+function _localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+let _currentDay = _localDateStr(new Date());
 
 function _checkDayChange() {
-    const today = new Date().toISOString().split('T')[0];
+    const today = _localDateStr(new Date());
     if (today !== _currentDay) {
         _currentDay = today;
         if (typeof loadVksActive === 'function') loadVksActive();
