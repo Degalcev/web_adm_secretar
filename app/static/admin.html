@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VKS Secretar — Панель администратора</title>
-<link rel="stylesheet" href="/static/css/admin.css">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components.css">
+<link rel="stylesheet" href="/static/css/tables.css">
+<link rel="stylesheet" href="/static/css/modals.css">
+<link rel="stylesheet" href="/static/css/logs.css">
+<link rel="stylesheet" href="/static/css/responsive.css">
 <script src="https://st.max.ru/js/max-web-app.js"></script>
 </head>
 <body>
@@ -44,26 +50,26 @@
 
     <nav class="sidebar-nav">
       <a class="nav-item active" data-page="users" onclick="switchPage('users')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Пользователи
       </a>
       <a class="nav-item" data-page="organizers" onclick="switchPage('organizers')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         Организаторы
       </a>
       <a class="nav-item" data-page="locations" onclick="switchPage('locations')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Локации
       </a>
       <a class="nav-item" data-page="logs" onclick="switchPage('logs')">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Логи
       </a>
     </nav>
 
     <div class="sidebar-footer">
       <a class="nav-item nav-logout" onclick="logout()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         Выйти
       </a>
     </div>
@@ -76,7 +82,7 @@
     <div class="page active" id="page-users">
       <div class="page-header">
         <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
           <h1>Пользователи</h1>
         </div>
         <div class="page-actions">
@@ -113,13 +119,7 @@
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th>Имя</th>
-              <th>Telegram ID</th>
-              <th>MAX ID</th>
-              <th>Статус</th>
-              <th>Действия</th>
-            </tr>
+            <tr><th>Имя</th><th>Telegram ID</th><th>MAX ID</th><th>Статус</th><th>Действия</th></tr>
           </thead>
           <tbody id="users-tbody">
             <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
@@ -132,7 +132,7 @@
     <div class="page" id="page-organizers">
       <div class="page-header">
         <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
           <h1>Организаторы</h1>
         </div>
         <div class="page-actions">
@@ -140,14 +140,8 @@
         </div>
       </div>
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Всего организаторов</div>
-          <div class="stat-value" id="stat-total-org">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Показано</div>
-          <div class="stat-value" id="stat-shown-org">0</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Всего организаторов</div><div class="stat-value" id="stat-total-org">0</div></div>
+        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-org">0</div></div>
       </div>
       <div class="table-toolbar">
         <div class="search-wrap">
@@ -157,17 +151,8 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>Короткое имя</th>
-              <th>URL</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody id="organizers-tbody">
-            <tr><td colspan="4" class="empty-state">Загрузка...</td></tr>
-          </tbody>
+          <thead><tr><th>Название</th><th>Короткое имя</th><th>URL</th><th>Действия</th></tr></thead>
+          <tbody id="organizers-tbody"><tr><td colspan="4" class="empty-state">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -176,7 +161,7 @@
     <div class="page" id="page-locations">
       <div class="page-header">
         <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
           <h1>Локации</h1>
         </div>
         <div class="page-actions">
@@ -184,14 +169,8 @@
         </div>
       </div>
       <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-label">Всего локаций</div>
-          <div class="stat-value" id="stat-total-loc">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Показано</div>
-          <div class="stat-value" id="stat-shown-loc">0</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">Всего локаций</div><div class="stat-value" id="stat-total-loc">0</div></div>
+        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-loc">0</div></div>
       </div>
       <div class="table-toolbar">
         <div class="search-wrap">
@@ -201,15 +180,8 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>Название</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody id="locations-tbody">
-            <tr><td colspan="2" class="empty-state">Загрузка...</td></tr>
-          </tbody>
+          <thead><tr><th>Название</th><th>Действия</th></tr></thead>
+          <tbody id="locations-tbody"><tr><td colspan="2" class="empty-state">Загрузка...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -218,68 +190,36 @@
     <div class="page" id="page-logs">
       <div class="page-header">
         <div class="page-title">
-          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <h1>Логи</h1>
         </div>
       </div>
 
       <div class="stats-row">
-        <div class="stat-card clickable" onclick="filterByLevel('')">
-          <div class="stat-label">Всего</div>
-          <div class="stat-value" id="stat-total">0</div>
-        </div>
-        <div class="stat-card clickable stat-error" onclick="filterByLevel('ERROR')">
-          <div class="stat-label">Ошибки</div>
-          <div class="stat-value" id="stat-error">0</div>
-        </div>
-        <div class="stat-card clickable stat-warning" onclick="filterByLevel('WARNING')">
-          <div class="stat-label">Предупреждения</div>
-          <div class="stat-value" id="stat-warning">0</div>
-        </div>
-        <div class="stat-card clickable stat-info" onclick="filterByLevel('INFO')">
-          <div class="stat-label">Инфо</div>
-          <div class="stat-value" id="stat-info">0</div>
-        </div>
-        <div class="stat-card clickable stat-debug" onclick="filterByLevel('DEBUG')">
-          <div class="stat-label">Отладка</div>
-          <div class="stat-value" id="stat-debug">0</div>
-        </div>
+        <div class="stat-card clickable" onclick="filterByLevel('', event)"><div class="stat-label">Всего</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat-card clickable stat-error" onclick="filterByLevel('ERROR', event)"><div class="stat-label">Ошибки</div><div class="stat-value" id="stat-error">0</div></div>
+        <div class="stat-card clickable stat-warning" onclick="filterByLevel('WARNING', event)"><div class="stat-label">Предупреждения</div><div class="stat-value" id="stat-warning">0</div></div>
+        <div class="stat-card clickable stat-info" onclick="filterByLevel('INFO', event)"><div class="stat-label">Инфо</div><div class="stat-value" id="stat-info">0</div></div>
+        <div class="stat-card clickable stat-debug" onclick="filterByLevel('DEBUG', event)"><div class="stat-label">Отладка</div><div class="stat-value" id="stat-debug">0</div></div>
       </div>
 
       <div class="log-filters">
         <div class="log-filters-main">
           <div class="log-filter-group">
             <label>Дата</label>
-            <select id="log-date-select" onchange="onLogDateChange()">
-              <option value="">Загрузка...</option>
-            </select>
+            <select id="log-date-select" onchange="onLogDateChange()"><option value="">Загрузка...</option></select>
           </div>
           <div class="log-filter-group">
             <label>Источник</label>
-            <select id="log-source-filter" onchange="onLogRefresh()">
-              <option value="">Все</option>
-              <option value="bot">Бот</option>
-              <option value="panel">Панель</option>
-            </select>
+            <select id="log-source-filter" onchange="onLogRefresh()"><option value="">Все</option><option value="bot">Бот</option><option value="panel">Панель</option></select>
           </div>
           <div class="log-filter-group">
             <label>Уровень</label>
-            <select id="log-level-filter" onchange="onLogRefresh()">
-              <option value="">Все</option>
-              <option value="ERROR">ERROR</option>
-              <option value="WARNING">WARNING</option>
-              <option value="INFO">INFO</option>
-              <option value="DEBUG">DEBUG</option>
-            </select>
+            <select id="log-level-filter" onchange="onLogRefresh()"><option value="">Все</option><option value="ERROR">ERROR</option><option value="WARNING">WARNING</option><option value="INFO">INFO</option><option value="DEBUG">DEBUG</option></select>
           </div>
           <div class="log-filter-group log-filter-narrow">
             <label>Строк</label>
-            <select id="log-lines-count" onchange="onLogRefresh()">
-              <option value="100">100</option>
-              <option value="500" selected>500</option>
-              <option value="1000">1000</option>
-              <option value="5000">5000</option>
-            </select>
+            <select id="log-lines-count" onchange="onLogRefresh()"><option value="100">100</option><option value="500" selected>500</option><option value="1000">1000</option><option value="5000">5000</option></select>
           </div>
           <div class="log-filter-group log-search-wrap">
             <label>Поиск</label>
@@ -299,9 +239,7 @@
         </div>
       </div>
 
-      <div class="log-container" id="log-container">
-        <div class="empty-state">Выберите дату</div>
-      </div>
+      <div class="log-container" id="log-container"><div class="empty-state">Выберите дату</div></div>
       <div class="log-footer" id="log-footer"></div>
     </div>
 
@@ -315,29 +253,11 @@
       <h3 id="modal-title">Добавить пользователя</h3>
       <button class="modal-close" onclick="closeModal()">&times;</button>
     </div>
-    <div class="form-group">
-      <label>Имя</label>
-      <input type="text" id="f-name" placeholder="Иван Иванов">
-    </div>
-    <div class="form-group">
-      <label>Telegram ID</label>
-      <input type="number" id="f-tg-id" placeholder="123456789">
-    </div>
-    <div class="form-group">
-      <label>MAX ID</label>
-      <input type="number" id="f-max-id" placeholder="987654321">
-    </div>
-    <div class="form-group">
-      <label>Пароль <span style="font-weight:400;text-transform:none;letter-spacing:0">(оставьте пустым чтобы не менять)</span></label>
-      <input type="password" id="f-password" placeholder="••••••••">
-    </div>
-    <div class="form-group">
-      <label>Статус</label>
-      <select id="f-status">
-        <option value="user">user</option>
-        <option value="admin">admin</option>
-      </select>
-    </div>
+    <div class="form-group"><label>Имя</label><input type="text" id="f-name" placeholder="Иван Иванов"></div>
+    <div class="form-group"><label>Telegram ID</label><input type="number" id="f-tg-id" placeholder="123456789"></div>
+    <div class="form-group"><label>MAX ID</label><input type="number" id="f-max-id" placeholder="987654321"></div>
+    <div class="form-group"><label>Пароль <span style="font-weight:400;text-transform:none;letter-spacing:0">(оставьте пустым чтобы не менять)</span></label><input type="password" id="f-password" placeholder="••••••••"></div>
+    <div class="form-group"><label>Статус</label><select id="f-status"><option value="user">user</option><option value="admin">admin</option></select></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
       <button class="btn btn-primary" id="modal-save-btn" onclick="saveUser()">Сохранить</button>
@@ -352,18 +272,9 @@
       <h3 id="org-modal-title">Добавить организатора</h3>
       <button class="modal-close" onclick="closeOrganizerModal()">&times;</button>
     </div>
-    <div class="form-group">
-      <label>Название</label>
-      <input type="text" id="f-org-name" placeholder="Организатор">
-    </div>
-    <div class="form-group">
-      <label>Короткое имя</label>
-      <input type="text" id="f-org-short-name" placeholder="org_short">
-    </div>
-    <div class="form-group">
-      <label>Базовый URL</label>
-      <input type="text" id="f-org-base-url" placeholder="https://example.com">
-    </div>
+    <div class="form-group"><label>Название</label><input type="text" id="f-org-name" placeholder="Организатор"></div>
+    <div class="form-group"><label>Короткое имя</label><input type="text" id="f-org-short-name" placeholder="org_short"></div>
+    <div class="form-group"><label>Базовый URL</label><input type="text" id="f-org-base-url" placeholder="https://example.com"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeOrganizerModal()">Отмена</button>
       <button class="btn btn-primary" id="org-modal-save-btn" onclick="saveOrganizer()">Сохранить</button>
@@ -378,10 +289,7 @@
       <h3 id="loc-modal-title">Добавить локацию</h3>
       <button class="modal-close" onclick="closeLocationModal()">&times;</button>
     </div>
-    <div class="form-group">
-      <label>Название</label>
-      <input type="text" id="f-loc-name" placeholder="Название локации">
-    </div>
+    <div class="form-group"><label>Название</label><input type="text" id="f-loc-name" placeholder="Название локации"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeLocationModal()">Отмена</button>
       <button class="btn btn-primary" id="loc-modal-save-btn" onclick="saveLocation()">Сохранить</button>
@@ -406,6 +314,14 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/static/js/admin.js"></script>
+<!-- JS модули (порядок важен: utils первым) -->
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/navigation.js"></script>
+<script src="/static/js/users.js"></script>
+<script src="/static/js/organizers.js"></script>
+<script src="/static/js/locations.js"></script>
+<script src="/static/js/logs.js"></script>
+<script src="/static/js/app.js"></script>
 </body>
 </html>
