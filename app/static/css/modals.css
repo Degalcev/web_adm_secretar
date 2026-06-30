@@ -56,6 +56,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .modal-section-header {
@@ -90,6 +91,7 @@
 .form-row {
   display: flex;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .form-row + .form-row {
