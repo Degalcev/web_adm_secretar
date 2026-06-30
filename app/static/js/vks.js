@@ -165,6 +165,7 @@ function renderVksBlock(title, events, type) {
 
 function renderVksCard(e, blockType) {
     const time = e.time || '--:--';
+    const date = e.date || '';
     const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
     const loc = e.location_id ? getLocationName(e.location_id) : '';
     const docCount = e.documents ? e.documents.length : 0;
@@ -172,6 +173,12 @@ function renderVksCard(e, blockType) {
     let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
     html += `<div class="vks-card-left">`;
     html += `<div class="vks-card-time">${time}</div>`;
+    if (date) {
+        const d = new Date(date);
+        const day = d.getDate();
+        const month = d.toLocaleDateString('ru-RU', { month: 'short' });
+        html += `<div class="vks-card-date">${day} ${month}</div>`;
+    }
     if (blockType === 'missed' && !e.completed) {
         html += `<div class="vks-card-status badge red"><span class="badge-dot"></span>Пропущено</div>`;
     } else if (e.completed) {
