@@ -22,7 +22,7 @@ function renderLocations(items) {
         return;
     }
     tbody.innerHTML = items.map(l => `
-        <tr>
+        <tr onclick="openEditLocationModal('${l.id}')" style="cursor:pointer">
             <td>${esc(l.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td>
                 <div class="actions">

@@ -22,7 +22,7 @@ function renderOrganizers(items) {
         return;
     }
     tbody.innerHTML = items.map(o => `
-        <tr>
+        <tr onclick="openEditOrganizerModal('${o.id}')" style="cursor:pointer">
             <td>${esc(o.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td style="font-family:monospace;color:var(--muted)">${esc(o.short_name) || '—'}</td>
             <td style="font-family:monospace;color:var(--muted);font-size:13px">${esc(o.base_url) || '—'}</td>

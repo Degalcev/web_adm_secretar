@@ -93,4 +93,4 @@ async def get_documents_by_event_id(event_id: str):
             text("SELECT id, name, size FROM documents WHERE event_id = :eid"),
             {'eid': event_id}
         )
-        return [dict(row) for row in result]
+        return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]

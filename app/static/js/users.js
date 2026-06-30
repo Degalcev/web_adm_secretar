@@ -29,7 +29,7 @@ function renderUsers(users) {
         return;
     }
     tbody.innerHTML = users.map(u => `
-        <tr>
+        <tr onclick="openEditModal('${u.id}')" style="cursor:pointer">
             <td data-label="Имя">${esc(u.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td data-label="Telegram ID" style="color:var(--muted);font-family:monospace">${u.tg_id || '—'}</td>
             <td data-label="MAX ID" style="color:var(--muted);font-family:monospace">${u.max_id || '—'}</td>
