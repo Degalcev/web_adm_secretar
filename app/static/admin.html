@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="/static/css/modals.css">
 <link rel="stylesheet" href="/static/css/logs.css">
 <link rel="stylesheet" href="/static/css/responsive.css">
+<link rel="stylesheet" href="/static/css/vks.css">
 <script src="https://st.max.ru/js/max-web-app.js"></script>
 </head>
 <body>
@@ -64,6 +65,10 @@
       <a class="nav-item" data-page="logs" onclick="switchPage('logs')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Логи
+      </a>
+      <a class="nav-item" data-page="vks" onclick="switchPage('vks')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        ВКС
       </a>
     </nav>
 
@@ -243,6 +248,42 @@
       <div class="log-footer" id="log-footer"></div>
     </div>
 
+    <!-- ─── VKS Page ────────────────────────────────────────────────── -->
+    <div class="page" id="page-vks">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <h1>ВКС</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openAddEventModal()">+ Добавить</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card clickable" onclick="filterVksEvents('')"><div class="stat-label">Всего</div><div class="stat-value" id="stat-total-vks">0</div></div>
+        <div class="stat-card clickable stat-info" onclick="filterVksEvents('active')"><div class="stat-label">Текущие</div><div class="stat-value" id="stat-active-vks">0</div></div>
+        <div class="stat-card clickable stat-success" onclick="filterVksEvents('completed')"><div class="stat-label">Завершённые</div><div class="stat-value" id="stat-completed-vks">0</div></div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div class="vks-tabs">
+        <button class="vks-tab active" onclick="switchVksTab('active')">Текущие</button>
+        <button class="vks-tab" onclick="switchVksTab('completed')">Завершённые</button>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="search-vks" placeholder="Поиск по описанию..." oninput="filterVksList()">
+        </div>
+      </div>
+
+      <div class="vks-board" id="vks-board">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -297,6 +338,26 @@
   </div>
 </div>
 
+<!-- ─── Modal: VKS Event ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="event-modal-title">Добавить ВКС</h3>
+      <button class="modal-close" onclick="closeEventModal()">&times;</button>
+    </div>
+    <div class="form-group"><label>Дата</label><input type="date" id="f-event-date"></div>
+    <div class="form-group"><label>Время</label><input type="time" id="f-event-time"></div>
+    <div class="form-group"><label>Организатор</label><select id="f-event-organizer"><option value="">Не указан</option></select></div>
+    <div class="form-group"><label>Локация</label><select id="f-event-location"><option value="">Не указана</option></select></div>
+    <div class="form-group"><label>URL</label><input type="text" id="f-event-url" placeholder="https://meet.example.com/..."></div>
+    <div class="form-group"><label>Описание</label><input type="text" id="f-event-desc" placeholder="Описание ВКС"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEventModal()">Отмена</button>
+      <button class="btn btn-primary" id="event-modal-save-btn" onclick="saveEvent()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <!-- ─── Confirm ────────────────────────────────────────────────────────── -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
@@ -322,6 +383,7 @@
 <script src="/static/js/organizers.js"></script>
 <script src="/static/js/locations.js"></script>
 <script src="/static/js/logs.js"></script>
+<script src="/static/js/vks.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

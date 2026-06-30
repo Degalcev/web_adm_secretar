@@ -14,4 +14,5 @@ function switchPage(page) {
     if (page === 'organizers') loadOrganizers();
     if (page === 'locations') loadLocations();
     if (page === 'logs') loadLogDates();
+    if (page === 'vks') loadEvents();
 }

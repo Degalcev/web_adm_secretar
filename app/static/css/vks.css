@@ -1,0 +1,134 @@
+/* ─── VKS Tabs ──────────────────────────────────────────────────────── */
+.vks-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  width: fit-content;
+}
+
+.vks-tab {
+  padding: 8px 20px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vks-tab:hover { color: var(--text); }
+.vks-tab.active { background: var(--accent); color: #fff; }
+
+/* ─── VKS Board ─────────────────────────────────────────────────────── */
+.vks-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vks-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vks-date-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vks-date-count {
+  background: var(--surface3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+/* ─── VKS Card ──────────────────────────────────────────────────────── */
+.vks-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.15s;
+}
+
+.vks-card:hover {
+  border-color: var(--border-h);
+  box-shadow: var(--shadow);
+}
+
+.vks-card.completed {
+  opacity: 0.6;
+}
+
+.vks-card-time {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+.vks-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.vks-card-desc {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.vks-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.vks-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--surface3);
+  color: var(--text2);
+}
+
+.vks-card-url {
+  font-size: 12px;
+  color: var(--accent-l);
+  text-decoration: none;
+}
+.vks-card-url:hover { text-decoration: underline; }
+
+.vks-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.stat-success .stat-value { color: var(--success); }
