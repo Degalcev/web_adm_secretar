@@ -2,7 +2,7 @@
 """Скрипт деплоя на VPS.
 
 Использование:
-    python deploy.py test   - Деплой тестового сайта (IP:8081, /opt/web_test)
+    python deploy.py test   - Деплой тестового сайта (IP:8082, /opt/web_test)
     python deploy.py prod   - Деплой продакшена (bot.dlab.run, /opt/web)
 """
 
@@ -18,13 +18,13 @@ VPS_PASS = 'Ghbnjr77'
 CONFIGS = {
     'test': {
         'deploy_path': '/opt/web_test',
-        'port': 8081,
+        'port': 8082,
         'env_file': 'deploy/.env.test',
         'service_name': 'web-admin-test',
     },
     'prod': {
         'deploy_path': '/opt/web',
-        'port': 8080,
+        'port': 8081,
         'env_file': 'deploy/.env.prod',
         'service_name': 'web-admin',
     },
@@ -68,7 +68,7 @@ def deploy(env_name):
 
     try:
         # 1. Создаём папку
-        print(f'[1/6] Создаю папку {deploy_path}...')
+        print(f'[1/5] Создаю папку {deploy_path}...')
         rc, out, err = run_cmd(ssh, f'mkdir -p {deploy_path}')
         if rc != 0:
             print(f'    ОШИБКА: {err}')
@@ -76,25 +76,27 @@ def deploy(env_name):
             print('    OK')
 
         # 2. Клонируем/обновляем репозиторий
-        print(f'[2/6] Клонирую репозиторий...')
-        rc, out, err = run_cmd(ssh, f'cd {deploy_path} && git clone https://github.com/Degalcev/web_adm_secretar.git . 2>/dev/null || git pull origin develop')
+        print(f'[2/5] Клонирую репозиторий...')
+        # Проверяем есть ли уже git репозиторий
+        rc, _, _ = run_cmd(ssh, f'cd {deploy_path} && git status 2>/dev/null')
+        if rc == 0:
+            # Уже есть репозиторий - обновляем
+            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && git fetch origin && git reset --hard origin/develop')
+        else:
+            # Нет репозитория - клонируем
+            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && rm -rf * .* 2>/dev/null; git clone https://github.com/Degalcev/web_adm_secretar.git . && git checkout develop')
         print(f'    {out.strip() or "OK"}')
 
-        # 3. Переключаемся на develop
-        print(f'[3/6] Переключаюсь на develop...')
-        rc, out, err = run_cmd(ssh, f'cd {deploy_path} && git checkout develop && git pull origin develop')
-        print(f'    {out.strip() or "OK"}')
-
-        # 4. Создаём venv и ставим зависимости
-        print(f'[4/6] Устанавливаю зависимости...')
+        # 3. Создаём venv и ставим зависимости
+        print(f'[3/5] Устанавливаю зависимости...')
         rc, out, err = run_cmd(ssh, f'cd {deploy_path} && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt -q')
         if rc != 0:
             print(f'    ОШИБКА: {err}')
         else:
             print('    OK')
 
-        # 5. Записываем .env
-        print(f'[5/6] Записываю .env...')
+        # 4. Записываем .env
+        print(f'[4/5] Записываю .env...')
         # Экранируем для shell
         escaped = env_content.replace("'", "'\\''")
         rc, out, err = run_cmd(ssh, f"cat > {deploy_path}/.env << 'ENDOFFILE'\n{env_content}\nENDOFFILE")
@@ -103,8 +105,8 @@ def deploy(env_name):
         else:
             print('    OK')
 
-        # 6. Перезапускаем сервис
-        print(f'[6/6] Перезапускаю {cfg["service_name"]}...')
+        # 5. Перезапускаем сервис
+        print(f'[5/5] Перезапускаю {cfg["service_name"]}...')
         rc, out, err = run_cmd(ssh, f'systemctl restart {cfg["service_name"]}')
         if rc != 0:
             print(f'    ОШИБКА: {err}')
