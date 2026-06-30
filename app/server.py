@@ -24,6 +24,21 @@ async def start_webapp(host='0.0.0.0', port=8080):
     app.router.add_post('/admin/login', admin_login)
     app.router.add_post('/admin/logout', admin_logout)
 
+    # SPA routes - отдают тот же HTML
+    spa_routes = [
+        '/',
+        '/admin/users',
+        '/admin/organizers',
+        '/admin/locations',
+        '/admin/logs',
+        '/conferences',
+        '/conferences/completed',
+        '/settings',
+        '/settings/general',
+    ]
+    for route in spa_routes:
+        app.router.add_get(route, admin_page)
+
     # Resource routes
     setup_users_routes(app)
     setup_organizers_routes(app)
