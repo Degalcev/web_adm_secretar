@@ -138,16 +138,16 @@ async def admin_login(request: web.Request) -> web.Response:
         response.set_cookie(
             'admin_token', token,
             httponly=True,
-            secure=True,
+            secure=False,
             max_age=86400,
-            samesite='Strict'
+            samesite='Lax'
         )
         response.set_cookie(
             'csrf_token', csrf_token,
             httponly=False,
-            secure=True,
+            secure=False,
             max_age=86400,
-            samesite='Strict'
+            samesite='Lax'
         )
         logger.info('Администратор {} вошёл в панель', max_id)
         return response
