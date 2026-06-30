@@ -10,7 +10,7 @@ from database.sending import add_organizer, update_organizer, delete_organizer
 async def get_organizers_handler(request: web.Request) -> web.Response:
     try:
         items = await get_organizers()
-        data = [{'id': o.id, 'name': o.name or '', 'short_name': o.short_name or '', 'base_url': o.base_url or ''} for o in items]
+        data = [{'id': o.id, 'name': o.name or '', 'base_url': o.base_url or ''} for o in items]
         return web.json_response(data)
     except Exception as e:
         logger.error('Ошибка получения организаторов: {}', repr(e))
@@ -24,7 +24,6 @@ async def create_organizer_handler(request: web.Request) -> web.Response:
         data = await request.json()
         new_id = await add_organizer(
             name=data.get('name', ''),
-            short_name=data.get('short_name', ''),
             base_url=data.get('base_url', ''),
         )
         return web.json_response({'ok': True, 'id': new_id})
@@ -42,7 +41,6 @@ async def update_organizer_handler(request: web.Request) -> web.Response:
         await update_organizer(
             organizer_id=item_id,
             name=data.get('name'),
-            short_name=data.get('short_name'),
             base_url=data.get('base_url'),
         )
         return web.json_response({'ok': True})

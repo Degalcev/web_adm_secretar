@@ -82,9 +82,8 @@ class Organizer(Base):
     __tablename__ = 'organizers'
 
     id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
-    name       = mapped_column(String(40))
-    short_name = mapped_column(String(20), nullable=True)
-    base_url   = mapped_column(String())
+    name       = mapped_column(String(100))
+    base_url   = mapped_column(String(), nullable=True)
     updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     __table_args__ = (

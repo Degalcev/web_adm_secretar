@@ -100,7 +100,7 @@ function renderVksBoard() {
 function getOrganizerName(id) {
     // Используем глобальный массив allOrganizers из organizers.js
     const o = (typeof allOrganizers !== 'undefined') ? allOrganizers.find(x => x.id === id) : null;
-    return o ? o.short_name || o.name : '';
+    return o ? o.name : '';
 }
 
 function getLocationName(id) {
@@ -181,7 +181,7 @@ async function loadEventSelects() {
     const locSelect = document.getElementById('f-event-location');
 
     orgSelect.innerHTML = '<option value="">Не указан</option>' +
-        (allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+        (allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
 
     locSelect.innerHTML = '<option value="">Не указана</option>' +
         (allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
