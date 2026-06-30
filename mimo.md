@@ -8,51 +8,47 @@
 ## Основной стек
 - **Backend**: Python 3.x + asyncio + aiohttp
 - **База данных**: PostgreSQL (asyncpg) + SQLAlchemy async
-- **Авторизация**: argon2-cffi хеширование паролей, сессии в памяти
-- **Логирование**: loguru с просмотром логов из нескольких источников
-- **Frontend**: Vanilla JS/CSS (тёмная тема)
-- **Деплой**: paramiko SSH к VPS (45.90.217.225)
-
-## Правила проекта
-1. Область: CRUD пользователей + организаторов + локаций + просмотр логов (без логики бота)
-2. Деплой через paramiko SSH на VPS `/opt/web/`, порт 8080
-3. Админ-панель доступна на `https://bot.dlab.run/admin` через nginx
-4. GitHub: `https://github.com/Degalcev/web_adm_secretar`
+- **Авторизация**: argon2-cffi, сессии в PostgreSQL
+- **Логирование**: loguru
+- **Frontend**: Vanilla JS/CSS (модульная структура)
+- **Деплой**: paramiko SSH к VPS
 
 ## Архитектура
-- Точка входа: `main.py` → `app/server.py` → `app/admin_routes.py`
-- Модели БД: `database/models.py` (User, Organizer, Location)
-- Операции БД: `database/requests.py` (чтение), `database/sending.py` (запись)
-- Конфигурация: `config.py` загружает из `.env`
-- Статические файлы: `app/static/` (admin.html, css/, js/)
+```
+app/
+├── auth.py              # Авторизация, CSRF, rate limiting, сессии
+├── server.py            # Точка входа aiohttp
+├── routes/
+│   ├── __init__.py
+│   ├── users.py         # CRUD пользователей
+│   ├── organizers.py    # CRUD организаторов
+│   ├── locations.py     # CRUD локаций
+│   ├── logs.py          # Просмотр логов
+│   └── vks.py           # CRUD событий ВКС
+└── static/
+    ├── admin.html
+    ├── css/ (base, layout, components, tables, modals, logs, vks, responsive)
+    └── js/ (utils, auth, navigation, users, organizers, locations, logs, vks, app)
 
-## Направления разработки
-- Python async паттерны (asyncio, aiohttp)
-- SQLAlchemy async ORM
-- PostgreSQL запросы и миграции
-- REST API дизайн
-- Frontend JavaScript (vanilla)
-- CSS тёмная тема
-- SSH деплой и управление VPS
-- Безопасность (авторизация, хеширование, защита от CSRF)
-- Java разработка ( Spring Boot и экосистема)
-- Графика и UI/UX дизайн
+database/
+├── models.py            # User, Organizer, Location, Session, Event
+├── requests.py          # Запросы (чтение)
+└── sending.py           # Операции (запись)
+```
 
-## Специализации агентов
-1. **Backend агент**: Python, asyncio, aiohttp, SQLAlchemy
-2. **Frontend агент**: HTML, CSS, JavaScript, UI/UX
-3. **DevOps агент**: SSH, деплой, nginx, VPS
-4. **Database агент**: PostgreSQL, миграции, запросы
-5. **Security агент**: Авторизация, хеширование, CSRF, валидация ввода
-6. **Java агент**: Java, Spring Boot, JVM экосистема
-7. **Graphics агент**: Графический дизайн, UI/UX, SVG, CSS-анимации
+## Базы данных
+- **vks_db** — продакшен (бот + админка)
+- **test_db** — тестовая (разработка, структура = vks_db)
 
-## Активные задачи
-- Реализация CRUD организаторов с полем short_name
-- Просмотр логов из нескольких источников
-- Автоматизация деплоя
+## Правила проекта
+1. Деплой через paramiko SSH на VPS
+2. Тест: `http://45.90.217.225/admin` (порт 8082)
+3. Продакшен: `https://bot.dlab.run/admin` (порт 8080)
+4. GitHub: `https://github.com/Degalcev/web_adm_secretar`
+5. При разработке использовать test_db
 
-## Известные проблемы
-- Сессии теряются при перезапуске (словарь в памяти)
-- Нет защиты CSRF на маршрутах админа
-- Пароль админа по умолчанию в конфиге
+## Скилы и агенты
+См. `.mimocode/skills/` и `.mimocode/agents/`
+- python-async, sqlalchemy-async, web-frontend
+- security-auth, devops-ssh, loguru-logging
+- java-development, graphics-ui
