@@ -228,13 +228,18 @@ function renderLocations() {
         .map(id => ({ name: locName(id), id, total: locTotal[id], today: locToday[id] || 0 }))
         .sort((a, b) => b.total - a.total);
 
-    el.innerHTML = entries.map(e => `
-        <a class="dash-loc-item" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
-            <div class="dash-loc-name">${e.name}</div>
-            <div class="dash-loc-today">${e.today > 0 ? e.today : '—'}</div>
-            <div class="dash-loc-count">${e.total}</div>
-        </a>
-    `).join('') || '<div class="dash-empty" style="grid-column:1/-1;">Нет данных</div>';
+    el.innerHTML = `
+        <div class="dash-loc-col-header">Локация</div>
+        <div class="dash-loc-col-header dash-loc-col-center">Сегодня</div>
+        <div class="dash-loc-col-header dash-loc-col-center">Всего</div>
+        ${entries.map(e => `
+            <a class="dash-loc-item" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
+                <div class="dash-loc-name">${e.name}</div>
+                <div class="dash-loc-today">${e.today > 0 ? e.today : '—'}</div>
+                <div class="dash-loc-count">${e.total}</div>
+            </a>
+        `).join('')}
+    ` || '<div class="dash-empty" style="grid-column:1/-1;">Нет данных</div>';
 }
 
 function setupChartToggle() {
