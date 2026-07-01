@@ -29,6 +29,8 @@ function initDashboard() {
     setupDashboardClicks();
 }
 
+let _dashLastDay = '';
+
 function updateDateTime() {
     const el = document.getElementById('dash-datetime');
     if (!el) return;
@@ -43,6 +45,12 @@ function updateDateTime() {
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
     el.innerHTML = `<span class="dash-dt-day">${day}</span>, <span class="dash-dt-date">${date} ${month} ${year}</span> <span class="dash-dt-time">${hours}:${minutes}:${seconds}</span>`;
+
+    const todayStr = `${year}-${now.getMonth()}-${now.getDate()}`;
+    if (_dashLastDay && _dashLastDay !== todayStr) {
+        loadDashboardData();
+    }
+    _dashLastDay = todayStr;
 }
 
 function setupDashboardClicks() {
@@ -180,7 +188,7 @@ function renderSoon() {
                 <div class="dash-upcoming-time">${e.time || '--:--'}</div>
                 <div class="dash-upcoming-info">
                     <div class="dash-upcoming-desc">${e.description || ''}</div>
-                    <div class="dash-upcoming-meta">${dayName}, ${d.getDate()}.${d.getMonth()+1} · ${locName(e.location_id)}</div>
+                    <div class="dash-upcoming-meta">${dayName}, ${d.getDate()}.${d.getMonth()+1} · ${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
                 </div>
             </a>
         `;
@@ -219,18 +227,14 @@ function renderLocations() {
     const entries = Object.keys(locTotal)
         .map(id => ({ name: locName(id), id, total: locTotal[id], today: locToday[id] || 0 }))
         .sort((a, b) => b.total - a.total);
-    const max = entries.length > 0 ? entries[0].total : 1;
 
     el.innerHTML = entries.map(e => `
-        <a class="dash-loc-item" data-href="/conferences/" data-filter="location:${e.id}" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
+        <a class="dash-loc-item" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
             <div class="dash-loc-name">${e.name}</div>
-            <div class="dash-loc-bar-wrap">
-                <div class="dash-loc-bar" style="width: ${(e.total / max * 100)}%"></div>
-            </div>
-            <div class="dash-loc-today">${e.today > 0 ? e.today + ' сег.' : ''}</div>
+            <div class="dash-loc-today">${e.today > 0 ? e.today : '—'}</div>
             <div class="dash-loc-count">${e.total}</div>
         </a>
-    `).join('') || '<div class="dash-empty">Нет данных</div>';
+    `).join('') || '<div class="dash-empty" style="grid-column:1/-1;">Нет данных</div>';
 }
 
 function setupChartToggle() {
