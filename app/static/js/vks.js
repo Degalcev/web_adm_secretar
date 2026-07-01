@@ -44,7 +44,7 @@ async function loadVksActive() {
         _pendingVksFilter = null;
         setTimeout(() => {
             if (f === 'all') filterVksByQuick('all');
-            else if (f === 'active') filterVksByQuick('all');
+            else if (f === 'active') filterVksByQuick('active');
             else if (f === 'missed') filterVksByQuick('missed');
             else if (f.startsWith('location:')) {
                 const locId = f.split(':')[1];

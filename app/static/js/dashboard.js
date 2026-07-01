@@ -159,12 +159,11 @@ function renderSoon() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const weekLater = new Date(today); weekLater.setDate(today.getDate() + 7);
 
     const events = _dashEvents
         .filter(e => !e.completed)
         .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
-        .filter(e => e._date >= tomorrow && e._date < weekLater)
+        .filter(e => e._date >= tomorrow)
         .sort((a, b) => a._date - b._date);
 
     if (events.length === 0) {
