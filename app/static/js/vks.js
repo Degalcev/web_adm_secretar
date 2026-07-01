@@ -161,6 +161,9 @@ function renderVksBoard(boardId, filter) {
             events = events.filter(e => e.date && e.date > today);
         } else if (_quickFilter === 'missed') {
             events = events.filter(e => !e.date || e.date < today);
+        } else if (_quickFilter === 'active') {
+            // Only non-missed, non-completed events
+            events = events.filter(e => e.date && e.date >= today);
         }
     }
 
@@ -567,6 +570,12 @@ async function saveEvent() {
             const completedBoard = document.getElementById('vks-board-completed');
             if (activeBoard) renderVksBoard('vks-board-active', 'active');
             if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
+            // Refresh dashboard if visible
+            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
+                _dashEvents = [...allEvents];
+                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+                renderDashboard();
+            }
             showToast(wasEditing ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
@@ -588,6 +597,11 @@ async function completeEvent(id) {
         if (data.ok) {
             await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
+            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
+                _dashEvents = [...allEvents];
+                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+                renderDashboard();
+            }
             showToast('ВКС завершено', 'success');
         }
     } catch (e) {
@@ -619,6 +633,11 @@ async function confirmDeleteEvent() {
             await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
+            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
+                _dashEvents = [...allEvents];
+                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+                renderDashboard();
+            }
             showToast('Удалено', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
