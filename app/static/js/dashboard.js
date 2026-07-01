@@ -11,6 +11,20 @@ function initDashboard() {
     updateDateTime();
     if (_dashDateTimeInterval) clearInterval(_dashDateTimeInterval);
     _dashDateTimeInterval = setInterval(updateDateTime, 1000);
+
+    // Restore cached data instantly
+    const cached = localStorage.getItem('dash_cache');
+    if (cached) {
+        try {
+            const c = JSON.parse(cached);
+            _dashEvents = c.events || [];
+            _dashLocations = c.locations || {};
+            _dashOrganizers = c.organizers || {};
+            if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
+            renderDashboard();
+        } catch (e) {}
+    }
+
     loadDashboardData();
     setupDashboardClicks();
 }
@@ -80,6 +94,15 @@ async function loadDashboardData() {
         _dashOrganizers = {};
         organizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
         if (typeof window !== 'undefined') window.allOrganizers = organizers;
+
+        // Cache for instant restore on next visit
+        try {
+            localStorage.setItem('dash_cache', JSON.stringify({
+                events: _dashEvents,
+                locations: _dashLocations,
+                organizers: _dashOrganizers
+            }));
+        } catch (e) {}
 
         renderDashboard();
     } catch (e) {
