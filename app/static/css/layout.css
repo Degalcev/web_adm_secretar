@@ -117,12 +117,25 @@
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-group-header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 12%, transparent), transparent);
+  transition: left 0.4s ease;
 }
 
 .nav-group-header:hover {
   color: var(--accent);
   background: color-mix(in oklab, var(--accent) 10%, transparent);
 }
+
+.nav-group-header:hover::before { left: 100%; }
 
 .nav-group.open > .nav-group-header {
   color: var(--accent);
@@ -172,6 +185,17 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 12%, transparent), transparent);
+  transition: left 0.4s ease;
 }
 
 .nav-item:hover {
@@ -180,11 +204,15 @@
   transform: translateX(4px);
 }
 
+.nav-item:hover::before { left: 100%; }
+
 .nav-item.active {
   font-weight: 600;
   color: var(--ifm-color-primary);
   background: linear-gradient(135deg, color-mix(in oklab, var(--accent) 15%, transparent), color-mix(in oklab, var(--accent-ambient) 15%, transparent));
 }
+
+.nav-item.active::before { display: none; }
 
 .nav-item svg {
   width: 18px;
