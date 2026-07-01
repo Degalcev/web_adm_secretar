@@ -31,8 +31,68 @@ async function loadAllEvents() {
 async function loadVksActive() {
     await loadAllEvents();
     populateVksFilters();
+    updateVksStats();
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
+}
+
+function _getLocalDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function updateVksStats() {
+    const active = allEvents.filter(e => !e.completed);
+    const now = new Date();
+    const today = _getLocalDateStr(now);
+    const tmr = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
+    const da = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+2));
+
+    let total = active.length;
+    let todayCount = 0;
+    let soonCount = 0;
+    let missedCount = 0;
+
+    active.forEach(e => {
+        if (!e.date) { missedCount++; return; }
+        if (e.date < today) { missedCount++; }
+        else if (e.date === today) { todayCount++; }
+        else if (e.date === tmr || e.date === da) { soonCount++; }
+    });
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('stat-vks-total', total);
+    set('stat-vks-today', todayCount);
+    set('stat-vks-soon', soonCount);
+    set('stat-vks-missed', missedCount);
+}
+
+let _quickFilter = '';
+
+function filterVksByQuick(type) {
+    const dateInput = document.getElementById('f-vks-active-date');
+    if (_quickFilter === type) {
+        _quickFilter = '';
+        dateInput.value = '';
+    } else {
+        _quickFilter = type;
+        const now = new Date();
+        if (type === 'today') {
+            dateInput.value = _getLocalDateStr(now);
+        } else if (type === 'soon') {
+            dateInput.value = '';
+        } else if (type === 'missed') {
+            dateInput.value = '';
+        } else {
+            dateInput.value = '';
+        }
+    }
+    document.querySelectorAll('#vks-active-stats .stat-card').forEach(card => card.classList.remove('active'));
+    if (_quickFilter) {
+        const idx = { all: 0, today: 1, soon: 2, missed: 3 }[type];
+        const cards = document.querySelectorAll('#vks-active-stats .stat-card');
+        if (cards[idx]) cards[idx].classList.add('active');
+    }
+    renderVksBoard('vks-board-active', 'active');
 }
 
 async function loadVksCompleted() {
@@ -68,6 +128,20 @@ function renderVksBoard(boardId, filter) {
             (e.description || '').toLowerCase().includes(descVal) ||
             (e.url || '').toLowerCase().includes(descVal)
         );
+    }
+
+    if (_quickFilter && filter === 'active') {
+        const now = new Date();
+        const today = _getLocalDateStr(now);
+        const tmr = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
+        const da = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+2));
+        if (_quickFilter === 'today') {
+            events = events.filter(e => e.date === today);
+        } else if (_quickFilter === 'soon') {
+            events = events.filter(e => e.date === tmr || e.date === da);
+        } else if (_quickFilter === 'missed') {
+            events = events.filter(e => !e.date || e.date < today);
+        }
     }
 
     if (!events.length) {
@@ -263,6 +337,8 @@ function resetVksActiveFilters() {
     document.getElementById('f-vks-active-org').value = '';
     document.getElementById('f-vks-active-loc').value = '';
     document.getElementById('f-vks-active-desc').value = '';
+    _quickFilter = '';
+    document.querySelectorAll('#vks-active-stats .stat-card').forEach(c => c.classList.remove('active'));
     filterVksListActive();
 }
 
