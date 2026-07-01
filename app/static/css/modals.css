@@ -109,7 +109,13 @@
 /* ─── Form ──────────────────────────────────────────────────────────── */
 .form-group { margin-bottom: 0; }
 .form-group + .form-group { margin-top: 10px; }
-.form-group label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem; }
+.form-group label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  margin-bottom: 0.5rem;
+}
 
 .form-row {
   display: flex;
