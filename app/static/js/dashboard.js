@@ -155,13 +155,14 @@ function renderToday() {
         .sort((a, b) => a._date - b._date);
 
     if (events.length === 0) {
-        el.innerHTML = '<div class="dash-empty">Нет мероприятий на сегодня</div>';
-        el.classList.remove('has-more');
+        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет мероприятий на сегодня</div>';
+        el.classList.remove('has-scroll');
         return;
     }
 
-    el.innerHTML = events.slice(0, 4).map(e => renderUpcomingItem(e)).join('');
-    el.classList.toggle('has-more', events.length > 4);
+    const items = events.slice(0, 8).map(e => renderUpcomingItem(e)).join('');
+    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
+    checkUpcomingScroll(el);
 }
 
 function renderSoon() {
@@ -177,12 +178,12 @@ function renderSoon() {
         .sort((a, b) => a._date - b._date);
 
     if (events.length === 0) {
-        el.innerHTML = '<div class="dash-empty">Нет ближайших мероприятий</div>';
-        el.classList.remove('has-more');
+        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет ближайших мероприятий</div>';
+        el.classList.remove('has-scroll');
         return;
     }
 
-    el.innerHTML = events.slice(0, 4).map(e => {
+    const items = events.slice(0, 8).map(e => {
         const d = e._date;
         const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
         const dayName = dayNames[d.getDay()];
@@ -196,7 +197,24 @@ function renderSoon() {
             </a>
         `;
     }).join('');
-    el.classList.toggle('has-more', events.length > 4);
+
+    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
+    checkUpcomingScroll(el);
+}
+
+function checkUpcomingScroll(el) {
+    requestAnimationFrame(() => {
+        const fade = el.querySelector('.dash-upcoming-fade');
+        if (fade) fade.remove();
+        if (el.scrollHeight > el.clientHeight + 5) {
+            el.classList.add('has-scroll');
+            const f = document.createElement('div');
+            f.className = 'dash-upcoming-fade';
+            el.appendChild(f);
+        } else {
+            el.classList.remove('has-scroll');
+        }
+    });
 }
 
 function renderUpcomingItem(e) {

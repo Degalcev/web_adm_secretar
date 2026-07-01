@@ -91,8 +91,8 @@
   border-radius: 0.75rem;
   padding: 1.25rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
   min-width: 0;
+  overflow: visible;
 }
 
 .dash-section-title {
@@ -121,20 +121,26 @@
   overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
-  position: relative;
 }
 
 .dash-upcoming-body::-webkit-scrollbar { display: none; }
 
 .dash-upcoming-fade {
-  position: absolute;
+  display: none;
+}
+
+.dash-upcoming-body.has-scroll .dash-upcoming-fade {
+  display: block;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 40px;
+  height: 36px;
   background: linear-gradient(transparent, color-mix(in oklab, var(--bg-elevated) 95%, transparent));
   pointer-events: none;
-  z-index: 1;
+  flex-shrink: 0;
+  margin: 0 -1.25rem -1.25rem;
+  padding: 0 1.25rem;
 }
 
 .dash-upcoming-item {
