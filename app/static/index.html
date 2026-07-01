@@ -161,11 +161,18 @@
         </div>
       </div>
 
-      <!-- Chart: VKS by day of week -->
+      <!-- Chart: VKS stats -->
       <div class="dash-section dash-chart-section">
-        <div class="dash-section-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
-          ВКС по дням недели
+        <div class="dash-chart-header">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
+            ВКС статистика
+          </div>
+          <div class="dash-chart-toggle" id="dash-chart-toggle">
+            <button class="dash-toggle-btn active" data-period="week">Неделя</button>
+            <button class="dash-toggle-btn" data-period="month">Месяц</button>
+            <button class="dash-toggle-btn" data-period="year">Год</button>
+          </div>
         </div>
         <div class="dash-chart" id="dash-chart"></div>
       </div>
