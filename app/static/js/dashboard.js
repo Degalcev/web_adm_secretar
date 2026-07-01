@@ -207,6 +207,10 @@ function renderUpcomingItem(e) {
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
                 <div class="dash-upcoming-meta">${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
             </div>
+            <label class="dash-check" onclick="event.stopPropagation(); event.preventDefault();">
+                <input type="checkbox" onchange="dashCompleteEvent('${e.id}', this.checked)">
+                <span class="dash-check-mark"></span>
+            </label>
         </a>
     `;
 }
@@ -250,7 +254,7 @@ function renderBarList(elId, entries, colorVar) {
     }
     const max = entries[0].count || 1;
     el.innerHTML = entries.map(e => `
-        <div class="dash-bar-row" data-loc-id="${e.id}" onclick="onDashLocClick('${e.id}')">
+        <div class="dash-bar-row">
             <div class="dash-bar-name">${e.name}</div>
             <div class="dash-bar-wrap">
                 <div class="dash-bar" style="width: ${(e.count / max * 100)}%; background: var(--${colorVar});"></div>
@@ -368,10 +372,32 @@ function drawChart() {
                     <div class="dash-chart-count">${c || ''}</div>
                     <div class="dash-chart-bar-wrap">
                         <div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div>
-                    </div>
+                     </div>
                     <div class="dash-chart-label">${labels[i]}</div>
                 </div>
             `).join('')}
         </div>
     `;
+}
+
+async function dashCompleteEvent(id, checked) {
+    if (!checked) return;
+    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    try {
+        const resp = await fetch(`/admin/api/events/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ completed: true, csrf_token: csrfToken })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            await loadAllEvents();
+            _dashEvents = [...allEvents];
+            try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+            renderDashboard();
+            showToast('ВКС завершено', 'success');
+        }
+    } catch (e) {
+        showToast('Ошибка сети', 'error');
+    }
 }
