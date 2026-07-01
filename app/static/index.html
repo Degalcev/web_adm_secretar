@@ -166,9 +166,22 @@
           <div class="dash-bar-list" id="dash-loc-today"></div>
         </div>
         <div class="dash-section">
-          <div class="dash-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ambient)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Локации — всего
+          <div class="dash-chart-header">
+            <div class="dash-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ambient)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Локации — всего
+            </div>
+            <div class="dash-chart-controls">
+              <button class="dash-month-btn" onclick="dashLocYearNav(-1)" id="dash-loc-year-prev">&#8249;</button>
+              <span class="dash-month-label" id="dash-loc-year-label"></span>
+              <button class="dash-month-btn" onclick="dashLocYearNav(1)" id="dash-loc-year-next">&#8250;</button>
+              <div class="dash-chart-toggle" id="dash-loc-toggle">
+                <button class="dash-toggle-btn active" data-period="all">Все</button>
+                <button class="dash-toggle-btn" data-period="year">Год</button>
+                <button class="dash-toggle-btn" data-period="month">Месяц</button>
+                <button class="dash-toggle-btn" data-period="week">Неделя</button>
+              </div>
+            </div>
           </div>
           <div class="dash-bar-list" id="dash-loc-total"></div>
         </div>
@@ -182,13 +195,17 @@
             ВКС статистика
           </div>
           <div class="dash-chart-controls">
-            <button class="dash-month-btn" onclick="prevMonth()" id="dash-month-prev">&#8249;</button>
+            <button class="dash-month-btn" onclick="dashYearNav(-1)" id="dash-year-prev">&#8249;</button>
+            <span class="dash-month-label" id="dash-chart-year-label"></span>
+            <button class="dash-month-btn" onclick="dashYearNav(1)" id="dash-year-next">&#8250;</button>
+            <button class="dash-month-btn" onclick="dashMonthNav(-1)" id="dash-month-prev" style="display:none;">&#8249;</button>
             <span class="dash-month-label" id="dash-chart-month-label"></span>
-            <button class="dash-month-btn" onclick="nextMonth()" id="dash-month-next">&#8250;</button>
+            <button class="dash-month-btn" onclick="dashMonthNav(1)" id="dash-month-next" style="display:none;">&#8250;</button>
             <div class="dash-chart-toggle" id="dash-chart-toggle">
               <button class="dash-toggle-btn active" data-period="week">Неделя</button>
               <button class="dash-toggle-btn" data-period="month">Месяц</button>
               <button class="dash-toggle-btn" data-period="year">Год</button>
+              <button class="dash-toggle-btn" data-period="all">Все</button>
             </div>
           </div>
         </div>
