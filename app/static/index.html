@@ -156,13 +156,22 @@
         </div>
       </div>
 
-      <!-- Locations: today vs total -->
-      <div class="dash-section" style="margin-bottom: 1.5rem;">
-        <div class="dash-section-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          По локациям
+      <!-- Locations: two bar charts side by side -->
+      <div class="dash-row">
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Локации — сегодня
+          </div>
+          <div class="dash-bar-list" id="dash-loc-today"></div>
         </div>
-        <div id="dash-locations" class="dash-loc-grid"></div>
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ambient)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Локации — всего
+          </div>
+          <div class="dash-bar-list" id="dash-loc-total"></div>
+        </div>
       </div>
 
       <!-- Chart: VKS stats -->

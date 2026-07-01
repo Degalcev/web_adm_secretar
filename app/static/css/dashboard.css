@@ -167,62 +167,51 @@
   color: var(--fg-muted);
 }
 
-/* ─── Locations ───────────────────────────────────────────────────── */
-.dash-loc-grid {
-  display: grid;
-  grid-template-columns: 1fr 80px 80px;
-  gap: 0;
+/* ─── Bar Lists (locations) ──────────────────────────────────────── */
+.dash-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dash-bar-row {
+  display: flex;
   align-items: center;
+  gap: 0.75rem;
 }
 
-.dash-loc-col-header {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--fg-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.dash-loc-col-center { text-align: center; }
-
-.dash-loc-item {
-  display: contents;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.dash-loc-item > * {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border);
-  transition: background 0.2s ease;
-}
-
-.dash-loc-item:hover > * {
-  background: color-mix(in oklab, var(--accent) 6%, transparent);
-}
-
-.dash-loc-name {
+.dash-bar-name {
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--fg);
+  min-width: 80px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dash-loc-today {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-align: center;
+.dash-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.dash-loc-count {
+.dash-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  min-width: 2px;
+}
+
+.dash-bar-count {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--fg-muted);
-  text-align: center;
+  min-width: 24px;
+  text-align: right;
 }
 
 /* ─── Chart ───────────────────────────────────────────────────────── */

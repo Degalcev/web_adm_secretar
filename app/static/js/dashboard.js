@@ -208,7 +208,6 @@ function renderUpcomingItem(e) {
 }
 
 function renderLocations() {
-    const el = document.getElementById('dash-locations');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
@@ -224,22 +223,37 @@ function renderLocations() {
         }
     });
 
-    const entries = Object.keys(locTotal)
-        .map(id => ({ name: locName(id), id, total: locTotal[id], today: locToday[id] || 0 }))
-        .sort((a, b) => b.total - a.total);
+    const allIds = [...new Set([...Object.keys(locToday), ...Object.keys(locTotal)])];
+    const todayEntries = allIds
+        .map(id => ({ name: locName(id), id, count: locToday[id] || 0 }))
+        .filter(e => e.count > 0)
+        .sort((a, b) => b.count - a.count);
+    const totalEntries = allIds
+        .map(id => ({ name: locName(id), id, count: locTotal[id] || 0 }))
+        .filter(e => e.count > 0)
+        .sort((a, b) => b.count - a.count);
 
-    el.innerHTML = `
-        <div class="dash-loc-col-header">Локация</div>
-        <div class="dash-loc-col-header dash-loc-col-center">Сегодня</div>
-        <div class="dash-loc-col-header dash-loc-col-center">Всего</div>
-        ${entries.map(e => `
-            <a class="dash-loc-item" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
-                <div class="dash-loc-name">${e.name}</div>
-                <div class="dash-loc-today">${e.today > 0 ? e.today : '—'}</div>
-                <div class="dash-loc-count">${e.total}</div>
-            </a>
-        `).join('')}
-    ` || '<div class="dash-empty" style="grid-column:1/-1;">Нет данных</div>';
+    renderBarList('dash-loc-today', todayEntries, 'accent');
+    renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
+}
+
+function renderBarList(elId, entries, colorVar) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (entries.length === 0) {
+        el.innerHTML = '<div class="dash-empty">Нет данных</div>';
+        return;
+    }
+    const max = entries[0].count || 1;
+    el.innerHTML = entries.map(e => `
+        <div class="dash-bar-row" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');" style="cursor:pointer;">
+            <div class="dash-bar-name">${e.name}</div>
+            <div class="dash-bar-wrap">
+                <div class="dash-bar" style="width: ${(e.count / max * 100)}%; background: var(--${colorVar});"></div>
+            </div>
+            <div class="dash-bar-count">${e.count}</div>
+        </div>
+    `).join('');
 }
 
 function setupChartToggle() {
