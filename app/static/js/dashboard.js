@@ -156,10 +156,12 @@ function renderToday() {
 
     if (events.length === 0) {
         el.innerHTML = '<div class="dash-empty">Нет мероприятий на сегодня</div>';
+        el.classList.remove('has-more');
         return;
     }
 
-    el.innerHTML = events.map(e => renderUpcomingItem(e)).join('');
+    el.innerHTML = events.slice(0, 4).map(e => renderUpcomingItem(e)).join('');
+    el.classList.toggle('has-more', events.length > 4);
 }
 
 function renderSoon() {
@@ -176,10 +178,11 @@ function renderSoon() {
 
     if (events.length === 0) {
         el.innerHTML = '<div class="dash-empty">Нет ближайших мероприятий</div>';
+        el.classList.remove('has-more');
         return;
     }
 
-    el.innerHTML = events.map(e => {
+    el.innerHTML = events.slice(0, 4).map(e => {
         const d = e._date;
         const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
         const dayName = dayNames[d.getDay()];
@@ -193,6 +196,7 @@ function renderSoon() {
             </a>
         `;
     }).join('');
+    el.classList.toggle('has-more', events.length > 4);
 }
 
 function renderUpcomingItem(e) {
@@ -246,7 +250,7 @@ function renderBarList(elId, entries, colorVar) {
     }
     const max = entries[0].count || 1;
     el.innerHTML = entries.map(e => `
-        <div class="dash-bar-row" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');" style="cursor:pointer;">
+        <div class="dash-bar-row" data-loc-id="${e.id}" onclick="onDashLocClick('${e.id}')">
             <div class="dash-bar-name">${e.name}</div>
             <div class="dash-bar-wrap">
                 <div class="dash-bar" style="width: ${(e.count / max * 100)}%; background: var(--${colorVar});"></div>
@@ -254,6 +258,13 @@ function renderBarList(elId, entries, colorVar) {
             <div class="dash-bar-count">${e.count}</div>
         </div>
     `).join('');
+}
+
+function onDashLocClick(locId) {
+    if (typeof _pendingVksFilter !== 'undefined') {
+        _pendingVksFilter = 'location:' + locId;
+    }
+    navigateTo('/conferences/');
 }
 
 function setupChartToggle() {
