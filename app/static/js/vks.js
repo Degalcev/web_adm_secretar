@@ -5,6 +5,7 @@ let editingEventId = null;
 let deletingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
+let _pendingVksFilter = null;
 
 async function ensureOrgsAndLocs() {
     if (!window.allOrganizers || !window.allOrganizers.length) {
@@ -29,11 +30,32 @@ async function loadAllEvents() {
 }
 
 async function loadVksActive() {
-    await loadAllEvents();
+    if (!allEvents.length) {
+        await loadAllEvents();
+    }
     populateVksFilters();
     updateVksStats();
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
+
+    // Apply pending filter from dashboard
+    if (_pendingVksFilter) {
+        const f = _pendingVksFilter;
+        _pendingVksFilter = null;
+        setTimeout(() => {
+            if (f === 'all') filterVksByQuick('all');
+            else if (f === 'active') filterVksByQuick('all');
+            else if (f === 'missed') filterVksByQuick('missed');
+            else if (f.startsWith('location:')) {
+                const locId = f.split(':')[1];
+                const locSel = document.getElementById('f-vks-active-loc');
+                if (locSel) {
+                    locSel.value = locId;
+                    filterVksListActive();
+                }
+            }
+        }, 50);
+    }
 }
 
 function _getLocalDateStr(d) {
@@ -94,7 +116,9 @@ function filterVksByQuick(type) {
 }
 
 async function loadVksCompleted() {
-    await loadAllEvents();
+    if (!allEvents.length) {
+        await loadAllEvents();
+    }
     populateVksFilters();
     const board = document.getElementById('vks-board-completed');
     if (board) renderVksBoard('vks-board-completed', 'completed');

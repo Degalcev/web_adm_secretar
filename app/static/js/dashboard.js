@@ -39,25 +39,18 @@ function setupDashboardClicks() {
             const href = el.dataset.href;
             const filter = el.dataset.filter;
             if (!href) return;
+            if (filter && typeof _pendingVksFilter !== 'undefined') {
+                _pendingVksFilter = filter;
+            }
             navigateTo(href);
-            setTimeout(() => applyDashboardFilter(filter), 300);
         });
     });
 }
 
 function applyDashboardFilter(filter) {
     if (!filter) return;
-    if (filter === 'active') {
-        if (typeof filterVksByQuick === 'function') filterVksByQuick('all');
-    } else if (filter === 'missed') {
-        if (typeof filterVksByQuick === 'function') filterVksByQuick('missed');
-    } else if (filter.startsWith('location:')) {
-        const locId = filter.split(':')[1];
-        const locSel = document.getElementById('f-vks-active-loc');
-        if (locSel) {
-            locSel.value = locId;
-            if (typeof filterVksListActive === 'function') filterVksListActive();
-        }
+    if (typeof _pendingVksFilter !== 'undefined') {
+        _pendingVksFilter = filter;
     }
 }
 
@@ -73,13 +66,20 @@ async function loadDashboardData() {
 
         _dashEvents = await eventsResp.json();
 
+        // Pre-populate vks.js globals so modals and VKS page work instantly
+        if (typeof allEvents !== 'undefined') {
+            allEvents = _dashEvents;
+        }
+
         const locations = await locResp.json();
         _dashLocations = {};
         locations.forEach(l => { _dashLocations[l.id] = l.name; });
+        if (typeof window !== 'undefined') window.allLocations = locations;
 
         const organizers = await orgResp.json();
         _dashOrganizers = {};
         organizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
+        if (typeof window !== 'undefined') window.allOrganizers = organizers;
 
         renderDashboard();
     } catch (e) {
@@ -149,7 +149,7 @@ function renderUpcoming() {
             <div class="dash-upcoming-group">
                 <div class="dash-upcoming-label">${g.label}</div>
                 ${g.events.map(e => `
-                    <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); navigateTo('/conferences/'); setTimeout(() => { openEditEventModal('${e.id}'); }, 400);">
+                    <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
                         <div class="dash-upcoming-time">${e.time || '--:--'}</div>
                         <div class="dash-upcoming-info">
                             <div class="dash-upcoming-desc">${e.description || 'Без описания'}</div>
