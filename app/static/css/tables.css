@@ -77,7 +77,7 @@ tbody tr {
   transition: background var(--motion-fast) var(--ease-standard);
 }
 
-tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+tbody tr:hover { background: color-mix(in oklab, var(--accent) 8%, transparent); }
 
 .table-name {
   display: flex;
