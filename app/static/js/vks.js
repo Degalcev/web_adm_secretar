@@ -380,6 +380,7 @@ async function openAddEventModal() {
     pendingFiles = [];
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
+    document.getElementById('event-modal-delete-btn').style.display = 'none';
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
@@ -401,6 +402,7 @@ async function openEditEventModal(id) {
     pendingFiles = [];
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
+    document.getElementById('event-modal-delete-btn').style.display = 'inline-flex';
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
     document.getElementById('f-event-url').value = e.url || '';
@@ -418,6 +420,15 @@ function closeEventModal() {
     document.getElementById('event-modal').classList.remove('show');
     pendingFiles = [];
     removedDocIds = [];
+}
+
+function confirmDeleteFromModal() {
+    if (!editingEventId) return;
+    const e = allEvents.find(x => x.id === editingEventId);
+    const desc = e ? (e.description || 'без описания') : '';
+    document.getElementById('confirm-text').textContent = `Удалить ВКС «${desc}»? Это действие нельзя отменить.`;
+    deletingEventId = editingEventId;
+    document.getElementById('confirm-overlay').classList.add('show');
 }
 
 function refreshEventDocs() {
@@ -630,6 +641,7 @@ async function confirmDeleteEvent() {
         const data = await resp.json();
         if (data.ok) {
             closeConfirm();
+            closeEventModal();
             await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');

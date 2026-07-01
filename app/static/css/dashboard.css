@@ -117,23 +117,24 @@
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+  max-height: 230px;
   overflow-y: auto;
-  max-height: 220px;
+  -ms-overflow-style: none;
   scrollbar-width: none;
+  position: relative;
 }
 
 .dash-upcoming-body::-webkit-scrollbar { display: none; }
 
-.dash-upcoming-body.has-more::after {
-  content: '';
-  position: sticky;
+.dash-upcoming-fade {
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 32px;
-  background: linear-gradient(transparent, color-mix(in oklab, var(--bg-elevated) 90%, transparent));
+  height: 40px;
+  background: linear-gradient(transparent, color-mix(in oklab, var(--bg-elevated) 95%, transparent));
   pointer-events: none;
-  flex-shrink: 0;
+  z-index: 1;
 }
 
 .dash-upcoming-item {
@@ -153,6 +154,54 @@
 .dash-upcoming-item:hover {
   background: color-mix(in oklab, var(--accent) 6%, transparent);
   border-color: color-mix(in oklab, var(--accent) 15%, transparent);
+}
+
+/* ─── Checkbox ────────────────────────────────────────────────────── */
+.dash-check {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.dash-check input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.dash-check-mark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-strong);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-check-mark::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.dash-check input:checked + .dash-check-mark {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.dash-check input:checked + .dash-check-mark::after {
+  background: #fff;
+}
+
+.dash-check:hover .dash-check-mark {
+  border-color: var(--accent);
 }
 
 .dash-upcoming-time {
