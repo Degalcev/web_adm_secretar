@@ -108,7 +108,7 @@
 
 /* ─── Form ──────────────────────────────────────────────────────────── */
 .form-group { margin-bottom: 0; }
-.form-group + .form-group { margin-top: 10px; }
+.form-group + .form-group { margin-top: 0px; }
 .form-group label {
   display: block;
   font-size: 0.75rem;
