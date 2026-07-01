@@ -67,15 +67,16 @@
   align-items: stretch;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  background: var(--bg-elevated);
+  background: color-mix(in oklab, var(--bg-elevated) 80%, transparent);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: all var(--motion-fast) var(--ease-standard);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
 }
 
 .vks-card:hover {
-  border-color: var(--border-strong);
-  transform: translateX(3px);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .vks-card.completed {
