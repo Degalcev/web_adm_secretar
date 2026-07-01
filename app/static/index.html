@@ -138,25 +138,31 @@
         </a>
       </div>
 
-      <!-- Upcoming events + Locations row -->
+      <!-- Upcoming: today + soon side by side -->
       <div class="dash-row">
-        <!-- Upcoming: today/tomorrow/day-after -->
-        <div class="dash-section dash-upcoming">
+        <div class="dash-section">
           <div class="dash-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Ближайшие мероприятия
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ВКС сегодня
           </div>
-          <div class="dash-upcoming-body" id="dash-upcoming"></div>
+          <div class="dash-upcoming-body" id="dash-today"></div>
         </div>
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ВКС скоро
+          </div>
+          <div class="dash-upcoming-body" id="dash-soon"></div>
+        </div>
+      </div>
 
-        <!-- By locations -->
-        <div class="dash-section dash-locations">
-          <div class="dash-section-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            По локациям
-          </div>
-          <div class="dash-loc-list" id="dash-locations"></div>
+      <!-- Locations: today vs total -->
+      <div class="dash-section" style="margin-bottom: 1.5rem;">
+        <div class="dash-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          По локациям
         </div>
+        <div class="dash-loc-list" id="dash-locations"></div>
       </div>
 
       <!-- Chart: VKS stats -->

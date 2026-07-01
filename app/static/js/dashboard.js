@@ -104,88 +104,111 @@ function renderDashboard() {
     document.getElementById('dash-completed').textContent = completed;
     document.getElementById('dash-missed').textContent = missed;
 
-    renderUpcoming();
+    renderToday();
+    renderSoon();
     renderLocations();
     drawChart();
     setupChartToggle();
 }
 
-function renderUpcoming() {
-    const el = document.getElementById('dash-upcoming');
+function renderToday() {
+    const el = document.getElementById('dash-today');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-    const dayAfter = new Date(today); dayAfter.setDate(today.getDate() + 2);
 
-    const upcoming = _dashEvents
+    const events = _dashEvents
         .filter(e => !e.completed)
         .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
-        .filter(e => e._date >= today)
+        .filter(e => e._date >= today && e._date < tomorrow)
         .sort((a, b) => a._date - b._date);
 
-    const groups = [
-        { label: 'Сегодня', date: today, events: [] },
-        { label: 'Завтра', date: tomorrow, events: [] },
-        { label: 'Послезавтра', date: dayAfter, events: [] },
-    ];
-
-    upcoming.forEach(e => {
-        const d = new Date(e._date); d.setHours(0, 0, 0, 0);
-        for (const g of groups) {
-            if (d.getTime() === g.date.getTime()) { g.events.push(e); break; }
-        }
-    });
-
-    const totalUpcoming = groups.reduce((s, g) => s + g.events.length, 0);
-    if (totalUpcoming === 0) {
-        el.innerHTML = '<div class="dash-empty">Нет предстоящих мероприятий</div>';
+    if (events.length === 0) {
+        el.innerHTML = '<div class="dash-empty">Нет мероприятий на сегодня</div>';
         return;
     }
 
-    el.innerHTML = groups.map(g => {
-        if (g.events.length === 0) return '';
+    el.innerHTML = events.map(e => renderUpcomingItem(e)).join('');
+}
+
+function renderSoon() {
+    const el = document.getElementById('dash-soon');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const weekLater = new Date(today); weekLater.setDate(today.getDate() + 7);
+
+    const events = _dashEvents
+        .filter(e => !e.completed)
+        .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
+        .filter(e => e._date >= tomorrow && e._date < weekLater)
+        .sort((a, b) => a._date - b._date);
+
+    if (events.length === 0) {
+        el.innerHTML = '<div class="dash-empty">Нет ближайших мероприятий</div>';
+        return;
+    }
+
+    el.innerHTML = events.map(e => {
+        const d = e._date;
+        const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        const dayName = dayNames[d.getDay()];
         return `
-            <div class="dash-upcoming-group">
-                <div class="dash-upcoming-label">${g.label}</div>
-                ${g.events.map(e => `
-                    <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
-                        <div class="dash-upcoming-time">${e.time || '--:--'}</div>
-                        <div class="dash-upcoming-info">
-                            <div class="dash-upcoming-desc">${e.description || 'Без описания'}</div>
-                            <div class="dash-upcoming-meta">${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
-                        </div>
-                    </a>
-                `).join('')}
-            </div>
+            <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
+                <div class="dash-upcoming-time">${e.time || '--:--'}</div>
+                <div class="dash-upcoming-info">
+                    <div class="dash-upcoming-desc">${e.description || ''}</div>
+                    <div class="dash-upcoming-meta">${dayName}, ${d.getDate()}.${d.getMonth()+1} · ${locName(e.location_id)}</div>
+                </div>
+            </a>
         `;
     }).join('');
 }
 
+function renderUpcomingItem(e) {
+    return `
+        <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
+            <div class="dash-upcoming-time">${e.time || '--:--'}</div>
+            <div class="dash-upcoming-info">
+                <div class="dash-upcoming-desc">${e.description || ''}</div>
+                <div class="dash-upcoming-meta">${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
+            </div>
+        </a>
+    `;
+}
+
 function renderLocations() {
     const el = document.getElementById('dash-locations');
-    const locCounts = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+    const locToday = {};
+    const locTotal = {};
     _dashEvents.forEach(e => {
         const id = e.location_id || 'unknown';
-        locCounts[id] = (locCounts[id] || 0) + 1;
+        locTotal[id] = (locTotal[id] || 0) + 1;
+        const d = new Date(e.date + 'T' + (e.time || '23:59'));
+        if (d >= today && d < tomorrow) {
+            locToday[id] = (locToday[id] || 0) + 1;
+        }
     });
 
-    const entries = Object.entries(locCounts)
-        .map(([id, count]) => ({ name: locName(id), id, count }))
-        .sort((a, b) => b.count - a.count);
-    const max = entries.length > 0 ? entries[0].count : 1;
+    const entries = Object.keys(locTotal)
+        .map(id => ({ name: locName(id), id, total: locTotal[id], today: locToday[id] || 0 }))
+        .sort((a, b) => b.total - a.total);
+    const max = entries.length > 0 ? entries[0].total : 1;
 
     el.innerHTML = entries.map(e => `
-        <a class="dash-loc-item" data-href="/conferences/" data-filter="location:${e.id}">
+        <a class="dash-loc-item" data-href="/conferences/" data-filter="location:${e.id}" onclick="event.preventDefault(); _pendingVksFilter='location:${e.id}'; navigateTo('/conferences/');">
             <div class="dash-loc-name">${e.name}</div>
             <div class="dash-loc-bar-wrap">
-                <div class="dash-loc-bar" style="width: ${(e.count / max * 100)}%"></div>
+                <div class="dash-loc-bar" style="width: ${(e.total / max * 100)}%"></div>
             </div>
-            <div class="dash-loc-count">${e.count}</div>
+            <div class="dash-loc-today">${e.today > 0 ? e.today + ' сег.' : ''}</div>
+            <div class="dash-loc-count">${e.total}</div>
         </a>
     `).join('') || '<div class="dash-empty">Нет данных</div>';
-
-    setupDashboardClicks();
 }
 
 function setupChartToggle() {
