@@ -349,9 +349,9 @@ function onDashLocClick(locId) {
 }
 
 function setupChartToggle() {
-    document.querySelectorAll('.dash-toggle-btn').forEach(btn => {
+    document.querySelectorAll('#dash-chart-toggle .dash-toggle-btn').forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.dash-toggle-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#dash-chart-toggle .dash-toggle-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             _dashPeriod = btn.dataset.period;
             drawChart();
