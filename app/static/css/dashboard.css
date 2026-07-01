@@ -79,10 +79,17 @@
 /* ─── Sections ────────────────────────────────────────────────────── */
 .dash-row {
   display: grid;
-  grid-template-columns: 280px 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
   min-width: 0;
+}
+
+.dash-row-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.dash-row-locs {
+  grid-template-columns: 280px 1fr;
 }
 
 .dash-section {
@@ -462,7 +469,7 @@
 /* ─── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .dash-cards { grid-template-columns: repeat(2, 1fr); }
-  .dash-row { grid-template-columns: 1fr; }
+  .dash-row-2, .dash-row-locs { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
