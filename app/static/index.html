@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="/static/css/vks.css">
 <link rel="stylesheet" href="/static/css/settings.css">
 <link rel="stylesheet" href="/static/css/filters.css">
+<link rel="stylesheet" href="/static/css/dashboard.css">
 <script src="https://st.max.ru/js/max-web-app.js"></script>
 </head>
 <body>
@@ -56,6 +57,11 @@
     </div>
 
     <nav class="sidebar-nav">
+      <a class="nav-item" data-page="dashboard" data-href="/panel/">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Обзор
+      </a>
+
       <div class="nav-group">
         <div class="nav-group-header" onclick="toggleGroup(this)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -103,8 +109,70 @@
   <!-- Content -->
   <main class="content-area">
 
+    <!-- ─── Dashboard Page ──────────────────────────────────────────── -->
+    <div class="page active" id="page-dashboard">
+      <!-- Date/Time banner -->
+      <div class="dash-datetime" id="dash-datetime"></div>
+
+      <!-- Stat cards row -->
+      <div class="dash-cards" id="dash-cards">
+        <a class="dash-card" data-href="/conferences/" data-filter="all">
+          <div class="dash-card-icon cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="dash-card-value" id="dash-total">0</div>
+          <div class="dash-card-label">Всего ВКС</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/" data-filter="active">
+          <div class="dash-card-icon purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="dash-card-value accent" id="dash-active">0</div>
+          <div class="dash-card-label">Активные</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/completed/">
+          <div class="dash-card-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="dash-card-value" id="dash-completed">0</div>
+          <div class="dash-card-label">Завершённые</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/" data-filter="missed">
+          <div class="dash-card-icon amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="dash-card-value" id="dash-missed">0</div>
+          <div class="dash-card-label">Пропущенные</div>
+        </a>
+      </div>
+
+      <!-- Next event + Locations row -->
+      <div class="dash-row">
+        <!-- Next event -->
+        <div class="dash-section dash-next">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            Ближайшее мероприятие
+          </div>
+          <div class="dash-next-body" id="dash-next-event">
+            <div class="dash-empty">Нет предстоящих мероприятий</div>
+          </div>
+        </div>
+
+        <!-- By locations -->
+        <div class="dash-section dash-locations">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            По локациям
+          </div>
+          <div class="dash-loc-list" id="dash-locations"></div>
+        </div>
+      </div>
+
+      <!-- Chart: VKS by day of week -->
+      <div class="dash-section dash-chart-section">
+        <div class="dash-section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
+          ВКС по дням недели
+        </div>
+        <div class="dash-chart" id="dash-chart"></div>
+      </div>
+    </div>
+
     <!-- ─── Users Page ───────────────────────────────────────────────── -->
-    <div class="page active" id="page-users">
+    <div class="page" id="page-users">
       <div class="page-header">
         <div class="page-title">
           <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
@@ -690,6 +758,7 @@
 <script src="/static/js/logs.js"></script>
 <script src="/static/js/vks.js"></script>
 <script src="/static/js/settings.js"></script>
+<script src="/static/js/dashboard.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

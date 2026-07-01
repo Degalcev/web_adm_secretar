@@ -20,7 +20,7 @@ async function login() {
     const data = await resp.json();
 
     if (data.ok) {
-        navigateTo('/conferences/');
+        navigateTo('/panel/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -44,7 +44,7 @@ async function checkAuth() {
         // Авторизован — перейти на текущий URL или conferences
         const path = getRouteFromURL();
         if (path === '/') {
-            navigateTo('/conferences/', false);
+            navigateTo('/panel/', false);
         } else {
             navigateTo(path, false);
         }
