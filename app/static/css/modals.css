@@ -37,7 +37,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1rem;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 .modal-header h3 { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; color: var(--fg); margin: 0; }
@@ -100,7 +101,8 @@
   display: flex;
   gap: 0.625rem;
   justify-content: flex-end;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1rem;
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
 
