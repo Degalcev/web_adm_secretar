@@ -178,7 +178,6 @@
   color: var(--accent);
   background: color-mix(in oklab, var(--accent) 10%, transparent);
   transform: translateX(4px);
-  text-decoration: none;
 }
 
 .nav-item.active {
