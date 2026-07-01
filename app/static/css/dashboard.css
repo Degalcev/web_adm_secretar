@@ -239,7 +239,14 @@
   color: var(--fg-muted);
 }
 
-.dash-doc-badge {
+.dash-indicators {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.dash-indicator {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -247,15 +254,24 @@
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 9999px;
-  background: color-mix(in oklab, var(--accent-ambient) 12%, transparent);
-  color: var(--accent-ambient);
-  border: 1px solid color-mix(in oklab, var(--accent-ambient) 25%, transparent);
   flex-shrink: 0;
 }
 
-.dash-doc-badge svg {
+.dash-indicator svg {
   width: 10px;
   height: 10px;
+}
+
+.dash-indicator-doc {
+  background: color-mix(in oklab, var(--accent-ambient) 12%, transparent);
+  color: var(--accent-ambient);
+  border: 1px solid color-mix(in oklab, var(--accent-ambient) 25%, transparent);
+}
+
+.dash-indicator-link {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
 }
 
 /* ─── Bar Lists (locations) ──────────────────────────────────────── */

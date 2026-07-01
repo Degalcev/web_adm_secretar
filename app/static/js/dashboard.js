@@ -187,16 +187,11 @@ function renderSoon() {
     const items = events.slice(0, 8).map(e => {
         const d = e._date;
         const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        const dayName = dayNames[d.getDay()];
-        return `
-            <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
-                <div class="dash-upcoming-time">${e.time || '--:--'}</div>
-                <div class="dash-upcoming-info">
-                    <div class="dash-upcoming-desc">${e.description || ''}</div>
-                    <div class="dash-upcoming-meta">${dayName}, ${d.getDate()}.${d.getMonth()+1} · ${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
-                </div>
-            </a>
-        `;
+        return renderUpcomingItem(e, {
+            showDate: true,
+            dayName: dayNames[d.getDay()],
+            dateStr: `${d.getDate()}.${d.getMonth()+1}`
+        });
     }).join('');
 
     el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
@@ -218,19 +213,25 @@ function checkUpcomingScroll(el) {
     });
 }
 
-function renderUpcomingItem(e) {
+function renderUpcomingItem(e, opts = {}) {
     const docCount = (e.documents || []).length;
-    const docBadge = docCount > 0
-        ? `<span class="dash-doc-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`
-        : '';
+    const hasUrl = e.url && e.url.trim().length > 0;
+    const badges = [];
+    if (docCount > 0) badges.push(`<span class="dash-indicator dash-indicator-doc" title="${docCount} док."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`);
+    if (hasUrl) badges.push(`<span class="dash-indicator dash-indicator-link" title="Есть ссылка"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>`);
+
+    const meta = opts.showDate
+        ? `${opts.dayName}, ${opts.dateStr} · ${locName(e.location_id)} · ${orgName(e.organizer_id)}`
+        : `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
+
     return `
         <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
             <div class="dash-upcoming-time">${e.time || '--:--'}</div>
             <div class="dash-upcoming-info">
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
-                <div class="dash-upcoming-meta">${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
+                <div class="dash-upcoming-meta">${meta}</div>
             </div>
-            ${docBadge}
+            <div class="dash-indicators">${badges.join('')}</div>
             <label class="dash-check" onclick="event.stopPropagation(); event.preventDefault();">
                 <input type="checkbox" onchange="dashCompleteEvent('${e.id}', this.checked)">
                 <span class="dash-check-mark"></span>
@@ -265,16 +266,6 @@ function renderLocations() {
         } else if (_locPeriod === 'month') {
             const ed = new Date(e.date);
             include = ed.getFullYear() === _locYear && ed.getMonth() === _dashMonth;
-        } else if (_locPeriod === 'week') {
-            const ed = new Date(e.date);
-            const now = new Date();
-            const dayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - dayIdx);
-            startOfWeek.setHours(0, 0, 0, 0);
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 7);
-            include = ed >= startOfWeek && ed < endOfWeek;
         }
         if (include) {
             locTotal[id] = (locTotal[id] || 0) + 1;
@@ -303,13 +294,22 @@ function setupLocToggle() {
             document.querySelectorAll('#dash-loc-toggle .dash-toggle-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             _locPeriod = btn.dataset.period;
-            const showYearNav = _locPeriod !== 'all';
-            document.getElementById('dash-loc-year-label').style.display = showYearNav ? 'inline' : 'none';
-            document.getElementById('dash-loc-year-prev').style.display = showYearNav ? 'flex' : 'none';
-            document.getElementById('dash-loc-year-next').style.display = showYearNav ? 'flex' : 'none';
+            updateLocControls();
             renderLocations();
         };
     });
+    updateLocControls();
+}
+
+function updateLocControls() {
+    const showYearNav = _locPeriod === 'year' || _locPeriod === 'month';
+    const yearLabel = document.getElementById('dash-loc-year-label');
+    const yearPrev = document.getElementById('dash-loc-year-prev');
+    const yearNext = document.getElementById('dash-loc-year-next');
+    if (yearLabel) yearLabel.style.display = showYearNav ? 'inline' : 'none';
+    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
+    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
+    if (yearLabel && showYearNav) yearLabel.textContent = _locYear;
 }
 
 function dashLocYearNav(dir) {
@@ -394,13 +394,14 @@ function drawChart() {
     const yearNext = document.getElementById('dash-year-next');
 
     const showMonthNav = _dashPeriod === 'month';
-    const showYearNav = _dashPeriod === 'year' || _dashPeriod === 'month';
     if (monthLabel) monthLabel.style.display = showMonthNav ? 'inline' : 'none';
     if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
     if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
-    if (yearLabel) yearLabel.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'inline' : 'none';
-    if (yearPrev) yearPrev.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'flex' : 'none';
-    if (yearNext) yearNext.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'flex' : 'none';
+    // Year navigation: visible for 'month' and 'year', hidden for 'week' and 'all'
+    const showYearNav = _dashPeriod === 'month' || _dashPeriod === 'year';
+    if (yearLabel) yearLabel.style.display = showYearNav ? 'inline' : 'none';
+    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
+    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
 
     if (_dashPeriod === 'week') {
         const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
