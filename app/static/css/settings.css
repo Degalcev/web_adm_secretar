@@ -30,21 +30,21 @@
 .theme-card {
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: 0.75rem;
   padding: 1rem;
   cursor: pointer;
-  transition: all var(--motion-fast) var(--ease-standard);
+  transition: all 0.3s ease;
 }
 
 .theme-card:hover {
-  border-color: var(--border-strong);
+  border-color: color-mix(in oklab, var(--accent) 35%, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .theme-card.active {
   border-color: var(--accent);
-  background: rgba(34, 211, 238, 0.06);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
 }
 
 .theme-preview {
