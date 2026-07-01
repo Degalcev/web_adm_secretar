@@ -1,3 +1,32 @@
+/* ─── Filter Banner ──────────────────────────────────────────────── */
+.vks-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  background: color-mix(in oklab, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.vks-filter-clear {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1.125rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.vks-filter-clear:hover { opacity: 1; }
+
 /* ─── VKS Tabs ──────────────────────────────────────────────────────── */
 .vks-tabs {
   display: flex;

@@ -42,7 +42,9 @@ async function loadVksActive() {
     if (_pendingVksFilter) {
         const f = _pendingVksFilter;
         _pendingVksFilter = null;
-        setTimeout(() => {
+        const tryApply = (retries) => {
+            const board = document.getElementById('vks-board-active');
+            if (!board && retries > 0) { setTimeout(() => tryApply(retries - 1), 100); return; }
             if (f === 'all') filterVksByQuick('all');
             else if (f === 'active') filterVksByQuick('active');
             else if (f === 'missed') filterVksByQuick('missed');
@@ -54,8 +56,54 @@ async function loadVksActive() {
                     filterVksListActive();
                 }
             }
-        }, 50);
+            showFilterBanner(f);
+        };
+        setTimeout(() => tryApply(5), 100);
     }
+}
+
+function showFilterBanner(filter) {
+    const existing = document.getElementById('vks-filter-banner');
+    if (existing) existing.remove();
+    if (!filter) return;
+
+    const page = document.getElementById('page-vks-active');
+    if (!page) return;
+
+    let text = '';
+    if (filter === 'active') text = 'Фильтр: Активные (без пропущенных)';
+    else if (filter === 'today') text = 'Фильтр: Сегодня';
+    else if (filter === 'soon') text = 'Фильтр: Скоро';
+    else if (filter === 'missed') text = 'Фильтр: Пропущенные';
+    else if (filter === 'all') text = 'Фильтр: Все';
+    else if (filter.startsWith('location:')) {
+        const locId = filter.split(':')[1];
+        const loc = (window.allLocations || []).find(l => l.id === locId);
+        text = `Фильтр: Локация — ${loc ? loc.name : locId}`;
+    }
+    if (!text) return;
+
+    const banner = document.createElement('div');
+    banner.id = 'vks-filter-banner';
+    banner.className = 'vks-filter-banner';
+    banner.innerHTML = `
+        <span>${text}</span>
+        <button onclick="clearVksFilter()" class="vks-filter-clear">&times;</button>
+    `;
+    page.querySelector('.page-header').after(banner);
+}
+
+function clearVksFilter() {
+    const banner = document.getElementById('vks-filter-banner');
+    if (banner) banner.remove();
+    _quickFilter = '';
+    const dateInput = document.getElementById('f-vks-active-date');
+    if (dateInput) dateInput.value = '';
+    document.getElementById('f-vks-active-org').value = '';
+    document.getElementById('f-vks-active-loc').value = '';
+    document.getElementById('f-vks-active-desc').value = '';
+    document.querySelectorAll('#vks-active-stats .stat-card').forEach(c => c.classList.remove('active'));
+    renderVksBoard('vks-board-active', 'active');
 }
 
 function _getLocalDateStr(d) {
