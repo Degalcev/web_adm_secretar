@@ -2,6 +2,7 @@
 
 const ROUTES = {
     '/':                        { page: 'login',          title: 'Вход' },
+    '/panel/':                  { page: 'dashboard',      title: 'Обзор' },
     '/admin/':                  { page: 'users',          title: 'Пользователи' },
     '/admin/users/':            { page: 'users',          title: 'Пользователи' },
     '/admin/organizers/':       { page: 'organizers',     title: 'Организаторы' },

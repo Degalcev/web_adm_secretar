@@ -38,6 +38,7 @@ function switchPage(page) {
     if (pageEl) pageEl.classList.add('active');
 
     // Загрузить данные
+    if (page === 'dashboard') initDashboard();
     if (page === 'users') loadUsers();
     if (page === 'organizers') loadOrganizers();
     if (page === 'locations') loadLocations();

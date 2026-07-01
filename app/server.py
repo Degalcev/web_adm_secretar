@@ -19,6 +19,7 @@ STATIC_PATH = Path(__file__).parent / 'static'
 # Все SPA маршруты
 SPA_PATHS = [
     '/',
+    '/panel/',
     '/admin/',
     '/admin/users/',
     '/admin/organizers/',
