@@ -58,7 +58,7 @@ function updateDateTime() {
 
 async function loadDashboardData() {
     try {
-        const resp = await fetch('/api/events', { credentials: 'same-origin' });
+        const resp = await fetch('/admin/api/events', { credentials: 'same-origin' });
         if (!resp.ok) throw new Error(resp.status);
         const events = await resp.json();
         renderDashboard(events);
@@ -140,18 +140,85 @@ function renderLocations(events) {
     `).join('') || '<div class="dash-empty">Нет данных</div>';
 }
 
-function renderChart(events) {
-    const el = document.getElementById('dash-chart');
-    const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    const counts = [0, 0, 0, 0, 0, 0, 0];
+let _dashEvents = [];
+let _dashPeriod = 'week';
 
-    events.forEach(e => {
-        if (!e.date) return;
-        const d = new Date(e.date);
-        let dayIdx = d.getDay() - 1;
-        if (dayIdx < 0) dayIdx = 6;
-        counts[dayIdx]++;
+function renderChart(events) {
+    _dashEvents = events;
+    _dashPeriod = 'week';
+    drawChart();
+    setupChartToggle();
+}
+
+function setupChartToggle() {
+    document.querySelectorAll('.dash-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.dash-toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _dashPeriod = btn.dataset.period;
+            drawChart();
+        });
     });
+}
+
+function drawChart() {
+    const el = document.getElementById('dash-chart');
+    const now = new Date();
+    let labels = [];
+    let counts = [];
+
+    if (_dashPeriod === 'week') {
+        const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        labels = dayNames;
+        counts = new Array(7).fill(0);
+        const startOfWeek = new Date(now);
+        const dayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
+        startOfWeek.setDate(now.getDate() - dayIdx);
+        startOfWeek.setHours(0, 0, 0, 0);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+        _dashEvents.forEach(e => {
+            if (!e.date) return;
+            const d = new Date(e.date);
+            if (d >= startOfWeek && d < endOfWeek) {
+                let idx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                counts[idx]++;
+            }
+        });
+    } else if (_dashPeriod === 'month') {
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const shortMonths = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        labels = [];
+        counts = new Array(daysInMonth).fill(0);
+
+        for (let i = 1; i <= daysInMonth; i++) {
+            labels.push(i % 5 === 0 || i === 1 || i === daysInMonth ? String(i) : '');
+        }
+
+        _dashEvents.forEach(e => {
+            if (!e.date) return;
+            const d = new Date(e.date);
+            if (d.getFullYear() === year && d.getMonth() === month) {
+                counts[d.getDate() - 1]++;
+            }
+        });
+    } else if (_dashPeriod === 'year') {
+        const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        labels = monthNames;
+        counts = new Array(12).fill(0);
+        const year = now.getFullYear();
+
+        _dashEvents.forEach(e => {
+            if (!e.date) return;
+            const d = new Date(e.date);
+            if (d.getFullYear() === year) {
+                counts[d.getMonth()]++;
+            }
+        });
+    }
 
     const max = Math.max(...counts, 1);
 
@@ -163,7 +230,7 @@ function renderChart(events) {
                     <div class="dash-chart-bar-wrap">
                         <div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div>
                     </div>
-                    <div class="dash-chart-label">${dayNames[i]}</div>
+                    <div class="dash-chart-label">${labels[i]}</div>
                 </div>
             `).join('')}
         </div>

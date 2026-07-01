@@ -184,6 +184,45 @@
   margin-bottom: 1.5rem;
 }
 
+.dash-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.dash-chart-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 2px;
+}
+
+.dash-toggle-btn {
+  padding: 0.375rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dash-toggle-btn:hover {
+  color: var(--fg);
+}
+
+.dash-toggle-btn.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 600;
+}
+
 .dash-chart-bars {
   display: flex;
   align-items: flex-end;
