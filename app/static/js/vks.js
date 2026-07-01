@@ -42,23 +42,47 @@ async function loadVksActive() {
     if (_pendingVksFilter) {
         const f = _pendingVksFilter;
         _pendingVksFilter = null;
+        // Reset quick filter state first
+        _quickFilter = '';
+        const dateInput = document.getElementById('f-vks-active-date');
+        if (dateInput) dateInput.value = '';
+        document.getElementById('f-vks-active-org').value = '';
+        document.getElementById('f-vks-active-loc').value = '';
+        document.getElementById('f-vks-active-desc').value = '';
+
         const tryApply = (retries) => {
-            const board = document.getElementById('vks-board-active');
-            if (!board && retries > 0) { setTimeout(() => tryApply(retries - 1), 100); return; }
-            if (f === 'all') filterVksByQuick('all');
-            else if (f === 'active') filterVksByQuick('active');
-            else if (f === 'missed') filterVksByQuick('missed');
-            else if (f.startsWith('location:')) {
+            const b = document.getElementById('vks-board-active');
+            if (!b || !b.children.length || b.querySelector('.empty-state')) {
+                if (retries > 0) { setTimeout(() => tryApply(retries - 1), 200); return; }
+            }
+            // Apply the filter
+            if (f === 'active') {
+                _quickFilter = 'active';
+            } else if (f === 'missed') {
+                _quickFilter = 'missed';
+            } else if (f === 'today') {
+                _quickFilter = 'today';
+                if (dateInput) dateInput.value = _getLocalDateStr(new Date());
+            } else if (f === 'soon') {
+                _quickFilter = 'soon';
+            }
+            // Highlight the correct stat card
+            document.querySelectorAll('#vks-active-stats .stat-card').forEach(c => c.classList.remove('active'));
+            if (_quickFilter) {
+                const idx = { all: 0, today: 1, soon: 2, missed: 3, active: 4 }[_quickFilter];
+                const cards = document.querySelectorAll('#vks-active-stats .stat-card');
+                if (cards[idx]) cards[idx].classList.add('active');
+            }
+            // Handle location filter
+            if (f.startsWith('location:')) {
                 const locId = f.split(':')[1];
                 const locSel = document.getElementById('f-vks-active-loc');
-                if (locSel) {
-                    locSel.value = locId;
-                    filterVksListActive();
-                }
+                if (locSel) locSel.value = locId;
             }
+            renderVksBoard('vks-board-active', 'active');
             showFilterBanner(f);
         };
-        setTimeout(() => tryApply(5), 100);
+        setTimeout(() => tryApply(15), 300);
     }
 }
 
