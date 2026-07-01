@@ -315,7 +315,7 @@ html[data-panel-theme="starWars"] .sw-cinema-bg { display: block; }
 html { background-color: var(--bg) !important; min-height: 100vh; scroll-behavior: smooth; }
 body { font-family: var(--font-sans); color: var(--fg); min-height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; line-height: 1.5; position: relative; z-index: 1; }
 a { color: var(--accent); text-decoration: none; }
-a:not(.nav-item):hover { text-decoration: underline; }
+a:not(.nav-item):not(.dash-card):not(.dash-loc-item):not(.dash-upcoming-item):hover { text-decoration: underline; }
 ::selection { background: color-mix(in oklab, var(--accent) 35%, transparent); }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
