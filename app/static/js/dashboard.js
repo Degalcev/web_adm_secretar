@@ -5,6 +5,7 @@ let _dashLocations = {};
 let _dashOrganizers = {};
 let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
+let _dashYear = new Date().getFullYear();
 let _dashDateTimeInterval = null;
 
 function initDashboard() {
@@ -218,6 +219,10 @@ function checkUpcomingScroll(el) {
 }
 
 function renderUpcomingItem(e) {
+    const docCount = (e.documents || []).length;
+    const docBadge = docCount > 0
+        ? `<span class="dash-doc-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`
+        : '';
     return `
         <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
             <div class="dash-upcoming-time">${e.time || '--:--'}</div>
@@ -225,6 +230,7 @@ function renderUpcomingItem(e) {
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
                 <div class="dash-upcoming-meta">${locName(e.location_id)} · ${orgName(e.organizer_id)}</div>
             </div>
+            ${docBadge}
             <label class="dash-check" onclick="event.stopPropagation(); event.preventDefault();">
                 <input type="checkbox" onchange="dashCompleteEvent('${e.id}', this.checked)">
                 <span class="dash-check-mark"></span>
@@ -232,6 +238,9 @@ function renderUpcomingItem(e) {
         </a>
     `;
 }
+
+let _locPeriod = 'all';
+let _locYear = new Date().getFullYear();
 
 function renderLocations() {
     const today = new Date();
@@ -242,10 +251,33 @@ function renderLocations() {
     const locTotal = {};
     _dashEvents.forEach(e => {
         const id = e.location_id || 'unknown';
-        locTotal[id] = (locTotal[id] || 0) + 1;
         const d = new Date(e.date + 'T' + (e.time || '23:59'));
+        // Today count
         if (d >= today && d < tomorrow) {
             locToday[id] = (locToday[id] || 0) + 1;
+        }
+        // Total count based on period
+        let include = false;
+        if (_locPeriod === 'all') {
+            include = true;
+        } else if (_locPeriod === 'year') {
+            include = new Date(e.date).getFullYear() === _locYear;
+        } else if (_locPeriod === 'month') {
+            const ed = new Date(e.date);
+            include = ed.getFullYear() === _locYear && ed.getMonth() === _dashMonth;
+        } else if (_locPeriod === 'week') {
+            const ed = new Date(e.date);
+            const now = new Date();
+            const dayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - dayIdx);
+            startOfWeek.setHours(0, 0, 0, 0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 7);
+            include = ed >= startOfWeek && ed < endOfWeek;
+        }
+        if (include) {
+            locTotal[id] = (locTotal[id] || 0) + 1;
         }
     });
 
@@ -261,6 +293,33 @@ function renderLocations() {
 
     renderBarList('dash-loc-today', todayEntries, 'accent');
     renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
+    setupLocToggle();
+    updateLocYearLabel();
+}
+
+function setupLocToggle() {
+    document.querySelectorAll('#dash-loc-toggle .dash-toggle-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('#dash-loc-toggle .dash-toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _locPeriod = btn.dataset.period;
+            const showYearNav = _locPeriod !== 'all';
+            document.getElementById('dash-loc-year-label').style.display = showYearNav ? 'inline' : 'none';
+            document.getElementById('dash-loc-year-prev').style.display = showYearNav ? 'flex' : 'none';
+            document.getElementById('dash-loc-year-next').style.display = showYearNav ? 'flex' : 'none';
+            renderLocations();
+        };
+    });
+}
+
+function dashLocYearNav(dir) {
+    _locYear += dir;
+    renderLocations();
+}
+
+function updateLocYearLabel() {
+    const el = document.getElementById('dash-loc-year-label');
+    if (el) el.textContent = _locYear;
 }
 
 function renderBarList(elId, entries, colorVar) {
@@ -302,13 +361,22 @@ function setupChartToggle() {
 
 function prevMonth() {
     _dashMonth--;
-    if (_dashMonth < 0) { _dashMonth = 11; }
+    if (_dashMonth < 0) { _dashMonth = 11; _dashYear--; }
     drawChart();
 }
 
 function nextMonth() {
     _dashMonth++;
-    if (_dashMonth > 11) { _dashMonth = 0; }
+    if (_dashMonth > 11) { _dashMonth = 0; _dashYear++; }
+    drawChart();
+}
+
+function dashMonthNav(dir) {
+    if (dir < 0) prevMonth(); else nextMonth();
+}
+
+function dashYearNav(dir) {
+    _dashYear += dir;
     drawChart();
 }
 
@@ -321,10 +389,18 @@ function drawChart() {
     const monthLabel = document.getElementById('dash-chart-month-label');
     const monthPrev = document.getElementById('dash-month-prev');
     const monthNext = document.getElementById('dash-month-next');
+    const yearLabel = document.getElementById('dash-chart-year-label');
+    const yearPrev = document.getElementById('dash-year-prev');
+    const yearNext = document.getElementById('dash-year-next');
+
     const showMonthNav = _dashPeriod === 'month';
+    const showYearNav = _dashPeriod === 'year' || _dashPeriod === 'month';
     if (monthLabel) monthLabel.style.display = showMonthNav ? 'inline' : 'none';
     if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
     if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
+    if (yearLabel) yearLabel.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'inline' : 'none';
+    if (yearPrev) yearPrev.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'flex' : 'none';
+    if (yearNext) yearNext.style.display = (_dashPeriod !== 'week' && _dashPeriod !== 'all') ? 'flex' : 'none';
 
     if (_dashPeriod === 'week') {
         const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -346,39 +422,46 @@ function drawChart() {
             }
         });
     } else if (_dashPeriod === 'month') {
-        const year = now.getFullYear();
-        const daysInMonth = new Date(year, _dashMonth + 1, 0).getDate();
+        const daysInMonth = new Date(_dashYear, _dashMonth + 1, 0).getDate();
         const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         labels = [];
         counts = new Array(daysInMonth).fill(0);
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            labels.push(String(i));
-        }
+        for (let i = 1; i <= daysInMonth; i++) labels.push(String(i));
 
         _dashEvents.forEach(e => {
             if (!e.date) return;
             const d = new Date(e.date);
-            if (d.getFullYear() === year && d.getMonth() === _dashMonth) {
+            if (d.getFullYear() === _dashYear && d.getMonth() === _dashMonth) {
                 counts[d.getDate() - 1]++;
             }
         });
-
-        const monthLabel = `${monthNames[_dashMonth]} ${year}`;
-        document.getElementById('dash-chart-month-label').textContent = monthLabel;
+        if (monthLabel) monthLabel.textContent = monthNames[_dashMonth];
     } else if (_dashPeriod === 'year') {
         const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
         labels = monthNames;
         counts = new Array(12).fill(0);
-        const year = now.getFullYear();
 
         _dashEvents.forEach(e => {
             if (!e.date) return;
             const d = new Date(e.date);
-            if (d.getFullYear() === year) {
+            if (d.getFullYear() === _dashYear) {
                 counts[d.getMonth()]++;
             }
         });
+    } else if (_dashPeriod === 'all') {
+        const yearSet = new Set();
+        _dashEvents.forEach(e => { if (e.date) yearSet.add(new Date(e.date).getFullYear()); });
+        const years = [...yearSet].sort((a, b) => a - b);
+        if (years.length === 0) {
+            const curYear = now.getFullYear();
+            for (let y = curYear - 4; y <= curYear; y++) years.push(y);
+        }
+        labels = years.map(String);
+        counts = years.map(y => _dashEvents.filter(e => e.date && new Date(e.date).getFullYear() === y).length);
+    }
+
+    if (yearLabel && yearLabel.style.display !== 'none') {
+        yearLabel.textContent = _dashYear;
     }
 
     const max = Math.max(...counts, 1);
