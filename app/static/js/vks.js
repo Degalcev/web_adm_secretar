@@ -44,8 +44,6 @@ function updateVksStats() {
     const active = allEvents.filter(e => !e.completed);
     const now = new Date();
     const today = _getLocalDateStr(now);
-    const tmr = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
-    const da = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+2));
 
     let total = active.length;
     let todayCount = 0;
@@ -56,7 +54,7 @@ function updateVksStats() {
         if (!e.date) { missedCount++; return; }
         if (e.date < today) { missedCount++; }
         else if (e.date === today) { todayCount++; }
-        else if (e.date === tmr || e.date === da) { soonCount++; }
+        else { soonCount++; }
     });
 
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -133,12 +131,10 @@ function renderVksBoard(boardId, filter) {
     if (_quickFilter && filter === 'active') {
         const now = new Date();
         const today = _getLocalDateStr(now);
-        const tmr = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1));
-        const da = _getLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate()+2));
         if (_quickFilter === 'today') {
             events = events.filter(e => e.date === today);
         } else if (_quickFilter === 'soon') {
-            events = events.filter(e => e.date === tmr || e.date === da);
+            events = events.filter(e => e.date && e.date > today);
         } else if (_quickFilter === 'missed') {
             events = events.filter(e => !e.date || e.date < today);
         }
