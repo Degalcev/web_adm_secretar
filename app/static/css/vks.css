@@ -305,10 +305,11 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 500;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
@@ -316,7 +317,8 @@
 }
 
 .event-doc-upload-btn:hover {
-  background: var(--accent-ambient);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .event-docs-empty {
