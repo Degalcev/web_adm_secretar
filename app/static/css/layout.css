@@ -1,12 +1,14 @@
 /* ─── Login ─────────────────────────────────────────────────────────── */
 #login-screen {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
   background: var(--bg);
 }
+
+#login-screen.show { display: flex; }
 
 .login-box {
   background: var(--bg-elevated);
@@ -61,7 +63,7 @@
 .sidebar {
   width: 260px;
   min-width: 260px;
-  background: var(--bg-elevated);
+  background: var(--bg-elevated) !important;
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -69,8 +71,8 @@
   overflow-y: auto;
 }
 
-html[data-panel-theme="vision"] .sidebar {
-  background: var(--bg);
+[data-panel-theme="vision"] .sidebar {
+  background: var(--bg) !important;
 }
 
 .sidebar-nav {
@@ -320,6 +322,12 @@ html[data-panel-theme="vision"] .sidebar {
   padding: 2rem;
   min-width: 0;
   background: var(--bg);
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ─── Pages ─────────────────────────────────────────────────────────── */
