@@ -71,17 +71,30 @@
   margin-bottom: 2rem;
 }
 
-.sidebar-brand-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-ambient));
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.sidebar-brand {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
   font-weight: 700;
-  font-size: 0.875rem;
-  color: #fff;
+  letter-spacing: -0.02em;
+  color: var(--ifm-heading-color);
+}
+
+.sidebar-sub {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+#env-badge {
+  display: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--warning);
+  color: #000;
+  font-size: 0.5625rem;
+  width: fit-content;
 }
 
 .sidebar-brand-text {

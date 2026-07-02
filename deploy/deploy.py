@@ -105,6 +105,14 @@ def deploy(env_name):
         else:
             print('    OK')
 
+        # 4.5 Записываем version.json для автообновления
+        commit_hash = run_cmd(ssh, f'cd {deploy_path} && git rev-parse HEAD')[1].strip()[:8]
+        env_label = 'test' if env_name == 'test' else 'prod'
+        version_json = f'{{"version":"{commit_hash}","env":"{env_label}","ts":"{int(__import__("time").time())}"}}'
+        rc, out, err = run_cmd(ssh, f"cat > {deploy_path}/version.json << 'ENDOFFILE'\n{version_json}\nENDOFFILE")
+        if rc == 0:
+            print(f'    version.json: {commit_hash} ({env_label})')
+
         # 5. Перезапускаем сервис
         print(f'[5/5] Перезапускаю {cfg["service_name"]}...')
         rc, out, err = run_cmd(ssh, f'systemctl restart {cfg["service_name"]}')
