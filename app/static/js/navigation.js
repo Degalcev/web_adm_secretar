@@ -39,6 +39,7 @@ function switchPage(page) {
 
     // Загрузить данные
     if (page === 'dashboard') initDashboard();
+    if (page === 'profile') initProfile();
     if (page === 'users') loadUsers();
     if (page === 'organizers') loadOrganizers();
     if (page === 'locations') loadLocations();
