@@ -54,6 +54,10 @@ function navigateTo(path, pushState = true) {
 
 function handlePopState() {
     const path = getRouteFromURL();
+    if (path !== '/' && !isAuthenticated) {
+        navigateTo('/', false);
+        return;
+    }
     navigateTo(path, false);
 }
 

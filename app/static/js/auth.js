@@ -1,5 +1,7 @@
 // ─── Авторизация ─────────────────────────────────────────────────────
 
+let isAuthenticated = false;
+
 async function login() {
     const maxId = document.getElementById('login-max-id').value;
     const password = document.getElementById('login-password').value;
@@ -20,6 +22,7 @@ async function login() {
     const data = await resp.json();
 
     if (data.ok) {
+        isAuthenticated = true;
         navigateTo('/panel/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
@@ -29,6 +32,7 @@ async function login() {
 
 async function logout() {
     await fetch(`${BASE_URL}/admin/logout`, { method: 'POST' });
+    isAuthenticated = false;
     navigateTo('/');
 }
 
@@ -41,6 +45,7 @@ async function checkAuth() {
     } catch (e) { /* ignore */ }
     const resp = await fetch(`${BASE_URL}/admin/api/users`);
     if (resp.status === 200) {
+        isAuthenticated = true;
         // Авторизован — перейти на текущий URL или conferences
         const path = getRouteFromURL();
         if (path === '/') {
