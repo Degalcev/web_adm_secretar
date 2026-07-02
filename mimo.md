@@ -268,7 +268,8 @@ async def event_stream(request):
    - `main`: `python deploy/deploy.py prod` → `web_admin.service` → `https://bot.dlab.run/admin`
 2. GitHub: `https://github.com/Degalcev/web_adm_secretar`
 3. При разработке использовать test_db
-4. **ОБЯЗАТЕЛЬНО**: Перед любой задачей читать скилы из `.mimocode/skills/` и при необходимости использовать агентов из `.mimocode/agents/`
+4. **Логирование**: всегда использовать `loguru.logger` (никогда `print` или `logging`)
+5. **ОБЯЗАТЕЛЬНО**: Перед любой задачей читать скилы из `.mimocode/skills/` и при необходимости использовать агентов из `.mimocode/agents/`
 
 ## Порядок работы
 1. Получил задачу → читаю `.mimocode/skills/` (подходящий скилл)
