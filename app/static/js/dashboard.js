@@ -317,6 +317,37 @@ function dashLocYearNav(dir) {
     renderLocations();
 }
 
+function dashLocMonthNav(dir) {
+    _dashMonth += dir;
+    if (_dashMonth < 0) { _dashMonth = 11; _locYear--; }
+    if (_dashMonth > 11) { _dashMonth = 0; _locYear++; }
+    renderLocations();
+}
+
+function updateLocControls() {
+    const showYearNav = _locPeriod === 'year' || _locPeriod === 'month';
+    const showMonthNav = _locPeriod === 'month';
+    const yearLabel = document.getElementById('dash-loc-year-label');
+    const yearPrev = document.getElementById('dash-loc-year-prev');
+    const yearNext = document.getElementById('dash-loc-year-next');
+    const monthLabel = document.getElementById('dash-loc-month-label');
+    const monthPrev = document.getElementById('dash-loc-month-prev');
+    const monthNext = document.getElementById('dash-loc-month-next');
+
+    if (yearLabel) { yearLabel.style.display = showYearNav ? 'inline' : 'none'; yearLabel.textContent = _locYear; }
+    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
+    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
+    if (monthLabel) {
+        monthLabel.style.display = showMonthNav ? 'inline' : 'none';
+        if (showMonthNav) {
+            const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+            monthLabel.textContent = monthNames[_dashMonth];
+        }
+    }
+    if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
+    if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
+}
+
 function updateLocYearLabel() {
     const el = document.getElementById('dash-loc-year-label');
     if (el) el.textContent = _locYear;
