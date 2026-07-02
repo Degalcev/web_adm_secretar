@@ -26,7 +26,7 @@ CONFIGS = {
         'deploy_path': '/opt/web',
         'port': 8081,
         'env_file': 'deploy/.env.prod',
-        'service_name': 'web-admin',
+        'service_name': 'web_admin',
     },
 }
 
