@@ -10,9 +10,7 @@ function connectSSE() {
         try {
             const data = JSON.parse(e.data);
             handleSSEEvent(data);
-        } catch (err) {
-            console.error('SSE parse error:', err);
-        }
+        } catch (err) {}
     };
 
     _eventSource.onerror = () => {
@@ -25,49 +23,62 @@ function handleSSEEvent(data) {
     const table = data.table_name;
     if (!table) return;
 
-    // Обновляем данные дашборда если открыт
-    if (typeof loadDashboardData === 'function') {
-        loadDashboardData();
+    if (table === 'events') {
+        _refreshEvents();
+    } else if (table === 'locations') {
+        _refreshLocations();
+    } else if (table === 'organizers') {
+        _refreshOrganizers();
     }
+}
 
-    // Обновляем кэш для VKS
-    if (table === 'events' && typeof allEvents !== 'undefined') {
-        fetch('/admin/api/events', { credentials: 'same-origin' })
-            .then(r => r.json())
-            .then(events => {
-                allEvents = events;
-                localStorage.setItem('dash_cache_events', JSON.stringify(events));
-            })
-            .catch(() => {});
-    }
+async function _refreshEvents() {
+    try {
+        const resp = await fetch('/admin/api/events', { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const events = await resp.json();
+        if (typeof allEvents !== 'undefined') allEvents = events;
+        if (typeof _dashEvents !== 'undefined') _dashEvents = events;
 
-    // Обновляем локации
-    if (table === 'locations') {
-        fetch('/admin/api/locations', { credentials: 'same-origin' })
-            .then(r => r.json())
-            .then(locs => {
-                if (window) window.allLocations = locs;
-                if (typeof _dashLocations !== 'undefined') {
-                    _dashLocations = {};
-                    locs.forEach(l => { _dashLocations[l.id] = l.name; });
-                }
-            })
-            .catch(() => {});
-    }
+        // Перерисовать активную страницу
+        const page = currentPage || '';
+        if (page === 'vks-active') {
+            renderVksBoard('vks-board-active', 'active');
+            updateVksStats();
+        } else if (page === 'vks-completed') {
+            renderVksBoard('vks-board-completed', 'completed');
+        } else if (page === 'dashboard') {
+            renderDashboard();
+        }
+    } catch (e) {}
+}
 
-    // Обновляем организаторов
-    if (table === 'organizers') {
-        fetch('/admin/api/organizers', { credentials: 'same-origin' })
-            .then(r => r.json())
-            .then(orgs => {
-                if (window) window.allOrganizers = orgs;
-                if (typeof _dashOrganizers !== 'undefined') {
-                    _dashOrganizers = {};
-                    orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
-                }
-            })
-            .catch(() => {});
-    }
+async function _refreshLocations() {
+    try {
+        const resp = await fetch('/admin/api/locations', { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const locs = await resp.json();
+        if (window) window.allLocations = locs;
+        if (typeof _dashLocations !== 'undefined') {
+            _dashLocations = {};
+            locs.forEach(l => { _dashLocations[l.id] = l.name; });
+        }
+        if ((currentPage || '') === 'dashboard') renderDashboard();
+    } catch (e) {}
+}
+
+async function _refreshOrganizers() {
+    try {
+        const resp = await fetch('/admin/api/organizers', { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const orgs = await resp.json();
+        if (window) window.allOrganizers = orgs;
+        if (typeof _dashOrganizers !== 'undefined') {
+            _dashOrganizers = {};
+            orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
+        }
+        if ((currentPage || '') === 'dashboard') renderDashboard();
+    } catch (e) {}
 }
 
 function initSSE() {
