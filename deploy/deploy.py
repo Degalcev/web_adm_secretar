@@ -21,12 +21,14 @@ CONFIGS = {
         'port': 8082,
         'env_file': 'deploy/.env.test',
         'service_name': 'web-admin-test',
+        'branch': 'develop',
     },
     'prod': {
         'deploy_path': '/opt/web',
         'port': 8081,
         'env_file': 'deploy/.env.prod',
         'service_name': 'web_admin',
+        'branch': 'main',
     },
 }
 
@@ -50,6 +52,7 @@ def deploy(env_name):
     cfg = CONFIGS[env_name]
     deploy_path = cfg['deploy_path']
     env_file = cfg['env_file']
+    branch = cfg['branch']
 
     print(f'=== Деплой {env_name.upper()} ===')
     print(f'    Путь: {deploy_path}')
@@ -81,10 +84,10 @@ def deploy(env_name):
         rc, _, _ = run_cmd(ssh, f'cd {deploy_path} && git status 2>/dev/null')
         if rc == 0:
             # Уже есть репозиторий - обновляем
-            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && git fetch origin && git reset --hard origin/develop')
+            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && git fetch origin && git reset --hard origin/{branch}')
         else:
             # Нет репозитория - клонируем
-            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && rm -rf * .* 2>/dev/null; git clone https://github.com/Degalcev/web_adm_secretar.git . && git checkout develop')
+            rc, out, err = run_cmd(ssh, f'cd {deploy_path} && rm -rf * .* 2>/dev/null; git clone https://github.com/Degalcev/web_adm_secretar.git . && git checkout {branch}')
         print(f'    {out.strip() or "OK"}')
 
         # 3. Создаём venv и ставим зависимости
