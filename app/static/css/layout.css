@@ -49,7 +49,13 @@
 .login-error { font-size: 0.8125rem; color: var(--danger); margin-bottom: 16px; display: none; }
 
 /* ─── Main Layout ───────────────────────────────────────────────────── */
-#main-screen { display: none; flex-direction: row; height: 100vh; overflow: hidden; }
+#main-screen { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.main-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
 
 /* ─── Sidebar ───────────────────────────────────────────────────────── */
 .sidebar {
@@ -61,14 +67,6 @@
   flex-direction: column;
   padding: 1.5rem 0;
   overflow-y: auto;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .sidebar-nav {
@@ -235,22 +233,13 @@
   background: rgba(248, 113, 113, 0.08);
 }
 
-/* ─── Main Area ──────────────────────────────────────────────────── */
-.main-area {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
 /* ─── Top Bar ────────────────────────────────────────────────────── */
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 2rem;
-  background: var(--bg-elevated);
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }

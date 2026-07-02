@@ -46,6 +46,22 @@
 <!-- ─── Main Layout ────────────────────────────────────────────────────── -->
 <div id="main-screen">
 
+  <!-- Top bar — full width -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="topbar-title">АДМ Секретарь</span>
+      <span class="topbar-badge" id="env-badge"></span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-datetime" id="topbar-datetime"></span>
+      <span class="topbar-version" id="topbar-version"></span>
+    </div>
+  </header>
+
+  <!-- Body: sidebar + content -->
+  <div class="main-body">
+
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <nav class="sidebar-nav">
@@ -98,21 +114,6 @@
       </a>
     </nav>
   </aside>
-
-  <!-- Main area: topbar + content -->
-  <div class="main-area">
-    <!-- Top bar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-        <span class="topbar-title">АДМ Секретарь</span>
-        <span class="topbar-badge" id="env-badge"></span>
-      </div>
-      <div class="topbar-right">
-        <span class="topbar-datetime" id="topbar-datetime"></span>
-        <span class="topbar-version" id="topbar-version"></span>
-      </div>
-    </header>
 
   <!-- Content -->
   <main class="content-area">
