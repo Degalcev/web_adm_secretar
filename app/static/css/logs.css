@@ -1,0 +1,56 @@
+/* ─── Log Filters ───────────────────────────────────────────────────── */
+.log-filters {
+  display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem;
+  padding: 1rem 1.25rem; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+.log-filters-main { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.log-filters-actions { display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+
+.log-filter-group { min-width: 120px; flex: 1; }
+.log-filter-narrow { min-width: 90px; flex: 0 0 auto; }
+.log-search-wrap { flex: 2; min-width: 160px; }
+
+.log-filters label { display: block; font-size: 0.6875rem; font-weight: 600; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+
+.log-filters select {
+  width: 100%; padding: 0.625rem 0.875rem; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); color: var(--fg); font-family: var(--font-sans); font-size: 0.875rem; outline: none;
+  transition: border-color var(--motion-fast) var(--ease-standard);
+}
+.log-filters select:focus { border-color: var(--accent); }
+.log-filters select option { background: var(--bg-elevated); }
+
+/* ─── Log Container ─────────────────────────────────────────────────── */
+.log-container {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  overflow-y: scroll; flex: 1; min-height: 300px; max-height: calc(100vh - 400px);
+  font-family: var(--font-mono); font-size: 0.75rem; line-height: 1.7;
+}
+
+.log-footer {
+  padding: 0.75rem 1rem; font-size: 0.75rem; color: var(--fg-muted); background: var(--bg-elevated);
+  border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  display: flex; justify-content: space-between;
+}
+
+.log-line { padding: 3px 14px; white-space: pre-wrap; word-break: break-all; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 0; }
+.log-line:hover { background: color-mix(in oklab, var(--accent) 5%, transparent); }
+.log-line.level-ERROR { background: rgba(248,113,113,0.06); color: var(--danger); border-left: 3px solid var(--danger); }
+.log-line.level-WARNING { background: rgba(251,191,36,0.04); color: var(--warning); border-left: 3px solid var(--warning); }
+.log-line.level-INFO { color: var(--fg-muted); border-left: 3px solid transparent; }
+.log-line.level-DEBUG { color: var(--fg-subtle); border-left: 3px solid transparent; }
+
+.log-line .log-timestamp { color: var(--accent); }
+.log-line .log-level { font-weight: 700; }
+.log-line .log-level-ERROR { color: var(--danger); }
+.log-line .log-level-WARNING { color: var(--warning); }
+.log-line .log-level-INFO { color: var(--accent); }
+.log-line .log-level-DEBUG { color: var(--fg-muted); }
+
+/* ─── Source badges ─────────────────────────────────────────────────── */
+.log-src-badge {
+  display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 6px;
+  border-radius: 4px; margin-right: 8px; letter-spacing: 0.5px; vertical-align: middle; flex-shrink: 0;
+}
+.log-src-badge.bot { background: rgba(251,191,36,0.15); color: var(--warning); border: 1px solid rgba(251,191,36,0.3); }
+.log-src-badge.panel { background: rgba(34,211,238,0.15); color: var(--accent); border: 1px solid rgba(34,211,238,0.3); }

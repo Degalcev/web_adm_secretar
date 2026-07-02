@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime, timedelta
 
 from loguru import logger
 from sqlalchemy import update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location
+from database.models import async_session, User, Organizer, Location, Session, Event, Document
 
 
 async def add_user(**kwargs) -> str:
@@ -138,4 +139,135 @@ async def delete_location(location_id: str):
         except Exception as e:
             await session.rollback()
             logger.error('Ошибка удаления локации: {}', repr(e))
+            raise
+
+
+# ─── Сессии ─────────────────────────────────────────────────────────────
+
+async def create_session(token: str, user_id: str, ip_address: str = None, user_agent: str = None, expires_hours: int = 24) -> str:
+    new_id = str(uuid.uuid4())
+    new_session = Session(
+        id=new_id,
+        token=token,
+        user_id=user_id,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        expires_at=datetime.utcnow() + timedelta(hours=expires_hours)
+    )
+    async with async_session() as session:
+        try:
+            session.add(new_session)
+            await session.commit()
+            logger.info('Сессия создана для пользователя {}', user_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка создания сессии: {}', repr(e))
+            raise
+
+
+async def delete_session(token: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Session).where(Session.token == token)
+            )
+            await session.commit()
+            logger.info('Сессия удалена')
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления сессии: {}', repr(e))
+            raise
+
+
+async def cleanup_expired_sessions():
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Session).where(Session.expires_at < datetime.utcnow())
+            )
+            await session.commit()
+            logger.info('Просроченные сессии удалены')
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка очистки сессий: {}', repr(e))
+            raise
+
+
+# ─── Events (ВКС) ─────────────────────────────────────────────────────
+
+async def add_event(**kwargs) -> str:
+    new_id = str(uuid.uuid4())
+    kwargs.setdefault('type', 'ВКС')
+    kwargs.setdefault('completed', False)
+    kwargs.setdefault('notification', True)
+    new_event = Event(id=new_id, **kwargs)
+    async with async_session() as session:
+        try:
+            session.add(new_event)
+            await session.commit()
+            logger.info('Событие {} добавлено', new_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления события: {}', repr(e))
+            raise
+
+
+async def update_event(event_id: str, **kwargs):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                update(Event).where(Event.id == event_id).values(**kwargs)
+            )
+            await session.commit()
+            logger.info('Событие {} обновлено', event_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка обновления события: {}', repr(e))
+            raise
+
+
+async def delete_event(event_id: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Event).where(Event.id == event_id)
+            )
+            await session.commit()
+            logger.info('Событие {} удалено', event_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления события: {}', repr(e))
+            raise
+
+
+# ─── Documents ────────────────────────────────────────────────────────
+
+async def add_document(event_id: str, name: str, size: int, content: bytes) -> str:
+    new_id = str(uuid.uuid4())
+    new_doc = Document(id=new_id, event_id=event_id, name=name, size=size, content=content)
+    async with async_session() as session:
+        try:
+            session.add(new_doc)
+            await session.commit()
+            logger.info('Документ {} добавлен', name)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления документа: {}', repr(e))
+            raise
+
+
+async def delete_document(doc_id: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(Document).where(Document.id == doc_id)
+            )
+            await session.commit()
+            logger.info('Документ {} удалён', doc_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления документа: {}', repr(e))
             raise

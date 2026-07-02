@@ -83,9 +83,9 @@ class Organizer(Base):
 
     id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
     name       = mapped_column(String(40))
-    short_name = mapped_column(String(20), nullable=True)
-    base_url   = mapped_column(String())
+    base_url   = mapped_column(String(), nullable=True)
     updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    short_name = mapped_column(String(20), nullable=True)
 
     __table_args__ = (
         Index('idx_organizer_name', 'name'),
@@ -101,6 +101,67 @@ class Location(Base):
 
     __table_args__ = (
         Index('idx_location_name', 'name'),
+    )
+
+
+class Session(Base):
+    __tablename__ = 'sessions'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    token      = mapped_column(String(64), unique=True, nullable=False)
+    user_id    = mapped_column(String(), ForeignKey('users.id'), nullable=False)
+    ip_address = mapped_column(String(45), nullable=True)
+    user_agent = mapped_column(String(500), nullable=True)
+    created_at = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at = mapped_column(DateTime, nullable=False)
+
+    __table_args__ = (
+        Index('idx_session_token', 'token'),
+        Index('idx_session_expires', 'expires_at'),
+    )
+
+
+class Event(Base):
+    __tablename__ = 'events'
+
+    id             = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    type           = mapped_column(String(20), default='ВКС')
+    date           = mapped_column(Date(), nullable=False)
+    time           = mapped_column(Time(), nullable=True)
+    organizer_id   = mapped_column(String(), ForeignKey('organizers.id'), nullable=True)
+    location_id    = mapped_column(String(), ForeignKey('locations.id'), nullable=True)
+    url            = mapped_column(String(), nullable=True)
+    description    = mapped_column(String(), nullable=True)
+    completed      = mapped_column(Boolean(), default=False)
+    doc_id         = mapped_column(String(), nullable=True)
+    notification   = mapped_column(Boolean(), default=True)
+    updated_at     = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    locked_by      = mapped_column(Integer(), nullable=True)
+    locked_at      = mapped_column(DateTime, nullable=True)
+
+    __table_args__ = (
+        Index('idx_event_date', 'date'),
+        Index('idx_event_date_time', 'date', 'time'),
+        Index('idx_event_organizer_id', 'organizer_id'),
+        Index('idx_event_location_id', 'location_id'),
+        Index('idx_event_completed', 'completed'),
+    )
+
+
+class Document(Base):
+    __tablename__ = 'documents'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id   = mapped_column(String(), ForeignKey('events.id'), nullable=True)
+    name       = mapped_column(String(80))
+    size       = mapped_column(Integer(), default=0)
+    file_path  = mapped_column(String(), nullable=True)
+    content    = mapped_column(LargeBinary(), nullable=True)
+    updated_at = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_document_event_id', 'event_id'),
+        Index('idx_document_name', 'name'),
     )
 
 

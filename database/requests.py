@@ -1,7 +1,8 @@
+from datetime import datetime, date
 from loguru import logger
-from sqlalchemy import select
+from sqlalchemy import select, and_
 
-from database.models import async_session, User, Organizer, Location
+from database.models import async_session, User, Organizer, Location, Session, Event, Document
 
 
 async def get_user(user_max_id=None):
@@ -39,3 +40,67 @@ async def get_locations():
 async def get_location_by_id(location_id: str):
     async with async_session() as session:
         return await session.scalar(select(Location).where(Location.id == location_id))
+
+
+async def get_session_by_token(token: str):
+    async with async_session() as session:
+        result = await session.scalar(
+            select(Session).where(
+                Session.token == token,
+                Session.expires_at > datetime.utcnow()
+            )
+        )
+        return result
+
+
+async def get_user_by_id(user_id: str):
+    async with async_session() as session:
+        result = await session.scalar(select(User).where(User.id == user_id))
+        return result
+
+
+# ─── Events (ВКС) ─────────────────────────────────────────────────────
+
+async def get_events(completed: bool = None):
+    async with async_session() as session:
+        query = select(Event)
+        if completed is not None:
+            query = query.where(Event.completed == completed)
+        query = query.order_by(Event.date.desc(), Event.time.desc())
+        result = await session.scalars(query)
+        return list(result)
+
+
+async def get_events_by_date_range(start_date: date, end_date: date):
+    async with async_session() as session:
+        result = await session.scalars(
+            select(Event).where(
+                and_(Event.date >= start_date, Event.date <= end_date)
+            ).order_by(Event.date, Event.time)
+        )
+        return list(result)
+
+
+async def get_event_by_id(event_id: str):
+    async with async_session() as session:
+        return await session.scalar(select(Event).where(Event.id == event_id))
+
+
+async def get_documents_by_event_id(event_id: str):
+    async with async_session() as session:
+        result = await session.execute(
+            select(Document.id, Document.name, Document.size).where(Document.event_id == event_id)
+        )
+        return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]
+
+
+async def get_document_by_id(doc_id: str):
+    async with async_session() as session:
+        result = await session.execute(
+            select(Document.id, Document.name, Document.size, Document.file_path, Document.content)
+            .where(Document.id == doc_id)
+        )
+        row = result.first()
+        if row:
+            return {'id': row[0], 'name': row[1], 'size': row[2], 'file_path': row[3], 'content': row[4]}
+        return None

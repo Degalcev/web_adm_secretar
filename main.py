@@ -3,6 +3,7 @@ import logging
 
 from loguru import logger
 from app.server import start_webapp
+from app.sse_listener import start_listener, stop_listener
 from config import WEBAPP_HOST, WEBAPP_PORT
 from database.models import async_main
 
@@ -55,12 +56,14 @@ async def main():
     setup_logging()
     await async_main()
 
+    start_listener()
     runner = await start_webapp(host=WEBAPP_HOST, port=WEBAPP_PORT)
     logger.info('Админ-панель запущена на {}:{}', WEBAPP_HOST, WEBAPP_PORT)
 
     try:
         await asyncio.Event().wait()
     finally:
+        stop_listener()
         await runner.cleanup()
 
 

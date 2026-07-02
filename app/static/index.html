@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0d1117">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<title>АДМ Секретарь — Панель администратора</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Montserrat:wght@100..900&family=Unbounded:wght@200..900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/base.css">
+<link rel="stylesheet" href="/static/css/layout.css">
+<link rel="stylesheet" href="/static/css/components.css">
+<link rel="stylesheet" href="/static/css/tables.css">
+<link rel="stylesheet" href="/static/css/modals.css">
+<link rel="stylesheet" href="/static/css/logs.css">
+<link rel="stylesheet" href="/static/css/responsive.css">
+<link rel="stylesheet" href="/static/css/vks.css">
+<link rel="stylesheet" href="/static/css/settings.css">
+<link rel="stylesheet" href="/static/css/filters.css">
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<script src="https://st.max.ru/js/max-web-app.js"></script>
+</head>
+<body>
+
+<!-- ─── Login ──────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="10" fill="rgba(45,212,191,0.12)"/>
+        <path d="M20 10C14.477 10 10 14.477 10 20s4.477 10 10 10 10-4.477 10-10S25.523 10 20 10zm0 4a3 3 0 110 6 3 3 0 010-6zm0 14c-3.314 0-6.253-1.56-8.138-4 .047-2.65 5.43-4.1 8.138-4.1 2.71 0 8.09 1.45 8.138 4.1C26.253 26.44 23.314 28 20 28z" fill="#2dd4bf"/>
+      </svg>
+    </div>
+    <h1>VKS Secretar</h1>
+    <p>Введите MAX ID и пароль для входа</p>
+    <label for="login-max-id">MAX ID</label>
+    <input type="number" id="login-max-id" placeholder="123456789">
+    <label for="login-password">Пароль</label>
+    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+    <div class="login-error" id="login-error"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="login()">Войти</button>
+  </div>
+</div>
+
+<!-- ─── Main Layout ────────────────────────────────────────────────────── -->
+<div id="main-screen">
+
+  <!-- Top bar — full width -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="topbar-title">АДМ Секретарь</span>
+      <span class="topbar-badge" id="env-badge"></span>
+    </div>
+      <div class="topbar-right">
+        <span class="topbar-datetime" id="topbar-datetime"></span>
+        <span class="topbar-version"><span class="topbar-version-label">Версия:</span> <span id="topbar-version"></span></span>
+      </div>
+  </header>
+
+  <!-- Body: sidebar + content -->
+  <div class="main-body">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <a class="nav-item" data-page="dashboard" data-href="/panel/">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Обзор
+      </a>
+
+      <div class="nav-group">
+        <div class="nav-group-header" onclick="toggleGroup(this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          ВКС
+          <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <a class="nav-item" data-page="vks-active" data-href="/conferences/">Текущие</a>
+          <a class="nav-item" data-page="vks-completed" data-href="/conferences/completed/">Завершённые</a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-header" onclick="toggleGroup(this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00 .73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 00 2.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00 .73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          Администрирование
+          <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <a class="nav-item" data-page="users" data-href="/admin/users/">Пользователи</a>
+          <a class="nav-item" data-page="organizers" data-href="/admin/organizers/">Организаторы</a>
+          <a class="nav-item" data-page="locations" data-href="/admin/locations/">Локации</a>
+          <a class="nav-item" data-page="logs" data-href="/admin/logs/">Логи</a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-header" onclick="toggleGroup(this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00 .73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 00 2.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00 .73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          Настройки
+          <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <a class="nav-item" data-page="settings" data-href="/settings/general/">Общие</a>
+          <a class="nav-item" data-page="profile" data-href="/settings/profile/">Пользователь</a>
+        </div>
+      </div>
+
+      <a class="nav-item nav-logout" onclick="logout()" style="margin-top: auto;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Выйти
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Content -->
+  <main class="content-area">
+
+    <!-- ─── Dashboard Page ──────────────────────────────────────────── -->
+    <div class="page active" id="page-dashboard">
+
+      <!-- Stat cards row -->
+      <div class="dash-cards" id="dash-cards">
+        <a class="dash-card" data-href="/conferences/" data-filter="all">
+          <div class="dash-card-icon cyan"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="dash-card-value" id="dash-total">0</div>
+          <div class="dash-card-label">Всего ВКС</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/" data-filter="active">
+          <div class="dash-card-icon purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="dash-card-value accent" id="dash-active">0</div>
+          <div class="dash-card-label">Активные</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/completed/">
+          <div class="dash-card-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="dash-card-value" id="dash-completed">0</div>
+          <div class="dash-card-label">Завершённые</div>
+        </a>
+        <a class="dash-card" data-href="/conferences/" data-filter="missed">
+          <div class="dash-card-icon amber"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="dash-card-value" id="dash-missed">0</div>
+          <div class="dash-card-label">Пропущенные</div>
+        </a>
+      </div>
+
+      <!-- Upcoming: today + soon side by side -->
+      <div class="dash-row dash-row-2">
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ВКС сегодня
+          </div>
+          <div class="dash-upcoming-body" id="dash-today"></div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ВКС скоро
+          </div>
+          <div class="dash-upcoming-body" id="dash-soon"></div>
+        </div>
+      </div>
+
+      <!-- Locations: two bar charts side by side -->
+      <div class="dash-row dash-row-locs">
+        <div class="dash-section">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Локации — сегодня
+          </div>
+          <div class="dash-bar-list" id="dash-loc-today"></div>
+        </div>
+        <div class="dash-section">
+          <div class="dash-chart-header">
+            <div class="dash-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ambient)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Локации — всего
+            </div>
+            <div class="dash-chart-controls">
+              <button class="dash-month-btn" onclick="dashLocYearNav(-1)" id="dash-loc-year-prev">&#8249;</button>
+              <span class="dash-month-label" id="dash-loc-year-label"></span>
+              <button class="dash-month-btn" onclick="dashLocYearNav(1)" id="dash-loc-year-next">&#8250;</button>
+              <button class="dash-month-btn" onclick="dashLocMonthNav(-1)" id="dash-loc-month-prev" style="display:none;">&#8249;</button>
+              <span class="dash-month-label" id="dash-loc-month-label"></span>
+              <button class="dash-month-btn" onclick="dashLocMonthNav(1)" id="dash-loc-month-next" style="display:none;">&#8250;</button>
+              <div class="dash-chart-toggle" id="dash-loc-toggle">
+                <button class="dash-toggle-btn active" data-period="all">Все</button>
+                <button class="dash-toggle-btn" data-period="year">Год</button>
+                <button class="dash-toggle-btn" data-period="month">Месяц</button>
+              </div>
+            </div>
+          </div>
+          <div class="dash-bar-list" id="dash-loc-total"></div>
+        </div>
+      </div>
+
+      <!-- Chart: VKS stats -->
+      <div class="dash-section dash-chart-section">
+        <div class="dash-chart-header">
+          <div class="dash-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="12" width="4" height="8" rx="1"/><rect x="10" y="8" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="16" rx="1"/></svg>
+            ВКС статистика
+          </div>
+          <div class="dash-chart-controls">
+            <button class="dash-month-btn" onclick="dashYearNav(-1)" id="dash-year-prev">&#8249;</button>
+            <span class="dash-month-label" id="dash-chart-year-label"></span>
+            <button class="dash-month-btn" onclick="dashYearNav(1)" id="dash-year-next">&#8250;</button>
+            <button class="dash-month-btn" onclick="dashMonthNav(-1)" id="dash-month-prev" style="display:none;">&#8249;</button>
+            <span class="dash-month-label" id="dash-chart-month-label"></span>
+            <button class="dash-month-btn" onclick="dashMonthNav(1)" id="dash-month-next" style="display:none;">&#8250;</button>
+            <div class="dash-chart-toggle" id="dash-chart-toggle">
+              <button class="dash-toggle-btn active" data-period="week">Неделя</button>
+              <button class="dash-toggle-btn" data-period="month">Месяц</button>
+              <button class="dash-toggle-btn" data-period="year">Год</button>
+              <button class="dash-toggle-btn" data-period="all">Все</button>
+            </div>
+          </div>
+        </div>
+        <div class="dash-chart" id="dash-chart"></div>
+      </div>
+    </div>
+
+    <!-- ─── Users Page ───────────────────────────────────────────────── -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <h1>Пользователи</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openAddModal()">+ Добавить</button>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Всего пользователей</div>
+          <div class="stat-value" id="stat-total-users">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Администраторы</div>
+          <div class="stat-value accent" id="stat-admins">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Обычные</div>
+          <div class="stat-value" id="stat-users">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Показано</div>
+          <div class="stat-value" id="stat-shown">0</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Имя</span>
+          <input class="filter-input" id="f-user-name" placeholder="Фильтр по имени..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Telegram ID</span>
+          <input class="filter-input" id="f-user-tg" placeholder="Содержит..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">MAX ID</span>
+          <input class="filter-input" id="f-user-max" placeholder="Содержит..." oninput="filterUsers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Статус</span>
+          <select class="filter-select" id="f-user-status" onchange="filterUsers()">
+            <option value="">Все</option>
+            <option value="admin">Администратор</option>
+            <option value="user">Пользователь</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetUserFilters()">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Имя</th><th>Telegram ID</th><th>MAX ID</th><th>Статус</th><th>Действия</th></tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="5" class="empty-state">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Organizers Page ──────────────────────────────────────────── -->
+    <div class="page" id="page-organizers">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <h1>Организаторы</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openAddOrganizerModal()">+ Добавить</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Всего организаторов</div><div class="stat-value" id="stat-total-org">0</div></div>
+        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-org">0</div></div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Название</span>
+          <input class="filter-input" id="f-org-name" placeholder="Фильтр по названию..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-group narrow">
+          <span class="filter-label">Короткое имя</span>
+          <input class="filter-input" id="f-org-short" placeholder="Содержит..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">URL</span>
+          <input class="filter-input" id="f-org-url" placeholder="Содержит..." oninput="filterOrganizers()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetOrgFilters()">Сбросить</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Название</th><th>Короткое имя</th><th>URL</th><th>Действия</th></tr></thead>
+          <tbody id="organizers-tbody"><tr><td colspan="4" class="empty-state">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Locations Page ───────────────────────────────────────────── -->
+    <div class="page" id="page-locations">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <h1>Локации</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openAddLocationModal()">+ Добавить</button>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Всего локаций</div><div class="stat-value" id="stat-total-loc">0</div></div>
+        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-loc">0</div></div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span class="filter-label">Название</span>
+          <input class="filter-input" id="f-loc-name" placeholder="Фильтр по названию..." oninput="filterLocations()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetLocFilters()">Сбросить</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Название</th><th>Действия</th></tr></thead>
+          <tbody id="locations-tbody"><tr><td colspan="2" class="empty-state">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── Logs Page ────────────────────────────────────────────────── -->
+    <div class="page" id="page-logs">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <h1>Логи</h1>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card clickable" onclick="filterByLevel('', event)"><div class="stat-label">Всего</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat-card clickable stat-error" onclick="filterByLevel('ERROR', event)"><div class="stat-label">Ошибки</div><div class="stat-value" id="stat-error">0</div></div>
+        <div class="stat-card clickable stat-warning" onclick="filterByLevel('WARNING', event)"><div class="stat-label">Предупреждения</div><div class="stat-value" id="stat-warning">0</div></div>
+        <div class="stat-card clickable stat-info" onclick="filterByLevel('INFO', event)"><div class="stat-label">Инфо</div><div class="stat-value" id="stat-info">0</div></div>
+        <div class="stat-card clickable stat-debug" onclick="filterByLevel('DEBUG', event)"><div class="stat-label">Отладка</div><div class="stat-value" id="stat-debug">0</div></div>
+      </div>
+
+      <div class="log-filters">
+        <div class="log-filters-main">
+          <div class="log-filter-group">
+            <label>Дата</label>
+            <select id="log-date-select" onchange="onLogDateChange()"><option value="">Загрузка...</option></select>
+          </div>
+          <div class="log-filter-group">
+            <label>Источник</label>
+            <select id="log-source-filter" onchange="onLogRefresh()"><option value="">Все</option><option value="bot">Бот</option><option value="panel">Панель</option></select>
+          </div>
+          <div class="log-filter-group">
+            <label>Уровень</label>
+            <select id="log-level-filter" onchange="onLogRefresh()"><option value="">Все</option><option value="ERROR">ERROR</option><option value="WARNING">WARNING</option><option value="INFO">INFO</option><option value="DEBUG">DEBUG</option></select>
+          </div>
+          <div class="log-filter-group log-filter-narrow">
+            <label>Строк</label>
+            <select id="log-lines-count" onchange="onLogRefresh()"><option value="100">100</option><option value="500" selected>500</option><option value="1000">1000</option><option value="5000">5000</option></select>
+          </div>
+          <div class="log-filter-group log-search-wrap">
+            <label>Поиск</label>
+            <div class="search-wrap">
+              <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input class="search-input" id="log-search" placeholder="Текст..." oninput="debounceSearch()">
+            </div>
+          </div>
+        </div>
+        <div class="log-filters-actions">
+          <div class="toggle-wrap">
+            <input type="checkbox" id="auto-refresh-toggle" class="toggle-input" onchange="toggleAutoRefresh()">
+            <label for="auto-refresh-toggle" class="toggle-track"></label>
+            <span class="toggle-text">Авто 5с</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="refreshLogs()">Обновить</button>
+        </div>
+      </div>
+
+      <div class="log-container" id="log-container"><div class="empty-state">Выберите дату</div></div>
+      <div class="log-footer" id="log-footer"></div>
+    </div>
+
+    <!-- ─── VKS Active Page ─────────────────────────────────────────── -->
+    <div class="page" id="page-vks-active">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <h1>Текущие ВКС</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openAddEventModal()">+ Добавить</button>
+        </div>
+      </div>
+
+      <div class="stats-row" id="vks-active-stats">
+        <div class="stat-card clickable" onclick="filterVksByQuick('all')">
+          <div class="stat-card-header">
+            <span class="stat-label">Всего</span>
+            <div class="stat-card-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          </div>
+          <div class="stat-value" id="stat-vks-total">0</div>
+        </div>
+        <div class="stat-card clickable" onclick="filterVksByQuick('today')">
+          <div class="stat-card-header">
+            <span class="stat-label">Сегодня</span>
+            <div class="stat-card-icon purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          </div>
+          <div class="stat-value" id="stat-vks-today">0</div>
+        </div>
+        <div class="stat-card clickable" onclick="filterVksByQuick('soon')">
+          <div class="stat-card-header">
+            <span class="stat-label">Скоро</span>
+            <div class="stat-card-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          </div>
+          <div class="stat-value" id="stat-vks-soon">0</div>
+        </div>
+        <div class="stat-card clickable" onclick="filterVksByQuick('missed')">
+          <div class="stat-card-header">
+            <span class="stat-label">Пропущенные</span>
+            <div class="stat-card-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          </div>
+          <div class="stat-value" id="stat-vks-missed">0</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-group narrow">
+          <span class="filter-label">Дата</span>
+          <input type="date" class="filter-input" id="f-vks-active-date" onchange="filterVksListActive()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Организатор</span>
+          <select class="filter-select" id="f-vks-active-org" onchange="filterVksListActive()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Локация</span>
+          <select class="filter-select" id="f-vks-active-loc" onchange="filterVksListActive()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">Описание</span>
+          <input class="filter-input" id="f-vks-active-desc" placeholder="Содержит..." oninput="filterVksListActive()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetVksActiveFilters()">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="vks-board" id="vks-board-active">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- ─── VKS Completed Page ──────────────────────────────────────── -->
+    <div class="page" id="page-vks-completed">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <h1>Завершённые ВКС</h1>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-group narrow">
+          <span class="filter-label">Дата</span>
+          <input type="date" class="filter-input" id="f-vks-completed-date" onchange="filterVksListCompleted()">
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Организатор</span>
+          <select class="filter-select" id="f-vks-completed-org" onchange="filterVksListCompleted()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Локация</span>
+          <select class="filter-select" id="f-vks-completed-loc" onchange="filterVksListCompleted()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">Описание</span>
+          <input class="filter-input" id="f-vks-completed-desc" placeholder="Содержит..." oninput="filterVksListCompleted()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="resetVksCompletedFilters()">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="vks-board" id="vks-board-completed">
+        <div class="empty-state">Загрузка...</div>
+      </div>
+    </div>
+
+    <!-- ─── Settings Page ───────────────────────────────────────────── -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00 .73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 00 2.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00 .73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h1>Настройки</h1>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-title">Выбор темы</h2>
+        <p class="settings-desc">Выберите оформление интерфейса панели управления</p>
+        <div class="theme-grid" id="themeGrid">
+          <div class="theme-card" data-theme="default" onclick="applyTheme('default')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #0d1117, #1c2128);">
+              <div class="theme-accent" style="background: #22d3ee;"></div>
+            </div>
+            <div class="theme-name">Default</div>
+            <div class="theme-desc">Базовая тёмная тема</div>
+          </div>
+          <div class="theme-card" data-theme="midnight" onclick="applyTheme('midnight')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #0a1628, #0f1f35);">
+              <div class="theme-accent" style="background: #60a5fa;"></div>
+            </div>
+            <div class="theme-name">Midnight</div>
+            <div class="theme-desc">Ночная синяя тема</div>
+          </div>
+          <div class="theme-card" data-theme="ember" onclick="applyTheme('ember')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #140f0c, #1f1814);">
+              <div class="theme-accent" style="background: #f59e0b;"></div>
+            </div>
+            <div class="theme-name">Ember</div>
+            <div class="theme-desc">Тёплая янтарная тема</div>
+          </div>
+          <div class="theme-card" data-theme="boreal" onclick="applyTheme('boreal')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #0a1412, #122620);">
+              <div class="theme-accent" style="background: #14b8a6;"></div>
+            </div>
+            <div class="theme-name">Boreal</div>
+            <div class="theme-desc">Бореальная зелёная тема</div>
+          </div>
+          <div class="theme-card" data-theme="web" onclick="applyTheme('web')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #05060a, #0c0f18);">
+              <div class="theme-accent" style="background: #8577f2;"></div>
+            </div>
+            <div class="theme-name">Web</div>
+            <div class="theme-desc">Фиолетовая веб-тема</div>
+          </div>
+          <div class="theme-card" data-theme="xuiClassic" onclick="applyTheme('xuiClassic')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #0a1222, #151f31);">
+              <div class="theme-accent" style="background: #008771;"></div>
+            </div>
+            <div class="theme-name">3x-ui Classic</div>
+            <div class="theme-desc">Классическая тема</div>
+          </div>
+          <div class="theme-card" data-theme="starWars" onclick="applyTheme('starWars')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #030508, #0a0e18);">
+              <div class="theme-accent" style="background: #ffe81f;"></div>
+            </div>
+            <div class="theme-name">Star Wars</div>
+            <div class="theme-desc">Звёздные войны</div>
+          </div>
+          <div class="theme-card" data-theme="vision" onclick="applyTheme('vision')">
+            <div class="theme-preview" style="background: linear-gradient(135deg, #f2f2f7, #ffffff);">
+              <div class="theme-accent" style="background: #007aff;"></div>
+            </div>
+            <div class="theme-name">Vision</div>
+            <div class="theme-desc">Светлая тема</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Profile Page ──────────────────────────────────────────────── -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <h1>Пользователь</h1>
+        </div>
+      </div>
+
+      <div class="settings-section" style="max-width: 420px;">
+        <h2 class="settings-title">Смена пароля</h2>
+        <p class="settings-desc">Введите текущий и новый пароль</p>
+        <div class="form-group">
+          <label>Текущий пароль</label>
+          <input type="password" id="profile-old-password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Новый пароль</label>
+          <input type="password" id="profile-new-password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Повторите новый пароль</label>
+          <input type="password" id="profile-confirm-password" placeholder="••••••••">
+        </div>
+        <div id="profile-error" class="login-error" style="display:none; margin-bottom: 1rem;"></div>
+        <div id="profile-success" style="display:none; margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 0.5rem; color: var(--success); font-size: 0.875rem;"></div>
+        <button class="btn btn-primary" onclick="changeMyPassword()">Сохранить</button>
+      </div>
+    </div>
+
+  </main>
+  </div>
+</div>
+
+<!-- ─── Modal: User ────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Добавить пользователя</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <span>Данные пользователя</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group"><label>Имя</label><input type="text" id="f-name" placeholder="Иван Иванов"></div>
+          <div class="form-group"><label>Telegram ID</label><input type="number" id="f-tg-id" placeholder="123456789"></div>
+          <div class="form-group"><label>MAX ID</label><input type="number" id="f-max-id" placeholder="987654321"></div>
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+          <span>Безопасность</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group"><label>Пароль <span style="font-weight:400;text-transform:none;letter-spacing:0">(оставьте пустым чтобы не менять)</span></label><input type="password" id="f-password" placeholder="••••••••"></div>
+          <div class="form-group"><label>Статус</label><select id="f-status"><option value="user">user</option><option value="admin">admin</option></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveUser()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Organizer ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="organizer-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="org-modal-title">Добавить организатора</h3>
+      <button class="modal-close" onclick="closeOrganizerModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <span>Данные организатора</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group"><label>Название</label><input type="text" id="f-org-name" placeholder="Организатор"></div>
+          <div class="form-group"><label>Короткое имя</label><input type="text" id="f-org-short-name" placeholder="org_short"></div>
+          <div class="form-group"><label>Базовый URL</label><input type="text" id="f-org-base-url" placeholder="https://example.com"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeOrganizerModal()">Отмена</button>
+      <button class="btn btn-primary" id="org-modal-save-btn" onclick="saveOrganizer()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Location ────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="location-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="loc-modal-title">Добавить локацию</h3>
+      <button class="modal-close" onclick="closeLocationModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <span>Данные локации</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group"><label>Название</label><input type="text" id="f-loc-name" placeholder="Название локации"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeLocationModal()">Отмена</button>
+      <button class="btn btn-primary" id="loc-modal-save-btn" onclick="saveLocation()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: VKS Event ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="event-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <h3 id="event-modal-title">Добавить ВКС</h3>
+      <button class="modal-close" onclick="closeEventModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Основная информация -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <span>Основная информация</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>Дата *</label>
+              <input type="date" id="f-event-date" required>
+            </div>
+            <div class="form-group flex-1">
+              <label>Время *</label>
+              <input type="time" id="f-event-time" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Организатор *</label>
+              <select id="f-event-organizer" required><option value="">Не указан</option></select>
+            </div>
+            <div class="form-group flex-1">
+              <label>Локация *</label>
+              <select id="f-event-location" required><option value="">Не указана</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Дополнительная информация -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <span>Дополнительная информация</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group">
+            <textarea id="f-event-desc" rows="4" placeholder="Подробное описание встречи..." maxlength="200"></textarea>
+            <span class="form-hint">Максимум 200 символов</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ссылка -->
+      <div class="modal-section">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+          <span>Ссылка на встречу</span>
+        </div>
+        <div class="modal-section-body">
+          <div class="form-group">
+            <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
+          </div>
+        </div>
+      </div>
+
+      <!-- Документы -->
+      <div class="modal-section" id="f-event-docs-group" style="display:none">
+        <div class="modal-section-header">
+          <div class="modal-section-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <span>Документы</span>
+          <label class="event-doc-upload-btn" id="event-doc-upload-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Добавить файлы
+            <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
+          </label>
+        </div>
+        <div class="modal-section-body">
+          <div id="f-event-docs" class="event-docs-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="event-modal-delete-btn" onclick="confirmDeleteFromModal()" style="margin-right: auto; display: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Удалить
+      </button>
+      <button class="btn btn-ghost" onclick="closeEventModal()">Отмена</button>
+      <button class="btn btn-primary" id="event-modal-save-btn" onclick="saveEvent()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Confirm ────────────────────────────────────────────────────────── -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </div>
+    <h3>Подтвердите удаление</h3>
+    <p id="confirm-text">Это действие нельзя отменить.</p>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- JS модули (порядок важен: utils первым) -->
+<script src="/static/js/utils.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/router.js"></script>
+<script src="/static/js/navigation.js"></script>
+<script src="/static/js/users.js"></script>
+<script src="/static/js/organizers.js"></script>
+<script src="/static/js/locations.js"></script>
+<script src="/static/js/logs.js"></script>
+<script src="/static/js/vks.js"></script>
+<script src="/static/js/settings.js"></script>
+<script src="/static/js/dashboard.js"></script>
+<script src="/static/js/profile.js"></script>
+<script src="/static/js/preloader.js"></script>
+<script src="/static/js/sse.js"></script>
+<script src="/static/js/updater.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

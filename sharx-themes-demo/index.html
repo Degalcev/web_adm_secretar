@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ru" data-panel-theme="web">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SharX Themes Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       SharX Theme Demo — all 8 panel themes from konstpic/sharx-code
+       ============================================================ */
+
+    @property --accent { syntax: "<color>"; inherits: true; initial-value: #22d3ee; }
+    @property --accent-ambient { syntax: "<color>"; inherits: true; initial-value: #9775fa; }
+
+    :root, :root[data-theme="dark"] {
+      color-scheme: dark;
+      --font-sans: "Montserrat", system-ui, sans-serif;
+      --font-mono: "Fira Mono", ui-monospace, monospace;
+      --bg: #0d1117; --bg-elevated: #1c2128;
+      --surface: rgba(36,44,56,0.55); --surface-strong: rgba(36,44,56,0.85);
+      --border: rgba(139,148,158,0.15); --border-strong: rgba(34,211,238,0.25);
+      --fg: #c9d1d9; --fg-muted: #8b949e; --fg-subtle: rgba(201,209,217,0.55);
+      --code-bg: rgba(36,44,56,0.9);
+      --accent: #22d3ee; --accent-ambient: #9775fa;
+      --ifm-color-primary: #22d3ee; --ifm-color-secondary: #9775fa;
+      --ifm-heading-color: #c9d1d9; --ifm-link-color: #22d3ee;
+    }
+
+    /* --- Theme palettes --- */
+    :root[data-panel-theme="default"] {
+      --ifm-color-primary: #22d3ee; --ifm-color-secondary: #9775fa;
+      --ifm-link-color: #22d3ee; --ifm-heading-color: #c9d1d9;
+      --bg: #0d1117; --bg-elevated: #1c2128;
+      --surface: rgba(36,44,56,0.55); --surface-strong: rgba(36,44,56,0.85);
+      --border: rgba(139,148,158,0.15); --border-strong: rgba(34,211,238,0.25);
+      --fg: #c9d1d9; --fg-muted: #8b949e; --fg-subtle: rgba(201,209,217,0.55);
+      --code-bg: rgba(36,44,56,0.9); --accent: #22d3ee; --accent-ambient: #9775fa;
+    }
+    :root[data-panel-theme="midnight"] {
+      --ifm-color-primary: #7dd3fc; --ifm-color-secondary: #a5b4fc;
+      --ifm-link-color: #7dd3fc; --ifm-heading-color: #e2e8f0;
+      --bg: #0a1628; --bg-elevated: #0f1f35;
+      --surface: rgba(30,41,59,0.5); --surface-strong: rgba(30,41,59,0.82);
+      --border: rgba(148,163,184,0.14); --border-strong: rgba(96,165,250,0.28);
+      --fg: #e2e8f0; --fg-muted: #94a3b8; --fg-subtle: rgba(226,232,240,0.52);
+      --code-bg: rgba(15,31,53,0.92); --accent: #60a5fa; --accent-ambient: #818cf8;
+    }
+    :root[data-panel-theme="ember"] {
+      --ifm-color-primary: #fbbf24; --ifm-color-secondary: #fb7185;
+      --ifm-link-color: #fbbf24; --ifm-heading-color: #e8e0da;
+      --bg: #140f0c; --bg-elevated: #1f1814;
+      --surface: rgba(55,42,36,0.55); --surface-strong: rgba(55,42,36,0.85);
+      --border: rgba(214,180,150,0.12); --border-strong: rgba(251,191,36,0.22);
+      --fg: #e8e0da; --fg-muted: #b9a99a; --fg-subtle: rgba(232,224,218,0.52);
+      --code-bg: rgba(40,30,26,0.92); --accent: #f59e0b; --accent-ambient: #f472b6;
+    }
+    :root[data-panel-theme="boreal"] {
+      --ifm-color-primary: #2dd4bf; --ifm-color-secondary: #4ade80;
+      --ifm-link-color: #2dd4bf; --ifm-heading-color: #d8ebe6;
+      --bg: #0a1412; --bg-elevated: #122620;
+      --surface: rgba(32,58,52,0.5); --surface-strong: rgba(32,58,52,0.84);
+      --border: rgba(134,180,168,0.14); --border-strong: rgba(45,212,191,0.24);
+      --fg: #d8ebe6; --fg-muted: #8eb5aa; --fg-subtle: rgba(216,235,230,0.52);
+      --code-bg: rgba(12,30,26,0.92); --accent: #14b8a6; --accent-ambient: #22c55e;
+    }
+    :root[data-panel-theme="web"] {
+      --ifm-color-primary: #8577f2; --ifm-color-secondary: #6c52c7;
+      --ifm-link-color: #8577f2; --ifm-heading-color: #f5f7fb;
+      --bg: #05060a; --bg-elevated: #0c0f18;
+      --surface: rgba(255,255,255,0.04); --surface-strong: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.18);
+      --fg: #f5f7fb; --fg-muted: rgba(245,247,251,0.66); --fg-subtle: rgba(245,247,251,0.44);
+      --code-bg: rgba(255,255,255,0.06); --accent: #8577f2; --accent-ambient: #6c52c7;
+    }
+    :root[data-panel-theme="xuiClassic"] {
+      --ifm-color-primary: #008771; --ifm-color-secondary: #3ad3ba;
+      --ifm-link-color: #008771; --ifm-heading-color: rgba(255,255,255,0.9);
+      --bg: #0a1222; --bg-elevated: #151f31;
+      --surface: rgba(34,45,66,0.52); --surface-strong: rgba(34,45,66,0.84);
+      --border: rgba(44,57,80,0.45); --border-strong: rgba(0,135,113,0.32);
+      --fg: rgba(255,255,255,0.88); --fg-muted: #8b9cbb; --fg-subtle: rgba(255,255,255,0.48);
+      --code-bg: rgba(17,25,41,0.92); --accent: #008771; --accent-ambient: #3ad3ba;
+    }
+    :root[data-panel-theme="starWars"] {
+      --ifm-color-primary: #ffe81f; --ifm-color-secondary: #e23d3d;
+      --ifm-link-color: #ffe81f; --ifm-heading-color: #f5f0e6;
+      --bg: #030508; --bg-elevated: #0a0e18;
+      --surface: rgba(18,24,42,0.55); --surface-strong: rgba(18,24,42,0.88);
+      --border: rgba(255,232,31,0.1); --border-strong: rgba(255,232,31,0.28);
+      --fg: #e8e4dc; --fg-muted: #9aa3b8; --fg-subtle: rgba(232,228,220,0.5);
+      --code-bg: rgba(8,12,22,0.94); --accent: #ffe81f; --accent-ambient: #c41e3a;
+    }
+    :root[data-panel-theme="vision"] {
+      color-scheme: light;
+      --ifm-color-primary: #007aff; --ifm-color-secondary: #34c759;
+      --ifm-link-color: #007aff; --ifm-heading-color: #1c1c1e;
+      --bg: #f2f2f7; --bg-elevated: rgba(255,255,255,0.9);
+      --surface: rgba(255,255,255,0.8); --surface-strong: rgba(255,255,255,0.94);
+      --border: rgba(0,0,0,0.1); --border-strong: rgba(0,0,0,0.14);
+      --fg: #1c1c1e; --fg-muted: #48484a; --fg-subtle: #636366;
+      --code-bg: rgba(255,255,255,0.94); --accent: #007aff; --accent-ambient: #ff9f0a;
+    }
+
+    /* --- Background patterns --- */
+    html:not([data-panel-theme]) {
+      background-image:
+        linear-gradient(to right, rgba(128,128,128,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(128,128,128,0.05) 1px, transparent 1px) !important;
+      background-size: 60px 60px !important;
+    }
+    html[data-panel-theme="midnight"] {
+      background-image:
+        repeating-linear-gradient(-18deg, color-mix(in oklab, var(--accent) 18%, transparent) 0, color-mix(in oklab, var(--accent) 18%, transparent) 1px, transparent 1px, transparent 11px),
+        repeating-linear-gradient(18deg, color-mix(in oklab, var(--accent-ambient) 12%, transparent) 0, color-mix(in oklab, var(--accent-ambient) 12%, transparent) 1px, transparent 1px, transparent 14px),
+        radial-gradient(ellipse 85% 55% at 50% -15%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 55%) !important;
+      background-size: auto, auto, 100% 100% !important;
+    }
+    html[data-panel-theme="ember"] {
+      background-image:
+        radial-gradient(ellipse 100% 70% at 50% 105%, color-mix(in oklab, var(--accent) 20%, transparent), transparent 52%),
+        repeating-linear-gradient(0deg, color-mix(in oklab, var(--accent-ambient) 10%, transparent) 0, color-mix(in oklab, var(--accent-ambient) 10%, transparent) 1px, transparent 1px, transparent 22px) !important;
+      background-size: 100% 100%, 24px 24px !important;
+    }
+    html[data-panel-theme="boreal"] {
+      background-image:
+        radial-gradient(ellipse 70% 45% at 18% 28%, color-mix(in oklab, var(--accent-ambient) 16%, transparent), transparent 50%),
+        radial-gradient(ellipse 55% 50% at 88% 72%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 50%),
+        repeating-linear-gradient(90deg, color-mix(in oklab, var(--accent) 8%, transparent) 0, color-mix(in oklab, var(--accent) 8%, transparent) 1px, transparent 1px, transparent 30px) !important;
+      background-size: auto, auto, 30px 100% !important;
+    }
+    html[data-panel-theme="web"] {
+      background-image:
+        linear-gradient(122deg, color-mix(in oklab, var(--accent) 14%, transparent) 0%, transparent 42%),
+        linear-gradient(300deg, color-mix(in oklab, var(--accent-ambient) 12%, transparent) 0%, transparent 48%),
+        linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px) !important;
+      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px !important;
+    }
+    html[data-panel-theme="xuiClassic"] {
+      background-image:
+        linear-gradient(110deg, color-mix(in oklab, var(--accent) 12%, transparent) 0%, transparent 45%),
+        linear-gradient(290deg, color-mix(in oklab, var(--accent-ambient) 8%, transparent) 0%, transparent 50%),
+        linear-gradient(to right, rgba(44,57,80,0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(44,57,80,0.35) 1px, transparent 1px) !important;
+      background-size: 100% 100%, 100% 100%, 52px 52px, 52px 52px !important;
+    }
+    html[data-panel-theme="vision"] {
+      background:
+        radial-gradient(ellipse 62% 52% at 88% 8%, rgba(255,159,10,0.14), transparent 52%),
+        radial-gradient(ellipse 58% 48% at 8% 18%, rgba(52,199,89,0.12), transparent 50%),
+        radial-gradient(ellipse 52% 44% at 72% 88%, rgba(255,55,95,0.1), transparent 50%),
+        radial-gradient(ellipse 48% 42% at 18% 78%, rgba(90,200,250,0.12), transparent 50%),
+        radial-gradient(ellipse 42% 38% at 48% 42%, rgba(191,90,242,0.07), transparent 55%),
+        var(--bg) !important;
+    }
+
+    /* --- Ambient haze layers --- */
+    html:not([data-panel-theme])::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(circle at 10% 10%, color-mix(in oklab, var(--accent-ambient) 15%, transparent) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, color-mix(in oklab, var(--accent) 15%, transparent) 0%, transparent 50%);
+      filter: blur(60px); opacity: 0.3;
+    }
+    html[data-panel-theme="midnight"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 70% 45% at 10% 25%, color-mix(in oklab, var(--accent) 18%, transparent) 0%, transparent 48%),
+        radial-gradient(ellipse 55% 50% at 95% 15%, color-mix(in oklab, var(--accent-ambient) 14%, transparent) 0%, transparent 50%);
+      filter: blur(50px); opacity: 0.28;
+    }
+    html[data-panel-theme="ember"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 80% 55% at 50% 100%, color-mix(in oklab, var(--accent) 24%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse 50% 40% at 20% 30%, color-mix(in oklab, var(--accent-ambient) 10%, transparent) 0%, transparent 50%);
+      filter: blur(55px); opacity: 0.32;
+    }
+    html[data-panel-theme="boreal"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 65% 50% at 15% 45%, color-mix(in oklab, var(--accent) 16%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse 55% 45% at 85% 25%, color-mix(in oklab, var(--accent-ambient) 12%, transparent) 0%, transparent 50%);
+      filter: blur(48px); opacity: 0.3;
+    }
+    html[data-panel-theme="web"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 55% 40% at 20% 35%, color-mix(in oklab, var(--accent) 20%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 50%, color-mix(in oklab, var(--accent-ambient) 16%, transparent) 0%, transparent 50%);
+      filter: blur(58px); opacity: 0.28;
+    }
+    html[data-panel-theme="xuiClassic"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 60% 42% at 15% 30%, color-mix(in oklab, var(--accent) 16%, transparent) 0%, transparent 48%),
+        radial-gradient(ellipse 50% 48% at 90% 20%, color-mix(in oklab, var(--accent-ambient) 10%, transparent) 0%, transparent 50%);
+      filter: blur(52px); opacity: 0.26;
+    }
+    html[data-panel-theme="starWars"]::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -10;
+      background: radial-gradient(ellipse 55% 40% at 20% 35%, color-mix(in oklab, var(--accent) 14%, transparent) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at 100% 50%, color-mix(in oklab, var(--accent-ambient) 10%, transparent) 0%, transparent 50%);
+      filter: blur(50px); opacity: 0.22;
+    }
+
+    /* Star Wars cinema FX */
+    .sw-cinema-bg { display: none; }
+    html[data-panel-theme="starWars"] .sw-cinema-bg { display: block; }
+    .sw-cinema-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .sw-cinema-bg .sw-stars {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23030508'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='24' cy='18' r='0.6' opacity='0.9'/%3E%3Ccircle cx='88' cy='42' r='0.4' opacity='0.5'/%3E%3Ccircle cx='156' cy='12' r='0.7' opacity='0.85'/%3E%3Ccircle cx='220' cy='68' r='0.5' opacity='0.6'/%3E%3Ccircle cx='312' cy='28' r='0.6' opacity='0.75'/%3E%3Ccircle cx='388' cy='54' r='0.4' opacity='0.55'/%3E%3Ccircle cx='468' cy='16' r='0.8' opacity='0.9'/%3E%3Ccircle cx='44' cy='112' r='0.5' opacity='0.65'/%3E%3Ccircle cx='128' cy='96' r='0.6' opacity='0.8'/%3E%3Ccircle cx='204' cy='140' r='0.4' opacity='0.45'/%3E%3Ccircle cx='296' cy='108' r='0.7' opacity='0.7'/%3E%3Ccircle cx='372' cy='124' r='0.5' opacity='0.6'/%3E%3Ccircle cx='452' cy='98' r='0.6' opacity='0.85'/%3E%3Ccircle cx='68' cy='188' r='0.4' opacity='0.5'/%3E%3Ccircle cx='172' cy='204' r='0.8' opacity='0.95'/%3E%3Ccircle cx='248' cy='176' r='0.5' opacity='0.55'/%3E%3Ccircle cx='336' cy='192' r='0.6' opacity='0.75'/%3E%3Ccircle cx='420' cy='168' r='0.4' opacity='0.5'/%3E%3Ccircle cx='12' cy='248' r='0.6' opacity='0.7'/%3E%3Ccircle cx='96' cy='268' r='0.5' opacity='0.6'/%3E%3Ccircle cx='180' cy='236' r='0.7' opacity='0.8'/%3E%3Ccircle cx='260' cy='252' r='0.4' opacity='0.5'/%3E%3Ccircle cx='344' cy='228' r='0.6' opacity='0.7'/%3E%3Ccircle cx='432' cy='244' r='0.5' opacity='0.65'/%3E%3Ccircle cx='52' cy='312' r='0.8' opacity='0.9'/%3E%3Ccircle cx='140' cy='296' r='0.5' opacity='0.55'/%3E%3Ccircle cx='228' cy='308' r='0.6' opacity='0.75'/%3E%3Ccircle cx='316' cy='280' r='0.4' opacity='0.45'/%3E%3Ccircle cx='404' cy='300' r='0.7' opacity='0.8'/%3E%3Ccircle cx='476' cy='288' r='0.5' opacity='0.6'/%3E%3Ccircle cx='80' cy='368' r='0.6' opacity='0.7'/%3E%3Ccircle cx='168' cy='356' r='0.4' opacity='0.5'/%3E%3Ccircle cx='256' cy='372' r='0.8' opacity='0.9'/%3E%3Ccircle cx='340' cy='344' r='0.5' opacity='0.55'/%3E%3Ccircle cx='428' cy='360' r='0.6' opacity='0.7'/%3E%3Ccircle cx='36' cy='424' r='0.7' opacity='0.8'/%3E%3Ccircle cx='124' cy='408' r='0.5' opacity='0.6'/%3E%3Ccircle cx='212' cy='432' r='0.4' opacity='0.45'/%3E%3Ccircle cx='300' cy='416' r='0.6' opacity='0.75'/%3E%3Ccircle cx='388' cy='428' r='0.8' opacity='0.9'/%3E%3Ccircle cx='460' cy='400' r='0.5' opacity='0.55'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 512px 512px;
+      position: absolute; inset: 0;
+      animation: sw-twinkle 5s ease-in-out infinite alternate;
+    }
+    @keyframes sw-twinkle { 0% { opacity: 0.55; filter: brightness(0.9); } 100% { opacity: 0.95; filter: brightness(1.12); } }
+    .sw-cinema-bg .sw-hyperspace {
+      position: absolute; inset: 0;
+      background: repeating-conic-gradient(from 0deg at 50% 45%, transparent 0deg 7deg, color-mix(in oklab, var(--accent) 14%, transparent) 7deg 7.35deg, transparent 7.35deg 14deg);
+      opacity: 0.18; animation: sw-drift 90s linear infinite;
+    }
+    @keyframes sw-drift { to { transform: rotate(360deg); } }
+
+    /* --- Base styles --- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background-color: var(--bg) !important; min-height: 100vh; scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); color: var(--fg); min-height: 100vh; position: relative; z-index: 1; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ::selection { background: color-mix(in oklab, var(--accent) 35%, transparent); }
+
+    /* --- Layout --- */
+    .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* --- Navbar --- */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: color-mix(in oklab, var(--bg) 92%, transparent);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid color-mix(in oklab, var(--accent) 15%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      padding: 0.75rem 1.5rem;
+    }
+    .navbar-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .navbar-brand { font-weight: 700; font-size: 1.25rem; color: var(--fg); letter-spacing: 0.02em; }
+    .navbar-brand span { color: var(--accent); }
+
+    /* --- Theme switcher --- */
+    .theme-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .theme-btn {
+      padding: 0.4rem 0.85rem; border-radius: 9999px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--fg-muted); font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all 0.2s ease; font-family: var(--font-sans);
+    }
+    .theme-btn:hover { border-color: var(--accent); color: var(--accent); background: color-mix(in oklab, var(--accent) 10%, transparent); }
+    .theme-btn.active { border-color: var(--accent); color: var(--bg); background: var(--accent); font-weight: 600; }
+
+    /* --- Hero --- */
+    .hero { text-align: center; padding: 4rem 0 3rem; }
+    .hero h1 { font-size: 2.8rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-ambient)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .hero p { font-size: 1.15rem; color: var(--fg-muted); max-width: 600px; margin: 0 auto; }
+
+    /* --- Cards --- */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; margin: 2rem 0; }
+    .card {
+      background: color-mix(in oklab, var(--bg-elevated) 90%, transparent);
+      border: 1px solid color-mix(in oklab, var(--fg-muted) 18%, transparent);
+      border-radius: 0.75rem; padding: 1.5rem; position: relative; overflow: hidden;
+      transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
+      opacity: 0; transition: opacity 0.3s ease;
+    }
+    .card:hover { border-color: color-mix(in oklab, var(--accent) 35%, transparent); box-shadow: 0 20px 40px rgba(0,0,0,0.3); transform: translateY(-2px); }
+    .card:hover::before { opacity: 1; }
+    .card h3 { color: var(--ifm-heading-color); margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .card p { color: var(--fg-muted); font-size: 0.9rem; line-height: 1.6; }
+    .card .tag {
+      display: inline-block; margin-top: 0.75rem; padding: 0.2rem 0.6rem;
+      border-radius: 9999px; font-size: 0.7rem; font-weight: 600;
+      background: color-mix(in oklab, var(--accent) 15%, transparent);
+      color: var(--accent); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent);
+    }
+
+    /* --- Stats --- */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 2rem 0; }
+    @media (max-width: 640px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat {
+      text-align: center; padding: 1.25rem; border-radius: 0.75rem;
+      background: color-mix(in oklab, var(--bg-elevated) 80%, transparent);
+      border: 1px solid var(--border);
+    }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.8rem; color: var(--fg-muted); margin-top: 0.25rem; }
+
+    /* --- Code block --- */
+    .code-block {
+      background: var(--code-bg); border: 1px solid color-mix(in oklab, var(--fg-muted) 20%, transparent);
+      border-radius: 0.75rem; padding: 1.25rem; margin: 2rem 0; overflow-x: auto;
+      font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.6; color: var(--fg);
+    }
+    .code-block .comment { color: var(--fg-muted); }
+    .code-block .keyword { color: var(--accent); }
+    .code-block .string { color: var(--accent-ambient); }
+
+    /* --- Buttons --- */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.5rem; border-radius: 0.75rem; border: none;
+      background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+      color: #000; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+      transition: opacity 0.2s ease; font-family: var(--font-sans);
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.5rem; border-radius: 0.75rem;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--fg); font-weight: 500; font-size: 0.9rem; cursor: pointer;
+      transition: all 0.2s ease; font-family: var(--font-sans);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* --- Status pills --- */
+    .pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.5rem 0; }
+    .pill {
+      padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;
+      border: 1px solid;
+    }
+    .pill--green { border-color: color-mix(in oklab, #10b981 35%, transparent); background: color-mix(in oklab, #10b981 12%, transparent); color: #6ee7b7; }
+    .pill--blue { border-color: color-mix(in oklab, #0ea5e9 35%, transparent); background: color-mix(in oklab, #0ea5e9 12%, transparent); color: #7dd3fc; }
+    .pill--amber { border-color: color-mix(in oklab, #f59e0b 35%, transparent); background: color-mix(in oklab, #f59e0b 12%, transparent); color: #fde68a; }
+    .pill--rose { border-color: color-mix(in oklab, #f43f5e 35%, transparent); background: color-mix(in oklab, #f43f5e 12%, transparent); color: #fda4af; }
+
+    /* --- Footer --- */
+    .footer { text-align: center; padding: 3rem 0 2rem; color: var(--fg-muted); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: 3rem; }
+    .footer a { color: var(--accent); }
+
+    /* --- Section headings --- */
+    .section-title { font-size: 1.4rem; font-weight: 700; color: var(--ifm-heading-color); margin: 2.5rem 0 0.5rem; }
+    .section-desc { color: var(--fg-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+
+    /* --- Responsive --- */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.8rem; }
+      .navbar-inner { flex-direction: column; gap: 0.75rem; }
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    /* --- Motion --- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Star Wars cinema layers -->
+  <div class="sw-cinema-bg">
+    <span class="sw-hyperspace"></span>
+    <span class="sw-stars"></span>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <div class="navbar-brand"><span>SharX</span> Themes</div>
+      <div class="theme-grid" id="themeGrid">
+        <button class="theme-btn" data-theme="web">Web</button>
+        <button class="theme-btn" data-theme="default">Default</button>
+        <button class="theme-btn" data-theme="midnight">Midnight</button>
+        <button class="theme-btn" data-theme="ember">Ember</button>
+        <button class="theme-btn" data-theme="boreal">Boreal</button>
+        <button class="theme-btn" data-theme="xuiClassic">3x-ui Classic</button>
+        <button class="theme-btn" data-theme="starWars">Star Wars</button>
+        <button class="theme-btn" data-theme="vision">Vision (Light)</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <h1>SharX Panel Themes</h1>
+      <p>8 тем оформления из проекта <a href="https://github.com/konstpic/sharx-code" target="_blank">konstpic/sharx-code</a> — fork 3x-ui с современным фронтендом на Next.js</p>
+    </section>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">8</div>
+        <div class="stat-label">Тем оформления</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">7</div>
+        <div class="stat-label">Тёмных тем</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Светлая тема</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">13</div>
+        <div class="stat-label">Языков интерфейса</div>
+      </div>
+    </div>
+
+    <!-- Color palette -->
+    <h2 class="section-title">Цветовая палитра текущей темы</h2>
+    <p class="section-desc">Основные CSS-переменные, определяющие внешний вид темы</p>
+    <div class="cards">
+      <div class="card">
+        <h3>Accent (primary)</h3>
+        <p id="accentColor" style="font-family: var(--font-mono); font-size: 1.1rem;">--accent: #8577f2</p>
+        <div class="tag">ifm-color-primary</div>
+      </div>
+      <div class="card">
+        <h3>Accent Ambient (secondary)</h3>
+        <p id="ambientColor" style="font-family: var(--font-mono); font-size: 1.1rem;">--accent-ambient: #6c52c7</p>
+        <div class="tag">ifm-color-secondary</div>
+      </div>
+      <div class="card">
+        <h3>Background</h3>
+        <p id="bgColor" style="font-family: var(--font-mono); font-size: 1.1rem;">--bg: #05060a</p>
+        <div class="tag">html background</div>
+      </div>
+    </div>
+
+    <!-- UI Elements -->
+    <h2 class="section-title">UI компоненты</h2>
+    <p class="section-desc">Кнопки, статусы и интерактивные элементы</p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.5rem;">
+      <button class="btn-primary">Primary Button</button>
+      <button class="btn-secondary">Secondary Button</button>
+    </div>
+
+    <div class="pills">
+      <span class="pill pill--green">Online</span>
+      <span class="pill pill--blue">Active</span>
+      <span class="pill pill--amber">Depleting</span>
+      <span class="pill pill--rose">Depleted</span>
+    </div>
+
+    <!-- Code example -->
+    <h2 class="section-title">Пример кода</h2>
+    <p class="section-desc">Подсветка синтаксиса и моноширинный шрифт</p>
+    <div class="code-block">
+<span class="comment">// Apply panel theme from SharX codebase</span>
+<span class="keyword">const</span> THEMES = [<span class="string">"web"</span>, <span class="string">"default"</span>, <span class="string">"midnight"</span>, <span class="string">"ember"</span>, <span class="string">"boreal"</span>, <span class="string">"xuiClassic"</span>, <span class="string">"starWars"</span>, <span class="string">"vision"</span>];
+
+<span class="keyword">function</span> applyTheme(id) {
+  <span class="keyword">const</span> root = document.documentElement;
+  root.setAttribute(<span class="string">"data-panel-theme"</span>, id);
+  root.setAttribute(<span class="string">"data-theme"</span>, id === <span class="string">"vision"</span> ? <span class="string">"light"</span> : <span class="string">"dark"</span>);
+}
+    </div>
+
+    <!-- Feature cards -->
+    <h2 class="section-title">Возможности тем</h2>
+    <p class="section-desc">Каждая тема включает палитру, фоновый паттерн и ambient-слои</p>
+    <div class="cards">
+      <div class="card">
+        <h3>CSS Variables</h3>
+        <p>Полный набор токенов: --bg, --fg, --accent, --border, --surface и десятки других</p>
+        <div class="tag">globals.css</div>
+      </div>
+      <div class="card">
+        <h3>Background Patterns</h3>
+        <p>Каждая тема имеет уникальный фоновый паттерн: градиенты, линии, сетки</p>
+        <div class="tag">data-panel-theme</div>
+      </div>
+      <div class="card">
+        <h3>Ambient Haze</h3>
+        <p>Мягкие цветовые ореолы (blur 48-60px) создают глубину и атмосферу</p>
+        <div class="tag">::before / ::after</div>
+      </div>
+      <div class="card">
+        <h3>Star Wars Cinema FX</h3>
+        <p>Звёздное поле, гиперпространство и лазерные sweep-анимации</p>
+        <div class="tag">star-wars-theme.css</div>
+      </div>
+      <div class="card">
+        <h3>Vision Glass</h3>
+        <p>Светлая тема с backdrop-filter blur, mesh-градиентами и multi-color ambient</p>
+        <div class="tag">visionOS-inspired</div>
+      </div>
+      <div class="card">
+        <h3>Subscription Presets</h3>
+        <p>Те же 8 палитр доступны для публичной страницы подписки</p>
+        <div class="tag">subPageColorPreset.ts</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Themes from <a href="https://github.com/konstpic/sharx-code" target="_blank">konstpic/sharx-code</a> (fork of <a href="https://github.com/MHSanaei/3x-ui" target="_blank">MHSanaei/3x-ui</a>)</p>
+    <p style="margin-top: 0.5rem;">GPL-3.0 License</p>
+  </footer>
+
+  <script>
+    const THEMES = {
+      web:        { accent: "#8577f2", ambient: "#6c52c7",  bg: "#05060a", meta: "#05060a" },
+      default:    { accent: "#22d3ee", ambient: "#9775fa",  bg: "#0d1117", meta: "#0d1117" },
+      midnight:   { accent: "#60a5fa", ambient: "#818cf8",  bg: "#0a1628", meta: "#0a1628" },
+      ember:      { accent: "#f59e0b", ambient: "#f472b6",  bg: "#140f0c", meta: "#140f0c" },
+      boreal:     { accent: "#14b8a6", ambient: "#22c55e",  bg: "#0a1412", meta: "#0a1412" },
+      xuiClassic: { accent: "#008771", ambient: "#3ad3ba",  bg: "#0a1222", meta: "#0a1222" },
+      starWars:   { accent: "#ffe81f", ambient: "#c41e3a",  bg: "#030508", meta: "#030508" },
+      vision:     { accent: "#007aff", ambient: "#ff9f0a",  bg: "#f2f2f7", meta: "#f5f5f7" },
+    };
+
+    function applyTheme(id) {
+      const root = document.documentElement;
+      root.setAttribute("data-panel-theme", id);
+      root.setAttribute("data-theme", id === "vision" ? "light" : "dark");
+      // Update meta theme-color
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", THEMES[id].meta);
+      // Update accent color display
+      const t = THEMES[id];
+      document.getElementById("accentColor").textContent = `--accent: ${t.accent}`;
+      document.getElementById("ambientColor").textContent = `--accent-ambient: ${t.ambient}`;
+      document.getElementById("bgColor").textContent = `--bg: ${t.bg}`;
+      // Update active button
+      document.querySelectorAll(".theme-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.theme === id);
+      });
+      // Persist
+      localStorage.setItem("sharx-theme", id);
+    }
+
+    // Init
+    document.querySelectorAll(".theme-btn").forEach(btn => {
+      btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+    });
+
+    // Restore saved theme or default to "web"
+    const saved = localStorage.getItem("sharx-theme") || "web";
+    applyTheme(saved);
+  </script>
+</body>
+</html>

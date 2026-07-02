@@ -1,0 +1,14 @@
+[Unit]
+Description=Web Admin Panel (Test)
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/opt/web_test
+ExecStart=/opt/web_test/venv/bin/python main.py
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
