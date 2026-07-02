@@ -57,11 +57,11 @@ async function checkAuth() {
 }
 
 function showMain() {
-    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('login-screen').classList.remove('show');
     document.getElementById('main-screen').style.display = 'flex';
 }
 
 function showLogin() {
     document.getElementById('main-screen').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-screen').classList.add('show');
 }

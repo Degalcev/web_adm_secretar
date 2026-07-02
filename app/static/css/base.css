@@ -169,11 +169,6 @@
   --accent-ambient: #ff9f0a;
 }
 
-html[data-panel-theme="vision"] .sidebar {
-  background: var(--bg);
-  border-right-color: var(--border);
-}
-
 /* ─── Background Patterns ──────────────────────────────────────────── */
 html {
   background-color: var(--bg) !important;
