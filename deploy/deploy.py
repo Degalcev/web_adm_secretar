@@ -106,12 +106,23 @@ def deploy(env_name):
             print('    OK')
 
         # 4.5 Записываем version.json для автообновления
-        commit_hash = run_cmd(ssh, f'cd {deploy_path} && git rev-parse HEAD')[1].strip()[:8]
+        # Читаем текущую версию или стартуем с 1.0.0
+        ver_file = f'{deploy_path}/VERSION'
+        rc_v, cur_ver, _ = run_cmd(ssh, f'cat {ver_file} 2>/dev/null || echo 1.0.0')
+        cur_ver = cur_ver.strip() or '1.0.0'
+        # Инкремент patch
+        parts = cur_ver.split('.')
+        if len(parts) == 3:
+            parts[2] = str(int(parts[2]) + 1)
+        else:
+            parts = ['1', '0', '1']
+        new_ver = '.'.join(parts)
+        run_cmd(ssh, f'echo {new_ver} > {ver_file}')
         env_label = 'test' if env_name == 'test' else 'prod'
-        version_json = f'{{"version":"{commit_hash}","env":"{env_label}","ts":"{int(__import__("time").time())}"}}'
+        version_json = f'{{"version":"{new_ver}","env":"{env_label}","ts":"{int(__import__("time").time())}"}}'
         rc, out, err = run_cmd(ssh, f"cat > {deploy_path}/version.json << 'ENDOFFILE'\n{version_json}\nENDOFFILE")
         if rc == 0:
-            print(f'    version.json: {commit_hash} ({env_label})')
+            print(f'    version.json: {new_ver} ({env_label})')
 
         # 5. Перезапускаем сервис
         print(f'[5/5] Перезапускаю {cfg["service_name"]}...')
