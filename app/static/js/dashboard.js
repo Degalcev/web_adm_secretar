@@ -8,6 +8,19 @@ let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 
 function initDashboard() {
+    // Мгновенно из кэша
+    const cached = localStorage.getItem('dash_cache');
+    if (cached) {
+        try {
+            const c = JSON.parse(cached);
+            _dashEvents = c.events || [];
+            _dashLocations = c.locations || {};
+            _dashOrganizers = c.organizers || {};
+            if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
+            renderDashboard();
+        } catch (e) {}
+    }
+    // Потом обновить с сервера
     loadDashboardData();
     setupDashboardClicks();
 }
@@ -39,6 +52,31 @@ function applyDashboardFilter(filter) {
 
 async function loadDashboardData() {
     try {
+        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error(resp.status);
+        const data = await resp.json();
+
+        // Обновляем счётчики мгновенно
+        document.getElementById('dash-total').textContent = data.total;
+        document.getElementById('dash-active').textContent = data.active;
+        document.getElementById('dash-completed').textContent = data.completed;
+        document.getElementById('dash-missed').textContent = data.missed;
+
+        // Обновляем today/soon
+        const todayEl = document.getElementById('dash-today');
+        const soonEl = document.getElementById('dash-soon');
+        if (todayEl && data.today) renderTodayFromData(data.today);
+        if (soonEl && data.soon) renderSoonFromData(data.soon);
+
+        // Полные данные для локаций и графика — загружаем отдельно
+        loadFullData();
+    } catch (e) {
+        console.error('Dashboard load error:', e);
+    }
+}
+
+async function loadFullData() {
+    try {
         const [eventsResp, locResp, orgResp] = await Promise.all([
             fetch('/admin/api/events', { credentials: 'same-origin' }),
             fetch('/admin/api/locations', { credentials: 'same-origin' }),
@@ -48,11 +86,7 @@ async function loadDashboardData() {
         if (!eventsResp.ok) throw new Error(eventsResp.status);
 
         _dashEvents = await eventsResp.json();
-
-        // Pre-populate vks.js globals so modals and VKS page work instantly
-        if (typeof allEvents !== 'undefined') {
-            allEvents = _dashEvents;
-        }
+        if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
 
         const locations = await locResp.json();
         _dashLocations = {};
@@ -64,19 +98,52 @@ async function loadDashboardData() {
         organizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
         if (typeof window !== 'undefined') window.allOrganizers = organizers;
 
-        // Cache for instant restore on next visit
         try {
             localStorage.setItem('dash_cache', JSON.stringify({
-                events: _dashEvents,
-                locations: _dashLocations,
-                organizers: _dashOrganizers
+                events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers
             }));
         } catch (e) {}
 
-        renderDashboard();
+        renderLocations();
+        drawChart();
+        setupChartToggle();
     } catch (e) {
-        console.error('Dashboard load error:', e);
+        console.error('Full data load error:', e);
     }
+}
+
+function renderTodayFromData(events) {
+    const el = document.getElementById('dash-today');
+    if (!el) return;
+    if (events.length === 0) {
+        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет мероприятий на сегодня</div>';
+        el.classList.remove('has-scroll');
+        return;
+    }
+    const items = events.map(e => renderUpcomingItem(e)).join('');
+    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
+    checkUpcomingScroll(el);
+}
+
+function renderSoonFromData(events) {
+    const el = document.getElementById('dash-soon');
+    if (!el) return;
+    if (events.length === 0) {
+        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет ближайших мероприятий</div>';
+        el.classList.remove('has-scroll');
+        return;
+    }
+    const items = events.map(e => {
+        const d = new Date(e.date);
+        const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+        return renderUpcomingItem(e, {
+            showDate: true,
+            dayName: dayNames[d.getDay()],
+            dateStr: `${d.getDate()}.${d.getMonth()+1}`
+        });
+    }).join('');
+    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
+    checkUpcomingScroll(el);
 }
 
 function locName(id) { return _dashLocations[id] || '—'; }

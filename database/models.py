@@ -144,6 +144,7 @@ class Event(Base):
         Index('idx_event_date_time', 'date', 'time'),
         Index('idx_event_organizer_id', 'organizer_id'),
         Index('idx_event_location_id', 'location_id'),
+        Index('idx_event_completed', 'completed'),
     )
 
 
