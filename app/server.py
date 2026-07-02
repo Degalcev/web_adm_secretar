@@ -13,6 +13,7 @@ from app.routes import (
     setup_vks_routes,
 )
 from app.routes.documents import setup_document_routes
+from app.routes.preload import setup_preload_routes
 
 STATIC_PATH = Path(__file__).parent / 'static'
 
@@ -52,6 +53,7 @@ async def start_webapp(host='0.0.0.0', port=8080):
     setup_logs_routes(app)
     setup_vks_routes(app)
     setup_document_routes(app)
+    setup_preload_routes(app)
 
     # Version JSON для автообновления
     async def version_json(request):

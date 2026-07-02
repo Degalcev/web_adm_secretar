@@ -8,21 +8,11 @@ let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 
 function initDashboard() {
-    // Мгновенно из кэша
-    const cached = localStorage.getItem('dash_cache');
-    if (cached) {
-        try {
-            const c = JSON.parse(cached);
-            _dashEvents = c.events || [];
-            _dashLocations = c.locations || {};
-            _dashOrganizers = c.organizers || {};
-            if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
-            renderDashboard();
-        } catch (e) {}
-    }
-    // Потом обновить с сервера
-    loadDashboardData();
+    // Данные уже в памяти из preloader
+    renderDashboard();
     setupDashboardClicks();
+    // Фоновое обновление
+    preloadAllData().then(() => renderDashboard());
 }
 
 let _dashLastDay = '';
