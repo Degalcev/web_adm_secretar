@@ -1,0 +1,12 @@
+/* ─── Responsive ────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .content-area { padding: 1rem; }
+  .page-header { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+  .stat-card { padding: 1rem; }
+  .stat-value { font-size: 1.25rem; }
+  .log-filters-main { flex-direction: column; }
+  .log-filter-group, .log-filter-narrow, .log-search-wrap { min-width: 100%; flex: none; }
+  .modal { margin: 0.75rem; padding: 1.25rem; }
+}
