@@ -1,96 +1,47 @@
-# Agents - Проект web_adm_secretar
+# Agents — Проект web_adm_secretar
 
-Директория содержит агентов для автоматизации разработки проекта.
+Агенты для автоматизации разработки админ-панели VKS Secretar.
 
 ## Доступные агенты
 
-### Backend разработка
-- **backend-agent** - Python backend: asyncio, aiohttp, SQLAlchemy
-
-### Frontend разработка
-- **frontend-agent** - HTML, CSS, JavaScript, UI/UX
-
-### Базы данных
-- **database-agent** - PostgreSQL, SQLAlchemy, миграции
-
-### DevOps
-- **devops-agent** - SSH деплой, VPS, nginx, мониторинг
-
-### Безопасность
-- **security-agent** - Авторизация, хеширование, CSRF, валидация
-
-### Java разработка
-- **java-agent** - Java, Spring Boot, JVM экосистема
-
-### Дизайн
-- **graphics-agent** - SVG графика, CSS анимации, UI/UX
+| Агент | Специализация | Файл |
+|-------|--------------|------|
+| **backend-agent** | Python backend: asyncio, aiohttp, SQLAlchemy, SSE | `backend-agent.md` |
+| **database-agent** | PostgreSQL, SQLAlchemy async, модели, CRUD | `database-agent.md` |
+| **security-agent** | Авторизация (argon2), CSRF, rate limiting, сессии | `security-agent.md` |
+| **frontend-agent** | HTML, CSS, JS, SPA роутинг, темы, SSE клиент | `frontend-agent.md` |
+| **devops-agent** | SSH деплой, VPS, nginx, systemd, мониторинг | `devops-agent.md` |
 
 ## Использование
 
-Агенты вызываются через инструмент `actor` с указанием `subagent_type`:
+Агенты вызываются через инструмент `actor`:
 
 ```python
-# Пример вызова backend агента
+# Backend агент
+actor({
+    "operation": {
+        "action": "run",
+        "subagent_type": "general",
+        "description": "Новый CRUD endpoint",
+        "prompt": "Создай endpoint для управления X"
+    }
+})
+
+# Explore агент (поиск в коде)
 actor({
     "operation": {
         "action": "run",
         "subagent_type": "explore",
-        "description": "Поиск в коде",
-        "prompt": "Найди все маршруты в admin_routes.py"
+        "description": "Поиск паттернов",
+        "prompt": "Найди все маршруты с @admin_required"
     }
 })
 ```
 
-## Специализации
+## Когда какой агент
 
-### backend-agent
-- Написание и оптимизация async Python кода
-- Реализация aiohttp обработчиков
-- Работа с SQLAlchemy async ORM
-- REST API разработка
-
-### frontend-agent
-- Создание адаптивных HTML макетов
-- CSS тёмная тема
-- Vanilla JavaScript
-- UI компоненты
-
-### database-agent
-- Проектирование схем БД
-- Оптимизация SQL запросов
-- Миграции
-- CRUD операции
-
-### devops-agent
-- SSH деплой через paramiko
-- Управление VPS
-- Nginx конфигурация
-- Мониторинг серверов
-
-### security-agent
-- Авторизация и аутентификация
-- Хеширование паролей (argon2)
-- CSRF защита
-- Валидация ввода
-
-### java-agent
-- Spring Boot приложения
-- JPA/Hibernate ORM
-- REST API
-- Тестирование
-
-### graphics-agent
-- SVG иконки и графика
-- CSS анимации
-- UI/UX проектирование
-- Адаптивный дизайн
-
-## Файлы агентов
-
-Каждый агент содержит:
-- **Роль** - Описание специализации
-- **Возможности** - Что умеет делать
-- **Контекст** - Информация о проекте
-- **Руководства** - Правила работы
-- **Примеры промптов** - Примеры задач
-- **Файлы для справки** - Ключевые файлы проекта
+- **Новый endpoint / CRUD** → backend-agent
+- **Новая модель / миграция** → database-agent
+- **Авторизация / CSRF / безопасность** → security-agent
+- **UI / CSS / JS** → frontend-agent
+- **Деплой / сервер / nginx** → devops-agent

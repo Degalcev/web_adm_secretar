@@ -285,5 +285,5 @@ logger.debug("Состояние переменных: {}", {"key": value})
 
 ## Ссылки
 - Документация Loguru: https://loguru.readthedocs.io/
-- Настройка логирования проекта: `main.py`
-- Просмотрщик логов: `app/admin_routes.py`
+- Настройка логирования: `main.py`
+- Просмотрщик логов: `app/routes/logs.py`

@@ -265,12 +265,14 @@ def rate_limit(handler):
 6. **Отсутствие rate limiting**: Защитите от brute force
 
 ## Специфичные для проекта заметки по безопасности
+- CSRF защита реализована: `@require_csrf` декоратор + cookie `csrf_token` + header `X-CSRF-Token`
+- Сессии хранятся в PostgreSQL (таблица sessions, TTL 24ч)
+- Rate limiter: 5 запросов/минуту на `/admin/login`
 - Пароль admin по умолчанию в конфиге (следует изменить)
-- Нет CSRF защиты (пока не реализована)
-- Сессии теряются при перезапуске (в памяти)
-- Нет принуждения HTTPS на уровне приложения (nginx обрабатывает)
+- HTTPS обеспечивается nginx (Let's Encrypt)
 
 ## Ссылки
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
 - argon2-cffi: https://argon2-cffi.readthedocs.io/
 - aiohttp безопасность: https://docs.aiohttp.org/en/stable/security.html
+- Реализация авторизации: `app/auth.py`

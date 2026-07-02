@@ -54,10 +54,11 @@ async def process_items(items):
 4. **Отмена задач**: Используйте `asyncio.TaskGroup` для структурированной конкурентности
 
 ## Специфика проекта
-- **Точка входа**: `main.py` запускает aiohttp сервер
-- **Маршруты**: `app/admin_routes.py` определяет все endpoints
-- **База данных**: Используйте `database/` пакет для async SQLAlchemy операций
-- **Логирование**: Используйте `loguru.logger` для структурированного логирования
+- **Точка входа**: `main.py` → `app/server.py` (запуск aiohttp)
+- **Маршруты**: `app/routes/*.py` (users, organizers, locations, logs, vks, documents, preload, sse)
+- **База данных**: `database/` пакет (models.py, requests.py, sending.py)
+- **Логирование**: `loguru.logger` с ротацией
+- **SSE**: `app/sse_listener.py` + `app/routes/sse.py`
 
 ## Советы по отладке
 ```python
@@ -89,4 +90,4 @@ async def test_handler():
 ## Ссылки
 - Документация asyncio: https://docs.python.org/3/library/asyncio.html
 - Документация aiohttp: https://docs.aiohttp.org/
-- Код проекта: `app/server.py`, `app/admin_routes.py`
+- Код проекта: `app/server.py`, `app/routes/*.py`

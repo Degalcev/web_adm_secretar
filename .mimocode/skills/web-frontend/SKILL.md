@@ -224,4 +224,5 @@ console.log('Debug info:', data);
 ## Ссылки
 - MDN Web Docs: https://developer.mozilla.org/
 - CSS-Tricks: https://css-tricks.com/
-- Фронтенд проекта: `app/static/`
+- Фронтенд проекта: `app/static/` (index.html, css/, js/)
+- SPA маршруты: `app/server.py` (SPA_PATHS)
