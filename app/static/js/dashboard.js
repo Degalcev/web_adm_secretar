@@ -6,53 +6,13 @@ let _dashOrganizers = {};
 let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
-let _dashDateTimeInterval = null;
 
 function initDashboard() {
-    updateDateTime();
-    if (_dashDateTimeInterval) clearInterval(_dashDateTimeInterval);
-    _dashDateTimeInterval = setInterval(updateDateTime, 1000);
-
-    // Restore cached data instantly
-    const cached = localStorage.getItem('dash_cache');
-    if (cached) {
-        try {
-            const c = JSON.parse(cached);
-            _dashEvents = c.events || [];
-            _dashLocations = c.locations || {};
-            _dashOrganizers = c.organizers || {};
-            if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
-            renderDashboard();
-        } catch (e) {}
-    }
-
     loadDashboardData();
     setupDashboardClicks();
 }
 
 let _dashLastDay = '';
-
-function updateDateTime() {
-    const el = document.getElementById('dash-datetime');
-    if (!el) return;
-    const now = new Date();
-    const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
-    const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    const day = days[now.getDay()];
-    const date = now.getDate();
-    const month = months[now.getMonth()];
-    const year = now.getFullYear();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    el.innerHTML = `<span class="dash-dt-day">${day}</span>, <span class="dash-dt-date">${date} ${month} ${year}</span> <span class="dash-dt-time">${hours}:${minutes}:${seconds}</span>`;
-
-    const todayStr = `${year}-${now.getMonth()}-${now.getDate()}`;
-    if (_dashLastDay && _dashLastDay !== todayStr) {
-        loadDashboardData();
-    }
-    _dashLastDay = todayStr;
-}
 
 function setupDashboardClicks() {
     document.querySelectorAll('.dash-card[data-href]').forEach(el => {
