@@ -91,14 +91,15 @@ async function saveOrganizer() {
         base_url: document.getElementById('f-org-base-url').value.trim(),
     };
     try {
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
         let resp;
         if (editingOrgId) {
             resp = await fetch(`${BASE_URL}/admin/api/organizers/${editingOrgId}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(payload)
             });
         } else {
             resp = await fetch(`${BASE_URL}/admin/api/organizers`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(payload)
             });
         }
         const data = await resp.json();
@@ -119,7 +120,11 @@ function openConfirmOrg(id, name) {
 async function confirmDeleteOrg() {
     if (!deletingOrgId) return;
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/organizers/${deletingOrgId}`, { method: 'DELETE' });
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const resp = await fetch(`${BASE_URL}/admin/api/organizers/${deletingOrgId}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadOrganizers(); showToast('Удалено', 'success'); }
         else { showToast(data.error || 'Ошибка', 'error'); }

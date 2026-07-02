@@ -531,13 +531,12 @@ function drawChart() {
 }
 
 async function dashCompleteEvent(id, checked) {
-    if (!checked) return;
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
         const resp = await fetch(`/admin/api/events/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ completed: true, csrf_token: csrfToken })
+            body: JSON.stringify({ completed: checked, csrf_token: csrfToken })
         });
         const data = await resp.json();
         if (data.ok) {
@@ -545,7 +544,7 @@ async function dashCompleteEvent(id, checked) {
             _dashEvents = [...allEvents];
             try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
             renderDashboard();
-            showToast('ВКС завершено', 'success');
+            showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
         }
     } catch (e) {
         showToast('Ошибка сети', 'error');

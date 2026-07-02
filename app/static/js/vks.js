@@ -671,10 +671,13 @@ async function saveEvent() {
 
 async function completeEvent(id) {
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const event = allEvents.find(e => e.id === id);
+    const newCompleted = event ? !event.completed : true;
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${id}`, {
-            method: 'PUT', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ completed: true, csrf_token: csrfToken })
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+            body: JSON.stringify({ completed: newCompleted, csrf_token: csrfToken })
         });
         const data = await resp.json();
         if (data.ok) {
@@ -685,7 +688,7 @@ async function completeEvent(id) {
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
-            showToast('ВКС завершено', 'success');
+            showToast(newCompleted ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
         }
     } catch (e) {
         showToast('Ошибка сети', 'error');

@@ -120,17 +120,18 @@ async function saveUser() {
     if (password) payload.password = password;
 
     try {
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
         let resp;
         if (editingId) {
             resp = await fetch(`${BASE_URL}/admin/api/users/${editingId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 body: JSON.stringify(payload)
             });
         } else {
             resp = await fetch(`${BASE_URL}/admin/api/users`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
                 body: JSON.stringify(payload)
             });
         }
