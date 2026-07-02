@@ -32,13 +32,18 @@ async def _listen_loop():
 
     while True:
         try:
+            logger.info('SSE listener: connecting to {}@{}:{}/{}', DB_USER, DB_HOST, DB_PORT, DB_NAME)
             _connection = await asyncpg.connect(
                 user=DB_USER, password=DB_USER_PASSWORD,
                 database=DB_NAME, host=DB_HOST, port=int(DB_PORT)
             )
+            logger.info('SSE listener: connected, adding listener...')
             await _connection.add_listener('update_event', _on_notify)
-            logger.info('SSE listener: LISTEN update_event')
-            await asyncio.Event().wait()
+            logger.info('SSE listener: LISTEN update_event OK')
+            # Keep alive
+            while True:
+                await asyncio.sleep(60)
+                await _connection.execute('SELECT 1')
         except asyncio.CancelledError:
             break
         except Exception as e:
@@ -47,10 +52,13 @@ async def _listen_loop():
 
 
 async def _on_notify(connection, pid, channel, payload):
+    logger.info('SSE notify received: channel={}, payload={}', channel, payload[:200])
     try:
         data = json.loads(payload)
         if data.get('username') == 'web_secretar':
+            logger.info('SSE: skipped (web_secretar)')
             return
+        logger.info('SSE: broadcasting to {} subscribers', len(_subscribers))
         await _broadcast(data)
     except Exception as e:
         logger.error('SSE notify error: {}', repr(e))
