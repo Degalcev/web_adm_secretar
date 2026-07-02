@@ -18,7 +18,7 @@ function addEntry(text, color) {
   d.textContent = new Date().toLocaleTimeString() + ' | ' + text;
   log.prepend(d);
 }
-const es = new EventSource('/admin/api/events/stream');
+const es = new EventSource('/admin/api/events/test-stream');
 es.onopen = () => { status.textContent = 'Connected'; status.style.color = '#0f0'; addEntry('SSE connected'); };
 es.onmessage = (e) => { addEntry('EVENT: ' + e.data.substring(0, 200), '#ff0'); };
 es.onerror = () => { status.textContent = 'Error/reconnecting...'; status.style.color = '#f00'; addEntry('Error, retrying...', '#f00'); };
