@@ -110,6 +110,7 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 0.75rem;
+  padding-right: 2rem;
   border-radius: var(--radius-md);
   color: var(--fg-muted);
   font-size: 0.875rem;
@@ -149,14 +150,18 @@
 }
 
 .nav-group-header .arrow {
-  margin-left: auto;
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   transition: transform var(--motion-fast) var(--ease-standard);
+  flex-shrink: 0;
 }
 
 .nav-group.open > .nav-group-header .arrow {
-  transform: rotate(180deg);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .nav-group-items {
