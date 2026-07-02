@@ -55,9 +55,11 @@ def deploy_to_vps():
 ```
 
 ## Файлы для справки
-- `database/models.py` - SSH туннель
-- `config.py` - Конфигурация сервера
-- Скрипты деплоя в `.mimocode/scripts/`
+- `database/models.py` — SSH туннель
+- `config.py` — Конфигурация сервера
+- `deploy/deploy.py` — Скрипт деплоя
+- `deploy/nginx/` — Конфиги nginx (test.conf, prod.conf)
+- `deploy/systemd/` — Systemd сервисы
 
 ## Команды мониторинга
 ```bash

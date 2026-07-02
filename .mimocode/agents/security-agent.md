@@ -5,105 +5,130 @@
 
 ## Возможности
 - Реализация безопасных систем авторизации
-- Хеширование и проверка паролей
+- Хеширование и проверка паролей (argon2)
 - Защита маршрутов авторизацией
 - Предотвращение распространённых веб-уязвимостей
-- Обработка CSRF защиты
-- Валидация и очистка ввода
+- CSRF защита
+- Rate limiting
+- Безопасное управление сессиями
 
 ## Контекст
-- **Метод авторизации**: argon2 хеширование паролей
-- **Сессии**: Словарь в памяти (cookies)
+- **Хеширование**: argon2-cffi
+- **Сессии**: PostgreSQL (таблица sessions, TTL 24ч)
+- **Куки**: `admin_token` (httponly), `csrf_token` (js-readable)
 - **Пароль по умолчанию**: 'ivc212' (из config)
-- **Маршруты**: `/admin/api/*` требуют admin авторизации
+- **Rate limiter**: 5 запросов/минуту на вход
+- **Декораторы**: `@admin_required`, `@require_csrf`
 
 ## Руководства
 1. Никогда не хардкодьте секреты в коде
-2. Используйте параметризованные запросы для предотвращения SQL инъекций
-3. Очищайте весь ввод пользователя
-4. Реализуйте CSRF токены для форм
-5. Используйте безопасные настройки cookies
-6. Логируйте события безопасности
+2. Используйте параметризованные запросы
+3. Реализуйте CSRF токены для mutation операций
+4. Используйте безопасные настройки cookies (httponly, samesite)
+5. Логируйте события безопасности
+6. Очищайте ввод пользователя
 
-## Примеры промптов
-- "Добавь CSRF защиту в эту форму"
-- "Реализуй rate limiting для входа"
-- "Проведи аудит этого кода на уязвимости"
-- "Добавь валидацию ввода в этот endpoint"
+## Система авторизации проекта
 
-## Хеширование паролей
+### Хеширование (argon2)
 ```python
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
 ph = PasswordHasher()
 
-def hash_password(password: str) -> str:
-    return ph.hash(password)
+# Хеширование
+hashed = ph.hash(password)
 
-def verify_password(stored_hash: str, password: str) -> bool:
-    try:
-        ph.verify(stored_hash, password)
-        return True
-    except VerifyMismatchError:
-        return False
+# Проверка
+try:
+    ph.verify(stored_hash, password)
+except VerifyMismatchError:
+    # Неверный пароль
 ```
 
-## Auth middleware
+### Сессии (PostgreSQL)
+```python
+import secrets
+from datetime import datetime, timedelta
+
+async def create_session(token: str, user_id: str, request):
+    new_session = Session(
+        id=str(uuid.uuid4()),
+        token=token,
+        user_id=user_id,
+        ip_address=request.remote,
+        user_agent=request.headers.get('User-Agent', '')[:500],
+        expires_at=datetime.utcnow() + timedelta(hours=24)
+    )
+    # ... commit
+```
+
+### Декоратор admin_required
 ```python
 def admin_required(handler):
     @wraps(handler)
     async def wrapper(request: web.Request):
         token = request.cookies.get('admin_token')
-        if not token:
-            return web.json_response({'error': 'Unauthorized'}, status=401)
-        
-        user_id = get_session(token)
-        if not user_id:
-            return web.json_response({'error': 'Invalid session'}, status=401)
-        
-        user = await get_user_by_id(user_id)
+        user = await validate_session(token)
         if not user or user.status != 'admin':
-            return web.json_response({'error': 'Forbidden'}, status=403)
-        
+            return web.json_response({'error': 'Доступ запрещён'}, status=401)
+        request['user'] = user
         return await handler(request)
     return wrapper
 ```
 
-## Валидация ввода
+### CSRF защита
 ```python
-import re
-from typing import Optional
-
-def validate_email(email: str) -> bool:
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email) is not None
-
-def sanitize_input(input_str: str) -> str:
-    import html
-    return html.escape(input_str.strip())
+def require_csrf(handler):
+    @wraps(handler)
+    async def wrapper(request: web.Request):
+        if request.method in ('POST', 'PUT', 'DELETE'):
+            cookie_token = request.cookies.get('csrf_token')
+            header_token = request.headers.get('X-CSRF-Token')
+            # проверка совпадения...
+        return await handler(request)
+    return wrapper
 ```
 
-## Security заголовки
+### Rate limiting
 ```python
-@web.middleware
-async def security_headers(request, handler):
-    response = await handler(request)
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    return response
+class RateLimiter:
+    def __init__(self, max_requests: int = 10, window: int = 60):
+        self.max_requests = max_requests
+        self.window = window
+        self.requests: dict[str, list[float]] = defaultdict(list)
+
+    def is_allowed(self, key: str) -> bool:
+        now = time.time()
+        self.requests[key] = [t for t in self.requests[key] if now - t < self.window]
+        if len(self.requests[key]) >= self.max_requests:
+            return False
+        self.requests[key].append(now)
+        return True
+```
+
+## Cookies
+```python
+response.set_cookie(
+    'admin_token', token,
+    httponly=True,     # JS не имеет доступа
+    secure=False,      # True для HTTPS
+    max_age=86400,     # 24 часа
+    samesite='Lax'
+)
 ```
 
 ## Файлы для справки
-- `app/admin_routes.py` - Существующая реализация auth
-- `config.py` - Конфигурация безопасности
-- `database/models.py` - Модель пользователя
+- `app/auth.py` — Полная реализация авторизации
+- `database/models.py` — Модель Session
+- `database/sending.py` — Операции с сессиями
+- `config.py` — DEFAULT_ADMIN_PASSWORD
 
-## Распространённые уязвимости для проверки
-1. SQL инъекции в запросах
-2. XSS во вводе/выводе пользователя
-3. CSRF на операциях изменения состояния
-4. Хардкод секретов
-5. Отсутствие rate limiting
-6. Небезопасное управление сессиями
+## Уязвимости для проверки
+1. Хардкод секретов
+2. SQL инъекции
+3. XSS
+4. CSRF
+5. Небезопасные cookies
+6. Отсутствие rate limiting
