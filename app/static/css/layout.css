@@ -71,6 +71,11 @@
   overflow-y: auto;
 }
 
+html[data-theme="light"] .sidebar,
+html[data-panel-theme="vision"] .sidebar {
+  background: var(--bg) !important;
+}
+
 .sidebar-nav {
   flex: 1;
   display: flex;
