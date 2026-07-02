@@ -46,3 +46,4 @@ initTheme();
 initRouter();
 checkAuth();
 initUpdater();
+initSSE();
