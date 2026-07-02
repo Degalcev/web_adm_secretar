@@ -24,3 +24,4 @@ DEFAULT_ADMIN_PASSWORD = os.getenv('DEFAULT_ADMIN_PASSWORD', 'ivc212')
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 BOT_LOGS_DIR = os.getenv('BOT_LOGS_DIR', '/opt/bot/logs')
+DOCUMENTS_DIR = os.getenv('DOCUMENTS_DIR', os.path.join(PROJECT_ROOT, 'uploads', 'documents'))

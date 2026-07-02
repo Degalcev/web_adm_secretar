@@ -17,17 +17,11 @@ async def download_document(request: web.Request) -> web.Response:
 
         logger.debug('Скачивание документа: {} ({})', doc.get('name'), doc_id)
 
-        if doc.get('file_path') and os.path.exists(doc['file_path']):
+        file_path = doc.get('file_path')
+        if file_path and os.path.exists(file_path):
             return web.FileResponse(
-                doc['file_path'],
+                file_path,
                 filename=doc.get('name', 'document'),
-                headers={'Content-Disposition': f'attachment; filename="{doc.get("name", "document")}"'}
-            )
-
-        if doc.get('content'):
-            return web.Response(
-                body=doc['content'],
-                content_type='application/octet-stream',
                 headers={'Content-Disposition': f'attachment; filename="{doc.get("name", "document")}"'}
             )
 
