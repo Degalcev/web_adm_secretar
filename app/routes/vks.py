@@ -178,7 +178,7 @@ async def dashboard_stats(request: web.Request) -> web.Response:
                     'description': e.description or '',
                     'organizer_id': e.organizer_id, 'location_id': e.location_id,
                     'url': e.url or '', 'completed': e.completed,
-                    'documents': [{'id': d.id} for d in await get_documents_by_event_id(e.id)]
+                    'documents': await get_documents_by_event_id(e.id)
                 })
         today_events.sort(key=lambda x: x['time'] or '23:59')
         today_events = today_events[:8]
@@ -195,7 +195,7 @@ async def dashboard_stats(request: web.Request) -> web.Response:
                     'description': e.description or '',
                     'organizer_id': e.organizer_id, 'location_id': e.location_id,
                     'url': e.url or '', 'completed': e.completed,
-                    'documents': [{'id': d.id} for d in await get_documents_by_event_id(e.id)]
+                    'documents': await get_documents_by_event_id(e.id)
                 })
         soon_events.sort(key=lambda x: (x['date'], x['time'] or '23:59'))
         soon_events = soon_events[:8]
