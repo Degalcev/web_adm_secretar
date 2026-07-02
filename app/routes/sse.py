@@ -7,8 +7,8 @@ from app.auth import admin_required
 from app.sse_listener import subscribe, unsubscribe
 
 
-@admin_required
 async def event_stream(request: web.Request) -> web.Response:
+    """SSE endpoint — без авторизации, куки проверяются при загрузке страницы"""
     logger.info('SSE: new connection from {}', request.remote)
     queue = subscribe()
     response = web.StreamResponse(
