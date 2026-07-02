@@ -4,15 +4,16 @@ let _eventSource = null;
 
 function connectSSE() {
     if (_eventSource) _eventSource.close();
-    console.log('SSE: connecting to /admin/api/events/stream');
-    _eventSource = new EventSource('/admin/api/events/stream');
+    const url = '/admin/api/events/stream?t=' + Date.now();
+    console.log('SSE: connecting to', url);
+    _eventSource = new EventSource(url);
 
     _eventSource.onopen = () => {
         console.log('SSE: connected');
     };
 
     _eventSource.onmessage = (e) => {
-        console.log('SSE: received', e.data);
+        console.log('SSE: received', e.data.substring(0, 100));
         try {
             const data = JSON.parse(e.data);
             handleSSEEvent(data);
@@ -22,7 +23,7 @@ function connectSSE() {
     };
 
     _eventSource.onerror = (e) => {
-        console.log('SSE: error', e);
+        console.log('SSE: error', _eventSource.readyState);
         _eventSource.close();
         setTimeout(connectSSE, 5000);
     };
