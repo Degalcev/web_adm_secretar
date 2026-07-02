@@ -20,6 +20,7 @@ STATIC_PATH = Path(__file__).parent / 'static'
 SPA_PATHS = [
     '/',
     '/panel/',
+    '/admin',
     '/admin/',
     '/admin/users/',
     '/admin/organizers/',
@@ -51,6 +52,14 @@ async def start_webapp(host='0.0.0.0', port=8080):
     setup_logs_routes(app)
     setup_vks_routes(app)
     setup_document_routes(app)
+
+    # Version JSON для автообновления
+    async def version_json(request):
+        vpath = Path(__file__).parent.parent / 'version.json'
+        if vpath.exists():
+            return web.FileResponse(vpath)
+        return web.json_response({'version': 'dev', 'env': 'dev'})
+    app.router.add_get('/version.json', version_json)
 
     # Статика
     if STATIC_PATH.exists():
