@@ -263,12 +263,12 @@ async def event_stream(request):
 ```
 
 ## Правила проекта
-1. Деплой через paramiko SSH на VPS
-2. Тест: `http://45.90.217.225/admin` (порт 8082)
-3. Продакшен: `https://bot.dlab.run/admin` (порт 8080)
-4. GitHub: `https://github.com/Degalcev/web_adm_secretar`
-5. При разработке использовать test_db
-6. **ОБЯЗАТЕЛЬНО**: Перед любой задачей читать скилы из `.mimocode/skills/` и при необходимости использовать агентов из `.mimocode/agents/`
+1. **Деплой по веткам**: `develop` → test, `main` → prod
+   - `develop`: `python deploy/deploy.py test` → `web-admin-test.service` → `http://45.90.217.225:8082/admin`
+   - `main`: `python deploy/deploy.py prod` → `web_admin.service` → `https://bot.dlab.run/admin`
+2. GitHub: `https://github.com/Degalcev/web_adm_secretar`
+3. При разработке использовать test_db
+4. **ОБЯЗАТЕЛЬНО**: Перед любой задачей читать скилы из `.mimocode/skills/` и при необходимости использовать агентов из `.mimocode/agents/`
 
 ## Порядок работы
 1. Получил задачу → читаю `.mimocode/skills/` (подходящий скилл)
