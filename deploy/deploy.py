@@ -71,7 +71,7 @@ def deploy(env_name):
 
     try:
         # 1. Создаём папку
-        print(f'[1/5] Создаю папку {deploy_path}...')
+        print(f'[1/6] Создаю папку {deploy_path}...')
         rc, out, err = run_cmd(ssh, f'mkdir -p {deploy_path}')
         if rc != 0:
             print(f'    ОШИБКА: {err}')
@@ -79,7 +79,7 @@ def deploy(env_name):
             print('    OK')
 
         # 2. Клонируем/обновляем репозиторий
-        print(f'[2/5] Клонирую репозиторий...')
+        print(f'[2/6] Клонирую репозиторий...')
         # Проверяем есть ли уже git репозиторий
         rc, _, _ = run_cmd(ssh, f'cd {deploy_path} && git status 2>/dev/null')
         if rc == 0:
@@ -91,7 +91,7 @@ def deploy(env_name):
         print(f'    {out.strip() or "OK"}')
 
         # 3. Создаём venv и ставим зависимости
-        print(f'[3/5] Устанавливаю зависимости...')
+        print(f'[3/6] Устанавливаю зависимости...')
         rc, out, err = run_cmd(ssh, f'cd {deploy_path} && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt -q')
         if rc != 0:
             print(f'    ОШИБКА: {err}')
@@ -99,7 +99,7 @@ def deploy(env_name):
             print('    OK')
 
         # 4. Записываем .env
-        print(f'[4/5] Записываю .env...')
+        print(f'[4/6] Записываю .env...')
         # Экранируем для shell
         escaped = env_content.replace("'", "'\\''")
         rc, out, err = run_cmd(ssh, f"cat > {deploy_path}/.env << 'ENDOFFILE'\n{env_content}\nENDOFFILE")
@@ -128,7 +128,12 @@ def deploy(env_name):
             print(f'    version.json: {new_ver} ({env_label})')
 
         # 5. Перезапускаем сервис
-        print(f'[5/5] Перезапускаю {cfg["service_name"]}...')
+        print(f'[5/6] Создаю директорию для документов...')
+        docs_dir = '/opt/uploads/documents' if env_name == 'prod' else '/opt/test_uploads/documents'
+        rc, out, err = run_cmd(ssh, f'mkdir -p {docs_dir} && chmod 755 {docs_dir}')
+        print('    OK')
+
+        print(f'[6/6] Перезапускаю {cfg["service_name"]}...')
         rc, out, err = run_cmd(ssh, f'systemctl restart {cfg["service_name"]}')
         if rc != 0:
             print(f'    ОШИБКА: {err}')

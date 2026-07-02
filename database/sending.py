@@ -1,11 +1,13 @@
 import uuid
+import os
 from datetime import datetime, timedelta
 
 from loguru import logger
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy import delete as sql_delete
 
 from database.models import async_session, User, Organizer, Location, Session, Event, Document
+from config import DOCUMENTS_DIR
 
 
 async def add_user(**kwargs) -> str:
@@ -246,22 +248,39 @@ async def delete_event(event_id: str):
 
 async def add_document(event_id: str, name: str, size: int, content: bytes) -> str:
     new_id = str(uuid.uuid4())
-    new_doc = Document(id=new_id, event_id=event_id, name=name, size=size, content=content)
+    safe_name = f'{new_id}_{name}'
+    doc_dir = os.path.join(DOCUMENTS_DIR, event_id)
+    os.makedirs(doc_dir, exist_ok=True)
+    file_path = os.path.join(doc_dir, safe_name)
+
+    with open(file_path, 'wb') as f:
+        f.write(content)
+
+    new_doc = Document(id=new_id, event_id=event_id, name=name, size=size, file_path=file_path)
     async with async_session() as session:
         try:
             session.add(new_doc)
             await session.commit()
-            logger.info('Документ {} добавлен', name)
+            logger.info('Документ {} сохранён на диск: {}', name, file_path)
             return new_id
         except Exception as e:
             await session.rollback()
             logger.error('Ошибка добавления документа: {}', repr(e))
+            if os.path.exists(file_path):
+                os.remove(file_path)
             raise
 
 
 async def delete_document(doc_id: str):
     async with async_session() as session:
         try:
+            result = await session.execute(
+                select(Document).where(Document.id == doc_id)
+            )
+            doc = result.scalar_one_or_none()
+            if doc and doc.file_path and os.path.exists(doc.file_path):
+                os.remove(doc.file_path)
+                logger.info('Файл удалён с диска: {}', doc.file_path)
             await session.execute(
                 sql_delete(Document).where(Document.id == doc_id)
             )
@@ -269,5 +288,5 @@ async def delete_document(doc_id: str):
             logger.info('Документ {} удалён', doc_id)
         except Exception as e:
             await session.rollback()
-            logger.error('Ошибка удаления документа: {}', repr(e))
+            logger.error('Ошибка удаления документа {}: {}', doc_id, repr(e))
             raise
