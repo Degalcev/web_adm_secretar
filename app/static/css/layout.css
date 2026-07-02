@@ -69,6 +69,10 @@
   overflow-y: auto;
 }
 
+html[data-panel-theme="vision"] .sidebar {
+  background: var(--bg);
+}
+
 .sidebar-nav {
   flex: 1;
   display: flex;
@@ -241,7 +245,10 @@
   padding: 0.75rem 2rem;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .topbar-left {
