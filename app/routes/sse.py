@@ -1,6 +1,6 @@
 import asyncio
 import json
-from aiohttp import web
+from aiohttp import web, ClientConnectionResetError
 from loguru import logger
 
 from app.auth import admin_required
@@ -28,8 +28,11 @@ async def event_stream(request: web.Request) -> web.Response:
                 payload = json.dumps(data)
                 await response.write(f'data: {payload}\n\n'.encode())
             except asyncio.TimeoutError:
-                await response.write(b': keepalive\n\n')
-            except ConnectionResetError:
+                try:
+                    await response.write(b': keepalive\n\n')
+                except (ClientConnectionResetError, ConnectionResetError, Exception):
+                    break
+            except (ClientConnectionResetError, ConnectionResetError):
                 break
     except asyncio.CancelledError:
         pass
