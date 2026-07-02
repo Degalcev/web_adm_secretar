@@ -63,16 +63,12 @@
 .sidebar {
   width: 260px;
   min-width: 260px;
-  background: var(--bg-elevated) !important;
+  background: var(--bg-elevated);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 1rem 0;
   overflow-y: auto;
-}
-
-[data-panel-theme="vision"] .sidebar {
-  background: var(--bg) !important;
 }
 
 .sidebar-nav {

@@ -23,6 +23,12 @@ function applyTheme(id) {
     root.style.setProperty('--accent', THEMES[id].accent);
     root.style.setProperty('--accent-ambient', THEMES[id].ambient);
 
+    // Sidebar фон
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.style.background = id === 'vision' ? 'var(--bg)' : 'var(--bg-elevated)';
+    }
+
     // Обновить активную карточку
     document.querySelectorAll('.theme-card').forEach(card => {
         card.classList.toggle('active', card.dataset.theme === id);
@@ -35,4 +41,11 @@ function applyTheme(id) {
 function initTheme() {
     const saved = localStorage.getItem('vks-theme') || 'default';
     applyTheme(saved);
+    // Применить sidebar стиль после DOM ready
+    requestAnimationFrame(() => {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+            sidebar.style.background = saved === 'vision' ? 'var(--bg)' : 'var(--bg-elevated)';
+        }
+    });
 }
