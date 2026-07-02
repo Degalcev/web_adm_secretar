@@ -96,6 +96,7 @@
         </div>
         <div class="nav-group-items">
           <a class="nav-item" data-page="settings" data-href="/settings/general/">Общие</a>
+          <a class="nav-item" data-page="profile" data-href="/settings/profile/">Пользователь</a>
         </div>
       </div>
 
@@ -592,6 +593,36 @@
       </div>
     </div>
 
+    <!-- ─── Profile Page ──────────────────────────────────────────────── -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <h1>Пользователь</h1>
+        </div>
+      </div>
+
+      <div class="settings-section" style="max-width: 420px;">
+        <h2 class="settings-title">Смена пароля</h2>
+        <p class="settings-desc">Введите текущий и новый пароль</p>
+        <div class="form-group">
+          <label>Текущий пароль</label>
+          <input type="password" id="profile-old-password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Новый пароль</label>
+          <input type="password" id="profile-new-password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Повторите новый пароль</label>
+          <input type="password" id="profile-confirm-password" placeholder="••••••••">
+        </div>
+        <div id="profile-error" class="login-error" style="display:none; margin-bottom: 1rem;"></div>
+        <div id="profile-success" style="display:none; margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); border-radius: 0.5rem; color: var(--success); font-size: 0.875rem;"></div>
+        <button class="btn btn-primary" onclick="changeMyPassword()">Сохранить</button>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -807,6 +838,7 @@
 <script src="/static/js/vks.js"></script>
 <script src="/static/js/settings.js"></script>
 <script src="/static/js/dashboard.js"></script>
+<script src="/static/js/profile.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

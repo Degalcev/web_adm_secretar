@@ -11,6 +11,7 @@ const ROUTES = {
     '/conferences/':            { page: 'vks-active',     title: 'Текущие ВКС' },
     '/conferences/completed/':  { page: 'vks-completed',  title: 'Завершённые ВКС' },
     '/settings/general/':       { page: 'settings',       title: 'Настройки' },
+    '/settings/profile/':       { page: 'profile',        title: 'Пользователь' },
 };
 
 const PAGE_TO_ROUTE = {};

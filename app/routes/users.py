@@ -109,9 +109,44 @@ async def check_admin_status(request: web.Request) -> web.Response:
         return web.json_response({'is_admin': False}, status=500)
 
 
+@admin_required
+@require_csrf
+async def change_password(request: web.Request) -> web.Response:
+    try:
+        data = await request.json()
+        old_password = data.get('old_password', '')
+        new_password = data.get('new_password', '')
+
+        if not old_password or not new_password:
+            return web.json_response({'ok': False, 'error': 'Заполните оба поля'}, status=400)
+
+        if len(new_password) < 4:
+            return web.json_response({'ok': False, 'error': 'Минимум 4 символа'}, status=400)
+
+        user = request['user']
+
+        if user.password:
+            try:
+                ph.verify(user.password, old_password)
+            except Exception:
+                return web.json_response({'ok': False, 'error': 'Неверный текущий пароль'}, status=401)
+        else:
+            from config import DEFAULT_ADMIN_PASSWORD
+            if old_password != DEFAULT_ADMIN_PASSWORD:
+                return web.json_response({'ok': False, 'error': 'Неверный текущий пароль'}, status=401)
+
+        await update_user(user_id=user.id, password=ph.hash(new_password))
+        logger.info('Пользователь {} сменил пароль', user.max_id)
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка смены пароля: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 def setup_users_routes(app: web.Application):
     app.router.add_get('/admin/api/users', get_users)
     app.router.add_post('/admin/api/users', create_user)
     app.router.add_put('/admin/api/users/{id}', update_user_handler)
     app.router.add_delete('/admin/api/users/{id}', delete_user_handler)
     app.router.add_get('/api/check-admin-status/{max_id}', check_admin_status)
+    app.router.add_post('/admin/api/change-password', change_password)

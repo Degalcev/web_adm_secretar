@@ -29,6 +29,7 @@ SPA_PATHS = [
     '/conferences/completed/',
     '/settings/',
     '/settings/general/',
+    '/settings/profile/',
 ]
 
 
