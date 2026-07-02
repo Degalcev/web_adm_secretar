@@ -261,6 +261,58 @@
   justify-content: center;
 }
 
+/* ─── VKS Checkbox ──────────────────────────────────────────────── */
+.vks-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.vks-check:hover {
+  background: rgba(34, 211, 191, 0.1);
+}
+
+.vks-check input[type="checkbox"] {
+  display: none;
+}
+
+.vks-check-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: var(--surface);
+}
+
+.vks-check:hover .vks-check-mark {
+  border-color: var(--accent);
+}
+
+.vks-check input:checked + .vks-check-mark {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.vks-check input:checked + .vks-check-mark::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
 /* ─── VKS Block Styles ─────────────────────────────────────────────── */
 .vks-block-missed .vks-card {
   border-left: 3px solid var(--danger);
@@ -420,4 +472,69 @@
   border-radius: var(--radius-sm);
   background: rgba(34, 211, 238, 0.12);
   color: var(--accent);
+}
+
+/* ─── Modal Completed Checkbox ──────────────────────────────────── */
+.modal-check-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.modal-check-label:hover {
+  background: var(--surface-strong);
+}
+
+.modal-check-label input[type="checkbox"] {
+  display: none;
+}
+
+.modal-check-mark {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.modal-check-label:hover .modal-check-mark {
+  border-color: var(--accent);
+}
+
+.modal-check-label input:checked + .modal-check-mark {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.modal-check-label input:checked + .modal-check-mark::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
+
+.btn-icon.danger {
+  color: var(--fg-muted);
+  transition: all 0.15s;
+}
+
+.btn-icon.danger:hover {
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.1);
 }

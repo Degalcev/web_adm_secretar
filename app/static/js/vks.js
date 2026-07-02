@@ -382,9 +382,10 @@ function renderVksCard(e, blockType) {
     }
     html += `</div>`;
     html += `<div class="vks-card-actions">`;
-    if (!e.completed) {
-        html += `<button class="btn-icon" onclick="event.stopPropagation();completeEvent('${e.id}')" title="Завершить" style="color:var(--success)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
-    }
+    html += `<label class="vks-check" onclick="event.stopPropagation()" title="${e.completed ? 'Снять завершение' : 'Завершить'}">`;
+    html += `<input type="checkbox" ${e.completed ? 'checked' : ''} onchange="completeEvent('${e.id}', this.checked)">`;
+    html += `<span class="vks-check-mark"></span>`;
+    html += `</label>`;
     html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
     html += `</div>`;
     html += `</div>`;
@@ -453,6 +454,8 @@ async function openAddEventModal() {
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
     document.getElementById('event-modal-delete-btn').style.display = 'none';
+    document.getElementById('event-modal-completed-group').style.display = 'none';
+    document.getElementById('f-event-completed').checked = false;
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
@@ -475,6 +478,8 @@ async function openEditEventModal(id) {
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
     document.getElementById('event-modal-delete-btn').style.display = 'inline-flex';
+    document.getElementById('event-modal-completed-group').style.display = 'inline-flex';
+    document.getElementById('f-event-completed').checked = e.completed;
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
     document.getElementById('f-event-url').value = e.url || '';
@@ -621,6 +626,7 @@ async function saveEvent() {
     formData.append('location_id', location);
     formData.append('url', document.getElementById('f-event-url').value.trim());
     formData.append('description', document.getElementById('f-event-desc').value.trim());
+    formData.append('completed', document.getElementById('f-event-completed').checked ? 'true' : 'false');
     formData.append('csrf_token', csrfToken);
 
     if (editingEventId) {
@@ -669,26 +675,25 @@ async function saveEvent() {
     btn.disabled = false;
 }
 
-async function completeEvent(id) {
+async function completeEvent(id, checked) {
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
-    const event = allEvents.find(e => e.id === id);
-    const newCompleted = event ? !event.completed : true;
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ completed: newCompleted, csrf_token: csrfToken })
+            body: JSON.stringify({ completed: checked, csrf_token: csrfToken })
         });
         const data = await resp.json();
         if (data.ok) {
             await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
+            renderVksBoard('vks-board-completed', 'completed');
             if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
                 _dashEvents = [...allEvents];
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
-            showToast(newCompleted ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
+            showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
         }
     } catch (e) {
         showToast('Ошибка сети', 'error');
