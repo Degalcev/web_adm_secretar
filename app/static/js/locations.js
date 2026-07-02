@@ -74,14 +74,15 @@ async function saveLocation() {
     btn.disabled = true;
     const payload = { name: document.getElementById('f-loc-name').value.trim() };
     try {
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
         let resp;
         if (editingLocId) {
             resp = await fetch(`${BASE_URL}/admin/api/locations/${editingLocId}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(payload)
             });
         } else {
             resp = await fetch(`${BASE_URL}/admin/api/locations`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(payload)
             });
         }
         const data = await resp.json();
