@@ -55,13 +55,9 @@ async def _on_notify(connection, pid, channel, payload):
     logger.info('SSE notify received: channel={}, payload={}', channel, payload[:200])
     try:
         data = json.loads(payload)
-        if data.get('username') == 'web_secretar':
-            logger.info('SSE: skipped (web_secretar)')
-            return
         logger.info('SSE: broadcasting to {} subscribers', len(_subscribers))
         await _broadcast(data)
     except (json.JSONDecodeError, TypeError):
-        # Payload не JSON — пропускаем
         logger.info('SSE: skipped non-JSON payload')
     except Exception as e:
         logger.error('SSE notify error: {}', repr(e))
