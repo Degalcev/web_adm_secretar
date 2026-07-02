@@ -42,7 +42,7 @@ function navigateTo(path, pushState = true) {
         history.pushState({ path }, '', path);
     }
 
-    document.title = `${route.title} — VKS Secretar`;
+    document.title = `${route.title} — АДМ Секретарь`;
 
     if (route.page === 'login') {
         showLogin();

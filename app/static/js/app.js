@@ -44,3 +44,4 @@ setInterval(_checkDayChange, 60000);
 initTheme();
 initRouter();
 checkAuth();
+initUpdater();
