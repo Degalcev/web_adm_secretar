@@ -60,6 +60,9 @@ async def _on_notify(connection, pid, channel, payload):
             return
         logger.info('SSE: broadcasting to {} subscribers', len(_subscribers))
         await _broadcast(data)
+    except (json.JSONDecodeError, TypeError):
+        # Payload не JSON — пропускаем
+        logger.info('SSE: skipped non-JSON payload')
     except Exception as e:
         logger.error('SSE notify error: {}', repr(e))
 
