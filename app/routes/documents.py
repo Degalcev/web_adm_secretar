@@ -20,8 +20,7 @@ async def download_document(request: web.Request) -> web.Response:
         file_path = doc.get('file_path')
         if file_path and os.path.exists(file_path):
             return web.FileResponse(
-                file_path,
-                filename=doc.get('name', 'document'),
+                path=file_path,
                 headers={'Content-Disposition': f'attachment; filename="{doc.get("name", "document")}"'}
             )
 
