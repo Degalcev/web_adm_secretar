@@ -84,6 +84,12 @@ async function _refreshLocations() {
             _dashLocations = {};
             locs.forEach(l => { _dashLocations[l.id] = l.name; });
         }
+        allLocations = locs;
+        if ((currentPage || '') === 'locations') {
+            renderLocations(allLocations);
+            document.getElementById('stat-total-loc').textContent = allLocations.length;
+            document.getElementById('stat-shown-loc').textContent = allLocations.length;
+        }
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
 }
@@ -97,6 +103,12 @@ async function _refreshOrganizers() {
         if (typeof _dashOrganizers !== 'undefined') {
             _dashOrganizers = {};
             orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
+        }
+        allOrganizers = orgs;
+        if ((currentPage || '') === 'organizers') {
+            renderOrganizers(allOrganizers);
+            document.getElementById('stat-total-org').textContent = allOrganizers.length;
+            document.getElementById('stat-shown-org').textContent = allOrganizers.length;
         }
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
