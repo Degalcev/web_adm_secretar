@@ -249,10 +249,7 @@ function renderUpcomingItem(e, opts = {}) {
                 <div class="dash-upcoming-meta">${meta}</div>
             </div>
             <div class="dash-indicators">${badges.join('')}</div>
-            <label class="dash-check" onclick="event.stopPropagation()">
-                <input type="checkbox" ${e.completed ? 'checked' : ''} onchange="event.stopPropagation();dashConfirmCompleteEvent('${e.id}', this.checked, this)">
-                <span class="dash-check-mark"></span>
-            </label>
+            <button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();dashConfirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
         </div>
     `;
 }
@@ -530,7 +527,7 @@ function drawChart() {
     `;
 }
 
-function dashConfirmCompleteEvent(id, checked, inputEl) {
+function dashConfirmCompleteEvent(id, checked) {
     const e = allEvents.find(x => x.id === id);
     const desc = e ? (e.description || 'без описания') : '';
     const action = checked ? 'завершить' : 'снять завершение с';
@@ -539,10 +536,7 @@ function dashConfirmCompleteEvent(id, checked, inputEl) {
         <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
         <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
     `;
-    document.getElementById('confirm-cancel-btn').onclick = function () {
-        if (inputEl) inputEl.checked = !checked;
-        closeConfirm();
-    };
+    document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
     document.getElementById('confirm-ok-btn').onclick = async function () {
         this.disabled = true;
         this.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Выполняю...';
