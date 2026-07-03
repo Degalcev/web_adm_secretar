@@ -314,9 +314,9 @@
 /* ─── Content Area ──────────────────────────────────────────────────── */
 .content-area {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   padding: 2rem;
-  min-width: 0;
   background: var(--bg);
   animation: fadeIn 0.15s ease;
 }
@@ -328,7 +328,7 @@
 
 /* ─── Pages ─────────────────────────────────────────────────────────── */
 .page { display: none; }
-.page.active { display: flex; flex-direction: column; overflow-y: auto; height: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+.page.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .page.active::-webkit-scrollbar { display: none; }
 
 .page-header {
