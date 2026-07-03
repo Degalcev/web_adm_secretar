@@ -52,13 +52,25 @@ initSSE();
 (function () {
     const btn = document.getElementById('scroll-top-btn');
     if (!btn) return;
-    const container = document.querySelector('.content-area');
-    if (!container) return;
-    container.addEventListener('scroll', function () {
-        if (container.scrollTop > 300) {
-            btn.classList.add('visible');
-        } else {
-            btn.classList.remove('visible');
+
+    function getScrollContainer() {
+        return document.querySelector('.page.active') || document.querySelector('.content-area');
+    }
+
+    // Слушаем скролл на активной странице
+    document.addEventListener('scroll', function (e) {
+        const container = getScrollContainer();
+        if (e.target === container || e.target === document.querySelector('.content-area')) {
+            if (container.scrollTop > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
         }
+    }, true);
+
+    btn.addEventListener('click', function () {
+        const container = getScrollContainer();
+        container.scrollTo({ top: 0, behavior: 'smooth' });
     });
 })();

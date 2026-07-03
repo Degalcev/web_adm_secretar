@@ -314,7 +314,7 @@
 /* ─── Content Area ──────────────────────────────────────────────────── */
 .content-area {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 2rem;
   min-width: 0;
   background: var(--bg);
@@ -328,7 +328,7 @@
 
 /* ─── Pages ─────────────────────────────────────────────────────────── */
 .page { display: none; }
-.page.active { display: block; }
+.page.active { display: flex; flex-direction: column; overflow-y: auto; height: 100%; }
 
 .page-header {
   display: flex;
