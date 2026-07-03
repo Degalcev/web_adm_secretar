@@ -538,3 +538,83 @@
   color: var(--danger);
   background: rgba(248, 113, 113, 0.1);
 }
+
+/* ─── Modal Event Actions Panel ─────────────────────────────── */
+.modal-event-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.modal-event-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.modal-event-status.status-active {
+  color: var(--warning);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.modal-event-status.status-completed {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.modal-event-status.status-missed {
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.modal-event-status .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.modal-event-divider {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 12px;
+}
+
+.modal-event-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-event-buttons .modal-check-label:hover {
+  background: rgba(74, 222, 128, 0.08);
+  color: var(--success);
+}
+
+.modal-event-buttons .modal-check-label:hover .modal-check-mark {
+  border-color: var(--success);
+}
+
+.modal-event-buttons .btn-icon.danger {
+  color: var(--fg-muted);
+}
+
+.modal-event-buttons .btn-icon.danger:hover {
+  color: var(--danger);
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.3);
+}

@@ -453,8 +453,7 @@ async function openAddEventModal() {
     pendingFiles = [];
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
-    document.getElementById('event-modal-delete-btn').style.display = 'none';
-    document.getElementById('event-modal-completed-group').style.display = 'none';
+    document.getElementById('event-modal-actions').style.display = 'none';
     document.getElementById('f-event-completed').checked = false;
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
@@ -477,8 +476,25 @@ async function openEditEventModal(id) {
     pendingFiles = [];
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
-    document.getElementById('event-modal-delete-btn').style.display = 'inline-flex';
-    document.getElementById('event-modal-completed-group').style.display = 'inline-flex';
+
+    // Показать панель действий
+    const actionsPanel = document.getElementById('event-modal-actions');
+    actionsPanel.style.display = 'flex';
+
+    // Заполнить индикатор статуса
+    const statusEl = document.getElementById('event-modal-status');
+    const today = _getLocalDateStr(new Date());
+    if (e.completed) {
+        statusEl.className = 'modal-event-status status-completed';
+        statusEl.innerHTML = '<span class="status-dot"></span>Завершено';
+    } else if (!e.date || e.date < today) {
+        statusEl.className = 'modal-event-status status-missed';
+        statusEl.innerHTML = '<span class="status-dot"></span>Пропущено';
+    } else {
+        statusEl.className = 'modal-event-status status-active';
+        statusEl.innerHTML = '<span class="status-dot"></span>В работе';
+    }
+
     document.getElementById('f-event-completed').checked = e.completed;
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
