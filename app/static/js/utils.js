@@ -28,3 +28,6 @@ function showToast(msg, type) {
 }
 
 const BASE_URL = window.location.origin;
+
+// Заглушка — sse.js перезапишет реальной логикой
+function markSSESkipped() {}
