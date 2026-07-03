@@ -577,6 +577,8 @@ function dashConfirmCompleteEvent(id, checked) {
     });
     observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
 }
+
+async function dashCompleteEvent(id, checked) {
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
         const formData = new FormData();
