@@ -2,13 +2,15 @@ from aiohttp import web
 from loguru import logger
 
 from app.auth import admin_required
-from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_id
+from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids
 
 
 @admin_required
 async def preload_data(request: web.Request) -> web.Response:
     try:
         events, orgs, locs = await get_events(), await get_organizers(), await get_locations()
+        event_ids = [e.id for e in events]
+        docs_map = await get_documents_by_event_ids(event_ids)
         return web.json_response({
             'events': [
                 {
@@ -18,7 +20,7 @@ async def preload_data(request: web.Request) -> web.Response:
                     'organizer_id': e.organizer_id, 'location_id': e.location_id,
                     'url': e.url or '', 'description': e.description or '',
                     'completed': e.completed, 'notification': e.notification,
-                    'documents': await get_documents_by_event_id(e.id),
+                    'documents': docs_map.get(e.id, []),
                 }
                 for e in events
             ],

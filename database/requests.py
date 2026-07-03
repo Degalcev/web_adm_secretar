@@ -94,6 +94,22 @@ async def get_documents_by_event_id(event_id: str):
         return [{'id': row[0], 'name': row[1], 'size': row[2]} for row in result]
 
 
+async def get_documents_by_event_ids(event_ids: list):
+    if not event_ids:
+        return {}
+    async with async_session() as session:
+        result = await session.execute(
+            select(Document.id, Document.name, Document.size, Document.event_id).where(Document.event_id.in_(event_ids))
+        )
+        docs_map = {}
+        for row in result:
+            eid = row[3]
+            if eid not in docs_map:
+                docs_map[eid] = []
+            docs_map[eid].append({'id': row[0], 'name': row[1], 'size': row[2]})
+        return docs_map
+
+
 async def get_document_by_id(doc_id: str):
     async with async_session() as session:
         result = await session.execute(

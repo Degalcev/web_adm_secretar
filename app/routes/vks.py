@@ -3,7 +3,7 @@ from loguru import logger
 from datetime import date, datetime, timedelta, time
 
 from app.auth import admin_required, require_csrf
-from database.requests import get_events, get_event_by_id, get_documents_by_event_id
+from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids
 from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
 
@@ -19,8 +19,9 @@ async def get_events_handler(request: web.Request) -> web.Response:
             events = await get_events()
 
         data = []
+        event_ids = [e.id for e in events]
+        docs_map = await get_documents_by_event_ids(event_ids)
         for e in events:
-            docs = await get_documents_by_event_id(e.id)
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -32,7 +33,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'description': e.description or '',
                 'completed': e.completed,
                 'notification': e.notification,
-                'documents': docs,
+                'documents': docs_map.get(e.id, []),
             })
         logger.debug('Загружено {} событий', len(data))
         return web.json_response(data)
