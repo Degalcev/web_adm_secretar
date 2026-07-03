@@ -143,8 +143,12 @@ async def update_event_handler(request: web.Request) -> web.Response:
 async def delete_event_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
+        # Сначала удаляем документы события
+        docs = await get_documents_by_event_id(event_id)
+        for doc in docs:
+            await delete_document(doc['id'])
         await delete_event(event_id)
-        logger.info('Событие удалено: {}', event_id)
+        logger.info('Событие и {} документ(ов) удалены: {}', len(docs), event_id)
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления события: {}', repr(e))
