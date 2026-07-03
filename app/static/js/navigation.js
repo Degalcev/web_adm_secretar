@@ -37,9 +37,6 @@ function switchPage(page) {
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
 
-    // Сброс прокрутки при смене страницы
-    document.querySelector('.content-area').scrollTop = 0;
-
     // Загрузить данные
     if (page === 'dashboard') initDashboard();
     if (page === 'profile') initProfile();

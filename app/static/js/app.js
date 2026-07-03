@@ -47,3 +47,18 @@ initRouter();
 checkAuth();
 initUpdater();
 initSSE();
+
+// ─── Кнопка «Наверх» ─────────────────────────────────────────────
+(function () {
+    const btn = document.getElementById('scroll-top-btn');
+    if (!btn) return;
+    const container = document.querySelector('.content-area');
+    if (!container) return;
+    container.addEventListener('scroll', function () {
+        if (container.scrollTop > 300) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    });
+})();
