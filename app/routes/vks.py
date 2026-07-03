@@ -119,14 +119,14 @@ async def update_event_handler(request: web.Request) -> web.Response:
         await update_event(event_id=event_id, **update_data)
         logger.info('Событие обновлено: {}', event_id)
 
-        keep_ids = fields.get('keep_doc_ids', '')
-        keep_list = [x.strip() for x in keep_ids.split(',') if x.strip()] if keep_ids else []
-
-        existing_docs = await get_documents_by_event_id(event_id)
-        for doc in existing_docs:
-            if doc['id'] not in keep_list:
-                await delete_document(doc['id'])
-                logger.info('Документ {} удалён из события {}', doc['id'], event_id)
+        keep_ids = fields.get('keep_doc_ids')
+        if keep_ids is not None:
+            keep_list = [x.strip() for x in keep_ids.split(',') if x.strip()]
+            existing_docs = await get_documents_by_event_id(event_id)
+            for doc in existing_docs:
+                if doc['id'] not in keep_list:
+                    await delete_document(doc['id'])
+                    logger.info('Документ {} удалён из события {}', doc['id'], event_id)
 
         for f in files:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
