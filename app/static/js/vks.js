@@ -749,7 +749,6 @@ async function saveEvent() {
         const data = await resp.json();
         if (data.ok) {
             const wasEditing = !!editingEventId;
-            markSSESkipped();
             await loadAllEvents();
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
