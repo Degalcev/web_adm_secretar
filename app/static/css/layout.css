@@ -314,23 +314,24 @@
 /* ─── Content Area ──────────────────────────────────────────────────── */
 .content-area {
   flex: 1;
-  min-height: 0;
+  overflow-y: auto;
   padding: 2rem;
+  min-width: 0;
   background: var(--bg);
   animation: fadeIn 0.15s ease;
-}
-
-.page { display: none; }
-.page.active {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow-y: scroll;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.page.active::-webkit-scrollbar { display: none; }
+.content-area::-webkit-scrollbar { display: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ─── Pages ─────────────────────────────────────────────────────────── */
+.page { display: none; }
+.page.active { display: block; }
 .page.active::-webkit-scrollbar { display: none; }
 
 .page-header {
