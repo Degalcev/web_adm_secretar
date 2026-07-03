@@ -241,9 +241,13 @@ function renderUpcomingItem(e, opts = {}) {
         ? `${opts.dayName}, ${opts.dateStr} · ${locName(e.location_id)} · ${orgName(e.organizer_id)}`
         : `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
 
+    const timeHtml = opts.showDate
+        ? `<div class="dash-upcoming-date">${opts.dateStr}</div><div class="dash-upcoming-time">${e.time || '--:--'}</div>`
+        : `<div class="dash-upcoming-time">${e.time || '--:--'}</div>`;
+
     return `
         <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
-            <div class="dash-upcoming-time">${e.time || '--:--'}</div>
+            <div class="dash-upcoming-time-col">${timeHtml}</div>
             <div class="dash-upcoming-info">
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
                 <div class="dash-upcoming-meta">${meta}</div>
@@ -533,10 +537,13 @@ function drawChart() {
 async function dashCompleteEvent(id, checked) {
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
+        const formData = new FormData();
+        formData.append('completed', checked ? 'true' : 'false');
+        formData.append('csrf_token', csrfToken);
         const resp = await fetch(`/admin/api/events/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ completed: checked, csrf_token: csrfToken })
+            headers: { 'X-CSRF-Token': csrfToken },
+            body: formData
         });
         const data = await resp.json();
         if (data.ok) {
