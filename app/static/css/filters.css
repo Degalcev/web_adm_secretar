@@ -112,7 +112,12 @@
 }
 
 .filter-date-group {
-  flex: 2;
+  flex: 0 0 auto;
+  min-width: 280px;
+}
+
+.filter-date-group .filter-label {
+  margin-bottom: 0;
 }
 
 .filter-date-selects {
@@ -121,6 +126,6 @@
 }
 
 .filter-date-sel {
-  flex: 1;
-  min-width: 0;
+  width: 90px;
+  flex: none;
 }
