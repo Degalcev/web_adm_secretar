@@ -94,7 +94,7 @@ async function loadFullData() {
             }));
         } catch (e) {}
 
-        renderLocations();
+        renderDashLocations();
         drawChart();
         setupChartToggle();
     } catch (e) {
@@ -155,7 +155,7 @@ function renderDashboard() {
 
     renderToday();
     renderSoon();
-    renderLocations();
+    renderDashLocations();
     drawChart();
     setupChartToggle();
 }
@@ -260,7 +260,7 @@ function renderUpcomingItem(e, opts = {}) {
 let _locPeriod = 'all';
 let _locYear = new Date().getFullYear();
 
-function renderLocations() {
+function renderDashLocations() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
@@ -312,7 +312,7 @@ function setupLocToggle() {
             btn.classList.add('active');
             _locPeriod = btn.dataset.period;
             updateLocControls();
-            renderLocations();
+            renderDashLocations();
         };
     });
     updateLocControls();
@@ -331,14 +331,14 @@ function updateLocControls() {
 
 function dashLocYearNav(dir) {
     _locYear += dir;
-    renderLocations();
+    renderDashLocations();
 }
 
 function dashLocMonthNav(dir) {
     _dashMonth += dir;
     if (_dashMonth < 0) { _dashMonth = 11; _locYear--; }
     if (_dashMonth > 11) { _dashMonth = 0; _locYear++; }
-    renderLocations();
+    renderDashLocations();
 }
 
 function updateLocControls() {
