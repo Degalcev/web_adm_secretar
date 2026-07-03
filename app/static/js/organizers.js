@@ -85,6 +85,9 @@ function closeOrganizerModal() {
 async function saveOrganizer() {
     const btn = document.getElementById('org-modal-save-btn');
     btn.disabled = true;
+    btn.classList.add('loading');
+    const origText = btn.textContent;
+    btn.textContent = 'Сохранение...';
     const payload = {
         name: document.getElementById('f-org-name').value.trim(),
         short_name: document.getElementById('f-org-short-name').value.trim(),
@@ -107,6 +110,8 @@ async function saveOrganizer() {
         else { showToast(data.error || 'Ошибка', 'error'); }
     } catch (e) { showToast('Ошибка сети', 'error'); }
     btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = origText;
 }
 
 function openConfirmOrg(id, name) {
@@ -127,6 +132,6 @@ async function confirmDeleteOrg() {
         });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadOrganizers(); showToast('Удалено', 'success'); }
-        else { showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { showToast('Ошибка сети', 'error'); }
+        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
 }

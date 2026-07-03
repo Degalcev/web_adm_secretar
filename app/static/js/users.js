@@ -106,6 +106,9 @@ function closeModal() {
 async function saveUser() {
     const btn = document.getElementById('modal-save-btn');
     btn.disabled = true;
+    btn.classList.add('loading');
+    const origText = btn.textContent;
+    btn.textContent = 'Сохранение...';
 
     const tgIdValue = document.getElementById('f-tg-id').value;
     const maxIdValue = document.getElementById('f-max-id').value;
@@ -147,6 +150,8 @@ async function saveUser() {
         showToast('Ошибка сети', 'error');
     }
     btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = origText;
 }
 
 // ─── Удаление пользователя ───────────────────────────────────────────
@@ -173,6 +178,23 @@ function closeConfirm() {
 }
 
 async function confirmDelete() {
+    // Блокируем кнопки и показываем спиннер
+    const overlay = document.getElementById('confirm-overlay');
+    const okBtn = document.getElementById('confirm-ok-btn');
+    const cancelBtn = document.getElementById('confirm-cancel-btn');
+    if (okBtn) {
+        okBtn.disabled = true;
+        okBtn.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Выполняю...';
+    }
+    if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.style.pointerEvents = 'none';
+        cancelBtn.style.opacity = '0.5';
+    }
+    overlay.querySelector('.confirm-icon').innerHTML = '<svg class="spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+    overlay.querySelector('h3').textContent = 'Выполняю...';
+    overlay.querySelector('p').textContent = '';
+
     if (deletingEventId) { await confirmDeleteEvent(); return; }
     if (deletingOrgId) { await confirmDeleteOrg(); return; }
     if (deletingLocId) { await confirmDeleteLoc(); return; }
@@ -185,6 +207,6 @@ async function confirmDelete() {
         });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadUsers(); showToast('Пользователь удалён', 'success'); }
-        else { showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { showToast('Ошибка сети', 'error'); }
+        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
 }

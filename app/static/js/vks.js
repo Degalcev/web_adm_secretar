@@ -657,16 +657,19 @@ function populateVksFilters() {
 async function saveEvent() {
     const btn = document.getElementById('event-modal-save-btn');
     btn.disabled = true;
+    btn.classList.add('loading');
+    const origText = btn.textContent;
+    btn.textContent = 'Сохранение...';
 
     const date = document.getElementById('f-event-date').value;
     const time = document.getElementById('f-event-time').value;
     const organizer = document.getElementById('f-event-organizer').value;
     const location = document.getElementById('f-event-location').value;
 
-    if (!date) { showToast('Укажите дату', 'error'); btn.disabled = false; return; }
-    if (!time) { showToast('Укажите время', 'error'); btn.disabled = false; return; }
-    if (!organizer) { showToast('Выберите организатора', 'error'); btn.disabled = false; return; }
-    if (!location) { showToast('Выберите локацию', 'error'); btn.disabled = false; return; }
+    if (!date) { showToast('Укажите дату', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
+    if (!time) { showToast('Укажите время', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
+    if (!organizer) { showToast('Выберите организатора', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
+    if (!location) { showToast('Выберите локацию', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
 
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     const formData = new FormData();
@@ -723,6 +726,8 @@ async function saveEvent() {
         showToast('Ошибка сети', 'error');
     }
     btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = origText;
 }
 
 function confirmCompleteEvent(id, checked) {
@@ -821,8 +826,7 @@ async function confirmDeleteEvent() {
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, {
             method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csrf_token: csrfToken })
+            headers: { 'X-CSRF-Token': csrfToken }
         });
         const data = await resp.json();
         if (data.ok) {
@@ -838,6 +842,7 @@ async function confirmDeleteEvent() {
             }
             showToast('Удалено', 'success');
         } else {
+            closeConfirm();
             showToast(data.error || 'Ошибка', 'error');
         }
     } catch (e) { showToast('Ошибка сети', 'error'); }

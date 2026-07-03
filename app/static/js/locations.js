@@ -76,6 +76,9 @@ function closeLocationModal() {
 async function saveLocation() {
     const btn = document.getElementById('loc-modal-save-btn');
     btn.disabled = true;
+    btn.classList.add('loading');
+    const origText = btn.textContent;
+    btn.textContent = 'Сохранение...';
     const payload = { name: document.getElementById('f-loc-name-modal').value.trim() };
     try {
         const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
@@ -94,6 +97,8 @@ async function saveLocation() {
         else { showToast(data.error || 'Ошибка', 'error'); }
     } catch (e) { showToast('Ошибка сети', 'error'); }
     btn.disabled = false;
+    btn.classList.remove('loading');
+    btn.textContent = origText;
 }
 
 function openConfirmLoc(id, name) {
@@ -114,6 +119,6 @@ async function confirmDeleteLoc() {
         });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadLocations(); showToast('Удалено', 'success'); }
-        else { showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { showToast('Ошибка сети', 'error'); }
+        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
 }
