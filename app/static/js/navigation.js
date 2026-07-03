@@ -37,6 +37,16 @@ function switchPage(page) {
     const pageEl = document.getElementById(`page-${page}`);
     if (pageEl) pageEl.classList.add('active');
 
+    // Обновить видимость кнопки «Наверх»
+    const scrollBtn = document.getElementById('scroll-top-btn');
+    if (scrollBtn && pageEl) {
+        if (pageEl.scrollTop > 300) {
+            scrollBtn.classList.add('visible');
+        } else {
+            scrollBtn.classList.remove('visible');
+        }
+    }
+
     // Загрузить данные
     if (page === 'dashboard') initDashboard();
     if (page === 'profile') initProfile();
