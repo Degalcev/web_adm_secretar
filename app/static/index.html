@@ -732,6 +732,20 @@
     </div>
 
     <div class="modal-body">
+      <!-- ─── Панель действий (только при редактировании) ─── -->
+      <div class="modal-event-actions" id="event-modal-actions" style="display:none">
+        <div class="modal-event-status" id="event-modal-status"></div>
+        <div class="modal-event-divider"></div>
+        <div class="modal-event-buttons">
+          <button class="btn-icon" id="event-modal-complete-btn" onclick="toggleEventComplete()" title="Завершить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+          <button class="btn-icon danger" id="event-modal-delete-btn" onclick="confirmDeleteFromModal()" title="Удалить событие">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+      </div>
+
       <!-- Основная информация -->
       <div class="modal-section">
         <div class="modal-section-header">
@@ -802,22 +816,6 @@
         </div>
         <div class="modal-section-body">
           <div id="f-event-docs" class="event-docs-list"></div>
-        </div>
-      </div>
-
-      <!-- ─── Панель действий (только при редактировании) ─── -->
-      <div class="modal-event-actions" id="event-modal-actions" style="display:none">
-        <div class="modal-event-status" id="event-modal-status"></div>
-        <div class="modal-event-divider"></div>
-        <div class="modal-event-buttons">
-          <label class="modal-check-label" id="event-modal-completed-group">
-            <input type="checkbox" id="f-event-completed">
-            <span class="modal-check-mark"></span>
-            Завершить
-          </label>
-          <button class="btn-icon danger" id="event-modal-delete-btn" onclick="confirmDeleteFromModal()" title="Удалить событие">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          </button>
         </div>
       </div>
     </div>

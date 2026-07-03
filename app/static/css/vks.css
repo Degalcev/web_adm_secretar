@@ -544,7 +544,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.75rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -600,21 +600,26 @@
   gap: 6px;
 }
 
-.modal-event-buttons .modal-check-label:hover {
-  background: rgba(74, 222, 128, 0.08);
-  color: var(--success);
-}
-
-.modal-event-buttons .modal-check-label:hover .modal-check-mark {
-  border-color: var(--success);
-}
-
-.modal-event-buttons .btn-icon.danger {
+/* Кнопка «Завершить» — базовый стиль как btn-icon */
+#event-modal-complete-btn {
   color: var(--fg-muted);
+  transition: all 0.15s;
 }
 
-.modal-event-buttons .btn-icon.danger:hover {
-  color: var(--danger);
-  background: rgba(248, 113, 113, 0.1);
-  border-color: rgba(248, 113, 113, 0.3);
+#event-modal-complete-btn:hover {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* Активное состояние — зелёный */
+#event-modal-complete-btn.active {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+#event-modal-complete-btn.active:hover {
+  background: rgba(74, 222, 128, 0.18);
+  border-color: rgba(74, 222, 128, 0.4);
 }

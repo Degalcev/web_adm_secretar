@@ -495,6 +495,16 @@ async function openEditEventModal(id) {
         statusEl.innerHTML = '<span class="status-dot"></span>В работе';
     }
 
+    // Состояние кнопки «Завершить»
+    const completeBtn = document.getElementById('event-modal-complete-btn');
+    if (e.completed) {
+        completeBtn.classList.add('active');
+        completeBtn.title = 'Снять завершение';
+    } else {
+        completeBtn.classList.remove('active');
+        completeBtn.title = 'Завершить';
+    }
+
     document.getElementById('f-event-completed').checked = e.completed;
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
@@ -513,6 +523,32 @@ function closeEventModal() {
     document.getElementById('event-modal').classList.remove('show');
     pendingFiles = [];
     removedDocIds = [];
+}
+
+function toggleEventComplete() {
+    if (!editingEventId) return;
+    const cb = document.getElementById('f-event-completed');
+    cb.checked = !cb.checked;
+    const btn = document.getElementById('event-modal-complete-btn');
+    const statusEl = document.getElementById('event-modal-status');
+    if (cb.checked) {
+        btn.classList.add('active');
+        btn.title = 'Снять завершение';
+        statusEl.className = 'modal-event-status status-completed';
+        statusEl.innerHTML = '<span class="status-dot"></span>Завершено';
+    } else {
+        btn.classList.remove('active');
+        btn.title = 'Завершить';
+        const e = allEvents.find(x => x.id === editingEventId);
+        const today = _getLocalDateStr(new Date());
+        if (!e || !e.date || e.date < today) {
+            statusEl.className = 'modal-event-status status-missed';
+            statusEl.innerHTML = '<span class="status-dot"></span>Пропущено';
+        } else {
+            statusEl.className = 'modal-event-status status-active';
+            statusEl.innerHTML = '<span class="status-dot"></span>В работе';
+        }
+    }
 }
 
 function confirmDeleteFromModal() {
