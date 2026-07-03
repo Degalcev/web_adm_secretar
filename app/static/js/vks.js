@@ -276,11 +276,12 @@ function renderVksBoard(boardId, filter) {
 
     // Сортируем внутри каждого блока по времени
     const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
-    missed.sort(sortByTime);
+    const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
+    missed.sort(sortByDateThenTime);
     todayEvents.sort(sortByTime);
     tomorrowEvents.sort(sortByTime);
     dayAfterEvents.sort(sortByTime);
-    soon.sort((a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b));
+    soon.sort(sortByDateThenTime);
 
     let html = '';
 
