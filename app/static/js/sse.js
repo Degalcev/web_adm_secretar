@@ -1,6 +1,8 @@
 // ─── SSE: реалтайм обновления ───────────────────────────────────────
 
 let _eventSource = null;
+let _sseDebounceTimer = null;
+let _skipNextSSE = false;
 
 function connectSSE() {
     if (_eventSource) _eventSource.close();
@@ -19,17 +21,34 @@ function connectSSE() {
     };
 }
 
+function markSSESkipped() {
+    _skipNextSSE = true;
+}
+
 function handleSSEEvent(data) {
     const table = data.table_name;
     if (!table) return;
 
+    // Пропустить SSE если данные только что обновлены вручную
+    if (_skipNextSSE) {
+        _skipNextSSE = false;
+        return;
+    }
+
     if (table === 'events') {
-        _refreshEvents();
+        debounceRefreshEvents();
     } else if (table === 'locations') {
         _refreshLocations();
     } else if (table === 'organizers') {
         _refreshOrganizers();
     }
+}
+
+function debounceRefreshEvents() {
+    if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
+    _sseDebounceTimer = setTimeout(() => {
+        _refreshEvents();
+    }, 300);
 }
 
 async function _refreshEvents() {

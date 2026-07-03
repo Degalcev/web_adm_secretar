@@ -93,7 +93,7 @@ async function saveLocation() {
             });
         }
         const data = await resp.json();
-        if (data.ok) { await loadLocations(); closeLocationModal(); showToast(editingLocId ? 'Обновлено' : 'Добавлено', 'success'); }
+        if (data.ok) { markSSESkipped(); await loadLocations(); closeLocationModal(); showToast(editingLocId ? 'Обновлено' : 'Добавлено', 'success'); }
         else { showToast(data.error || 'Ошибка', 'error'); }
     } catch (e) { showToast('Ошибка сети', 'error'); }
     btn.disabled = false;
