@@ -5,14 +5,24 @@ let editingLocId = null;
 let deletingLocId = null;
 
 async function loadLocations() {
+    console.log('[LOC] loadLocations called');
     const tbody = document.getElementById('locations-tbody');
+    if (!tbody) { console.error('[LOC] tbody not found!'); return; }
     tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Загрузка...</td></tr>';
-    const resp = await fetch(`${BASE_URL}/admin/api/locations`);
-    if (resp.status === 401) { showLogin(); return; }
-    allLocations = await resp.json();
-    renderLocations(allLocations);
-    document.getElementById('stat-total-loc').textContent = allLocations.length;
-    document.getElementById('stat-shown-loc').textContent = allLocations.length;
+    try {
+        const url = `${BASE_URL}/admin/api/locations`;
+        console.log('[LOC] fetching:', url);
+        const resp = await fetch(url);
+        console.log('[LOC] response:', resp.status, resp.statusText);
+        if (resp.status === 401) { showLogin(); return; }
+        allLocations = await resp.json();
+        console.log('[LOC] data:', allLocations.length, 'items');
+        renderLocations(allLocations);
+        document.getElementById('stat-total-loc').textContent = allLocations.length;
+        document.getElementById('stat-shown-loc').textContent = allLocations.length;
+    } catch (e) {
+        console.error('[LOC] error:', e);
+    }
 }
 
 function renderLocations(items) {
@@ -26,7 +36,7 @@ function renderLocations(items) {
             <td>${esc(l.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td>
                 <div class="actions">
-                    <button class="btn-icon danger" onclick="openConfirmLoc('${l.id}','${esc(l.name)}')" title="Удалить">
+                    <button class="btn-icon danger" onclick="event.stopPropagation();openConfirmLoc('${l.id}','${esc(l.name).replace(/'/g, "\\'")}')" title="Удалить">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                     </button>
                 </div>
