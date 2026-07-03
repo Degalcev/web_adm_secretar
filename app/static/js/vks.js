@@ -726,15 +726,17 @@ async function saveEvent() {
 }
 
 function confirmCompleteEvent(id, checked) {
+    console.log('[VKS] confirmCompleteEvent called', id, checked);
     const e = allEvents.find(x => x.id === id);
     const desc = e ? (e.description || 'без описания') : '';
     const action = checked ? 'завершить' : 'снять завершение с';
     document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
     document.getElementById('confirm-actions').innerHTML = `
         <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
-        <button class="btn btn-primary" onclick="closeConfirm();completeEvent('${id}', ${checked})">Подтвердить</button>
+        <button class="btn btn-primary" onclick="completeEvent('${id}', ${checked});closeConfirm()">Подтвердить</button>
     `;
     document.getElementById('confirm-overlay').classList.add('show');
+    console.log('[VKS] confirm overlay shown');
 }
 
 async function completeEvent(id, checked) {
