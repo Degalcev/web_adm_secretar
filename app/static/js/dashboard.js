@@ -252,7 +252,7 @@ function renderUpcomingItem(e, opts = {}) {
             </div>
             <div class="dash-indicators">${badges.join('')}</div>
             <label class="dash-check" onclick="event.stopPropagation()">
-                <input type="checkbox" ${e.completed ? 'checked' : ''} onchange="event.stopPropagation();dashCompleteEvent('${e.id}', this.checked)">
+                <input type="checkbox" ${e.completed ? 'checked' : ''} onchange="event.stopPropagation();dashConfirmCompleteEvent('${e.id}', this.checked)">
                 <span class="dash-check-mark"></span>
             </label>
         </div>
@@ -532,7 +532,51 @@ function drawChart() {
     `;
 }
 
-async function dashCompleteEvent(id, checked) {
+function dashConfirmCompleteEvent(id, checked) {
+    const e = allEvents.find(x => x.id === id);
+    const desc = e ? (e.description || 'без описания') : '';
+    const action = checked ? 'завершить' : 'снять завершение с';
+    document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
+    document.getElementById('confirm-actions').innerHTML = `
+        <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
+        <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
+    `;
+    document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
+    document.getElementById('confirm-ok-btn').onclick = async function () {
+        this.disabled = true;
+        this.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Выполняю...';
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+        cancelBtn.disabled = true;
+        cancelBtn.style.pointerEvents = 'none';
+        cancelBtn.style.opacity = '0.5';
+        const overlay = document.getElementById('confirm-overlay');
+        overlay.querySelector('.confirm-icon').innerHTML = '<svg class="spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+        overlay.querySelector('h3').textContent = 'Выполняю...';
+        overlay.querySelector('p').textContent = '';
+        await dashCompleteEvent(id, checked);
+        closeConfirm();
+    };
+    const overlay = document.getElementById('confirm-overlay');
+    const icon = overlay.querySelector('.confirm-icon');
+    const title = overlay.querySelector('h3');
+    const origIconHTML = icon.innerHTML;
+    const origTitle = title.textContent;
+    icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>';
+    icon.style.background = 'rgba(74, 222, 128, 0.1)';
+    icon.style.color = 'var(--success)';
+    title.textContent = checked ? 'Завершить ВКС?' : 'Снять завершение?';
+    overlay.classList.add('show');
+    const observer = new MutationObserver(() => {
+        if (!overlay.classList.contains('show')) {
+            icon.innerHTML = origIconHTML;
+            icon.style.background = '';
+            icon.style.color = '';
+            title.textContent = origTitle;
+            observer.disconnect();
+        }
+    });
+    observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
+}
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
         const formData = new FormData();
