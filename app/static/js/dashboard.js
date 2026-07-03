@@ -586,7 +586,6 @@ async function dashCompleteEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            markSSESkipped();
             await loadAllEvents();
             _dashEvents = [...allEvents];
             try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
