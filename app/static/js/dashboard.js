@@ -167,7 +167,6 @@ function renderToday() {
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
     const events = _dashEvents
-        .filter(e => !e.completed)
         .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
         .filter(e => e._date >= today && e._date < tomorrow)
         .sort((a, b) => a._date - b._date);
@@ -190,7 +189,6 @@ function renderSoon() {
     const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
     const events = _dashEvents
-        .filter(e => !e.completed)
         .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
         .filter(e => e._date >= tomorrow)
         .sort((a, b) => a._date - b._date);
