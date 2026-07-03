@@ -106,7 +106,7 @@ async function saveOrganizer() {
             });
         }
         const data = await resp.json();
-        if (data.ok) { markSSESkipped(); await loadOrganizers(); closeOrganizerModal(); showToast(editingOrgId ? 'Обновлено' : 'Добавлено', 'success'); }
+        if (data.ok) { await loadOrganizers(); closeOrganizerModal(); showToast(editingOrgId ? 'Обновлено' : 'Добавлено', 'success'); }
         else { showToast(data.error || 'Ошибка', 'error'); }
     } catch (e) { showToast('Ошибка сети', 'error'); }
     btn.disabled = false;
