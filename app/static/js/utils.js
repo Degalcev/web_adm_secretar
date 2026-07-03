@@ -1,7 +1,7 @@
 // ─── Утилиты ─────────────────────────────────────────────────────────
 
 function esc(str) {
-    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
 
 function formatSize(bytes) {

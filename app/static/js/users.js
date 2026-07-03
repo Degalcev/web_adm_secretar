@@ -173,7 +173,11 @@ async function confirmDelete() {
     if (deletingLocId) { await confirmDeleteLoc(); return; }
     if (!deletingId) return;
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/users/${deletingId}`, { method: 'DELETE' });
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const resp = await fetch(`${BASE_URL}/admin/api/users/${deletingId}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadUsers(); showToast('Пользователь удалён', 'success'); }
         else { showToast(data.error || 'Ошибка', 'error'); }

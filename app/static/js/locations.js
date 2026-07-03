@@ -52,7 +52,7 @@ function resetLocFilters() {
 function openAddLocationModal() {
     editingLocId = null;
     document.getElementById('loc-modal-title').textContent = 'Добавить локацию';
-    document.getElementById('f-loc-name').value = '';
+    document.getElementById('f-loc-name-modal').value = '';
     document.getElementById('location-modal').classList.add('show');
 }
 
@@ -61,7 +61,7 @@ function openEditLocationModal(id) {
     if (!l) return;
     editingLocId = id;
     document.getElementById('loc-modal-title').textContent = 'Редактировать локацию';
-    document.getElementById('f-loc-name').value = l.name || '';
+    document.getElementById('f-loc-name-modal').value = l.name || '';
     document.getElementById('location-modal').classList.add('show');
 }
 
@@ -72,7 +72,7 @@ function closeLocationModal() {
 async function saveLocation() {
     const btn = document.getElementById('loc-modal-save-btn');
     btn.disabled = true;
-    const payload = { name: document.getElementById('f-loc-name').value.trim() };
+    const payload = { name: document.getElementById('f-loc-name-modal').value.trim() };
     try {
         const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
         let resp;
@@ -103,7 +103,11 @@ function openConfirmLoc(id, name) {
 async function confirmDeleteLoc() {
     if (!deletingLocId) return;
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/locations/${deletingLocId}`, { method: 'DELETE' });
+        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const resp = await fetch(`${BASE_URL}/admin/api/locations/${deletingLocId}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
         const data = await resp.json();
         if (data.ok) { closeConfirm(); await loadLocations(); showToast('Удалено', 'success'); }
         else { showToast(data.error || 'Ошибка', 'error'); }
