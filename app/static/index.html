@@ -465,9 +465,13 @@
       </div>
 
       <div class="filter-bar">
-        <div class="filter-group narrow">
+        <div class="filter-group filter-date-group">
           <span class="filter-label">Дата</span>
-          <input type="date" class="filter-input" id="f-vks-active-date" onchange="filterVksListActive()">
+          <div class="filter-date-selects">
+            <select class="filter-select filter-date-sel" id="f-vks-active-day" onchange="filterVksListActive()"><option value="">День</option></select>
+            <select class="filter-select filter-date-sel" id="f-vks-active-month" onchange="filterVksListActive()"><option value="">Месяц</option></select>
+            <select class="filter-select filter-date-sel" id="f-vks-active-year" onchange="filterVksListActive()"><option value="">Год</option></select>
+          </div>
         </div>
         <div class="filter-group">
           <span class="filter-label">Организатор</span>
@@ -501,9 +505,13 @@
       </div>
 
       <div class="filter-bar">
-        <div class="filter-group narrow">
+        <div class="filter-group filter-date-group">
           <span class="filter-label">Дата</span>
-          <input type="date" class="filter-input" id="f-vks-completed-date" onchange="filterVksListCompleted()">
+          <div class="filter-date-selects">
+            <select class="filter-select filter-date-sel" id="f-vks-completed-day" onchange="filterVksListCompleted()"><option value="">День</option></select>
+            <select class="filter-select filter-date-sel" id="f-vks-completed-month" onchange="filterVksListCompleted()"><option value="">Месяц</option></select>
+            <select class="filter-select filter-date-sel" id="f-vks-completed-year" onchange="filterVksListCompleted()"><option value="">Год</option></select>
+          </div>
         </div>
         <div class="filter-group">
           <span class="filter-label">Организатор</span>

@@ -7,6 +7,45 @@ let pendingFiles = [];
 let removedDocIds = [];
 let _pendingVksFilter = null;
 
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function populateDateSelects(prefix) {
+    const daySel = document.getElementById(`${prefix}-day`);
+    const monthSel = document.getElementById(`${prefix}-month`);
+    const yearSel = document.getElementById(`${prefix}-year`);
+    if (!daySel || !monthSel || !yearSel) return;
+
+    for (let d = 1; d <= 31; d++) {
+        daySel.add(new Option(d, d));
+    }
+    MONTHS.forEach((m, i) => {
+        monthSel.add(new Option(m, i + 1));
+    });
+    const curYear = new Date().getFullYear();
+    for (let y = curYear - 2; y <= curYear + 1; y++) {
+        yearSel.add(new Option(y, y));
+    }
+}
+
+function getDateFilter(prefix) {
+    const day = document.getElementById(`${prefix}-day`)?.value || '';
+    const month = document.getElementById(`${prefix}-month`)?.value || '';
+    const year = document.getElementById(`${prefix}-year`)?.value || '';
+    return { day, month, year };
+}
+
+function matchDateFilter(eventDate, filter) {
+    if (!eventDate) return !filter.day && !filter.month && !filter.year;
+    const parts = eventDate.split('-');
+    const eYear = parts[0];
+    const eMonth = parseInt(parts[1]);
+    const eDay = parseInt(parts[2]);
+    if (filter.year && eYear !== filter.year) return false;
+    if (filter.month && eMonth !== parseInt(filter.month)) return false;
+    if (filter.day && eDay !== parseInt(filter.day)) return false;
+    return true;
+}
+
 async function ensureOrgsAndLocs() {
     if (!window.allOrganizers || !window.allOrganizers.length) {
         try {
@@ -33,6 +72,7 @@ async function loadVksActive() {
     if (!allEvents.length) {
         await loadAllEvents();
     }
+    populateDateSelects('f-vks-active');
     populateVksFilters();
     updateVksStats();
     const board = document.getElementById('vks-board-active');
@@ -44,8 +84,9 @@ async function loadVksActive() {
         _pendingVksFilter = null;
         // Reset quick filter state first
         _quickFilter = '';
-        const dateInput = document.getElementById('f-vks-active-date');
-        if (dateInput) dateInput.value = '';
+        document.getElementById('f-vks-active-day').value = '';
+        document.getElementById('f-vks-active-month').value = '';
+        document.getElementById('f-vks-active-year').value = '';
         document.getElementById('f-vks-active-org').value = '';
         document.getElementById('f-vks-active-loc').value = '';
         document.getElementById('f-vks-active-desc').value = '';
@@ -121,8 +162,9 @@ function clearVksFilter() {
     const banner = document.getElementById('vks-filter-banner');
     if (banner) banner.remove();
     _quickFilter = '';
-    const dateInput = document.getElementById('f-vks-active-date');
-    if (dateInput) dateInput.value = '';
+    document.getElementById('f-vks-active-day').value = '';
+    document.getElementById('f-vks-active-month').value = '';
+    document.getElementById('f-vks-active-year').value = '';
     document.getElementById('f-vks-active-org').value = '';
     document.getElementById('f-vks-active-loc').value = '';
     document.getElementById('f-vks-active-desc').value = '';
@@ -161,22 +203,16 @@ function updateVksStats() {
 let _quickFilter = '';
 
 function filterVksByQuick(type) {
-    const dateInput = document.getElementById('f-vks-active-date');
     if (_quickFilter === type) {
         _quickFilter = '';
-        dateInput.value = '';
+        document.getElementById('f-vks-active-day').value = '';
+        document.getElementById('f-vks-active-month').value = '';
+        document.getElementById('f-vks-active-year').value = '';
     } else {
         _quickFilter = type;
-        const now = new Date();
-        if (type === 'today') {
-            dateInput.value = _getLocalDateStr(now);
-        } else if (type === 'soon') {
-            dateInput.value = '';
-        } else if (type === 'missed') {
-            dateInput.value = '';
-        } else {
-            dateInput.value = '';
-        }
+        document.getElementById('f-vks-active-day').value = '';
+        document.getElementById('f-vks-active-month').value = '';
+        document.getElementById('f-vks-active-year').value = '';
     }
     document.querySelectorAll('#vks-active-stats .stat-card').forEach(card => card.classList.remove('active'));
     if (_quickFilter) {
@@ -191,6 +227,7 @@ async function loadVksCompleted() {
     if (!allEvents.length) {
         await loadAllEvents();
     }
+    populateDateSelects('f-vks-completed');
     populateVksFilters();
     const board = document.getElementById('vks-board-completed');
     if (board) renderVksBoard('vks-board-completed', 'completed');
@@ -201,7 +238,7 @@ function renderVksBoard(boardId, filter) {
     if (!board) return;
 
     const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
-    const dateVal = document.getElementById(`${prefix}-date`)?.value || '';
+    const dateFilter = getDateFilter(prefix);
     const orgVal = document.getElementById(`${prefix}-org`)?.value || '';
     const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
     const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
@@ -214,7 +251,9 @@ function renderVksBoard(boardId, filter) {
         events = events.filter(e => e.completed);
     }
 
-    if (dateVal) events = events.filter(e => e.date === dateVal);
+    if (dateFilter.day || dateFilter.month || dateFilter.year) {
+        events = events.filter(e => matchDateFilter(e.date, dateFilter));
+    }
     if (orgVal) events = events.filter(e => e.organizer_id === orgVal);
     if (locVal) events = events.filter(e => e.location_id === locVal);
     if (descVal) {
@@ -427,7 +466,9 @@ function filterVksListCompleted() {
 }
 
 function resetVksActiveFilters() {
-    document.getElementById('f-vks-active-date').value = '';
+    document.getElementById('f-vks-active-day').value = '';
+    document.getElementById('f-vks-active-month').value = '';
+    document.getElementById('f-vks-active-year').value = '';
     document.getElementById('f-vks-active-org').value = '';
     document.getElementById('f-vks-active-loc').value = '';
     document.getElementById('f-vks-active-desc').value = '';
@@ -437,7 +478,9 @@ function resetVksActiveFilters() {
 }
 
 function resetVksCompletedFilters() {
-    document.getElementById('f-vks-completed-date').value = '';
+    document.getElementById('f-vks-completed-day').value = '';
+    document.getElementById('f-vks-completed-month').value = '';
+    document.getElementById('f-vks-completed-year').value = '';
     document.getElementById('f-vks-completed-org').value = '';
     document.getElementById('f-vks-completed-loc').value = '';
     document.getElementById('f-vks-completed-desc').value = '';

@@ -110,3 +110,17 @@
   border-color: var(--accent);
   color: var(--accent);
 }
+
+.filter-date-group {
+  flex: 2;
+}
+
+.filter-date-selects {
+  display: flex;
+  gap: 6px;
+}
+
+.filter-date-sel {
+  flex: 1;
+  min-width: 0;
+}
