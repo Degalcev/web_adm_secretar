@@ -39,7 +39,10 @@ async def _listen_loop():
             )
             logger.info('SSE listener: connected, adding listener...')
             await _connection.add_listener('update_event', _on_notify)
-            logger.info('SSE listener: LISTEN update_event OK')
+            await _connection.add_listener('update_users', _on_notify)
+            await _connection.add_listener('update_locations', _on_notify)
+            await _connection.add_listener('update_organizers', _on_notify)
+            logger.info('SSE listener: LISTEN all channels OK')
             # Keep alive
             while True:
                 await asyncio.sleep(60)
