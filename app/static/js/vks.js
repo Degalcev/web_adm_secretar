@@ -732,10 +732,18 @@ function confirmCompleteEvent(id, checked) {
         const action = checked ? 'завершить' : 'снять завершение с';
         document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
         document.getElementById('confirm-actions').innerHTML = `
-            <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
-            <button class="btn btn-primary" onclick="completeEvent('${id}', ${checked});closeConfirm()">Подтвердить</button>
+            <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
+            <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
         `;
-        // Временно меняем заголовок и иконку
+        document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
+        document.getElementById('confirm-ok-btn').onclick = async function () {
+            this.disabled = true;
+            this.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Загрузка...';
+            document.getElementById('confirm-cancel-btn').disabled = true;
+            await completeEvent(id, checked);
+            closeConfirm();
+        };
+        // Меняем заголовок и иконку
         const overlay = document.getElementById('confirm-overlay');
         const icon = overlay.querySelector('.confirm-icon');
         const title = overlay.querySelector('h3');
