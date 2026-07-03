@@ -165,12 +165,21 @@ function openConfirm(id, name) {
 }
 
 function closeConfirm() {
-    document.getElementById('confirm-overlay').classList.remove('show');
+    const overlay = document.getElementById('confirm-overlay');
+    overlay.classList.remove('show');
     // Восстановить оригинальные кнопки
     document.getElementById('confirm-actions').innerHTML = `
         <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
         <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
     `;
+    // Восстановить иконку и заголовок
+    const icon = overlay.querySelector('.confirm-icon');
+    const title = overlay.querySelector('h3');
+    icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+    icon.style.background = '';
+    icon.style.color = '';
+    title.textContent = 'Подтвердите удаление';
+    document.getElementById('confirm-text').textContent = 'Это действие нельзя отменить.';
     deletingId = null;
     deletingOrgId = null;
     deletingLocId = null;
