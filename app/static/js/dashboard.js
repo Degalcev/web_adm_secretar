@@ -244,18 +244,18 @@ function renderUpcomingItem(e, opts = {}) {
         : `<div class="dash-upcoming-time">${e.time || '--:--'}</div>`;
 
     return `
-        <a class="dash-upcoming-item" onclick="event.preventDefault(); event.stopPropagation(); openEditEventModal('${e.id}');">
+        <div class="dash-upcoming-item" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">
             <div class="dash-upcoming-time-col">${timeHtml}</div>
             <div class="dash-upcoming-info">
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
                 <div class="dash-upcoming-meta">${meta}</div>
             </div>
             <div class="dash-indicators">${badges.join('')}</div>
-            <label class="dash-check" onclick="event.stopPropagation(); event.preventDefault();">
-                <input type="checkbox" onchange="dashCompleteEvent('${e.id}', this.checked)">
+            <label class="dash-check" onclick="event.stopPropagation()">
+                <input type="checkbox" ${e.completed ? 'checked' : ''} onchange="event.stopPropagation();dashCompleteEvent('${e.id}', this.checked)">
                 <span class="dash-check-mark"></span>
             </label>
-        </a>
+        </div>
     `;
 }
 
