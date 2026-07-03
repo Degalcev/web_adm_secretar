@@ -5,34 +5,27 @@ let editingLocId = null;
 let deletingLocId = null;
 
 async function loadLocations() {
-    console.log('[LOC] loadLocations called');
     const tbody = document.getElementById('locations-tbody');
-    if (!tbody) { console.error('[LOC] tbody not found!'); return; }
     tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Загрузка...</td></tr>';
     try {
-        const url = `${BASE_URL}/admin/api/locations`;
-        console.log('[LOC] fetching:', url);
-        const resp = await fetch(url);
-        console.log('[LOC] response:', resp.status, resp.statusText);
+        const resp = await fetch(`${BASE_URL}/admin/api/locations`);
         if (resp.status === 401) { showLogin(); return; }
         allLocations = await resp.json();
-        console.log('[LOC] data:', allLocations.length, 'items');
         renderLocations(allLocations);
         document.getElementById('stat-total-loc').textContent = allLocations.length;
         document.getElementById('stat-shown-loc').textContent = allLocations.length;
     } catch (e) {
-        console.error('[LOC] error:', e);
+        showToast('Ошибка загрузки локаций', 'error');
     }
 }
 
 function renderLocations(items) {
     const tbody = document.getElementById('locations-tbody');
-    console.log('[LOC] renderLocations:', items.length, 'items, tbody:', !!tbody);
     if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Нет локаций</td></tr>';
         return;
     }
-    const html = items.map(l => `
+    tbody.innerHTML = items.map(l => `
         <tr onclick="openEditLocationModal('${l.id}')" style="cursor:pointer">
             <td>${esc(l.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td>
@@ -44,9 +37,6 @@ function renderLocations(items) {
             </td>
         </tr>
     `).join('');
-    console.log('[LOC] html length:', html.length, 'first 200:', html.substring(0, 200));
-    tbody.innerHTML = html;
-    console.log('[LOC] innerHTML set, tbody rows:', tbody.rows.length);
 }
 
 function filterLocations() {
