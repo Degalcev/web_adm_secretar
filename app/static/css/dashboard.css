@@ -214,19 +214,6 @@
   min-width: 42px;
 }
 
-.dash-upcoming-date {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--fg-muted);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-}
-
-.dash-upcoming-date.weekend {
-  color: var(--danger);
-}
-
 .dash-upcoming-info {
   flex: 1;
   min-width: 0;

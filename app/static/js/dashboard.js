@@ -203,14 +203,9 @@ function renderSoon() {
 
     const items = events.slice(0, 8).map(e => {
         const d = e._date;
-        const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        const dayNum = d.getDay();
-        const isWeekend = dayNum === 0 || dayNum === 6;
         return renderUpcomingItem(e, {
             showDate: true,
-            dayName: dayNames[dayNum],
-            dateStr: `${dayNames[dayNum]}, ${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`,
-            isWeekend
+            dateStr: `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`
         });
     }).join('');
 
@@ -245,7 +240,7 @@ function renderUpcomingItem(e, opts = {}) {
         : `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
 
     const timeHtml = opts.showDate
-        ? `<div class="dash-upcoming-time"><span class="dash-upcoming-date ${opts.isWeekend ? 'weekend' : ''}">${opts.dateStr}</span> ${e.time || '--:--'}</div>`
+        ? `<div class="dash-upcoming-time">${opts.dateStr} ${e.time || '--:--'}</div>`
         : `<div class="dash-upcoming-time">${e.time || '--:--'}</div>`;
 
     return `
