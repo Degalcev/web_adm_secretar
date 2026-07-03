@@ -242,7 +242,7 @@ function renderUpcomingItem(e, opts = {}) {
         : `<div class="dash-upcoming-time">${e.time || '--:--'}</div>`;
 
     return `
-        <div class="dash-upcoming-item" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">
+        <div class="dash-upcoming-item ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">
             <div class="dash-upcoming-time-col">${timeHtml}</div>
             <div class="dash-upcoming-info">
                 <div class="dash-upcoming-desc">${e.description || ''}</div>
