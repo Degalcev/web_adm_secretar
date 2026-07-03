@@ -262,55 +262,38 @@
 }
 
 /* ─── VKS Checkbox ──────────────────────────────────────────────── */
-.vks-check {
+/* ─── VKS Complete Button (icon style, matches modal) ──────── */
+.vks-complete-btn {
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.vks-check:hover {
-  background: rgba(34, 211, 191, 0.1);
-}
-
-.vks-check input[type="checkbox"] {
-  display: none;
-}
-
-.vks-check-mark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
   background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+  flex-shrink: 0;
 }
 
-.vks-check:hover .vks-check-mark {
-  border-color: var(--accent);
+.vks-complete-btn:hover {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.08);
+  border-color: rgba(74, 222, 128, 0.3);
 }
 
-.vks-check input:checked + .vks-check-mark {
-  background: var(--success);
-  border-color: var(--success);
+.vks-complete-btn.active {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.3);
 }
 
-.vks-check input:checked + .vks-check-mark::after {
-  content: '';
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-  margin-bottom: 2px;
+.vks-complete-btn.active:hover {
+  background: rgba(74, 222, 128, 0.18);
+  border-color: rgba(74, 222, 128, 0.4);
 }
 
 /* ─── VKS Block Styles ─────────────────────────────────────────────── */

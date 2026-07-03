@@ -383,10 +383,7 @@ function renderVksCard(e, blockType) {
     }
     html += `</div>`;
     html += `<div class="vks-card-actions">`;
-    html += `<label class="vks-check" onclick="event.stopPropagation()" title="${e.completed ? 'Снять завершение' : 'Завершить'}">`;
-    html += `<input type="checkbox" ${e.completed ? 'checked' : ''} onchange="completeEvent('${e.id}', this.checked)">`;
-    html += `<span class="vks-check-mark"></span>`;
-    html += `</label>`;
+    html += `<button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();confirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
     html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
     html += `</div>`;
     html += `</div>`;
@@ -726,6 +723,18 @@ async function saveEvent() {
         showToast('Ошибка сети', 'error');
     }
     btn.disabled = false;
+}
+
+function confirmCompleteEvent(id, checked) {
+    const e = allEvents.find(x => x.id === id);
+    const desc = e ? (e.description || 'без описания') : '';
+    const action = checked ? 'завершить' : 'снять завершение с';
+    document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
+    document.getElementById('confirm-actions').innerHTML = `
+        <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
+        <button class="btn btn-primary" onclick="closeConfirm();completeEvent('${id}', ${checked})">Подтвердить</button>
+    `;
+    document.getElementById('confirm-overlay').classList.add('show');
 }
 
 async function completeEvent(id, checked) {
