@@ -140,8 +140,8 @@ async function saveUser() {
         }
         const data = await resp.json();
         if (data.ok) {
-            closeModal();
             await loadUsers();
+            closeModal();
             showToast(editingId ? 'Пользователь обновлён' : 'Пользователь добавлен', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');

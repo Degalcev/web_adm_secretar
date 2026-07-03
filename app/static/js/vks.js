@@ -706,7 +706,6 @@ async function saveEvent() {
         const data = await resp.json();
         if (data.ok) {
             const wasEditing = !!editingEventId;
-            closeEventModal();
             await loadAllEvents();
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
@@ -718,6 +717,7 @@ async function saveEvent() {
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
+            closeEventModal();
             showToast(wasEditing ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
@@ -830,8 +830,6 @@ async function confirmDeleteEvent() {
         });
         const data = await resp.json();
         if (data.ok) {
-            closeConfirm();
-            closeEventModal();
             await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
@@ -840,6 +838,8 @@ async function confirmDeleteEvent() {
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
+            closeConfirm();
+            closeEventModal();
             showToast('Удалено', 'success');
         } else {
             closeConfirm();
