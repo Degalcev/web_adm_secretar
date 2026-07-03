@@ -735,7 +735,28 @@ function confirmCompleteEvent(id, checked) {
             <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
             <button class="btn btn-primary" onclick="completeEvent('${id}', ${checked});closeConfirm()">Подтвердить</button>
         `;
-        document.getElementById('confirm-overlay').classList.add('show');
+        // Временно меняем заголовок и иконку
+        const overlay = document.getElementById('confirm-overlay');
+        const icon = overlay.querySelector('.confirm-icon');
+        const title = overlay.querySelector('h3');
+        const origIconHTML = icon.innerHTML;
+        const origTitle = title.textContent;
+        icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>';
+        icon.style.background = 'rgba(74, 222, 128, 0.1)';
+        icon.style.color = 'var(--success)';
+        title.textContent = checked ? 'Завершить ВКС?' : 'Снять завершение?';
+        overlay.classList.add('show');
+        // Восстановить при закрытии
+        const observer = new MutationObserver(() => {
+            if (!overlay.classList.contains('show')) {
+                icon.innerHTML = origIconHTML;
+                icon.style.background = '';
+                icon.style.color = '';
+                title.textContent = origTitle;
+                observer.disconnect();
+            }
+        });
+        observer.observe(overlay, { attributes: true, attributeFilter: ['class'] });
     } catch (err) {
         console.error('[VKS] confirmCompleteEvent error:', err);
         completeEvent(id, checked);
@@ -745,10 +766,13 @@ function confirmCompleteEvent(id, checked) {
 async function completeEvent(id, checked) {
     const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
     try {
+        const formData = new FormData();
+        formData.append('completed', checked ? 'true' : 'false');
+        formData.append('csrf_token', csrfToken);
         const resp = await fetch(`${BASE_URL}/admin/api/events/${id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-            body: JSON.stringify({ completed: checked, csrf_token: csrfToken })
+            headers: { 'X-CSRF-Token': csrfToken },
+            body: formData
         });
         const data = await resp.json();
         if (data.ok) {
