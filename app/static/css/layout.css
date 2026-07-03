@@ -314,15 +314,14 @@
 /* ─── Content Area ──────────────────────────────────────────────────── */
 .content-area {
   flex: 1;
-  overflow-y: auto;
+  min-height: 0;
   padding: 2rem;
   min-width: 0;
   background: var(--bg);
   animation: fadeIn 0.15s ease;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  display: flex;
+  flex-direction: column;
 }
-.content-area::-webkit-scrollbar { display: none; }
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -331,7 +330,16 @@
 
 /* ─── Pages ─────────────────────────────────────────────────────────── */
 .page { display: none; }
-.page.active { display: block; }
+.page.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.page.active::-webkit-scrollbar { display: none; }
 .page.active::-webkit-scrollbar { display: none; }
 
 .page-header {

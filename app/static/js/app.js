@@ -57,10 +57,10 @@ initSSE();
         return document.querySelector('.page.active') || document.querySelector('.content-area');
     }
 
-    // Слушаем скролл на активной странице
+    // Слушаем скролл на активной странице (capture для всплытия)
     document.addEventListener('scroll', function (e) {
         const container = getScrollContainer();
-        if (e.target === container || e.target === document.querySelector('.content-area')) {
+        if (e.target === container) {
             if (container.scrollTop > 300) {
                 btn.classList.add('visible');
             } else {
