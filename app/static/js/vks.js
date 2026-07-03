@@ -383,7 +383,7 @@ function renderVksCard(e, blockType) {
     }
     html += `</div>`;
     html += `<div class="vks-card-actions">`;
-    html += `<button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();confirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
+    html += `<button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();alert('CLICK');confirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
     html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
     html += `</div>`;
     html += `</div>`;
