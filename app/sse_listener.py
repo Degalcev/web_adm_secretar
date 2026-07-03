@@ -55,10 +55,10 @@ async def _listen_loop():
 
 
 async def _on_notify(connection, pid, channel, payload):
-    logger.info('SSE notify received: channel={}, payload={}', channel, payload[:200])
+    logger.info('SSE notify: channel={}', channel)
     try:
         data = json.loads(payload)
-        logger.info('SSE: broadcasting to {} subscribers', len(_subscribers))
+        logger.info('SSE: broadcasting {} to {} subscribers', data.get('table_name', '?'), len(_subscribers))
         await _broadcast(data)
     except (json.JSONDecodeError, TypeError):
         logger.info('SSE: skipped non-JSON payload')

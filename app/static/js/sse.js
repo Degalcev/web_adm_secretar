@@ -41,6 +41,8 @@ function handleSSEEvent(data) {
         _refreshLocations();
     } else if (table === 'organizers') {
         _refreshOrganizers();
+    } else if (table === 'users') {
+        _refreshUsers();
     }
 }
 
@@ -97,6 +99,19 @@ async function _refreshOrganizers() {
             orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
         }
         if ((currentPage || '') === 'dashboard') renderDashboard();
+    } catch (e) {}
+}
+
+async function _refreshUsers() {
+    try {
+        const resp = await fetch('/admin/api/users', { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const users = await resp.json();
+        allUsers = users;
+        if ((currentPage || '') === 'users') {
+            renderUsers(allUsers);
+            updateStats(allUsers);
+        }
     } catch (e) {}
 }
 
