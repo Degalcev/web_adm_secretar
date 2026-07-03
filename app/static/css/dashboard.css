@@ -219,12 +219,16 @@
 }
 
 .dash-upcoming-date {
-  font-size: 0.625rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
   color: var(--fg-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
+}
+
+.dash-upcoming-date.weekend {
+  color: var(--danger);
 }
 
 .dash-upcoming-info {
