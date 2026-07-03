@@ -584,9 +584,47 @@
 }
 
 /* Кнопка «Завершить» — базовый стиль как btn-icon */
-#event-modal-complete-btn {
+#event-modal-complete-btn,
+.vks-complete-btn {
   color: var(--fg-muted);
   transition: all 0.15s;
+}
+
+#event-modal-complete-btn svg,
+.vks-complete-btn:not(.active) svg {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+#event-modal-complete-btn:hover svg,
+.vks-complete-btn:not(.active):hover svg {
+  opacity: 1;
+}
+
+#event-modal-complete-btn:hover,
+.vks-complete-btn:hover {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.1);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+/* Активное состояние — зелёный, галочка видна всегда */
+#event-modal-complete-btn.active,
+.vks-complete-btn.active {
+  color: var(--success);
+  background: rgba(74, 222, 128, 0.12);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+#event-modal-complete-btn.active svg,
+.vks-complete-btn.active svg {
+  opacity: 1;
+}
+
+#event-modal-complete-btn.active:hover,
+.vks-complete-btn.active:hover {
+  background: rgba(74, 222, 128, 0.18);
+  border-color: rgba(74, 222, 128, 0.4);
 }
 
 #event-modal-complete-btn:hover {
