@@ -161,6 +161,11 @@ function openConfirm(id, name) {
 
 function closeConfirm() {
     document.getElementById('confirm-overlay').classList.remove('show');
+    // Восстановить оригинальные кнопки
+    document.getElementById('confirm-actions').innerHTML = `
+        <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+    `;
     deletingId = null;
     deletingOrgId = null;
     deletingLocId = null;
