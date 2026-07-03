@@ -27,11 +27,12 @@ async function loadLocations() {
 
 function renderLocations(items) {
     const tbody = document.getElementById('locations-tbody');
+    console.log('[LOC] renderLocations:', items.length, 'items, tbody:', !!tbody);
     if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="2" class="empty-state">Нет локаций</td></tr>';
         return;
     }
-    tbody.innerHTML = items.map(l => `
+    const html = items.map(l => `
         <tr onclick="openEditLocationModal('${l.id}')" style="cursor:pointer">
             <td>${esc(l.name) || '<span style="color:var(--muted)">—</span>'}</td>
             <td>
@@ -43,6 +44,9 @@ function renderLocations(items) {
             </td>
         </tr>
     `).join('');
+    console.log('[LOC] html length:', html.length, 'first 200:', html.substring(0, 200));
+    tbody.innerHTML = html;
+    console.log('[LOC] innerHTML set, tbody rows:', tbody.rows.length);
 }
 
 function filterLocations() {
