@@ -222,6 +222,8 @@
   transition: all 0.15s;
   position: relative;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .vks-doc-item::before {
@@ -249,9 +251,18 @@
   flex-shrink: 0;
 }
 
+.vks-doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
 .vks-doc-size {
   color: var(--fg-subtle);
   font-size: 0.6875rem;
+  flex-shrink: 0;
 }
 
 .vks-card-actions {
@@ -343,17 +354,23 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
+  min-width: 0;
 }
 
 .event-doc-name {
   flex: 1;
   color: var(--fg);
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .event-doc-size {
   color: var(--fg-muted);
   font-size: 0.75rem;
+  flex-shrink: 0;
 }
 
 .event-doc-download {
@@ -366,6 +383,7 @@
   color: var(--fg-muted);
   transition: all 0.15s;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .event-doc-download:hover {
@@ -413,6 +431,7 @@
   border: none;
   cursor: pointer;
   transition: all 0.15s;
+  flex-shrink: 0;
 }
 
 .event-doc-delete:hover {
@@ -625,24 +644,6 @@
 
 #event-modal-complete-btn.active:hover,
 .vks-complete-btn.active:hover {
-  background: rgba(74, 222, 128, 0.18);
-  border-color: rgba(74, 222, 128, 0.4);
-}
-
-#event-modal-complete-btn:hover {
-  color: var(--success);
-  background: rgba(74, 222, 128, 0.1);
-  border-color: rgba(74, 222, 128, 0.3);
-}
-
-/* Активное состояние — зелёный */
-#event-modal-complete-btn.active {
-  color: var(--success);
-  background: rgba(74, 222, 128, 0.12);
-  border-color: rgba(74, 222, 128, 0.3);
-}
-
-#event-modal-complete-btn.active:hover {
   background: rgba(74, 222, 128, 0.18);
   border-color: rgba(74, 222, 128, 0.4);
 }
