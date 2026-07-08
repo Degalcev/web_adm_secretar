@@ -105,58 +105,6 @@ async function checkAuth(silent) {
         showLogin();
     }
 }
-    } catch (e) { /* ignore */ }
-
-    // Если авторизован — показать дашборд, иначе — логин
-    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
-    if (resp.status === 200) {
-        isAuthenticated = true;
-
-        // Получить данные текущего пользователя
-        try {
-            const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
-            if (meResp.ok) {
-                const me = await meResp.json();
-                window.currentUserRole = me.status || 'user';
-                // Имя для хедера: приоритет name, потом ФИО
-                const displayName = me.name || me.username || '';
-                const lastName = me.last_name || '';
-                const firstName = me.first_name || '';
-                if (lastName && firstName) {
-                    window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
-                } else if (displayName) {
-                    window.currentUserName = displayName;
-                } else {
-                    window.currentUserName = `User #${me.max_id || ''}`;
-                }
-                // Показать имя в хедере
-                const userEl = document.getElementById('topbar-user');
-                if (userEl && window.currentUserName) {
-                    userEl.textContent = window.currentUserName;
-                    userEl.style.display = 'inline';
-                }
-            } else {
-                window.currentUserRole = 'admin';
-            }
-        } catch (e) {
-            window.currentUserRole = 'admin';
-        }
-
-        showMain();
-        // Применить ограничения ролей
-        console.log('[auth] role:', window.currentUserRole, 'name:', window.currentUserName);
-        if (typeof applyRoleRestrictions === 'function') {
-            applyRoleRestrictions();
-        }
-        // Загрузить данные после авторизации
-        _preloaded = false;
-        if (typeof initPreloader === 'function') initPreloader();
-    } else {
-        // Не авторизован — показать логин
-        showLogin();
-    }
-    // Если не авторизован — показать логин (по умолчанию)
-}
 
 function showMain() {
     document.getElementById('login-screen').classList.remove('show');
