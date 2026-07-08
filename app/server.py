@@ -73,17 +73,6 @@ async def start_webapp(host='0.0.0.0', port=8080):
     else:
         logger.error('Папка static не найдена: {}', STATIC_PATH)
 
-    # Anti-caching middleware для JS/CSS файлов
-    @web.middleware
-    async def cache_middleware(request, handler):
-        resp = await handler(request)
-        path = request.path
-        if path.endswith('.js') or path.endswith('.css'):
-            resp.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-            resp.headers['Pragma'] = 'no-cache'
-        return resp
-    app.middlewares.append(cache_middleware)
-
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host, port)
