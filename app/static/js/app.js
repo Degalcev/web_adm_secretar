@@ -43,15 +43,7 @@ setInterval(_checkDayChange, 60000);
 // Запуск
 initTheme();
 initRouter();
-// checkAuth — единственный вызов, проверяет сессию и показывает нужный экран
-checkAuth().then(authed => {
-    if (authed) {
-        const route = getRouteFromURL();
-        if (route && ROUTES[route]) {
-            navigateTo(route, false);
-        }
-    }
-});
+checkAuth();
 initUpdater();
 initSSE();
 

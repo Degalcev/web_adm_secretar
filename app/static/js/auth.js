@@ -16,6 +16,11 @@ async function checkAuth() {
             if (typeof applyRoleRestrictions === 'function') {
                 applyRoleRestrictions();
             }
+            // Навигация: при входе — на главную, при загрузке страницы — по URL
+            const route = getRouteFromURL();
+            if (route && typeof ROUTES !== 'undefined' && ROUTES[route]) {
+                navigateTo(route, false);
+            }
             return true;
         }
     } catch (e) { /* ignore network errors */ }
