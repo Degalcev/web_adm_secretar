@@ -59,6 +59,7 @@ async function checkAuth() {
     } catch (e) { /* ignore */ }
 
     // Если авторизован — показать дашборд, иначе — логин
+    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
     if (resp.status === 200) {
         isAuthenticated = true;
 
