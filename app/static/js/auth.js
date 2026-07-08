@@ -61,13 +61,16 @@ async function checkAuth() {
             if (meResp.ok) {
                 const me = await meResp.json();
                 window.currentUserRole = me.status || 'user';
-                // Имя для хедера: Фамилия И.
+                // Имя для хедера: приоритет name, потом ФИО
+                const displayName = me.name || me.username || '';
                 const lastName = me.last_name || '';
                 const firstName = me.first_name || '';
                 if (lastName && firstName) {
                     window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
+                } else if (displayName) {
+                    window.currentUserName = displayName;
                 } else {
-                    window.currentUserName = me.name || me.username || '';
+                    window.currentUserName = `User #${me.max_id || ''}`;
                 }
                 // Показать имя в хедере
                 const userEl = document.getElementById('topbar-user');
@@ -91,6 +94,7 @@ async function checkAuth() {
             navigateTo(path, false);
         }
         // Применить ограничения ролей
+        console.log('[auth] role:', window.currentUserRole, 'name:', window.currentUserName);
         if (typeof applyRoleRestrictions === 'function') {
             applyRoleRestrictions();
         }

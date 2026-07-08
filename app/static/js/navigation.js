@@ -119,19 +119,18 @@ function closeMobileMenu() {
 // ─── Role Restrictions ────────────────────────────────────────────
 function applyRoleRestrictions(container) {
     const root = container || document;
-    if (window.currentUserRole !== 'admin') {
-        // Скрыть nav-group "Администрирование" и "Настройки"
-        root.querySelectorAll('.nav-group').forEach(group => {
-            const header = group.querySelector('.nav-group-header');
-            if (header) {
-                const text = header.textContent || '';
-                if (text.includes('Администрирование') || text.includes('Настройки')) {
-                    group.style.display = 'none';
-                }
+    if (!window.currentUserRole || window.currentUserRole === 'admin') return;
+
+    // Скрыть только "Администрирование" для non-admin
+    root.querySelectorAll('.nav-group').forEach(group => {
+        const header = group.querySelector('.nav-group-header');
+        if (header) {
+            const text = header.textContent || '';
+            if (text.includes('Администрирование')) {
+                group.style.display = 'none';
             }
-        });
-        // Скрыть кнопку добавления VKS для non-admin (опционально)
-    }
+        }
+    });
 }
 
 // ─── Filter Toggle (mobile) ──────────────────────────────────────
