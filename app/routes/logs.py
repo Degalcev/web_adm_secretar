@@ -4,7 +4,6 @@ import re
 from aiohttp import web
 from loguru import logger
 
-from app.auth import admin_required
 from config import PROJECT_ROOT, BOT_LOGS_DIR
 
 LOGS_DIR = os.path.join(PROJECT_ROOT, 'logs')
@@ -45,7 +44,6 @@ def _scan_dates() -> list[dict]:
     return sorted(dates.values(), key=lambda x: x['date'], reverse=True)
 
 
-@admin_required
 async def get_log_dates(request: web.Request) -> web.Response:
     try:
         return web.json_response(_scan_dates())
@@ -54,7 +52,6 @@ async def get_log_dates(request: web.Request) -> web.Response:
         return web.json_response([], status=500)
 
 
-@admin_required
 async def get_log_by_date(request: web.Request) -> web.Response:
     try:
         date_str = request.match_info['date']

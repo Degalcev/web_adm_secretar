@@ -3,7 +3,6 @@ import json
 from aiohttp import web, ClientConnectionResetError
 from loguru import logger
 
-from app.auth import admin_required
 from app.sse_listener import subscribe, unsubscribe
 
 

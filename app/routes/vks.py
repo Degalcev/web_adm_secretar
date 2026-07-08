@@ -2,12 +2,11 @@ from aiohttp import web
 from loguru import logger
 from datetime import date, datetime, timedelta, time
 
-from app.auth import admin_required, auth_required, require_csrf
+from app.auth import require_csrf
 from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
 from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
 
-@admin_required
 async def get_events_handler(request: web.Request) -> web.Response:
     try:
         status = request.query.get('status', '').strip()
@@ -82,7 +81,6 @@ async def _parse_event_from_multipart(request: web.Request) -> dict:
     return {'fields': fields, 'files': files}
 
 
-@auth_required
 @require_csrf
 async def create_event_handler(request: web.Request) -> web.Response:
     try:
@@ -123,7 +121,6 @@ async def create_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@auth_required
 @require_csrf
 async def update_event_handler(request: web.Request) -> web.Response:
     try:
@@ -172,7 +169,6 @@ async def update_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@auth_required
 @require_csrf
 async def delete_event_handler(request: web.Request) -> web.Response:
     try:
@@ -192,7 +188,6 @@ async def delete_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@auth_required
 async def dashboard_stats(request: web.Request) -> web.Response:
     try:
         events = await get_events()

@@ -2,10 +2,9 @@ from aiohttp import web
 from loguru import logger
 import os
 
-from app.auth import auth_required, require_csrf
+from app.auth import require_csrf
 
 
-@auth_required
 async def download_document(request: web.Request) -> web.Response:
     try:
         doc_id = request.match_info['id']
@@ -31,7 +30,6 @@ async def download_document(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
-@auth_required
 @require_csrf
 async def upload_document(request: web.Request) -> web.Response:
     try:
@@ -60,7 +58,6 @@ async def upload_document(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@auth_required
 @require_csrf
 async def delete_document(request: web.Request) -> web.Response:
     try:

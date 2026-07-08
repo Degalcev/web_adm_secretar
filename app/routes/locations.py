@@ -1,12 +1,11 @@
 from aiohttp import web
 from loguru import logger
 
-from app.auth import admin_required, require_csrf
+from app.auth import require_csrf
 from database.requests import get_locations
 from database.sending import add_location, update_location, delete_location
 
 
-@admin_required
 async def get_locations_handler(request: web.Request) -> web.Response:
     try:
         items = await get_locations()
@@ -17,7 +16,6 @@ async def get_locations_handler(request: web.Request) -> web.Response:
         return web.json_response([], status=500)
 
 
-@admin_required
 @require_csrf
 async def create_location_handler(request: web.Request) -> web.Response:
     try:
@@ -29,7 +27,6 @@ async def create_location_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
 @require_csrf
 async def update_location_handler(request: web.Request) -> web.Response:
     try:
@@ -42,7 +39,6 @@ async def update_location_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
 @require_csrf
 async def delete_location_handler(request: web.Request) -> web.Response:
     try:

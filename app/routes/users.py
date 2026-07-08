@@ -2,14 +2,13 @@ from aiohttp import web
 from loguru import logger
 from argon2 import PasswordHasher
 
-from app.auth import admin_required, require_csrf, auth_required
+from app.auth import require_csrf
 from database.requests import get_user, get_user_by_max_id
 from database.sending import add_user, update_user, delete_user
 
 ph = PasswordHasher()
 
 
-@auth_required
 async def get_current_user(request: web.Request) -> web.Response:
     try:
         user = request['user']
@@ -28,13 +27,11 @@ async def get_current_user(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
-@auth_required
 async def check_auth(request: web.Request) -> web.Response:
     """Проверка авторизации — доступно всем ролям."""
     return web.json_response({'ok': True})
 
 
-@admin_required
 async def get_users(request: web.Request) -> web.Response:
     try:
         users = await get_user()
@@ -58,7 +55,6 @@ async def get_users(request: web.Request) -> web.Response:
         return web.json_response([], status=500)
 
 
-@admin_required
 @require_csrf
 async def create_user(request: web.Request) -> web.Response:
     try:
@@ -88,7 +84,6 @@ async def create_user(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
 @require_csrf
 async def update_user_handler(request: web.Request) -> web.Response:
     try:
@@ -119,7 +114,6 @@ async def update_user_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
 @require_csrf
 async def delete_user_handler(request: web.Request) -> web.Response:
     try:
@@ -146,7 +140,6 @@ async def check_admin_status(request: web.Request) -> web.Response:
         return web.json_response({'is_admin': False}, status=500)
 
 
-@admin_required
 @require_csrf
 async def change_password(request: web.Request) -> web.Response:
     try:
