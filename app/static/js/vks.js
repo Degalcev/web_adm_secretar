@@ -477,6 +477,25 @@ function getLocationName(id) {
     return l ? l.name : '';
 }
 
+function getDocCardMeta(ext) {
+    const map = {
+        pdf: { cls: 'pdf', label: 'PDF' },
+        doc: { cls: 'doc', label: 'DOC' },
+        docx: { cls: 'doc', label: 'DOC' },
+        xls: { cls: 'xls', label: 'XLS' },
+        xlsx: { cls: 'xls', label: 'XLS' },
+        ppt: { cls: 'ppt', label: 'PPT' },
+        pptx: { cls: 'ppt', label: 'PPT' },
+        txt: { cls: 'txt', label: 'TXT' },
+        zip: { cls: 'zip', label: 'ZIP' },
+        rar: { cls: 'zip', label: 'RAR' },
+        jpg: { cls: 'img', label: 'JPG' },
+        jpeg: { cls: 'img', label: 'JPG' },
+        png: { cls: 'img', label: 'PNG' },
+    };
+    return map[ext] || { cls: 'default', label: ext.toUpperCase() || 'FILE' };
+}
+
 function getDocIcon(ext) {
     const icons = {
         pdf: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
@@ -534,6 +553,16 @@ async function openAddEventModal() {
     document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
     document.getElementById('event-modal-actions').style.display = 'none';
     document.getElementById('f-event-completed').checked = false;
+    // Скрыть элементы режима редактирования
+    document.getElementById('event-modal-status').style.display = 'none';
+    document.getElementById('event-modal-delete-btn').style.display = 'none';
+    document.getElementById('event-modal-audit-btn').style.display = 'none';
+    document.getElementById('event-modal-complete-btn').style.display = 'none';
+    document.getElementById('event-modal-audit').style.display = 'none';
+    document.getElementById('event-url-go').style.display = 'none';
+    // Accent bar — по умолчанию
+    const accent = document.getElementById('vks-modal-accent');
+    accent.className = 'vks-modal-accent';
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
@@ -556,13 +585,24 @@ async function openEditEventModal(id) {
     removedDocIds = [];
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
 
-    // Показать панель действий
-    const actionsPanel = document.getElementById('event-modal-actions');
-    actionsPanel.style.display = 'flex';
+    // Показать элементы режима редактирования
+    document.getElementById('event-modal-delete-btn').style.display = 'inline-flex';
+    document.getElementById('event-modal-complete-btn').style.display = 'inline-flex';
 
-    // Заполнить индикатор статуса
-    const statusEl = document.getElementById('event-modal-status');
+    // Accent bar — цвет по статусу
+    const accent = document.getElementById('vks-modal-accent');
     const today = _getLocalDateStr(new Date());
+    if (e.completed) {
+        accent.className = 'vks-modal-accent status-completed';
+    } else if (!e.date || e.date < today) {
+        accent.className = 'vks-modal-accent status-missed';
+    } else {
+        accent.className = 'vks-modal-accent';
+    }
+
+    // Статус-бейдж
+    const statusEl = document.getElementById('event-modal-status');
+    statusEl.style.display = 'inline-flex';
     if (e.completed) {
         statusEl.className = 'modal-event-status status-completed';
         statusEl.innerHTML = '<span class="status-dot"></span>Завершено';
@@ -574,14 +614,15 @@ async function openEditEventModal(id) {
         statusEl.innerHTML = '<span class="status-dot"></span>В работе';
     }
 
-    // Состояние кнопки «Завершить»
+    // Кнопка «Завершить» — pill
     const completeBtn = document.getElementById('event-modal-complete-btn');
+    const pillLabel = completeBtn.querySelector('.pill-label');
     if (e.completed) {
         completeBtn.classList.add('active');
-        completeBtn.title = 'Снять завершение';
+        if (pillLabel) pillLabel.textContent = 'Завершено';
     } else {
         completeBtn.classList.remove('active');
-        completeBtn.title = 'Завершить';
+        if (pillLabel) pillLabel.textContent = 'Завершить';
     }
 
     document.getElementById('f-event-completed').checked = e.completed;
@@ -596,9 +637,19 @@ async function openEditEventModal(id) {
     document.getElementById('event-doc-upload').value = '';
     refreshEventDocs();
 
-    // Показать информацию об последнем изменении
-    const auditEl = document.getElementById('event-modal-audit');
-    if (auditEl && e.last_changed_by) {
+    // Кнопка «Перейти» — показать если есть URL
+    const urlGo = document.getElementById('event-url-go');
+    if (e.url) {
+        urlGo.href = e.url;
+        urlGo.style.display = 'inline-flex';
+    } else {
+        urlGo.style.display = 'none';
+    }
+
+    // Кнопка «Инфо» (будущая история изменений)
+    const auditBtn = document.getElementById('event-modal-audit-btn');
+    if (e.last_changed_by) {
+        auditBtn.style.display = 'inline-flex';
         const userName = e.last_changed_by || 'Неизвестно';
         const action = e.last_change_action || '';
         const date = e.last_changed_at ? new Date(e.last_changed_at).toLocaleString('ru-RU') : '';
@@ -608,10 +659,9 @@ async function openEditEventModal(id) {
             'complete': 'завершил',
             'delete': 'удалил'
         }[action] || action;
-        auditEl.textContent = `Последнее изменение: ${userName}, ${date} — ${actionText}`;
-        auditEl.style.display = 'block';
-    } else if (auditEl) {
-        auditEl.style.display = 'none';
+        auditBtn.title = `Последнее изменение: ${userName}, ${date} — ${actionText}`;
+    } else {
+        auditBtn.style.display = 'none';
     }
 
     document.getElementById('event-modal').classList.add('show');
@@ -619,6 +669,7 @@ async function openEditEventModal(id) {
 
 function closeEventModal() {
     document.getElementById('event-modal').classList.remove('show');
+    document.getElementById('event-url-go').style.display = 'none';
     pendingFiles = [];
     removedDocIds = [];
 }
@@ -629,22 +680,27 @@ function toggleEventComplete() {
     cb.checked = !cb.checked;
     const btn = document.getElementById('event-modal-complete-btn');
     const statusEl = document.getElementById('event-modal-status');
+    const pillLabel = btn.querySelector('.pill-label');
+    const accent = document.getElementById('vks-modal-accent');
     if (cb.checked) {
         btn.classList.add('active');
-        btn.title = 'Снять завершение';
+        if (pillLabel) pillLabel.textContent = 'Завершено';
         statusEl.className = 'modal-event-status status-completed';
         statusEl.innerHTML = '<span class="status-dot"></span>Завершено';
+        accent.className = 'vks-modal-accent status-completed';
     } else {
         btn.classList.remove('active');
-        btn.title = 'Завершить';
+        if (pillLabel) pillLabel.textContent = 'Завершить';
         const e = allEvents.find(x => x.id === editingEventId);
         const today = _getLocalDateStr(new Date());
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'modal-event-status status-missed';
             statusEl.innerHTML = '<span class="status-dot"></span>Пропущено';
+            accent.className = 'vks-modal-accent status-missed';
         } else {
             statusEl.className = 'modal-event-status status-active';
             statusEl.innerHTML = '<span class="status-dot"></span>В работе';
+            accent.className = 'vks-modal-accent';
         }
     }
 }
@@ -674,15 +730,18 @@ function refreshEventDocs() {
     if (all.length) {
         docsContainer.innerHTML = all.map(d => {
             const ext = (d.name || '').split('.').pop().toLowerCase();
-            const icon = getDocIcon(ext);
-            const action = d.pending
-                ? `<button class="event-doc-delete" onclick="event.stopPropagation();removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
-                : `<button class="event-doc-delete" onclick="event.stopPropagation();removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
+            const meta = getDocCardMeta(ext);
+            const deleteBtn = d.pending
+                ? `<button class="doc-card-delete" onclick="event.stopPropagation();removePendingFile('${d.id}')" title="Убрать"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`
+                : `<button class="doc-card-delete" onclick="event.stopPropagation();removeExistingDoc('${d.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>`;
             const clickAttr = d.pending ? '' : `onclick="event.stopPropagation();downloadDoc('${d.id}','${esc(d.name)}')"`;
-            return `<div class="event-doc-item ${d.pending ? '' : 'event-doc-downloadable'}" ${clickAttr}>${icon}<span class="event-doc-name">${esc(d.name)}</span>${d.size ? '<span class="event-doc-size">' + formatSize(d.size) + '</span>' : ''}${d.pending ? '<span class="event-doc-pending">новый</span>' : ''}${action}</div>`;
+            const pendingBadge = d.pending ? '<span class="doc-card-pending">новый</span>' : '';
+            const sizeText = d.size ? formatSize(d.size) : '';
+            const metaParts = [sizeText, pendingBadge].filter(Boolean).join(' · ');
+            return `<div class="doc-card-row"><div class="doc-card ${d.pending ? '' : 'event-doc-downloadable'}" ${clickAttr}><div class="doc-card-icon ${meta.cls}">${meta.label}</div><div class="doc-card-info"><div class="doc-card-name">${esc(d.name)}</div>${metaParts ? `<div class="doc-card-meta">${metaParts}</div>` : ''}</div></div>${deleteBtn}</div>`;
         }).join('');
     } else {
-        docsContainer.innerHTML = '<div class="event-docs-empty">Нет документов</div>';
+        docsContainer.innerHTML = '';
     }
 }
 

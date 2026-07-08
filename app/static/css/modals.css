@@ -96,6 +96,164 @@
   padding: 0 14px 14px 14px;
 }
 
+/* ─── VKS Modal: Compact Flat ────────────────────────────────── */
+.vks-modal-flat {
+  border-radius: 14px;
+}
+
+.vks-modal-accent {
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
+  flex-shrink: 0;
+}
+
+.vks-modal-accent.status-completed {
+  background: linear-gradient(90deg, var(--success), rgba(74,222,128,0.4));
+}
+
+.vks-modal-accent.status-missed {
+  background: linear-gradient(90deg, var(--danger), rgba(248,113,113,0.4));
+}
+
+.vks-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.vks-modal-title {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-header-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: var(--surface-strong);
+  color: var(--fg);
+  transform: translateY(-1px);
+}
+
+.icon-btn.danger:hover {
+  background: rgba(248,113,113,0.12);
+  border-color: rgba(248,113,113,0.25);
+  color: var(--danger);
+}
+
+.icon-btn.info:hover {
+  background: rgba(96,165,250,0.12);
+  border-color: rgba(96,165,250,0.25);
+  color: #60a5fa;
+}
+
+.form-separator {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-separator:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ─── URL Row ────────────────────────────────────────────────── */
+.url-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.url-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.url-go-btn {
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 36px;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.url-go-btn:hover {
+  background: rgba(34,211,238,0.1);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ─── Pill Button (complete in footer) ───────────────────────── */
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+  border: 1px solid transparent;
+  background: transparent;
+}
+
+.pill-btn.complete {
+  border-color: rgba(74,222,128,0.2);
+  color: var(--success);
+}
+
+.pill-btn.complete:hover {
+  background: rgba(74,222,128,0.12);
+  border-color: rgba(74,222,128,0.35);
+  transform: translateY(-1px);
+}
+
+.pill-btn.complete.active {
+  background: rgba(74,222,128,0.12);
+  border-color: rgba(74,222,128,0.35);
+}
+
+.footer-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* ─── Footer ────────────────────────────────────────────────────────── */
 .modal-footer {
   display: flex;

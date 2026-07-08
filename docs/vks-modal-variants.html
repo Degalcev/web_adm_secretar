@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="ru" data-panel-theme="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VKS Modal — 5 вариантов дизайна</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Montserrat:wght@100..900&display=swap" rel="stylesheet">
+<style>
+/* ─── Base Theme (из проекта) ────────────────────────────────────── */
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #22d3ee; }
+@property --accent-ambient { syntax: "<color>"; inherits: true; initial-value: #9775fa; }
+
+:root, :root[data-panel-theme="default"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --font-mono: "Fira Mono", ui-monospace, monospace;
+  --bg: #0d1117;
+  --bg-elevated: #1c2128;
+  --surface: rgba(36, 44, 56, 0.55);
+  --surface-strong: rgba(36, 44, 56, 0.85);
+  --border: rgba(139, 148, 158, 0.15);
+  --border-strong: rgba(34, 211, 238, 0.25);
+  --fg: #c9d1d9;
+  --fg-muted: #8b949e;
+  --fg-subtle: rgba(201, 209, 217, 0.55);
+  --accent: #22d3ee;
+  --accent-ambient: #9775fa;
+  --danger: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --motion-fast: 0.15s;
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+/* ─── Variant Selector ─────────────────────────────────────────── */
+.selector {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.selector h2 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.selector-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.selector-tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.selector-tab:hover { border-color: var(--accent); color: var(--fg); }
+.selector-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.variant-desc {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  line-height: 1.4;
+}
+
+.variant { display: none; }
+.variant.active { display: flex; justify-content: center; padding: 32px 16px 64px; min-height: 70vh; align-items: flex-start; }
+
+@media (max-width: 768px) {
+  .selector { padding: 12px 16px; }
+  .selector h2 { font-size: 0.9375rem; }
+  .variant { padding: 16px 8px 48px; }
+}
+
+/* ─── Shared Form Elements ─────────────────────────────────────── */
+input[type="text"], input[type="date"], input[type="time"],
+select, textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color var(--motion-fast) var(--ease-standard);
+  box-sizing: border-box;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select {
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+select option { background: var(--bg-elevated); }
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--fg-muted); margin-bottom: 0.375rem; }
+
+/* ─── Shared Buttons ───────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { filter: brightness(1.1); }
+.btn-ghost { background: transparent; color: var(--fg-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--fg-muted); color: var(--fg); }
+.btn-danger { background: rgba(248, 113, 113, 0.12); color: var(--danger); border: 1px solid rgba(248, 113, 113, 0.25); }
+.btn-danger:hover { background: rgba(248, 113, 113, 0.2); }
+
+.form-row { display: flex; gap: 12px; align-items: center; }
+.form-row + .form-row { margin-top: 10px; }
+.form-group { margin-bottom: 10px; }
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+</style>
+</head>
+<body>
+
+<!-- ─── Variant Selector ─────────────────────────────────────────── -->
+<div class="selector">
+  <h2>VKS Modal — 5 вариантов дизайна</h2>
+  <div class="selector-tabs">
+    <button class="selector-tab active" onclick="showVariant(0, this)">1. Glassmorphism</button>
+    <button class="selector-tab" onclick="showVariant(1, this)">2. Bottom Sheet</button>
+    <button class="selector-tab" onclick="showVariant(2, this)">3. Two-Column</button>
+    <button class="selector-tab" onclick="showVariant(3, this)">4. Stepper Wizard</button>
+    <button class="selector-tab" onclick="showVariant(4, this)">5. Compact Flat</button>
+  </div>
+  <div class="variant-desc" id="variant-desc">Стеклянные карточки с backdrop-filter blur, градиентные рамки, spacious layout</div>
+</div>
+
+<!-- ═══ VARIANT 1: Glassmorphism ════════════════════════════════════ -->
+<div class="variant active" id="v1">
+<div style="width:100%; max-width:560px;">
+
+  <!-- Overlay backdrop -->
+  <div style="
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(8px); z-index: 1;
+  "></div>
+
+  <!-- Modal -->
+  <div style="
+    position: relative; z-index: 2; width: 100%;
+    background: rgba(28, 33, 40, 0.85);
+    border: 1px solid rgba(139, 148, 158, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    overflow: hidden;
+  ">
+
+    <!-- Header -->
+    <div style="
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid rgba(139, 148, 158, 0.08);
+    ">
+      <div>
+        <div style="font-size: 0.6875rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Редактирование</div>
+        <div style="font-size: 1.125rem; font-weight: 700; color: var(--fg);">Видеоконференция</div>
+      </div>
+      <button style="
+        width: 36px; height: 36px; border-radius: 10px;
+        border: 1px solid var(--border); background: transparent;
+        color: var(--fg-muted); font-size: 1.25rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.15s;
+      " onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--fg-muted)'">&times;</button>
+    </div>
+
+    <!-- Status Bar -->
+    <div style="
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 24px;
+      background: rgba(251, 191, 36, 0.04);
+      border-bottom: 1px solid rgba(139, 148, 158, 0.06);
+    ">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="
+          width: 8px; height: 8px; border-radius: 50%;
+          background: var(--warning); box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+        "></div>
+        <span style="font-size: 0.8125rem; font-weight: 600; color: var(--warning);">В работе</span>
+        <span style="font-size: 0.6875rem; color: var(--fg-subtle);">· 15.07.2026 14:00</span>
+      </div>
+      <div style="display: flex; gap: 4px;">
+        <button style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(74, 222, 128, 0.2); background: transparent; color: var(--fg-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s;" title="Завершить"
+          onmouseover="this.style.background='rgba(74,222,128,0.1)';this.style.color='var(--success)'" onmouseout="this.style.background='transparent';this.style.color='var(--fg-muted)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+        <button style="width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(248, 113, 113, 0.15); background: transparent; color: var(--fg-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s;" title="Удалить"
+          onmouseover="this.style.background='rgba(248,113,113,0.1)';this.style.color='var(--danger)'" onmouseout="this.style.background='transparent';this.style.color='var(--fg-muted)'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div style="padding: 20px 24px; overflow-y: auto; max-height: 50vh; display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Glass Card: Schedule -->
+      <div style="
+        background: linear-gradient(135deg, rgba(36, 44, 56, 0.7), rgba(36, 44, 56, 0.4));
+        border: 1px solid rgba(34, 211, 238, 0.12);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(34, 211, 238, 0.1); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+          </div>
+          <span style="font-size: 0.8125rem; font-weight: 600; color: var(--fg);">Расписание</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-15"></div>
+          <div class="form-group flex-1"><label>Время *</label><input type="time" value="14:00"></div>
+        </div>
+      </div>
+
+      <!-- Glass Card: Participants -->
+      <div style="
+        background: linear-gradient(135deg, rgba(36, 44, 56, 0.7), rgba(36, 44, 56, 0.4));
+        border: 1px solid rgba(151, 117, 250, 0.12);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(151, 117, 250, 0.1); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-ambient)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <span style="font-size: 0.8125rem; font-weight: 600; color: var(--fg);">Участники</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+          <div class="form-group flex-1"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+        </div>
+      </div>
+
+      <!-- Glass Card: Details -->
+      <div style="
+        background: linear-gradient(135deg, rgba(36, 44, 56, 0.7), rgba(36, 44, 56, 0.4));
+        border: 1px solid rgba(139, 148, 158, 0.1);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+          <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <span style="font-size: 0.8125rem; font-weight: 600; color: var(--fg);">Подробности</span>
+        </div>
+        <div class="form-group">
+          <label>Описание</label>
+          <textarea rows="3" placeholder="Описание встречи..." style="background: rgba(13, 17, 23, 0.6);">Обсуждение планов на квартал</textarea>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Ссылка на встречу</label>
+          <input type="text" value="https://meet.example.com/vks-123" style="background: rgba(13, 17, 23, 0.6);">
+        </div>
+      </div>
+
+      <!-- Glass Card: Documents -->
+      <div style="
+        background: linear-gradient(135deg, rgba(36, 44, 56, 0.7), rgba(36, 44, 56, 0.4));
+        border: 1px solid rgba(139, 148, 158, 0.1);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      ">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <span style="font-size: 0.8125rem; font-weight: 600; color: var(--fg);">Документы</span>
+            <span style="font-size: 0.6875rem; color: var(--fg-subtle);">· 2 файла</span>
+          </div>
+          <button style="padding: 4px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: transparent; color: var(--fg); font-size: 0.6875rem; font-weight: 500; cursor: pointer; font-family: var(--font-sans);">+ Добавить</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(13,17,23,0.5); border: 1px solid var(--border); border-radius: 10px; transition: all 0.15s; cursor: pointer;"
+            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(248,113,113,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; color: var(--danger); flex-shrink: 0;">PDF</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.8125rem; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Приказ_о_реорганизации.pdf</div>
+              <div style="font-size: 0.6875rem; color: var(--fg-subtle);">245 KB</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(13,17,23,0.5); border: 1px solid var(--border); border-radius: 10px; cursor: pointer;"
+            onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(96, 165, 250, 0.1); display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; color: #60a5fa; flex-shrink: 0;">DOC</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 0.8125rem; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Протокол_совещания.docx</div>
+              <div style="font-size: 0.6875rem; color: var(--fg-subtle);">128 KB</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2" style="flex-shrink: 0;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Audit -->
+    <div style="padding: 0 24px 8px;">
+      <div style="font-size: 0.6875rem; color: var(--fg-subtle); padding: 6px 10px; background: rgba(13,17,23,0.4); border-radius: var(--radius-sm);">
+        Изменил: Иванов И.И. · 14.07.2026 16:32 — изменил
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 16px 24px;
+      border-top: 1px solid rgba(139, 148, 158, 0.08);
+    ">
+      <button class="btn btn-ghost">Отмена</button>
+      <button class="btn btn-primary">Сохранить</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ VARIANT 2: Bottom Sheet ═════════════════════════════════════ -->
+<div class="variant" id="v2">
+<div style="width:100%; max-width:480px; position: relative;">
+
+  <!-- Modal as Bottom Sheet -->
+  <div style="
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
+    margin-top: auto;
+  ">
+
+    <!-- Drag Handle -->
+    <div style="display: flex; justify-content: center; padding: 12px 0 4px;">
+      <div style="width: 40px; height: 4px; border-radius: 2px; background: var(--border);"></div>
+    </div>
+
+    <!-- Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 20px 16px;">
+      <div style="font-size: 1.0625rem; font-weight: 700;">Редактировать ВКС</div>
+      <button style="width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--surface); color: var(--fg-muted); font-size: 1.125rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+
+    <!-- Status Chips -->
+    <div style="display: flex; gap: 8px; padding: 0 20px 16px;">
+      <div style="
+        display: flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border-radius: 20px;
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.25);
+        font-size: 0.75rem; font-weight: 600; color: var(--warning);
+      ">
+        <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--warning);"></div>
+        В работе
+      </div>
+      <button style="
+        padding: 6px 12px; border-radius: 20px;
+        background: rgba(74, 222, 128, 0.08);
+        border: 1px solid rgba(74, 222, 128, 0.2);
+        color: var(--success); font-size: 0.75rem; font-weight: 600;
+        cursor: pointer; font-family: var(--font-sans);
+        transition: all 0.15s;
+      " onmouseover="this.style.background='rgba(74,222,128,0.15)'" onmouseout="this.style.background='rgba(74,222,128,0.08)'">
+        ✓ Завершить
+      </button>
+      <button style="
+        padding: 6px 12px; border-radius: 20px;
+        background: rgba(248, 113, 113, 0.08);
+        border: 1px solid rgba(248, 113, 113, 0.15);
+        color: var(--danger); font-size: 0.75rem; font-weight: 600;
+        cursor: pointer; font-family: var(--font-sans);
+        margin-left: auto;
+      ">Удалить</button>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div style="padding: 0 20px 20px; overflow-y: auto; max-height: 55vh; display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- Quick Info Row -->
+      <div style="
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      ">
+        <div style="
+          padding: 12px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+        ">
+          <div style="font-size: 0.625rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Дата и время</div>
+          <input type="date" value="2026-07-15" style="margin-bottom: 6px; font-size: 0.8125rem; padding: 0.5rem 0.625rem;">
+          <input type="time" value="14:00" style="font-size: 0.8125rem; padding: 0.5rem 0.625rem;">
+        </div>
+        <div style="
+          padding: 12px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+        ">
+          <div style="font-size: 0.625rem; font-weight: 600; color: var(--accent-ambient); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Место</div>
+          <select style="margin-bottom: 6px; font-size: 0.8125rem; padding: 0.5rem 0.625rem;"><option>Департамент ИТ</option></select>
+          <select style="font-size: 0.8125rem; padding: 0.5rem 0.625rem;"><option>Конференц-зал</option></select>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label style="display: block; font-size: 0.6875rem; font-weight: 600; color: var(--fg-muted); margin-bottom: 6px;">Описание</label>
+        <textarea rows="3" placeholder="Описание встречи..." style="font-size: 0.8125rem;">Обсуждение планов на квартал</textarea>
+      </div>
+
+      <!-- URL -->
+      <div>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 0.6875rem; font-weight: 600; color: var(--fg-muted); margin-bottom: 6px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Ссылка
+        </label>
+        <input type="text" value="https://meet.example.com/vks-123" style="font-size: 0.8125rem; padding: 0.5rem 0.625rem;">
+      </div>
+
+      <!-- Documents -->
+      <div>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 0.6875rem; font-weight: 600; color: var(--fg-muted); margin-bottom: 0;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Файлы (2)
+          </label>
+          <button style="padding: 3px 8px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: transparent; color: var(--accent); font-size: 0.625rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">+ Загрузить</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+            <span style="font-size: 0.625rem; font-weight: 700; color: var(--danger); background: rgba(248,113,113,0.1); padding: 2px 5px; border-radius: 4px;">PDF</span>
+            <span style="flex:1; font-size: 0.75rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Приказ_о_реорганизации.pdf</span>
+            <span style="font-size: 0.625rem; color: var(--fg-subtle);">245K</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+            <span style="font-size: 0.625rem; font-weight: 700; color: #60a5fa; background: rgba(96,165,250,0.1); padding: 2px 5px; border-radius: 4px;">DOC</span>
+            <span style="flex:1; font-size: 0.75rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Протокол_совещания.docx</span>
+            <span style="font-size: 0.625rem; color: var(--fg-subtle);">128K</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit -->
+      <div style="font-size: 0.625rem; color: var(--fg-subtle); padding: 6px 0; border-top: 1px solid var(--border);">
+        Изменил: Иванов И.И. · 14.07.2026 16:32
+      </div>
+
+    </div>
+
+    <!-- Sticky Footer -->
+    <div style="
+      display: flex; gap: 10px; padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    ">
+      <button class="btn btn-ghost" style="flex: 1;">Отмена</button>
+      <button class="btn btn-primary" style="flex: 2;">Сохранить</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ VARIANT 3: Two-Column ═══════════════════════════════════════ -->
+<div class="variant" id="v3">
+<div style="width:100%; max-width:720px;">
+
+  <div style="
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    overflow: hidden;
+  ">
+
+    <!-- Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border);">
+      <div style="font-size: 1.0625rem; font-weight: 700;">Редактировать ВКС</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); font-size: 0.6875rem; font-weight: 600; color: var(--warning);">
+          <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--warning);"></div>В работе
+        </div>
+        <button style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface); color: var(--fg-muted); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+      </div>
+    </div>
+
+    <!-- Two-Column Body -->
+    <div style="display: flex; min-height: 0;">
+
+      <!-- Left Column: Form -->
+      <div style="flex: 1.2; padding: 20px 24px; border-right: 1px solid var(--border); overflow-y: auto; max-height: 55vh;">
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+
+          <!-- Section: Schedule -->
+          <div>
+            <div style="font-size: 0.6875rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Расписание</div>
+            <div class="form-row">
+              <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-15"></div>
+              <div class="form-group flex-1"><label>Время *</label><input type="time" value="14:00"></div>
+            </div>
+          </div>
+
+          <!-- Section: Location -->
+          <div>
+            <div style="font-size: 0.6875rem; font-weight: 700; color: var(--accent-ambient); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Место проведения</div>
+            <div class="form-row">
+              <div class="form-group flex-1"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+              <div class="form-group flex-1"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div style="height: 1px; background: var(--border);"></div>
+
+          <!-- Description -->
+          <div>
+            <div style="font-size: 0.6875rem; font-weight: 700; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Описание</div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <textarea rows="3" placeholder="Подробное описание встречи...">Обсуждение планов на квартал</textarea>
+            </div>
+          </div>
+
+          <!-- URL -->
+          <div style="margin-bottom: 0;">
+            <div style="font-size: 0.6875rem; font-weight: 700; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">Ссылка</div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <input type="text" value="https://meet.example.com/vks-123" placeholder="https://meet.example.com/...">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Documents + Actions -->
+      <div style="flex: 0.8; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 55vh;">
+
+        <!-- Actions -->
+        <div style="
+          display: flex; gap: 8px;
+        ">
+          <button style="flex:1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 10px; background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.2); color: var(--success); font-size: 0.8125rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans); transition: all 0.15s;"
+            onmouseover="this.style.background='rgba(74,222,128,0.15)'" onmouseout="this.style.background='rgba(74,222,128,0.08)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершить
+          </button>
+          <button style="padding: 10px; border-radius: 10px; background: rgba(248, 113, 113, 0.06); border: 1px solid rgba(248, 113, 113, 0.12); color: var(--fg-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s;"
+            onmouseover="this.style.background='rgba(248,113,113,0.12)';this.style.color='var(--danger)'" onmouseout="this.style.background='rgba(248,113,113,0.06)';this.style.color='var(--fg-muted)'">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+          </button>
+        </div>
+
+        <!-- Documents -->
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+            <div style="font-size: 0.6875rem; font-weight: 700; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em;">Документы</div>
+            <button style="padding: 3px 8px; border-radius: var(--radius-sm); border: 1px dashed var(--border); background: transparent; color: var(--accent); font-size: 0.625rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">+ Добавить</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s;"
+              onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(248,113,113,0.08); display: flex; align-items: center; justify-content: center; font-size: 0.5625rem; font-weight: 700; color: var(--danger); flex-shrink: 0;">PDF</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.75rem; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Приказ_о_реорганизации.pdf</div>
+                <div style="font-size: 0.625rem; color: var(--fg-subtle);">245 KB · 14.07.2026</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.15s;"
+              onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(96,165,250,0.08); display: flex; align-items: center; justify-content: center; font-size: 0.5625rem; font-weight: 700; color: #60a5fa; flex-shrink: 0;">DOC</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-size: 0.75rem; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Протокол_совещания.docx</div>
+                <div style="font-size: 0.625rem; color: var(--fg-subtle);">128 KB · 14.07.2026</div>
+              </div>
+            </div>
+            <!-- Drop zone hint -->
+            <div style="
+              flex: 1; min-height: 60px;
+              display: flex; align-items: center; justify-content: center;
+              border: 2px dashed var(--border); border-radius: 10px;
+              color: var(--fg-subtle); font-size: 0.75rem;
+              transition: all 0.15s;
+            ">
+              <div style="text-align: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 4px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <div>Перетащите файлы</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit -->
+        <div style="font-size: 0.625rem; color: var(--fg-subtle); padding-top: 8px; border-top: 1px solid var(--border);">
+          Изменил: Иванов И.И. · 14.07.2026 16:32
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="display: flex; gap: 10px; justify-content: flex-end; padding: 14px 24px; border-top: 1px solid var(--border);">
+      <button class="btn btn-ghost">Отмена</button>
+      <button class="btn btn-primary">Сохранить</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ VARIANT 4: Stepper Wizard ═══════════════════════════════════ -->
+<div class="variant" id="v4">
+<div style="width:100%; max-width:520px;">
+
+  <div style="
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    overflow: hidden;
+  ">
+
+    <!-- Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border);">
+      <div style="font-size: 1.0625rem; font-weight: 700;">Редактировать ВКС</div>
+      <button style="width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--surface); color: var(--fg-muted); font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+
+    <!-- Stepper -->
+    <div style="padding: 20px 24px 16px;">
+      <div style="display: flex; align-items: center; gap: 0; position: relative;">
+        <!-- Step 1 (active) -->
+        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 1;">
+          <div style="
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--accent); color: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700;
+            box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+          ">1</div>
+          <div style="font-size: 0.625rem; font-weight: 600; color: var(--accent); margin-top: 6px;">Основное</div>
+        </div>
+        <!-- Line 1-2 -->
+        <div style="flex: 1; height: 2px; background: var(--border); margin: 0 -8px; margin-bottom: 18px;"></div>
+        <!-- Step 2 -->
+        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 1;">
+          <div style="
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--surface); border: 2px solid var(--border);
+            color: var(--fg-muted);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700;
+          ">2</div>
+          <div style="font-size: 0.625rem; font-weight: 600; color: var(--fg-muted); margin-top: 6px;">Описание</div>
+        </div>
+        <!-- Line 2-3 -->
+        <div style="flex: 1; height: 2px; background: var(--border); margin: 0 -8px; margin-bottom: 18px;"></div>
+        <!-- Step 3 -->
+        <div style="display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; z-index: 1;">
+          <div style="
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--surface); border: 2px solid var(--border);
+            color: var(--fg-muted);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 700;
+          ">3</div>
+          <div style="font-size: 0.625rem; font-weight: 600; color: var(--fg-muted); margin-top: 6px;">Файлы</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step Content (Step 1 active) -->
+    <div style="padding: 0 24px 20px; overflow-y: auto; max-height: 40vh;">
+      <div style="
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      ">
+        <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 16px; color: var(--fg);">Основная информация</div>
+        <div class="form-row">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-15"></div>
+          <div class="form-group flex-1"><label>Время *</label><input type="time" value="14:00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+          <div class="form-group flex-1"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Ссылка на встречу</label>
+          <input type="text" value="https://meet.example.com/vks-123" placeholder="https://meet.example.com/...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div style="display: flex; align-items: center; gap: 8px; padding: 0 24px 12px;">
+      <div style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2); font-size: 0.6875rem; font-weight: 600; color: var(--warning);">
+        <div style="width: 6px; height: 6px; border-radius: 50%; background: var(--warning);"></div>В работе
+      </div>
+      <div style="flex:1;"></div>
+      <button style="padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(74,222,128,0.2); background: transparent; color: var(--success); font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">✓ Завершить</button>
+      <button style="padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(248,113,113,0.15); background: transparent; color: var(--fg-muted); font-size: 0.6875rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">Удалить</button>
+    </div>
+
+    <!-- Footer -->
+    <div style="display: flex; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border);">
+      <button class="btn btn-ghost">Отмена</button>
+      <div style="flex: 1;"></div>
+      <button class="btn btn-ghost" style="opacity: 0.4; pointer-events: none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Назад
+      </button>
+      <button class="btn btn-primary">
+        Далее
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ VARIANT 5: Compact Flat ═════════════════════════════════════ -->
+<div class="variant" id="v5">
+<div style="width:100%; max-width:460px;">
+
+  <div style="
+    width: 100%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+    overflow: hidden;
+  ">
+
+    <!-- Thin Accent Bar -->
+    <div style="height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-ambient));"></div>
+
+    <!-- Compact Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="
+          padding: 3px 8px; border-radius: 6px;
+          background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2);
+          font-size: 0.625rem; font-weight: 700; color: var(--warning);
+          text-transform: uppercase; letter-spacing: 0.04em;
+        ">В работе</div>
+        <span style="font-size: 0.9375rem; font-weight: 700;">ВКС — 15.07.2026</span>
+      </div>
+      <button style="width: 28px; height: 28px; border-radius: 6px; border: none; background: var(--surface); color: var(--fg-muted); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+    </div>
+
+    <!-- Flat Form — No Section Cards -->
+    <div style="padding: 0 16px 16px; overflow-y: auto; max-height: 55vh;">
+
+      <!-- Inline row: Date + Time -->
+      <div style="
+        display: grid; grid-template-columns: 2fr 1fr; gap: 8px;
+        padding: 10px 0; border-bottom: 1px solid var(--border);
+      ">
+        <div><label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Дата *</label><input type="date" value="2026-07-15" style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px;"></div>
+        <div><label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Время *</label><input type="time" value="14:00" style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px;"></div>
+      </div>
+
+      <!-- Inline row: Org + Location -->
+      <div style="
+        display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        padding: 10px 0; border-bottom: 1px solid var(--border);
+      ">
+        <div><label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Организатор *</label><select style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px;"><option>Департамент ИТ</option></select></div>
+        <div><label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Локация *</label><select style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px;"><option>Конференц-зал</option></select></div>
+      </div>
+
+      <!-- Description -->
+      <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+        <label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Описание</label>
+        <textarea rows="2" placeholder="Описание встречи..." style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px; min-height: 48px;">Обсуждение планов на квартал</textarea>
+      </div>
+
+      <!-- URL -->
+      <div style="padding: 10px 0; border-bottom: 1px solid var(--border);">
+        <label style="font-size: 0.625rem; color: var(--fg-subtle); margin-bottom: 3px;">Ссылка</label>
+        <input type="text" value="https://meet.example.com/vks-123" style="padding: 0.4rem 0.6rem; font-size: 0.8125rem; border-radius: 8px;">
+      </div>
+
+      <!-- Documents — inline -->
+      <div style="padding: 10px 0 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 0.625rem; color: var(--fg-subtle);">2 документа</span>
+          <button style="padding: 2px 6px; border-radius: 4px; border: 1px dashed var(--border); background: transparent; color: var(--accent); font-size: 0.5625rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">+ Файл</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: var(--surface); border-radius: 6px;">
+            <span style="font-size: 0.5rem; font-weight: 700; color: var(--danger); background: rgba(248,113,113,0.1); padding: 1px 4px; border-radius: 3px;">PDF</span>
+            <span style="flex:1; font-size: 0.6875rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Приказ_о_реорганизации.pdf</span>
+            <span style="font-size: 0.5625rem; color: var(--fg-subtle);">245K</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: var(--surface); border-radius: 6px;">
+            <span style="font-size: 0.5rem; font-weight: 700; color: #60a5fa; background: rgba(96,165,250,0.1); padding: 1px 4px; border-radius: 3px;">DOC</span>
+            <span style="flex:1; font-size: 0.6875rem; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Протокол_совещания.docx</span>
+            <span style="font-size: 0.5625rem; color: var(--fg-subtle);">128K</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit -->
+      <div style="padding: 8px 0 0; margin-top: 8px; border-top: 1px solid var(--border); font-size: 0.5625rem; color: var(--fg-subtle);">
+        Изменил: Иванов И.И. · 14.07.2026 16:32
+      </div>
+
+    </div>
+
+    <!-- Compact Footer -->
+    <div style="display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border);">
+      <button class="btn btn-ghost" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">Отмена</button>
+      <div style="flex: 1;"></div>
+      <button style="padding: 0.5rem 0.75rem; border-radius: 8px; border: 1px solid rgba(74,222,128,0.2); background: transparent; color: var(--success); font-size: 0.75rem; font-weight: 600; cursor: pointer; font-family: var(--font-sans);">✓ Завершить</button>
+      <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8125rem;">Сохранить</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ─── Script ───────────────────────────────────────────────────── -->
+<script>
+const descriptions = [
+  'Стеклянные карточки с backdrop-filter blur, градиентные рамки, spacious layout',
+  'Bottom sheet (мобильный стиль): drag handle, 2-колоночные быстрые карточки, sticky footer',
+  'Двухколоночный layout: форма слева, документы + действия справа. На mobile — стакается',
+  'Пошаговый мастер (stepper): 3 шага с прогресс-индикатором — Основное / Описание / Файлы',
+  'Компактный flat: нет секций-карточек, горизонтальные разделители, минималистичный дизайн'
+];
+
+function showVariant(i, btn) {
+  document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.selector-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('v' + (i+1)).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('variant-desc').textContent = descriptions[i];
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ru" data-panel-theme="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VKS Modal — Финальный дизайн (все темы)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500;700&family=Montserrat:wght@100..900&display=swap" rel="stylesheet">
+<style>
+/* ═══ ALL PROJECT THEMES ════════════════════════════════════════ */
+@property --accent { syntax: "<color>"; inherits: true; initial-value: #22d3ee; }
+@property --accent-ambient { syntax: "<color>"; inherits: true; initial-value: #9775fa; }
+
+:root, :root[data-panel-theme="default"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --font-mono: "Fira Mono", ui-monospace, monospace;
+  --bg: #0d1117; --bg-elevated: #1c2128;
+  --surface: rgba(36,44,56,0.55); --surface-strong: rgba(36,44,56,0.85);
+  --border: rgba(139,148,158,0.15); --border-strong: rgba(34,211,238,0.25);
+  --fg: #c9d1d9; --fg-muted: #8b949e; --fg-subtle: rgba(201,209,217,0.55);
+  --accent: #22d3ee; --accent-ambient: #9775fa;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="midnight"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #0a1628; --bg-elevated: #0f1f35;
+  --surface: rgba(30,41,59,0.5); --surface-strong: rgba(30,41,59,0.82);
+  --border: rgba(148,163,184,0.14); --border-strong: rgba(96,165,250,0.28);
+  --fg: #e2e8f0; --fg-muted: #94a3b8; --fg-subtle: rgba(226,232,240,0.52);
+  --accent: #60a5fa; --accent-ambient: #818cf8;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="ember"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #140f0c; --bg-elevated: #1f1814;
+  --surface: rgba(55,42,36,0.55); --surface-strong: rgba(55,42,36,0.85);
+  --border: rgba(214,180,150,0.12); --border-strong: rgba(251,191,36,0.22);
+  --fg: #e8e0da; --fg-muted: #b9a99a; --fg-subtle: rgba(232,224,218,0.52);
+  --accent: #f59e0b; --accent-ambient: #f472b6;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="boreal"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #0a1412; --bg-elevated: #122620;
+  --surface: rgba(32,58,52,0.5); --surface-strong: rgba(32,58,52,0.84);
+  --border: rgba(134,180,168,0.14); --border-strong: rgba(45,212,191,0.24);
+  --fg: #d8ebe6; --fg-muted: #8eb5aa; --fg-subtle: rgba(216,235,230,0.52);
+  --accent: #14b8a6; --accent-ambient: #22c55e;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="web"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #05060a; --bg-elevated: #0c0f18;
+  --surface: rgba(255,255,255,0.04); --surface-strong: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.18);
+  --fg: #f5f7fb; --fg-muted: rgba(245,247,251,0.66); --fg-subtle: rgba(245,247,251,0.44);
+  --accent: #8577f2; --accent-ambient: #6c52c7;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="xuiClassic"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #0a1222; --bg-elevated: #151f31;
+  --surface: rgba(34,45,66,0.52); --surface-strong: rgba(34,45,66,0.84);
+  --border: rgba(44,57,80,0.45); --border-strong: rgba(0,135,113,0.32);
+  --fg: rgba(255,255,255,0.88); --fg-muted: #8b9cbb; --fg-subtle: rgba(255,255,255,0.48);
+  --accent: #008771; --accent-ambient: #3ad3ba;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="starWars"] {
+  color-scheme: dark;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #030508; --bg-elevated: #0a0e18;
+  --surface: rgba(18,24,42,0.55); --surface-strong: rgba(18,24,42,0.88);
+  --border: rgba(255,232,31,0.1); --border-strong: rgba(255,232,31,0.28);
+  --fg: #e8e4dc; --fg-muted: #9aa3b8; --fg-subtle: rgba(232,228,220,0.5);
+  --accent: #ffe81f; --accent-ambient: #c41e3a;
+  --danger: #f87171; --success: #4ade80; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-panel-theme="vision"] {
+  color-scheme: light;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", system-ui, sans-serif;
+  --bg: #f2f2f7; --bg-elevated: rgba(255,255,255,0.9);
+  --surface: rgba(255,255,255,0.8); --surface-strong: rgba(255,255,255,0.94);
+  --border: rgba(0,0,0,0.1); --border-strong: rgba(0,0,0,0.14);
+  --fg: #1c1c1e; --fg-muted: #48484a; --fg-subtle: #636366;
+  --accent: #007aff; --accent-ambient: #ff9f0a;
+  --danger: #f87171; --success: #34c759; --warning: #fbbf24;
+  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 14px;
+  --motion-fast: 0.15s; --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ═══ BASE STYLES ═══════════════════════════════════════════════ */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+
+/* ─── Theme Selector ─────────────────────────────────────────── */
+.theme-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.theme-bar h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.theme-bar .sub {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+.theme-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.theme-tab {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.theme-tab:hover { border-color: var(--accent); color: var(--fg); }
+.theme-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.theme-tab .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* ─── Modal Layout ───────────────────────────────────────────── */
+.modal-area {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 16px;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.35);
+  overflow: hidden;
+}
+
+/* ─── Accent Bar ─────────────────────────────────────────────── */
+.accent-bar { height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-ambient)); }
+.accent-bar-completed { background: linear-gradient(90deg, var(--success), rgba(74,222,128,0.4)); }
+.accent-bar-missed { background: linear-gradient(90deg, var(--danger), rgba(248,113,113,0.4)); }
+
+/* ─── Header ─────────────────────────────────────────────────── */
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 10px;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.header-title { font-size: 0.9375rem; font-weight: 700; color: var(--fg); }
+.header-actions { display: flex; gap: 6px; }
+
+/* ─── Status Badge ───────────────────────────────────────────── */
+.status-badge {
+  padding: 3px 8px; border-radius: 6px;
+  font-size: 0.625rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.status-active { background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.2); color: var(--warning); }
+.status-completed { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); color: var(--success); }
+.status-missed { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); color: var(--danger); }
+
+/* ─── Icon Buttons ───────────────────────────────────────────── */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--fg-muted); cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard); flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--surface-strong); color: var(--fg); transform: translateY(-1px); }
+.icon-btn.danger:hover { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.25); color: var(--danger); }
+.icon-btn.info:hover { background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.25); color: #60a5fa; }
+
+/* ─── Body ───────────────────────────────────────────────────── */
+.modal-body { padding: 0 16px 16px; }
+
+/* ─── Form ───────────────────────────────────────────────────── */
+.form-separator { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.form-separator:last-child { border-bottom: none; padding-bottom: 0; }
+.form-row { display: flex; gap: 8px; }
+.form-row + .form-row { margin-top: 10px; }
+.form-group { margin-bottom: 10px; }
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+.flex-2 { flex: 2; }
+.form-group label { display: block; font-size: 0.625rem; font-weight: 500; color: var(--fg-subtle); margin-bottom: 3px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 0.5rem 0.75rem;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--fg); font-family: var(--font-sans); font-size: 0.8125rem;
+  outline: none; transition: border-color var(--motion-fast) var(--ease-standard);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+.form-group select {
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.75rem center;
+  -webkit-appearance: none; appearance: none;
+}
+.form-group select option { background: var(--bg-elevated); }
+.form-group textarea { resize: vertical; min-height: 48px; line-height: 1.4; }
+.url-row { display: flex; gap: 6px; align-items: stretch; }
+.url-row input { flex: 1; min-width: 0; }
+.url-go-btn {
+  padding: 0 10px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--accent); font-family: var(--font-sans);
+  font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: all var(--motion-fast) var(--ease-standard); display: inline-flex;
+  align-items: center; flex-shrink: 0; min-width: 36px; justify-content: center;
+}
+.url-go-btn:hover {
+  background: rgba(34, 211, 238, 0.1); border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.url-go-btn svg { flex-shrink: 0; }
+
+/* ─── Documents ──────────────────────────────────────────────── */
+.docs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.docs-label { font-size: 0.625rem; color: var(--fg-subtle); font-weight: 500; }
+.docs-add-btn {
+  padding: 8px 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+.docs-add-btn:hover { border-color: var(--accent); background: rgba(34,211,238,0.08); }
+.docs-list { display: flex; flex-direction: column; gap: 4px; }
+
+/* ─── Doc Item ───────────────────────────────────────────────── */
+.doc-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+.doc-downloadable { cursor: pointer; position: relative; overflow: hidden; }
+.doc-downloadable::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.06), transparent);
+  transition: left 0.5s ease;
+}
+.doc-downloadable:hover {
+  border-color: var(--accent);
+  background: linear-gradient(90deg, rgba(34,211,238,0.08), rgba(151,117,250,0.05), var(--surface));
+  transform: translateX(2px);
+}
+.doc-downloadable:hover::before { left: 100%; }
+.doc-downloadable:hover .doc-download-icon { color: var(--accent); opacity: 1; }
+.doc-icon {
+  width: 32px; height: 32px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.5rem; font-weight: 700; flex-shrink: 0;
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+.doc-downloadable:hover .doc-icon { transform: scale(1.08); }
+.doc-icon-pdf { background: rgba(248,113,113,0.1); color: var(--danger); }
+.doc-icon-doc { background: rgba(96,165,250,0.1); color: #60a5fa; }
+.doc-info { flex: 1; min-width: 0; }
+.doc-name { font-size: 0.75rem; font-weight: 500; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-meta { font-size: 0.5625rem; color: var(--fg-subtle); }
+.doc-download-icon { color: var(--fg-subtle); opacity: 0.4; flex-shrink: 0; transition: all var(--motion-fast) var(--ease-standard); }
+.doc-delete-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; border: none;
+  background: transparent; color: var(--fg-subtle); cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard); flex-shrink: 0;
+}
+.doc-delete-btn:hover { background: rgba(248,113,113,0.12); color: var(--danger); }
+.doc-downloadable:hover .doc-delete-btn { opacity: 1; }
+.doc-delete-btn { opacity: 0.4; }
+
+/* ─── Footer ─────────────────────────────────────────────────── */
+.modal-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+}
+.footer-right { display: flex; gap: 8px; align-items: center; }
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 0.5rem 1rem; border-radius: 8px;
+  font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 600;
+  cursor: pointer; transition: all var(--motion-fast) var(--ease-standard); border: none;
+}
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(34,211,238,0.2); }
+.btn-ghost { background: transparent; color: var(--fg-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { border-color: var(--fg-muted); color: var(--fg); }
+
+.pill-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px; border-radius: 8px;
+  font-family: var(--font-sans); font-size: 0.6875rem; font-weight: 600;
+  cursor: pointer; transition: all var(--motion-fast) var(--ease-standard);
+  border: 1px solid transparent; background: transparent;
+}
+.pill-btn.complete { border-color: rgba(74,222,128,0.2); color: var(--success); }
+.pill-btn.complete:hover { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.35); transform: translateY(-1px); }
+.pill-btn.complete.active { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.35); }
+
+/* ─── Section Label ──────────────────────────────────────────── */
+.section-label {
+  font-size: 0.75rem; color: var(--fg-muted); margin-bottom: 12px;
+  text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+}
+
+/* ─── Doc Card Variant (standalone delete) ────────────────────── */
+.docs-card-list { display: flex; flex-direction: column; gap: 8px; }
+.doc-card-row {
+  display: flex; align-items: stretch; gap: 6px;
+}
+.doc-card {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+.doc-card::before {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.06), transparent);
+  transition: left 0.5s ease;
+}
+.doc-card:hover { border-color: var(--accent); }
+.doc-card:hover::before { left: 100%; }
+.doc-card:hover .doc-card-icon { transform: scale(1.08); }
+.doc-card:hover .doc-card-download { opacity: 1; color: var(--accent); }
+.doc-card-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.5rem; font-weight: 700; flex-shrink: 0;
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+.doc-card-info { flex: 1; min-width: 0; }
+.doc-card-name {
+  font-size: 0.8125rem; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.doc-card-meta { font-size: 0.625rem; color: var(--fg-subtle); margin-top: 1px; }
+.doc-card-download {
+  color: var(--fg-subtle); opacity: 0; flex-shrink: 0;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+.doc-card-delete {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; flex-shrink: 0;
+  border-radius: 8px; border: 1px solid rgba(248,113,113,0.12);
+  background: transparent; color: var(--fg-subtle); cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+.doc-card-delete:hover {
+  background: rgba(248,113,113,0.1);
+  border-color: rgba(248,113,113,0.3);
+  color: var(--danger);
+}
+
+/* ─── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .modal-container { border-radius: 12px; }
+  .modal-header { padding: 10px 12px 8px; }
+  .header-title { font-size: 0.8125rem; }
+  .modal-body { padding: 0 12px 12px; }
+  .modal-footer { padding: 8px 12px; flex-wrap: wrap; gap: 8px; }
+  .modal-footer .btn { flex: 1; justify-content: center; padding: 0.5rem; font-size: 0.8125rem; }
+  .icon-btn { width: 28px; height: 28px; }
+  .icon-btn svg { width: 12px; height: 12px; }
+  .form-row { flex-direction: column; gap: 10px; }
+  .form-group { flex: auto !important; }
+  .footer-right { flex: 1; }
+  .footer-right .btn { flex: 1; }
+  .pill-btn { flex: 1; justify-content: center; padding: 6px 10px; }
+  .header-actions { gap: 4px; }
+  .url-go-btn { min-width: 32px; padding: 0 8px; }
+  .doc-card-delete { width: 32px; }
+  .doc-card-delete svg { width: 12px; height: 12px; }
+  .theme-bar { padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Theme Selector ─────────────────────────────────────────── -->
+<div class="theme-bar">
+  <h2>VKS Modal — Compact Flat (все темы)</h2>
+  <div class="theme-tabs" id="theme-tabs">
+    <button class="theme-tab active" onclick="setTheme('default', this)"><span class="dot" style="background:#22d3ee"></span>Default</button>
+    <button class="theme-tab" onclick="setTheme('midnight', this)"><span class="dot" style="background:#60a5fa"></span>Midnight</button>
+    <button class="theme-tab" onclick="setTheme('ember', this)"><span class="dot" style="background:#f59e0b"></span>Ember</button>
+    <button class="theme-tab" onclick="setTheme('boreal', this)"><span class="dot" style="background:#14b8a6"></span>Boreal</button>
+    <button class="theme-tab" onclick="setTheme('web', this)"><span class="dot" style="background:#8577f2"></span>Web</button>
+    <button class="theme-tab" onclick="setTheme('xuiClassic', this)"><span class="dot" style="background:#008771"></span>XuiClassic</button>
+    <button class="theme-tab" onclick="setTheme('starWars', this)"><span class="dot" style="background:#ffe81f"></span>StarWars</button>
+    <button class="theme-tab" onclick="setTheme('vision', this)"><span class="dot" style="background:#007aff"></span>Vision</button>
+  </div>
+  <div class="sub">3 состояния: Активное · Завершённое · Пропущенное</div>
+</div>
+
+<!-- ═══ STATE 1: Active (В работе) ═════════════════════════════ -->
+<div class="modal-area">
+  <div style="width:100%; max-width:460px;">
+    <div class="section-label">Активное событие</div>
+    <div class="modal-container">
+      <div class="accent-bar"></div>
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="status-badge status-active">В работе</div>
+          <span class="header-title">ВКС — 15.07.2026</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn info" title="История изменений">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Удалить событие">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="icon-btn" title="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row form-separator">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-15"></div>
+          <div class="form-group"><label>Время *</label><input type="time" value="14:00"></div>
+        </div>
+        <div class="form-row form-separator">
+          <div class="form-group"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+          <div class="form-group"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+        </div>
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <textarea rows="2" placeholder="Описание встречи...">Обсуждение планов на квартал</textarea>
+        </div>
+        <div class="form-separator form-group">
+          <label>Ссылка</label>
+          <div class="url-row">
+            <input type="text" value="https://meet.example.com/vks-123" placeholder="https://meet.example.com/...">
+            <a class="url-go-btn" href="https://meet.example.com/vks-123" target="_blank" rel="noopener" title="Открыть ссылку">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="form-separator">
+          <div class="docs-header">
+            <span class="docs-label">2 документа</span>
+          </div>
+          <div class="docs-list">
+            <div class="doc-item doc-downloadable">
+              <div class="doc-icon doc-icon-pdf">PDF</div>
+              <div class="doc-info"><div class="doc-name">Приказ_о_реорганизации.pdf</div><div class="doc-meta">245 KB</div></div>
+              <svg class="doc-download-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <button class="doc-delete-btn" title="Удалить документ" onclick="event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+            <div class="doc-item doc-downloadable">
+              <div class="doc-icon doc-icon-doc">DOC</div>
+              <div class="doc-info"><div class="doc-name">Протокол_совещания.docx</div><div class="doc-meta">128 KB</div></div>
+              <svg class="doc-download-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <button class="doc-delete-btn" title="Удалить документ" onclick="event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="docs-add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить документ
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost">Отмена</button>
+        <div class="footer-right">
+          <button class="pill-btn complete">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершить
+          </button>
+          <button class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STATE 2: Completed (Завершено) ═════════════════════════ -->
+<div class="modal-area">
+  <div style="width:100%; max-width:460px;">
+    <div class="section-label">Завершённое событие</div>
+    <div class="modal-container">
+      <div class="accent-bar accent-bar-completed"></div>
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="status-badge status-completed">Завершено</div>
+          <span class="header-title">ВКС — 10.07.2026</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn info" title="История изменений">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Удалить событие">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="icon-btn" title="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row form-separator">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-10"></div>
+          <div class="form-group"><label>Время *</label><input type="time" value="10:00"></div>
+        </div>
+        <div class="form-row form-separator">
+          <div class="form-group"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+          <div class="form-group"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+        </div>
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <textarea rows="2">Подведение итогов квартала</textarea>
+        </div>
+        <div class="form-separator form-group">
+          <label>Ссылка</label>
+          <div class="url-row">
+            <input type="text" value="https://meet.example.com/vks-456">
+            <a class="url-go-btn" href="https://meet.example.com/vks-456" target="_blank" rel="noopener" title="Открыть ссылку">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="form-separator">
+          <div class="docs-header">
+            <span class="docs-label">1 документ</span>
+          </div>
+          <div class="docs-list">
+            <div class="doc-item doc-downloadable">
+              <div class="doc-icon doc-icon-pdf">PDF</div>
+              <div class="doc-info"><div class="doc-name">Итоги_квартала.pdf</div><div class="doc-meta">512 KB</div></div>
+              <svg class="doc-download-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <button class="doc-delete-btn" title="Удалить документ" onclick="event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+               </button>
+            </div>
+          </div>
+          <button class="docs-add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить документ
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost">Отмена</button>
+        <div class="footer-right">
+          <button class="pill-btn complete active">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершено
+          </button>
+          <button class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ STATE 3: Missed (Пропущено) ═══════════════════════════ -->
+<div class="modal-area">
+  <div style="width:100%; max-width:460px;">
+    <div class="section-label">Пропущенное событие</div>
+    <div class="modal-container">
+      <div class="accent-bar accent-bar-missed"></div>
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="status-badge status-missed">Пропущено</div>
+          <span class="header-title">ВКС — 01.07.2026</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn info" title="История изменений">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Удалить событие">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="icon-btn" title="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row form-separator">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-01"></div>
+          <div class="form-group"><label>Время *</label><input type="time" value="16:30"></div>
+        </div>
+        <div class="form-row form-separator">
+          <div class="form-group"><label>Организатор *</label><select><option>Отдел безопасности</option></select></div>
+          <div class="form-group"><label>Локация *</label><select><option>Зал совещаний</option></select></div>
+        </div>
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <textarea rows="2">Совещание по вопросам ИБ</textarea>
+        </div>
+        <div class="form-separator">
+          <div class="docs-header">
+            <span class="docs-label">0 документов</span>
+          </div>
+          <button class="docs-add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить документ
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost">Отмена</button>
+        <div class="footer-right">
+          <button class="pill-btn complete">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершить
+          </button>
+          <button class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT: Documents with standalone delete buttons ═══════ -->
+<div class="modal-area">
+  <div style="width:100%; max-width:460px;">
+    <div class="section-label">Вариант: документы с отдельной кнопкой удалить</div>
+    <div class="modal-container">
+      <div class="accent-bar"></div>
+      <div class="modal-header">
+        <div class="header-left">
+          <div class="status-badge status-active">В работе</div>
+          <span class="header-title">ВКС — 15.07.2026</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn info" title="История изменений">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </button>
+          <button class="icon-btn danger" title="Удалить событие">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </button>
+          <button class="icon-btn" title="Закрыть">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="form-row form-separator">
+          <div class="form-group flex-2"><label>Дата *</label><input type="date" value="2026-07-15"></div>
+          <div class="form-group"><label>Время *</label><input type="time" value="14:00"></div>
+        </div>
+        <div class="form-row form-separator">
+          <div class="form-group"><label>Организатор *</label><select><option>Департамент ИТ</option></select></div>
+          <div class="form-group"><label>Локация *</label><select><option>Конференц-зал</option></select></div>
+        </div>
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <textarea rows="2" placeholder="Описание встречи...">Обсуждение планов на квартал</textarea>
+        </div>
+        <div class="form-separator form-group">
+          <label>Ссылка</label>
+          <div class="url-row">
+            <input type="text" value="https://meet.example.com/vks-123" placeholder="https://meet.example.com/...">
+            <a class="url-go-btn" href="https://meet.example.com/vks-123" target="_blank" rel="noopener" title="Открыть ссылку">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="form-separator">
+          <div class="docs-header">
+            <span class="docs-label">2 документа</span>
+          </div>
+          <div class="docs-card-list">
+            <!-- Card 1 -->
+            <div class="doc-card-row">
+              <div class="doc-card">
+                <div class="doc-card-icon doc-icon-pdf">PDF</div>
+                <div class="doc-card-info">
+                  <div class="doc-card-name">Приказ_о_реорганизации_в_связи_с_акцией_слияния.pdf</div>
+                  <div class="doc-card-meta">245 KB · 14.07.2026</div>
+                </div>
+                <svg class="doc-card-download" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <button class="doc-card-delete" title="Удалить документ" onclick="event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+            <!-- Card 2 -->
+            <div class="doc-card-row">
+              <div class="doc-card">
+                <div class="doc-card-icon doc-icon-doc">DOC</div>
+                <div class="doc-card-info">
+                  <div class="doc-card-name">Протокол_совещания_по_вопросам_инфраструктуры.docx</div>
+                  <div class="doc-card-meta">128 KB · 14.07.2026</div>
+                </div>
+                <svg class="doc-card-download" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <button class="doc-card-delete" title="Удалить документ" onclick="event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="docs-add-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить документ
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost">Отмена</button>
+        <div class="footer-right">
+          <button class="pill-btn complete">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Завершить
+          </button>
+          <button class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Script ═══════════════════════════════════════════════════ -->
+<script>
+function setTheme(name, btn) {
+  document.documentElement.setAttribute('data-panel-theme', name);
+  document.querySelectorAll('.theme-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>

@@ -518,6 +518,100 @@
   color: var(--accent);
 }
 
+/* ─── Doc Cards (standalone delete) ──────────────────────────── */
+.doc-card-list { display: flex; flex-direction: column; gap: 8px; }
+
+.doc-card-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.doc-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+
+.doc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.06), transparent);
+  transition: left 0.5s ease;
+}
+
+.doc-card:hover { border-color: var(--accent); }
+.doc-card:hover::before { left: 100%; }
+.doc-card:hover .doc-card-icon { transform: scale(1.08); }
+
+.doc-card-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.5rem; font-weight: 700; flex-shrink: 0;
+  transition: transform var(--motion-fast) var(--ease-standard);
+}
+
+.doc-card-icon.pdf { background: rgba(248,113,113,0.1); color: var(--danger); }
+.doc-card-icon.doc { background: rgba(96,165,250,0.1); color: #60a5fa; }
+.doc-card-icon.xls { background: rgba(74,222,128,0.1); color: var(--success); }
+.doc-card-icon.ppt { background: rgba(251,191,36,0.1); color: var(--warning); }
+.doc-card-icon.txt { background: var(--surface-strong); color: var(--fg-muted); }
+.doc-card-icon.zip { background: rgba(168,85,247,0.1); color: #a855f7; }
+.doc-card-icon.img { background: rgba(6,182,212,0.1); color: #06b6d4; }
+.doc-card-icon.default { background: var(--surface-strong); color: var(--fg-muted); }
+
+.doc-card-info { flex: 1; min-width: 0; }
+
+.doc-card-name {
+  font-size: 0.8125rem; font-weight: 500; color: var(--fg);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.doc-card-meta { font-size: 0.625rem; color: var(--fg-subtle); margin-top: 1px; }
+
+.doc-card-pending {
+  font-size: 0.5625rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 2px 6px; border-radius: var(--radius-sm);
+  background: rgba(34,211,238,0.12); color: var(--accent);
+}
+
+.doc-card-delete {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; flex-shrink: 0;
+  border-radius: 8px; border: 1px solid rgba(248,113,113,0.12);
+  background: transparent; color: var(--fg-subtle); cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+
+.doc-card-delete:hover {
+  background: rgba(248,113,113,0.1);
+  border-color: rgba(248,113,113,0.3);
+  color: var(--danger);
+}
+
+.doc-add-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 12px; margin-top: 10px;
+  border-radius: 8px; border: 1px dashed var(--border);
+  background: transparent; color: var(--accent);
+  font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 600;
+  cursor: pointer; width: 100%;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+
+.doc-add-btn:hover { border-color: var(--accent); background: rgba(34,211,238,0.08); }
+
 /* ─── Modal Completed Checkbox ──────────────────────────────────── */
 .event-modal-audit {
   font-size: 0.6875rem;
