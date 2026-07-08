@@ -196,13 +196,13 @@
   .event-doc-download { flex-shrink: 0; }
   .event-doc-delete { flex-shrink: 0; }
 
-  /* Dashboard — 2x2 cards, compact */
+  /* Dashboard — 2x2 cards, compact, centered */
   .dash-cards { grid-template-columns: repeat(2, 1fr); gap: 0.375rem; margin-bottom: 0.75rem; }
-  .dash-card { padding: 0.5rem 0.625rem; gap: 0.375rem; }
-  .dash-card-icon { width: 28px; height: 28px; border-radius: 7px; }
-  .dash-card-icon svg { width: 16px; height: 16px; }
-  .dash-card-value { font-size: 1rem; }
-  .dash-card-label { font-size: 0.625rem; }
+  .dash-card { padding: 0.5rem; gap: 0.25rem; align-items: center; text-align: center; }
+  .dash-card-icon { width: 24px; height: 24px; border-radius: 6px; }
+  .dash-card-icon svg { width: 14px; height: 14px; }
+  .dash-card-value { font-size: 0.875rem; }
+  .dash-card-label { font-size: 0.5625rem; }
   .dash-section { padding: 0.625rem; }
   .dash-section-title { font-size: 0.75rem; margin-bottom: 0.5rem; }
   .dash-row { gap: 0.5rem; margin-bottom: 0.75rem; }
@@ -231,8 +231,8 @@
   /* Stats — keep 2 columns */
   .stats-row { grid-template-columns: repeat(2, 1fr); }
 
-  /* Dashboard — keep 2 columns */
-  .dash-cards { grid-template-columns: repeat(2, 1fr); }
+  /* Dashboard — single column */
+  .dash-cards { grid-template-columns: 1fr; }
 
   /* Modal body — even tighter */
   .modal-body { padding: 0.375rem; margin: 0.375rem; gap: 0.375rem; }
