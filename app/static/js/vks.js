@@ -382,51 +382,96 @@ function renderVksCard(e, blockType) {
     const date = e.date || '';
     const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
     const loc = e.location_id ? getLocationName(e.location_id) : '';
-    const docCount = e.documents ? e.documents.length : 0;
+    const docs = e.documents || [];
+
+    // Stripe class
+    let stripeClass = 'active';
+    if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
+    else if (e.completed) stripeClass = 'completed';
 
     let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
-    html += `<div class="vks-card-left">`;
+
+    // Stripe
+    html += `<div class="vks-stripe ${stripeClass}"></div>`;
+
+    html += `<div class="vks-card-content">`;
+
+    // Time block
+    html += `<div class="vks-time-block">`;
     html += `<div class="vks-card-time">${time}</div>`;
     if (date) {
         const d = new Date(date);
         const day = d.getDate();
-        const monthNames = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-        const month = monthNames[d.getMonth()];
-        const year = d.getFullYear();
-        html += `<div class="vks-card-date">${day} ${month} ${year}</div>`;
-    }
-    if (blockType === 'missed' && !e.completed) {
-        html += `<div class="vks-card-status badge red"><span class="badge-dot"></span>Пропущено</div>`;
-    } else if (e.completed) {
-        html += `<div class="vks-card-status badge green"><span class="badge-dot"></span>Завершено</div>`;
-    } else {
-        html += `<div class="vks-card-status badge amber"><span class="badge-dot"></span>В работе</div>`;
+        const monthNames = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        html += `<div class="vks-card-date">${day} ${monthNames[d.getMonth()]}</div>`;
     }
     html += `</div>`;
+
+    // Body
     html += `<div class="vks-card-body">`;
     if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
+
+    // Meta: badge + tags + link
     html += `<div class="vks-card-meta">`;
-    if (org) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
-    if (loc) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
-    if (docCount > 0) html += `<span class="vks-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount} док.</span>`;
-    html += `</div>`;
-    if (e.url) html += `<a class="vks-card-url" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Открыть ссылку</a>`;
-    if (e.documents && e.documents.length) {
-        html += `<div class="vks-card-docs">`;
-        e.documents.forEach(d => {
-            const ext = (d.name || '').split('.').pop().toLowerCase();
-            const icon = getDocIcon(ext);
-            html += `<div class="vks-doc-item" onclick="event.stopPropagation();downloadDoc('${d.id}','${esc(d.name)}')" title="Скачать ${esc(d.name)}">${icon}<span>${esc(d.name)}</span>${d.size ? '<span class="vks-doc-size">' + formatSize(d.size) + '</span>' : ''}</div>`;
-        });
-        html += `</div>`;
+    if (blockType === 'missed' && !e.completed) {
+        html += `<span class="badge red"><span class="badge-dot"></span>Пропущено</span>`;
+    } else if (e.completed) {
+        html += `<span class="badge green"><span class="badge-dot"></span>Завершено</span>`;
+    } else {
+        html += `<span class="badge amber"><span class="badge-dot"></span>В работе</span>`;
     }
+    if (org) html += `<span class="vks-tag org"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
+    if (loc) html += `<span class="vks-tag loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
+    if (e.url) html += `<a class="vks-link-icon" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>`;
     html += `</div>`;
+
+    // Documents: first 3 collapsed + "ещё N" + all expanded
+    if (docs.length) {
+        const SHOW_FIRST = 3;
+        const remaining = docs.length - SHOW_FIRST;
+
+        // Collapsed: first 3 + "ещё N"
+        html += `<div class="vks-card-docs vks-docs-collapsed">`;
+        docs.slice(0, SHOW_FIRST).forEach(d => {
+            html += renderDocChip(d);
+        });
+        if (remaining > 0) {
+            html += `<span class="vks-doc-more" onclick="event.stopPropagation();toggleVksDocs(this)">+${remaining} ещё</span>`;
+        }
+        html += `</div>`;
+
+        // Expanded: all docs
+        if (remaining > 0) {
+            html += `<div class="vks-card-docs vks-docs-expanded">`;
+            docs.forEach(d => {
+                html += renderDocChip(d);
+            });
+            html += `</div>`;
+        }
+    }
+
+    html += `</div>`; // vks-card-body
+
+    // Actions
     html += `<div class="vks-card-actions">`;
-    html += `<button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();confirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span class="btn-label">Готово</span></button>`;
-    html += `<button class="btn-icon danger" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg><span class="btn-label">Удалить</span></button>`;
+    html += `<button class="${e.completed ? 'done' : ''}" onclick="event.stopPropagation();confirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>`;
+    html += `<button class="del" onclick="event.stopPropagation();openConfirmEvent('${e.id}')" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>`;
     html += `</div>`;
-    html += `</div>`;
+
+    html += `</div>`; // vks-card-content
+    html += `</div>`; // vks-card
     return html;
+}
+
+function renderDocChip(d) {
+    const ext = (d.name || '').split('.').pop().toLowerCase();
+    const icon = getDocIcon(ext);
+    return `<a class="vks-doc-chip" href="#" onclick="event.stopPropagation();downloadDoc('${d.id}','${esc(d.name)}');return false" title="Скачать ${esc(d.name)}">${icon}<span class="vks-doc-chip-name">${esc(d.name)}</span>${d.size ? '<span class="vks-doc-chip-size">' + formatSize(d.size) + '</span>' : ''}</a>`;
+}
+
+function toggleVksDocs(btn) {
+    const card = btn.closest('.vks-card');
+    if (card) card.classList.toggle('docs-expanded');
 }
 
 function getOrganizerName(id) {
