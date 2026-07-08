@@ -122,6 +122,8 @@ async function logout() {
     if (typeof allLocations !== 'undefined') allLocations = [];
     const userEl = document.getElementById('topbar-user');
     if (userEl) userEl.style.display = 'none';
+    // Сброс раскрытия меню
+    document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
     showLogin();
     window.history.replaceState(null, '', '/');
 }
