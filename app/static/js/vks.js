@@ -557,6 +557,25 @@ async function openEditEventModal(id) {
     document.getElementById('f-event-docs-group').style.display = 'block';
     document.getElementById('event-doc-upload').value = '';
     refreshEventDocs();
+
+    // Показать информацию об последнем изменении
+    const auditEl = document.getElementById('event-modal-audit');
+    if (auditEl && e.last_changed_by) {
+        const userName = e.last_changed_by || 'Неизвестно';
+        const action = e.last_change_action || '';
+        const date = e.last_changed_at ? new Date(e.last_changed_at).toLocaleString('ru-RU') : '';
+        const actionText = {
+            'create': 'создал',
+            'update': 'изменил',
+            'complete': 'завершил',
+            'delete': 'удалил'
+        }[action] || action;
+        auditEl.textContent = `Последнее изменение: ${userName}, ${date} — ${actionText}`;
+        auditEl.style.display = 'block';
+    } else if (auditEl) {
+        auditEl.style.display = 'none';
+    }
+
     document.getElementById('event-modal').classList.add('show');
 }
 

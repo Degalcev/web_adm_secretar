@@ -99,6 +99,18 @@ def admin_required(handler):
     return wrapper
 
 
+def auth_required(handler):
+    @wraps(handler)
+    async def wrapper(request: web.Request):
+        token = request.cookies.get('admin_token')
+        user = await validate_session(token)
+        if not user or user.status not in ('admin', 'user'):
+            return web.json_response({'error': 'Доступ запрещён'}, status=401)
+        request['user'] = user
+        return await handler(request)
+    return wrapper
+
+
 # ─── Auth Handlers ──────────────────────────────────────────────────────
 
 async def admin_login(request: web.Request) -> web.Response:
@@ -118,9 +130,9 @@ async def admin_login(request: web.Request) -> web.Response:
 
         user = await get_user_by_max_id(int(max_id))
 
-        if not user or user.status != 'admin':
-            logger.warning('Попытка входа не-администратора с max_id: {}', max_id)
-            return web.json_response({'ok': False, 'error': 'Доступ только для администраторов'}, status=403)
+        if not user:
+            logger.warning('Пользователь не найден: {}', max_id)
+            return web.json_response({'ok': False, 'error': 'Пользователь не найден'}, status=404)
 
         if not user.password:
             if password != DEFAULT_ADMIN_PASSWORD:
@@ -153,7 +165,7 @@ async def admin_login(request: web.Request) -> web.Response:
             max_age=86400,
             samesite='Lax'
         )
-        logger.info('Администратор {} вошёл в панель', max_id)
+        logger.info('Пользователь {} (role={}) вошёл в панель', max_id, user.status)
         return response
 
     except Exception as e:

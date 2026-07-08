@@ -20,6 +20,15 @@ function toggleGroup(header) {
 function switchPage(page) {
     currentPage = page;
 
+    // Проверка прав: non-admin не может зайти в Администрирование
+    if (window.currentUserRole !== 'admin') {
+        const adminPages = ['users', 'organizers', 'locations', 'logs'];
+        if (adminPages.includes(page)) {
+            navigateTo('/panel/');
+            return;
+        }
+    }
+
     // Подсветка активного пункта меню
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
@@ -103,6 +112,22 @@ function closeMobileMenu() {
     overlay.classList.remove('show');
     sidebar.classList.remove('open');
     document.body.style.overflow = '';
+}
+
+// ─── Role Restrictions ────────────────────────────────────────────
+function applyRoleRestrictions() {
+    if (window.currentUserRole !== 'admin') {
+        // Скрыть nav-group "Администрирование" и "Настройки"
+        document.querySelectorAll('.nav-group').forEach(group => {
+            const header = group.querySelector('.nav-group-header');
+            if (header) {
+                const text = header.textContent || '';
+                if (text.includes('Администрирование') || text.includes('Настройки')) {
+                    group.style.display = 'none';
+                }
+            }
+        });
+    }
 }
 
 // ─── Filter Toggle (mobile) ──────────────────────────────────────

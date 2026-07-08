@@ -46,12 +46,29 @@ async function checkAuth() {
     const resp = await fetch(`${BASE_URL}/admin/api/users`);
     if (resp.status === 200) {
         isAuthenticated = true;
+        // Получить роль текущего пользователя
+        try {
+            const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
+            if (meResp.ok) {
+                const me = await meResp.json();
+                window.currentUserRole = me.status || 'user';
+                window.currentUserName = me.first_name || me.last_name || me.name || '';
+            } else {
+                window.currentUserRole = 'admin';
+            }
+        } catch (e) {
+            window.currentUserRole = 'admin';
+        }
         // Авторизован — перейти на текущий URL или conferences
         const path = getRouteFromURL();
         if (path === '/') {
             navigateTo('/panel/', false);
         } else {
             navigateTo(path, false);
+        }
+        // Применить ограничения ролей
+        if (typeof applyRoleRestrictions === 'function') {
+            applyRoleRestrictions();
         }
     }
 }

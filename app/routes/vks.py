@@ -2,8 +2,8 @@ from aiohttp import web
 from loguru import logger
 from datetime import date, datetime, timedelta, time
 
-from app.auth import admin_required, require_csrf
-from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids
+from app.auth import admin_required, auth_required, require_csrf
+from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
 from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
 
@@ -21,7 +21,21 @@ async def get_events_handler(request: web.Request) -> web.Response:
         data = []
         event_ids = [e.id for e in events]
         docs_map = await get_documents_by_event_ids(event_ids)
+
+        # Resolve audit user names
+        audit_user_ids = set()
         for e in events:
+            if e.last_changed_by:
+                audit_user_ids.add(e.last_changed_by)
+        audit_users = {}
+        for uid in audit_user_ids:
+            u = await get_user_by_id(uid)
+            if u:
+                name_parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
+                audit_users[uid] = ' '.join(p for p in name_parts if p).strip() or u.name or u.username or str(u.max_id)
+
+        for e in events:
+            changed_by_name = audit_users.get(e.last_changed_by, '') if e.last_changed_by else ''
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -34,6 +48,9 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'completed': e.completed,
                 'notification': e.notification,
                 'documents': docs_map.get(e.id, []),
+                'last_changed_by': changed_by_name,
+                'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
+                'last_change_action': e.last_change_action or '',
             })
         logger.debug('Загружено {} событий', len(data))
         return web.json_response(data)
@@ -65,13 +82,22 @@ async def _parse_event_from_multipart(request: web.Request) -> dict:
     return {'fields': fields, 'files': files}
 
 
-@admin_required
+@auth_required
 @require_csrf
 async def create_event_handler(request: web.Request) -> web.Response:
     try:
         parsed = await _parse_event_from_multipart(request)
         fields = parsed['fields']
         files = parsed['files']
+
+        user = request.get('user')
+        audit_data = {}
+        if user:
+            audit_data = {
+                'last_changed_by': user.id,
+                'last_changed_at': datetime.utcnow(),
+                'last_change_action': 'create',
+            }
 
         event_id = await add_event(
             type=fields.get('type', 'ВКС'),
@@ -83,6 +109,7 @@ async def create_event_handler(request: web.Request) -> web.Response:
             description=fields.get('description', ''),
             completed=fields.get('completed', 'false') == 'true',
             notification=fields.get('notification', 'true') == 'true',
+            **audit_data,
         )
         logger.info('Событие создано: {}', event_id)
 
@@ -96,7 +123,7 @@ async def create_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
+@auth_required
 @require_csrf
 async def update_event_handler(request: web.Request) -> web.Response:
     try:
@@ -116,6 +143,12 @@ async def update_event_handler(request: web.Request) -> web.Response:
                     update_data[field] = fields[field] == 'true'
                 else:
                     update_data[field] = fields[field]
+
+        user = request.get('user')
+        if user:
+            update_data['last_changed_by'] = user.id
+            update_data['last_changed_at'] = datetime.utcnow()
+            update_data['last_change_action'] = 'update'
 
         await update_event(event_id=event_id, **update_data)
         logger.info('Событие обновлено: {}', event_id)
@@ -139,11 +172,14 @@ async def update_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
+@auth_required
 @require_csrf
 async def delete_event_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
+        user = request.get('user')
+        if user:
+            logger.info('Event {} deleted by user {} ({})', event_id, user.id, user.max_id)
         # Сначала удаляем документы события
         docs = await get_documents_by_event_id(event_id)
         for doc in docs:
@@ -156,7 +192,7 @@ async def delete_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
-@admin_required
+@auth_required
 async def dashboard_stats(request: web.Request) -> web.Response:
     try:
         events = await get_events()

@@ -2,11 +2,30 @@ from aiohttp import web
 from loguru import logger
 from argon2 import PasswordHasher
 
-from app.auth import admin_required, require_csrf
+from app.auth import admin_required, require_csrf, auth_required
 from database.requests import get_user, get_user_by_max_id
 from database.sending import add_user, update_user, delete_user
 
 ph = PasswordHasher()
+
+
+@auth_required
+async def get_current_user(request: web.Request) -> web.Response:
+    try:
+        user = request['user']
+        return web.json_response({
+            'id': user.id,
+            'first_name': user.first_name or '',
+            'last_name': user.last_name or '',
+            'patronymic': user.patronymic or '',
+            'username': user.username or '',
+            'name': user.name or '',
+            'max_id': user.max_id,
+            'status': user.status or 'user',
+        })
+    except Exception as e:
+        logger.error('Ошибка получения текущего пользователя: {}', repr(e))
+        return web.json_response({'error': str(e)}, status=500)
 
 
 @admin_required
@@ -16,6 +35,10 @@ async def get_users(request: web.Request) -> web.Response:
         data = [
             {
                 'id': u.id,
+                'first_name': u.first_name or '',
+                'last_name': u.last_name or '',
+                'patronymic': u.patronymic or '',
+                'username': u.username or '',
                 'name': u.name or '',
                 'tg_id': u.tg_id,
                 'max_id': u.max_id,
@@ -39,6 +62,10 @@ async def create_user(request: web.Request) -> web.Response:
         password = data.get('password')
 
         update_data = {
+            'first_name': data.get('first_name', ''),
+            'last_name': data.get('last_name', ''),
+            'patronymic': data.get('patronymic', ''),
+            'username': data.get('username', ''),
             'name': data.get('name', ''),
             'tg_id': int(tg_id) if tg_id else None,
             'max_id': int(max_id) if max_id else None,
@@ -66,6 +93,10 @@ async def update_user_handler(request: web.Request) -> web.Response:
         password = data.get('password')
 
         update_data = {
+            'first_name': data.get('first_name'),
+            'last_name': data.get('last_name'),
+            'patronymic': data.get('patronymic'),
+            'username': data.get('username'),
             'name': data.get('name'),
             'tg_id': int(tg_id) if tg_id else None,
             'max_id': int(max_id) if max_id else None,
@@ -144,6 +175,7 @@ async def change_password(request: web.Request) -> web.Response:
 
 
 def setup_users_routes(app: web.Application):
+    app.router.add_get('/admin/api/users/me', get_current_user)
     app.router.add_get('/admin/api/users', get_users)
     app.router.add_post('/admin/api/users', create_user)
     app.router.add_put('/admin/api/users/{id}', update_user_handler)

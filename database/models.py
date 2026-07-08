@@ -64,6 +64,10 @@ class User(Base):
     tg_id                   = mapped_column(Integer(), unique=True, nullable=True)
     max_id                  = mapped_column(Integer(), unique=True, nullable=True)
     name                    = mapped_column(String())
+    first_name              = mapped_column(String(), nullable=True)
+    last_name               = mapped_column(String(), nullable=True)
+    patronymic              = mapped_column(String(), nullable=True)
+    username                = mapped_column(String(), nullable=True)
     password                = mapped_column(String(), nullable=True)
     status                  = mapped_column(String())
     fsm_id                  = mapped_column(Integer())
@@ -138,6 +142,9 @@ class Event(Base):
     updated_at     = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     locked_by      = mapped_column(Integer(), nullable=True)
     locked_at      = mapped_column(DateTime, nullable=True)
+    last_changed_by    = mapped_column(String(), nullable=True)
+    last_changed_at    = mapped_column(DateTime, nullable=True)
+    last_change_action = mapped_column(String(), nullable=True)
 
     __table_args__ = (
         Index('idx_event_date', 'date'),

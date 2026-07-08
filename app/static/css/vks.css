@@ -479,6 +479,15 @@
 }
 
 /* ─── Modal Completed Checkbox ──────────────────────────────────── */
+.event-modal-audit {
+  font-size: 0.6875rem;
+  color: var(--fg-muted);
+  padding: 0.25rem 0.5rem;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+
 .modal-check-label {
   display: inline-flex;
   align-items: center;

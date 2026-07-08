@@ -77,6 +77,10 @@ function openAddModal() {
     editingId = null;
     document.getElementById('modal-title').textContent = 'Добавить пользователя';
     document.getElementById('modal-save-btn').textContent = 'Добавить';
+    document.getElementById('f-first-name').value = '';
+    document.getElementById('f-last-name').value = '';
+    document.getElementById('f-patronymic').value = '';
+    document.getElementById('f-username').value = '';
     document.getElementById('f-name').value = '';
     document.getElementById('f-tg-id').value = '';
     document.getElementById('f-max-id').value = '';
@@ -91,6 +95,10 @@ function openEditModal(id) {
     editingId = id;
     document.getElementById('modal-title').textContent = 'Редактировать пользователя';
     document.getElementById('modal-save-btn').textContent = 'Сохранить';
+    document.getElementById('f-first-name').value = u.first_name || '';
+    document.getElementById('f-last-name').value = u.last_name || '';
+    document.getElementById('f-patronymic').value = u.patronymic || '';
+    document.getElementById('f-username').value = u.username || '';
     document.getElementById('f-name').value = u.name || '';
     document.getElementById('f-tg-id').value = u.tg_id || '';
     document.getElementById('f-max-id').value = u.max_id || '';
@@ -115,6 +123,10 @@ async function saveUser() {
     const password = document.getElementById('f-password').value;
 
     const payload = {
+        first_name: document.getElementById('f-first-name').value.trim(),
+        last_name: document.getElementById('f-last-name').value.trim(),
+        patronymic: document.getElementById('f-patronymic').value.trim(),
+        username: document.getElementById('f-username').value.trim(),
         name: document.getElementById('f-name').value.trim(),
         tg_id: tgIdValue ? parseInt(tgIdValue) : null,
         max_id: maxIdValue ? parseInt(maxIdValue) : null,
