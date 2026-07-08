@@ -1,7 +1,7 @@
 // ─── Клиентский роутер ───────────────────────────────────────────────
 
 const ROUTES = {
-    '/':                        { page: 'login',          title: 'Вход' },
+    '/':                        { page: 'dashboard',      title: 'Обзор' },
     '/panel/':                  { page: 'dashboard',      title: 'Обзор' },
     '/admin/':                  { page: 'users',          title: 'Пользователи' },
     '/admin/users/':            { page: 'users',          title: 'Пользователи' },
@@ -54,8 +54,8 @@ function navigateTo(path, pushState = true) {
 
 function handlePopState() {
     const path = getRouteFromURL();
-    if (path !== '/' && !isAuthenticated) {
-        navigateTo('/', false);
+    if (!isAuthenticated) {
+        showLogin();
         return;
     }
     navigateTo(path, false);
@@ -75,9 +75,8 @@ function initRouter() {
         }
     });
 
-    // Начальный роут (если не логин)
-    const initialPath = getRouteFromURL();
-    if (initialPath !== '/') {
-        navigateTo(initialPath, false);
+    // Если не авторизован — показать логин
+    if (!isAuthenticated) {
+        showLogin();
     }
 }

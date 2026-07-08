@@ -24,8 +24,8 @@ async function login() {
     if (data.ok) {
         isAuthenticated = true;
         // Заменить историю, чтобы кнопка "назад" не возвращала на логин
-        window.history.replaceState(null, '', '/panel/');
-        navigateTo('/panel/');
+        window.history.replaceState(null, '', '/');
+        navigateTo('/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -85,11 +85,11 @@ async function checkAuth() {
             window.currentUserRole = 'admin';
         }
 
-        // Авторизован — перейти на текущий URL или conferences
+        // Авторизован — перейти на текущий URL или главную
         const path = getRouteFromURL();
-        if (path === '/') {
-            window.history.replaceState(null, '', '/panel/');
-            navigateTo('/panel/', false);
+        if (path === '/panel/') {
+            window.history.replaceState(null, '', '/');
+            navigateTo('/', false);
         } else {
             navigateTo(path, false);
         }
