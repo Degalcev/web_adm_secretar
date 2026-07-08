@@ -105,8 +105,10 @@
   .stat-value { font-size: 0.6875rem; line-height: 1.1; }
   .stat-label { font-size: 0.5rem; line-height: 1.1; }
 
-  /* Filters — collapsible on mobile */
+  /* Filters — collapsible on mobile, collapsed by default */
   .filter-bar { flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.625rem; position: relative; }
+  .filter-bar.collapsed .filter-group,
+  .filter-bar.collapsed .filter-actions { display: none; }
   .filter-toggle {
     display: flex;
     align-items: center;
