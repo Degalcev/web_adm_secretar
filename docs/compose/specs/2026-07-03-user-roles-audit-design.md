@@ -1,5 +1,10 @@
 # Спецификация: Роли пользователей и аудит изменений
 
+> [!NOTE]
+> This document may not reflect the current implementation.
+> See the final report for up-to-date state:
+> [Final Report](../reports/user-roles-audit.md)
+
 ## [S1] Проблема
 
 Сейчас все пользователи панели — администраторы. Нет роли "обычный пользователь". Нет аудита изменений VKS-событий (кто, когда, что изменил). Модель пользователя содержит только поле `name` без ФИО.
