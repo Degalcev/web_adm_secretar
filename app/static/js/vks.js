@@ -411,15 +411,8 @@ function renderVksCard(e, blockType) {
     html += `<div class="vks-card-body">`;
     if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
 
-    // Meta: badge + tags + link
+    // Meta: tags + link
     html += `<div class="vks-card-meta">`;
-    if (blockType === 'missed' && !e.completed) {
-        html += `<span class="badge red"><span class="badge-dot"></span>Пропущено</span>`;
-    } else if (e.completed) {
-        html += `<span class="badge green"><span class="badge-dot"></span>Завершено</span>`;
-    } else {
-        html += `<span class="badge amber"><span class="badge-dot"></span>В работе</span>`;
-    }
     if (org) html += `<span class="vks-tag org"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
     if (loc) html += `<span class="vks-tag loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
     if (e.url) html += `<a class="vks-link-icon" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>`;
