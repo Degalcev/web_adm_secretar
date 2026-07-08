@@ -3,25 +3,27 @@
 /* ─── Stat Cards ──────────────────────────────────────────────────── */
 .dash-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .dash-card {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.25rem;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  padding: 0.625rem;
   background: color-mix(in oklab, var(--bg-elevated) 80%, transparent);
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   text-decoration: none;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dash-card:hover {
@@ -31,9 +33,9 @@
 }
 
 .dash-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,7 +48,7 @@
 
 .dash-card-value {
   font-family: var(--font-heading);
-  font-size: 1.75rem;
+  font-size: 1.125rem;
   font-weight: 700;
   color: var(--fg);
   letter-spacing: -0.02em;
@@ -55,7 +57,7 @@
 .dash-card-value.accent { color: var(--accent); }
 
 .dash-card-label {
-  font-size: 0.8125rem;
+  font-size: 0.625rem;
   font-weight: 500;
   color: var(--fg-muted);
 }
