@@ -1,11 +1,11 @@
 from aiohttp import web
 from loguru import logger
 
-from app.auth import admin_required
+from app.auth import auth_required
 from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids
 
 
-@admin_required
+@auth_required
 async def preload_data(request: web.Request) -> web.Response:
     try:
         events, orgs, locs = await get_events(), await get_organizers(), await get_locations()

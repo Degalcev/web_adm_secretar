@@ -26,6 +26,9 @@ async function login() {
         showMain();
         // Заменить историю, чтобы кнопка "назад" не возвращала на логин
         window.history.replaceState(null, '', '/');
+        // Загрузить данные после логина
+        _preloaded = false;
+        if (typeof preloadAllData === 'function') preloadAllData();
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -99,6 +102,9 @@ async function checkAuth() {
         if (typeof applyRoleRestrictions === 'function') {
             applyRoleRestrictions();
         }
+        // Загрузить данные после авторизации
+        _preloaded = false;
+        if (typeof initPreloader === 'function') initPreloader();
     } else {
         // Не авторизован — показать логин
         showLogin();

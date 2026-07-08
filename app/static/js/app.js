@@ -41,7 +41,6 @@ function _checkDayChange() {
 setInterval(_checkDayChange, 60000);
 
 // Запуск
-initPreloader();
 initTheme();
 initRouter();
 checkAuth();
