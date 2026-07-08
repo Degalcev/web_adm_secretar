@@ -124,8 +124,6 @@
   }
   .filter-toggle svg { transition: transform 0.2s; }
   .filter-toggle.open svg { transform: rotate(180deg); }
-  .filter-bar.collapsed .filter-group,
-  .filter-bar.collapsed .filter-actions { display: none; }
   .filter-group, .filter-group.narrow, .filter-group.wide { min-width: 0; width: 100%; flex: none; }
   .filter-label { font-size: 0.5625rem; }
   .filter-input, .filter-select { font-size: 0.75rem; padding: 0.5rem 0.625rem; }
