@@ -1,7 +1,68 @@
-// ─── Авторизация ─────────────────────────────────────────────────────
+// --- Авторизация ---
 
 let isAuthenticated = false;
 
+/**
+ * Проверка авторизации — ЕДИНСТВЕННЫЙ источник правды.
+ * Возвращает true если авторизован, false если нет.
+ */
+async function checkAuth() {
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
+        if (resp.ok) {
+            isAuthenticated = true;
+            await loadCurrentUser();
+            showMain();
+            if (typeof applyRoleRestrictions === 'function') {
+                applyRoleRestrictions();
+            }
+            return true;
+        }
+    } catch (e) { /* ignore network errors */ }
+
+    isAuthenticated = false;
+    window.currentUserRole = null;
+    window.currentUserName = '';
+    showLogin();
+    return false;
+}
+
+/**
+ * Загрузка данных текущего пользователя.
+ */
+async function loadCurrentUser() {
+    try {
+        const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
+        if (meResp.ok) {
+            const me = await meResp.json();
+            window.currentUserRole = me.status || 'user';
+            const lastName = me.last_name || '';
+            const firstName = me.first_name || '';
+            if (lastName && firstName) {
+                window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
+            } else if (me.name) {
+                window.currentUserName = me.name;
+            } else if (me.username) {
+                window.currentUserName = me.username;
+            } else {
+                window.currentUserName = `User #${me.max_id || ''}`;
+            }
+            const userEl = document.getElementById('topbar-user');
+            if (userEl && window.currentUserName) {
+                userEl.textContent = window.currentUserName;
+                userEl.style.display = 'inline';
+            }
+        } else {
+            window.currentUserRole = 'admin';
+        }
+    } catch (e) {
+        window.currentUserRole = 'admin';
+    }
+}
+
+/**
+ * Вход — доверяет checkAuth() для финальной проверки.
+ */
 async function login() {
     const maxId = document.getElementById('login-max-id').value;
     const password = document.getElementById('login-password').value;
@@ -14,96 +75,50 @@ async function login() {
         return;
     }
 
-    const resp = await fetch(`${BASE_URL}/admin/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ max_id: parseInt(maxId), password })
-    });
-    const data = await resp.json();
+    const btn = document.querySelector('#login-screen .btn-primary');
+    if (btn) btn.disabled = true;
 
-    if (data.ok) {
-        isAuthenticated = true;
-        showMain();
-        window.history.replaceState(null, '', '/');
-        // Подождать установки cookie и загрузить данные
-        await new Promise(r => setTimeout(r, 100));
-        await checkAuth(true);
-    } else {
-        err.textContent = data.error || 'Неверный логин или пароль';
+    try {
+        const resp = await fetch(`${BASE_URL}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ max_id: parseInt(maxId), password })
+        });
+        const data = await resp.json();
+
+        if (data.ok) {
+            // НЕ ставим isAuthenticated = true
+            // НЕ показываем main-screen
+            // Доверяем только checkAuth()
+            await checkAuth();
+        } else {
+            err.textContent = data.error || 'Неверный логин или пароль';
+            err.style.display = 'block';
+        }
+    } catch (e) {
+        err.textContent = 'Ошибка сети';
         err.style.display = 'block';
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
+/**
+ * Выход.
+ */
 async function logout() {
     await fetch(`${BASE_URL}/admin/logout`, { method: 'POST' });
     isAuthenticated = false;
     window.currentUserRole = null;
     window.currentUserName = '';
-    // Очистить кэш данных
     if (typeof allUsers !== 'undefined') allUsers = [];
     if (typeof allEvents !== 'undefined') allEvents = [];
     if (typeof allOrganizers !== 'undefined') allOrganizers = [];
     if (typeof allLocations !== 'undefined') allLocations = [];
-    // Скрыть имя в хедере
     const userEl = document.getElementById('topbar-user');
     if (userEl) userEl.style.display = 'none';
-    // Показать логин
     showLogin();
     window.history.replaceState(null, '', '/');
-}
-
-async function checkAuth(silent) {
-    try {
-        if (window.WebApp && window.WebApp.initDataUnsafe && window.WebApp.initDataUnsafe.user) {
-            const maxId = window.WebApp.initDataUnsafe.user.user_id;
-            if (maxId) document.getElementById('login-max-id').value = maxId;
-        }
-    } catch (e) { /* ignore */ }
-
-    // Если авторизован — показать дашборд, иначе — логин
-    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
-    if (resp.status === 200) {
-        isAuthenticated = true;
-
-        // Получить данные текущего пользователя
-        try {
-            const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
-            if (meResp.ok) {
-                const me = await meResp.json();
-                window.currentUserRole = me.status || 'user';
-                const displayName = me.name || me.username || '';
-                const lastName = me.last_name || '';
-                const firstName = me.first_name || '';
-                if (lastName && firstName) {
-                    window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
-                } else if (displayName) {
-                    window.currentUserName = displayName;
-                } else {
-                    window.currentUserName = `User #${me.max_id || ''}`;
-                }
-                const userEl = document.getElementById('topbar-user');
-                if (userEl && window.currentUserName) {
-                    userEl.textContent = window.currentUserName;
-                    userEl.style.display = 'inline';
-                }
-            } else {
-                window.currentUserRole = 'admin';
-            }
-        } catch (e) {
-            window.currentUserRole = 'admin';
-        }
-
-        if (!silent) showMain();
-        console.log('[auth] role:', window.currentUserRole, 'name:', window.currentUserName);
-        if (typeof applyRoleRestrictions === 'function') {
-            applyRoleRestrictions();
-        }
-        // Preload данных
-        _preloaded = false;
-        if (typeof initPreloader === 'function') initPreloader();
-    } else if (!silent) {
-        showLogin();
-    }
 }
 
 function showMain() {

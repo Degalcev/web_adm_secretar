@@ -76,8 +76,18 @@ function initRouter() {
         }
     });
 
-    // Если не авторизован — показать логин
-    if (!isAuthenticated) {
+    // Проверить авторизованное состояние
+    handleAuthState();
+}
+
+async function handleAuthState() {
+    const authed = await checkAuth();
+    if (!authed) {
         showLogin();
+    } else {
+        const route = getRouteFromURL();
+        if (route && ROUTES[route]) {
+            navigateTo(route, false);
+        }
     }
 }
