@@ -240,20 +240,24 @@
 
       <div class="stats-row">
         <div class="stat-card">
-          <div class="stat-label">Всего пользователей</div>
+          <div class="stat-card-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
           <div class="stat-value" id="stat-total-users">0</div>
+          <span class="stat-label">Всего</span>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Администраторы</div>
+          <div class="stat-card-icon purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00 .73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 00 2.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00 .73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
           <div class="stat-value accent" id="stat-admins">0</div>
+          <span class="stat-label">Админы</span>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Обычные</div>
+          <div class="stat-card-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
           <div class="stat-value" id="stat-users">0</div>
+          <span class="stat-label">Обычные</span>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Показано</div>
+          <div class="stat-card-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
           <div class="stat-value" id="stat-shown">0</div>
+          <span class="stat-label">Показано</span>
         </div>
       </div>
 
@@ -311,8 +315,16 @@
         </div>
       </div>
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Всего организаторов</div><div class="stat-value" id="stat-total-org">0</div></div>
-        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-org">0</div></div>
+        <div class="stat-card">
+          <div class="stat-card-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="stat-value" id="stat-total-org">0</div>
+          <span class="stat-label">Всего</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="stat-value" id="stat-shown-org">0</div>
+          <span class="stat-label">Показано</span>
+        </div>
       </div>
       <div class="filter-bar collapsed">
         <button class="filter-toggle" onclick="toggleFilter(this.parentElement)">
@@ -355,8 +367,16 @@
         </div>
       </div>
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Всего локаций</div><div class="stat-value" id="stat-total-loc">0</div></div>
-        <div class="stat-card"><div class="stat-label">Показано</div><div class="stat-value" id="stat-shown-loc">0</div></div>
+        <div class="stat-card">
+          <div class="stat-card-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="stat-value" id="stat-total-loc">0</div>
+          <span class="stat-label">Всего</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+          <div class="stat-value" id="stat-shown-loc">0</div>
+          <span class="stat-label">Показано</span>
+        </div>
       </div>
       <div class="filter-bar collapsed">
         <button class="filter-toggle" onclick="toggleFilter(this.parentElement)">

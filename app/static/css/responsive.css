@@ -142,9 +142,16 @@
 
   /* Tables */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { min-width: 480px; }
-  thead th { padding: 0.5rem 0.625rem; font-size: 0.5625rem; }
-  tbody td { padding: 0.5rem 0.625rem; font-size: 0.6875rem; }
+  table { min-width: 400px; }
+  thead th { padding: 0.5rem 0.5rem; font-size: 0.5rem; white-space: nowrap; }
+  tbody td { padding: 0.5rem 0.5rem; font-size: 0.625rem; }
+  .table-name { gap: 0.375rem; }
+  .table-avatar { width: 24px; height: 24px; font-size: 0.5625rem; }
+  .table-name-text { font-size: 0.6875rem; }
+  .table-name-sub { font-size: 0.5rem; }
+  .actions { gap: 0.25rem; }
+  .btn-icon { width: 26px; height: 26px; }
+  .btn-icon svg { width: 12px; height: 12px; }
 
   /* Modals — very compact */
   .modal-overlay { padding: 0.25rem; }
