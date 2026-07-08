@@ -25,8 +25,8 @@
 ## Архитектура
 ```
 app/
-├── auth.py              # Авторизация (argon2), CSRF, rate limiting, сессии
-├── server.py            # Точка входа aiohttp (SPA маршруты + API + static)
+├── auth.py              # Auth middleware, CSRF (multipart), rate limiting, cookie domain
+├── server.py            # Точка входа aiohttp (middleware + SPA + API + static + cleanup)
 ├── sse_listener.py      # SSE listener (PostgreSQL LISTEN/NOTIFY → broadcast)
 ├── routes/
 │   ├── users.py         # CRUD пользователей + смена пароля
@@ -38,9 +38,9 @@ app/
 │   ├── preload.py       # Preload API (events + organizers + locations)
 │   └── sse.py           # SSE endpoint (/admin/api/events/stream)
 └── static/
-    ├── index.html       # SPA entry point
+    ├── index.html       # SPA entry point (?v=__VERSION__ → подставляется из version.json)
     ├── css/             # base, layout, components, tables, modals, logs, vks, settings, filters, responsive
-    └── js/              # utils, auth, router, navigation, users, organizers, locations, logs, vks, settings, app
+    └── js/              # utils, auth, router, navigation, users, organizers, locations, logs, vks, settings, dashboard, profile, preloader, sse, updater, app
 
 database/
 ├── models.py            # User, Organizer, Location, Session, Event, Document
@@ -48,27 +48,45 @@ database/
 └── sending.py           # Операции (запись)
 
 deploy/
-├── deploy.py            # Скрипт деплоя (test/prod)
-├── .env.test            # Конфиг тестовой среды
-├── .env.prod            # Конфиг продакшена
-├── nginx/               # test.conf, prod.conf
+├── deploy.py            # Скрипт деплоя (test/prod), инкремент patch автоматический
+├── .env.test            # Конфиг тестовой среды (включая COOKIE_DOMAIN)
+├── .env.prod            # Конфиг продакшена (включая COOKIE_DOMAIN)
+├── nginx/               # test.conf (anti-cache headers), prod.conf
 └── systemd/             # web-admin.service, web-admin-test.service
 ```
 
 ## Паттерны проекта
 
 ### Авторизация
-- `@admin_required` — декоратор для защищённых маршрутов (сессия + admin статус)
-- `@require_csrf` — декоратор CSRF проверки (POST/PUT/DELETE)
+- Auth middleware проверяет сессию для ВСЕХ запросов (кроме публичных)
+- Декораторы `@admin_required` / `@auth_required` **УДАЛЕНЫ** — middleware берёт на себя
+- `@require_csrf` — декоратор CSRF проверки (POST/PUT/DELETE), совместимый с multipart
 - Rate limiter: 5 запросов/минуту на вход
-- Cookie: `admin_token` (httponly) + `csrf_token` (js-readable)
-- Сессии в PostgreSQL, TTL 24ч
+- Cookie: `admin_token` (httponly) + `csrf_token` (js-readable), domain из `COOKIE_DOMAIN`
+- Сессии в PostgreSQL, TTL 24ч, автоочистка при старте + каждые 6ч
+- Session validation через JOIN (1 запрос вместо 2)
+- `check_auth` / `users/me` — доступны всем ролям (admin + user)
+- CRUD маршруты — через middleware (roles не проверяются на backend, только на frontend)
+
+### Frontend auth flow
+- `checkAuth()` — ЕДИНСТВЕННЫЙ источник правды для `isAuthenticated`
+- `login()` вызывает `checkAuth()` после POST /admin/login (не ставит isAuthenticated сам)
+- `checkAuth()` → `loadCurrentUser()` → `showMain()` → `applyRoleRestrictions()` → `navigateTo()`
+- `applyRoleRestrictions()` показывает/скрывает "Администрирование" в зависимости от роли
+- `logout()` сбрасывает раскрытие меню (`.nav-group.open`)
+
+### Версионирование
+- `index.html` содержит `?v=__VERSION__` (плейсхолдер)
+- `server.py` читает `version.json` при старте, подставляет в HTML
+- `deploy.py` инкрементирует patch в VERSION файле автоматически
+- nginx: `/static/` — `Cache-Control: public, max-age=86400`, `/admin/api/` — `no-store, no-cache`
 
 ### Ошибки в маршрутах
 ```python
-@admin_required
+# Маршруты БЕЗ декораторов auth (middleware проверяет)
 async def handler(request: web.Request) -> web.Response:
     try:
+        user = request['user']  # ← устанавливается middleware
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка: {}', repr(e))
@@ -117,5 +135,6 @@ Events принимают `multipart/form-data`:
 - DB_USER, DB_USER_PASSWORD, DB_NAME, DB_HOST, DB_PORT — PostgreSQL
 - WEBAPP_HOST, WEBAPP_PORT — веб-сервер
 - DEFAULT_ADMIN_PASSWORD — пароль admin по умолчанию
+- COOKIE_DOMAIN — домен для cookie (nginx proxy: IP или домен)
 - BOT_LOGS_DIR — директория логов бота
 - PROJECT_ROOT — корень проекта (авто)
