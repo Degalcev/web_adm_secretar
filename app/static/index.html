@@ -416,7 +416,11 @@
         <div class="stat-card clickable stat-debug" onclick="filterByLevel('DEBUG', event)"><div class="stat-label">Отладка</div><div class="stat-value" id="stat-debug">0</div></div>
       </div>
 
-      <div class="log-filters">
+      <div class="log-filters collapsed">
+        <button class="filter-toggle" onclick="toggleFilter(this.parentElement)">
+          <span>Фильтры</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
         <div class="log-filters-main">
           <div class="log-filter-group">
             <label>Дата</label>

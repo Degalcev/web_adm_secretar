@@ -134,8 +134,10 @@
   .filter-actions .btn { flex: 1; justify-content: center; }
   .filter-actions .filter-reset { flex: 0 0 auto; }
 
-  /* Log filters */
-  .log-filters { padding: 0.625rem; }
+  /* Log filters — collapsible */
+  .log-filters { padding: 0.625rem; position: relative; }
+  .log-filters.collapsed .log-filters-main,
+  .log-filters.collapsed .log-filters-actions { display: none !important; }
   .log-filters-main { flex-direction: column; gap: 0.5rem; }
   .log-filter-group, .log-filter-narrow, .log-search-wrap { min-width: 0; width: 100%; flex: none; }
   .log-filters-actions { flex-wrap: wrap; gap: 0.5rem; }
@@ -143,6 +145,11 @@
   /* Stats — evenly distributed, full width */
   .stats-row { grid-template-columns: repeat(4, 1fr); gap: 0.25rem; margin-bottom: 0.75rem; width: 100%; }
   .stats-row:has(.stat-card:nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
+  .stats-row:has(.stat-card:nth-child(5):last-child) { grid-template-columns: repeat(5, 1fr); }
+  .stats-row:has(.stat-card:nth-child(5):last-child) .stat-card-icon { width: 14px; height: 14px; border-radius: 3px; }
+  .stats-row:has(.stat-card:nth-child(5):last-child) .stat-card-icon svg { width: 9px; height: 9px; }
+  .stats-row:has(.stat-card:nth-child(5):last-child) .stat-value { font-size: 0.625rem; }
+  .stats-row:has(.stat-card:nth-child(5):last-child) .stat-label { font-size: 0.4375rem; }
 
   /* Tables */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
