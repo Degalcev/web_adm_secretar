@@ -24,11 +24,10 @@ async function login() {
     if (data.ok) {
         isAuthenticated = true;
         showMain();
-        // Заменить историю, чтобы кнопка "назад" не возвращала на логин
         window.history.replaceState(null, '', '/');
-        // Загрузить данные после логина
-        _preloaded = false;
-        if (typeof preloadAllData === 'function') preloadAllData();
+        // Подождать установки cookie и загрузить данные
+        await new Promise(r => setTimeout(r, 100));
+        await checkAuth(true);
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -53,12 +52,59 @@ async function logout() {
     window.history.replaceState(null, '', '/');
 }
 
-async function checkAuth() {
+async function checkAuth(silent) {
     try {
         if (window.WebApp && window.WebApp.initDataUnsafe && window.WebApp.initDataUnsafe.user) {
             const maxId = window.WebApp.initDataUnsafe.user.user_id;
             if (maxId) document.getElementById('login-max-id').value = maxId;
         }
+    } catch (e) { /* ignore */ }
+
+    // Если авторизован — показать дашборд, иначе — логин
+    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
+    if (resp.status === 200) {
+        isAuthenticated = true;
+
+        // Получить данные текущего пользователя
+        try {
+            const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
+            if (meResp.ok) {
+                const me = await meResp.json();
+                window.currentUserRole = me.status || 'user';
+                const displayName = me.name || me.username || '';
+                const lastName = me.last_name || '';
+                const firstName = me.first_name || '';
+                if (lastName && firstName) {
+                    window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
+                } else if (displayName) {
+                    window.currentUserName = displayName;
+                } else {
+                    window.currentUserName = `User #${me.max_id || ''}`;
+                }
+                const userEl = document.getElementById('topbar-user');
+                if (userEl && window.currentUserName) {
+                    userEl.textContent = window.currentUserName;
+                    userEl.style.display = 'inline';
+                }
+            } else {
+                window.currentUserRole = 'admin';
+            }
+        } catch (e) {
+            window.currentUserRole = 'admin';
+        }
+
+        if (!silent) showMain();
+        console.log('[auth] role:', window.currentUserRole, 'name:', window.currentUserName);
+        if (typeof applyRoleRestrictions === 'function') {
+            applyRoleRestrictions();
+        }
+        // Preload данных
+        _preloaded = false;
+        if (typeof initPreloader === 'function') initPreloader();
+    } else if (!silent) {
+        showLogin();
+    }
+}
     } catch (e) { /* ignore */ }
 
     // Если авторизован — показать дашборд, иначе — логин
