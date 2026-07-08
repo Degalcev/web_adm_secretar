@@ -23,9 +23,9 @@ async function login() {
 
     if (data.ok) {
         isAuthenticated = true;
+        showMain();
         // Заменить историю, чтобы кнопка "назад" не возвращала на логин
         window.history.replaceState(null, '', '/');
-        navigateTo('/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
         err.style.display = 'block';
@@ -37,9 +37,17 @@ async function logout() {
     isAuthenticated = false;
     window.currentUserRole = null;
     window.currentUserName = '';
-    // Очистить историю и перейти на логин
+    // Очистить кэш данных
+    if (typeof allUsers !== 'undefined') allUsers = [];
+    if (typeof allEvents !== 'undefined') allEvents = [];
+    if (typeof allOrganizers !== 'undefined') allOrganizers = [];
+    if (typeof allLocations !== 'undefined') allLocations = [];
+    // Скрыть имя в хедере
+    const userEl = document.getElementById('topbar-user');
+    if (userEl) userEl.style.display = 'none';
+    // Показать логин
+    showLogin();
     window.history.replaceState(null, '', '/');
-    navigateTo('/');
 }
 
 async function checkAuth() {
@@ -50,8 +58,7 @@ async function checkAuth() {
         }
     } catch (e) { /* ignore */ }
 
-    // Проверка авторизации через /auth/check (доступно всем ролям)
-    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
+    // Если авторизован — показать дашборд, иначе — логин
     if (resp.status === 200) {
         isAuthenticated = true;
 
@@ -85,19 +92,15 @@ async function checkAuth() {
             window.currentUserRole = 'admin';
         }
 
-        // Авторизован — перейти на текущий URL или главную
-        const path = getRouteFromURL();
-        if (path === '/panel/') {
-            window.history.replaceState(null, '', '/');
-            navigateTo('/', false);
-        } else {
-            navigateTo(path, false);
-        }
+        showMain();
         // Применить ограничения ролей
         console.log('[auth] role:', window.currentUserRole, 'name:', window.currentUserName);
         if (typeof applyRoleRestrictions === 'function') {
             applyRoleRestrictions();
         }
+    } else {
+        // Не авторизован — показать логин
+        showLogin();
     }
     // Если не авторизован — показать логин (по умолчанию)
 }

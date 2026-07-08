@@ -88,5 +88,10 @@ async def index_page(request: web.Request) -> web.Response:
         return web.Response(text='Page not found', status=404)
     return web.Response(
         text=html_path.read_text(encoding='utf-8'),
-        content_type='text/html'
+        content_type='text/html',
+        headers={
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+        }
     )

@@ -58,6 +58,7 @@ function handlePopState() {
         showLogin();
         return;
     }
+    showMain();
     navigateTo(path, false);
 }
 
