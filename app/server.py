@@ -61,7 +61,7 @@ async def on_startup(app):
         logger.error('Ошибка очистки сессий при старте: {}', repr(e))
 
     app['session_cleanup_task'] = asyncio.create_task(periodic_session_cleanup())
-    await start_listener()
+    start_listener()
 
 
 async def on_shutdown(app):
@@ -73,7 +73,7 @@ async def on_shutdown(app):
             await task
         except asyncio.CancelledError:
             pass
-    await stop_listener()
+    stop_listener()
 
 
 # --- Web App ---
