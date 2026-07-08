@@ -103,6 +103,8 @@ function toggleMobileMenu() {
         overlay.classList.add('show');
         sidebar.classList.add('open');
         document.body.style.overflow = 'hidden';
+        // Применить ограничения ролей к скопированным элементам
+        applyRoleRestrictions(nav);
     }
 }
 
@@ -115,10 +117,11 @@ function closeMobileMenu() {
 }
 
 // ─── Role Restrictions ────────────────────────────────────────────
-function applyRoleRestrictions() {
+function applyRoleRestrictions(container) {
+    const root = container || document;
     if (window.currentUserRole !== 'admin') {
         // Скрыть nav-group "Администрирование" и "Настройки"
-        document.querySelectorAll('.nav-group').forEach(group => {
+        root.querySelectorAll('.nav-group').forEach(group => {
             const header = group.querySelector('.nav-group-header');
             if (header) {
                 const text = header.textContent || '';
@@ -127,6 +130,7 @@ function applyRoleRestrictions() {
                 }
             }
         });
+        // Скрыть кнопку добавления VKS для non-admin (опционально)
     }
 }
 

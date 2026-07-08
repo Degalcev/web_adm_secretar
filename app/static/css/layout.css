@@ -311,6 +311,14 @@
   font-weight: 600;
 }
 
+.topbar-user {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--accent);
+  padding-right: 0.75rem;
+  border-right: 1px solid var(--border);
+}
+
 /* ─── Content Area ──────────────────────────────────────────────────── */
 .content-area {
   flex: 1;

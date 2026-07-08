@@ -23,6 +23,8 @@ async function login() {
 
     if (data.ok) {
         isAuthenticated = true;
+        // Заменить историю, чтобы кнопка "назад" не возвращала на логин
+        window.history.replaceState(null, '', '/panel/');
         navigateTo('/panel/');
     } else {
         err.textContent = data.error || 'Неверный логин или пароль';
@@ -33,6 +35,10 @@ async function login() {
 async function logout() {
     await fetch(`${BASE_URL}/admin/logout`, { method: 'POST' });
     isAuthenticated = false;
+    window.currentUserRole = null;
+    window.currentUserName = '';
+    // Очистить историю и перейти на логин
+    window.history.replaceState(null, '', '/');
     navigateTo('/');
 }
 
@@ -43,25 +49,43 @@ async function checkAuth() {
             if (maxId) document.getElementById('login-max-id').value = maxId;
         }
     } catch (e) { /* ignore */ }
-    const resp = await fetch(`${BASE_URL}/admin/api/users`);
+
+    // Проверка авторизации через /auth/check (доступно всем ролям)
+    const resp = await fetch(`${BASE_URL}/admin/api/auth/check`);
     if (resp.status === 200) {
         isAuthenticated = true;
-        // Получить роль текущего пользователя
+
+        // Получить данные текущего пользователя
         try {
             const meResp = await fetch(`${BASE_URL}/admin/api/users/me`);
             if (meResp.ok) {
                 const me = await meResp.json();
                 window.currentUserRole = me.status || 'user';
-                window.currentUserName = me.first_name || me.last_name || me.name || '';
+                // Имя для хедера: Фамилия И.
+                const lastName = me.last_name || '';
+                const firstName = me.first_name || '';
+                if (lastName && firstName) {
+                    window.currentUserName = `${lastName} ${firstName.charAt(0)}.`;
+                } else {
+                    window.currentUserName = me.name || me.username || '';
+                }
+                // Показать имя в хедере
+                const userEl = document.getElementById('topbar-user');
+                if (userEl && window.currentUserName) {
+                    userEl.textContent = window.currentUserName;
+                    userEl.style.display = 'inline';
+                }
             } else {
                 window.currentUserRole = 'admin';
             }
         } catch (e) {
             window.currentUserRole = 'admin';
         }
+
         // Авторизован — перейти на текущий URL или conferences
         const path = getRouteFromURL();
         if (path === '/') {
+            window.history.replaceState(null, '', '/panel/');
             navigateTo('/panel/', false);
         } else {
             navigateTo(path, false);
@@ -71,6 +95,7 @@ async function checkAuth() {
             applyRoleRestrictions();
         }
     }
+    // Если не авторизован — показать логин (по умолчанию)
 }
 
 function showMain() {

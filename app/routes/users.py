@@ -28,6 +28,12 @@ async def get_current_user(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+@auth_required
+async def check_auth(request: web.Request) -> web.Response:
+    """Проверка авторизации — доступно всем ролям."""
+    return web.json_response({'ok': True})
+
+
 @admin_required
 async def get_users(request: web.Request) -> web.Response:
     try:
@@ -175,6 +181,7 @@ async def change_password(request: web.Request) -> web.Response:
 
 
 def setup_users_routes(app: web.Application):
+    app.router.add_get('/admin/api/auth/check', check_auth)
     app.router.add_get('/admin/api/users/me', get_current_user)
     app.router.add_get('/admin/api/users', get_users)
     app.router.add_post('/admin/api/users', create_user)
