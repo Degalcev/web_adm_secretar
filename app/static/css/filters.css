@@ -11,6 +11,8 @@
   flex-wrap: wrap;
 }
 
+.filter-toggle { display: none; }
+
 .filter-group {
   display: flex;
   flex-direction: column;

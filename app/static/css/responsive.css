@@ -105,8 +105,25 @@
   .stat-value { font-size: 0.6875rem; line-height: 1.1; }
   .stat-label { font-size: 0.5rem; line-height: 1.1; }
 
-  /* Filters — full width stack */
-  .filter-bar { flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.625rem; }
+  /* Filters — collapsible on mobile */
+  .filter-bar { flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.625rem; position: relative; }
+  .filter-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0;
+    cursor: pointer;
+  }
+  .filter-toggle svg { transition: transform 0.2s; }
+  .filter-toggle.open svg { transform: rotate(180deg); }
+  .filter-bar.collapsed .filter-group,
+  .filter-bar.collapsed .filter-actions { display: none; }
   .filter-group, .filter-group.narrow, .filter-group.wide { min-width: 0; width: 100%; flex: none; }
   .filter-label { font-size: 0.5625rem; }
   .filter-input, .filter-select { font-size: 0.75rem; padding: 0.5rem 0.625rem; }

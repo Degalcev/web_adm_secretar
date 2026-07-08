@@ -104,3 +104,10 @@ function closeMobileMenu() {
     sidebar.classList.remove('open');
     document.body.style.overflow = '';
 }
+
+// ─── Filter Toggle (mobile) ──────────────────────────────────────
+function toggleFilter(bar) {
+    bar.classList.toggle('collapsed');
+    const btn = bar.querySelector('.filter-toggle');
+    if (btn) btn.classList.toggle('open');
+}
