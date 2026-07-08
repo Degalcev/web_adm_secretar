@@ -20,6 +20,19 @@ from app.sse_listener import start_listener, stop_listener
 from database.sending import cleanup_expired_sessions
 
 STATIC_PATH = Path(__file__).parent / 'static'
+VERSION = 'dev'
+
+
+def _read_version():
+    """Чтение версии из version.json при старте."""
+    global VERSION
+    vpath = Path(__file__).parent.parent / 'version.json'
+    if vpath.exists():
+        try:
+            import json
+            VERSION = json.loads(vpath.read_text()).get('version', 'dev')
+        except Exception:
+            VERSION = 'dev'
 
 # Все SPA маршруты
 SPA_PATHS = [
@@ -79,6 +92,7 @@ async def on_shutdown(app):
 # --- Web App ---
 
 async def start_webapp(host='0.0.0.0', port=8080):
+    _read_version()
     app = web.Application(client_max_size=100 * 1024 * 1024)
 
     # Auth middleware
@@ -134,8 +148,9 @@ async def index_page(request: web.Request) -> web.Response:
     if not html_path.exists():
         logger.error('Файл index.html не найден по пути: {}', html_path)
         return web.Response(text='Page not found', status=404)
+    html = html_path.read_text(encoding='utf-8').replace('?v=__VERSION__', f'?v={VERSION}')
     return web.Response(
-        text=html_path.read_text(encoding='utf-8'),
+        text=html,
         content_type='text/html',
         headers={
             'Cache-Control': 'no-cache, no-store, must-revalidate',
