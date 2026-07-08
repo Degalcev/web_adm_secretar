@@ -348,6 +348,7 @@
 /* ─── Chart ───────────────────────────────────────────────────────── */
 .dash-chart-section {
   margin-bottom: 1.5rem;
+  min-height: 260px;
 }
 
 .dash-chart-header {
@@ -434,6 +435,7 @@
   display: flex;
   align-items: flex-end;
   gap: 0.5rem;
+  min-height: 180px;
   height: 180px;
   padding-top: 1rem;
 }
