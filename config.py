@@ -21,6 +21,7 @@ WEBAPP_HOST = os.getenv('WEBAPP_HOST', '0.0.0.0')
 WEBAPP_PORT = int(os.getenv('WEBAPP_PORT', 8080))
 
 DEFAULT_ADMIN_PASSWORD = os.getenv('DEFAULT_ADMIN_PASSWORD', 'ivc212')
+COOKIE_DOMAIN = os.getenv('COOKIE_DOMAIN', '')
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 BOT_LOGS_DIR = os.getenv('BOT_LOGS_DIR', '/opt/bot/logs')
