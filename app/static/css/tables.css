@@ -41,12 +41,13 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 table { width: 100%; border-collapse: collapse; }
 
 thead th {
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   font-size: 0.6875rem;
   font-weight: 700;
@@ -57,13 +58,12 @@ thead th {
   white-space: nowrap;
   background: rgba(0, 0, 0, 0.15);
   user-select: none;
-  cursor: pointer;
 }
 
 thead th:hover { color: var(--text); }
 
 tbody td {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   font-size: 0.8125rem;
   color: var(--fg);
   border-bottom: 1px solid var(--border);
@@ -76,8 +76,16 @@ tbody tr {
   transition: background var(--motion-fast) var(--ease-standard);
 }
 
-tbody tr:hover { background: color-mix(in oklab, var(--accent) 8%, transparent); }
+tbody tr:hover { background: color-mix(in oklab, var(--accent) 6%, transparent); }
 
+/* ─── Column alignment helpers ──────────────────────────────────────── */
+.col-center { text-align: center; }
+.col-right { text-align: right; }
+.col-mono { font-family: 'Fira Mono', monospace; font-size: 0.8125rem; color: var(--fg-muted); }
+.col-muted { color: var(--fg-muted); }
+.col-actions { text-align: right; white-space: nowrap; }
+
+/* ─── Name cell with avatar ────────────────────────────────────────── */
 .table-name {
   display: flex;
   align-items: center;
@@ -99,5 +107,50 @@ tbody tr:hover { background: color-mix(in oklab, var(--accent) 8%, transparent);
 
 .table-name-text { font-weight: 600; }
 .table-name-sub { font-size: 0.6875rem; color: var(--fg-subtle); }
+
+/* ─── Status badges ────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-admin {
+  background: color-mix(in oklab, var(--accent) 15%, transparent);
+  color: var(--accent);
+}
+
+.badge-user {
+  background: color-mix(in oklab, var(--fg-muted) 12%, transparent);
+  color: var(--fg-muted);
+}
+
+/* ─── Actions ──────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: flex-end;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+
+.btn-icon:hover { background: color-mix(in oklab, var(--accent) 12%, transparent); color: var(--fg); }
+.btn-icon.danger:hover { background: color-mix(in oklab, var(--danger) 12%, transparent); color: var(--danger); }
 
 .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--fg-muted); font-size: 0.875rem; }
