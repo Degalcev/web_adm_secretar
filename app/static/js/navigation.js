@@ -58,3 +58,49 @@ function switchPage(page) {
     if (page === 'vks-completed') loadVksCompleted();
     if (page === 'settings') initTheme();
 }
+
+// ─── Mobile Menu ──────────────────────────────────────────────────
+function toggleMobileMenu() {
+    const overlay = document.getElementById('mobile-overlay');
+    const sidebar = document.getElementById('mobile-sidebar');
+    if (overlay.classList.contains('show')) {
+        closeMobileMenu();
+    } else {
+        // Копировать навигацию из основного sidebar
+        const nav = document.getElementById('mobile-nav');
+        const originalNav = document.querySelector('.sidebar-nav');
+        if (nav && originalNav) {
+            nav.innerHTML = originalNav.innerHTML;
+            // Навесить обработчики на скопированные элементы
+            nav.querySelectorAll('.nav-group-header').forEach(h => {
+                h.setAttribute('onclick', 'toggleGroup(this)');
+            });
+            nav.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const href = this.dataset.href;
+                    if (href) navigateTo(href);
+                    closeMobileMenu();
+                });
+            });
+            nav.querySelectorAll('.nav-logout').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeMobileMenu();
+                    logout();
+                });
+            });
+        }
+        overlay.classList.add('show');
+        sidebar.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeMobileMenu() {
+    const overlay = document.getElementById('mobile-overlay');
+    const sidebar = document.getElementById('mobile-sidebar');
+    overlay.classList.remove('show');
+    sidebar.classList.remove('open');
+    document.body.style.overflow = '';
+}
