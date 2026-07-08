@@ -10,14 +10,22 @@ from loguru import logger
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-from database.requests import get_user_by_max_id, get_session_by_token, get_user_by_id
-from database.sending import create_session as db_create_session, delete_session as db_delete_session
-from config import DEFAULT_ADMIN_PASSWORD
+from database.requests import get_user_by_max_id
+from database.sending import (
+    create_session as db_create_session,
+    delete_session as db_delete_session,
+    cleanup_expired_sessions,
+)
+from database.models import async_session, User, Session
+from config import DEFAULT_ADMIN_PASSWORD, COOKIE_DOMAIN
+
+from sqlalchemy import select
+from datetime import datetime
 
 ph = PasswordHasher()
 
 
-# ─── Rate Limiter ────────────────────────────────────────────────────────
+# --- Rate Limiter ---
 
 class RateLimiter:
     def __init__(self, max_requests: int = 10, window: int = 60):
@@ -37,7 +45,7 @@ class RateLimiter:
 login_limiter = RateLimiter(max_requests=5, window=60)
 
 
-# ─── CSRF ────────────────────────────────────────────────────────────────
+# --- CSRF ---
 
 def generate_csrf_token() -> str:
     return secrets.token_hex(32)
@@ -48,22 +56,54 @@ def require_csrf(handler):
     async def wrapper(request: web.Request):
         if request.method in ('POST', 'PUT', 'DELETE'):
             cookie_token = request.cookies.get('csrf_token')
+
+            # 1. Header
             header_token = request.headers.get('X-CSRF-Token')
-            form_token = header_token
-            if not form_token:
+
+            # 2. JSON body
+            if not header_token:
                 try:
                     data = await request.json()
-                    form_token = data.get('csrf_token')
+                    header_token = data.get('csrf_token')
                 except Exception:
                     pass
-            if not cookie_token or cookie_token != form_token:
-                logger.warning('CSRF token invalid: cookie={}, form={}', cookie_token, form_token)
+
+            # 3. Form data (multipart compatibility)
+            if not header_token:
+                try:
+                    post_data = await request.post()
+                    header_token = post_data.get('csrf_token')
+                except Exception:
+                    pass
+
+            if not cookie_token or cookie_token != header_token:
+                logger.warning('CSRF token invalid: cookie={}, form={}', cookie_token, header_token)
                 return web.json_response({'error': 'CSRF token invalid'}, status=403)
         return await handler(request)
     return wrapper
 
 
-# ─── Sessions ────────────────────────────────────────────────────────────
+# --- Sessions ---
+
+async def validate_session(token: str):
+    """Проверка сессии через JOIN — 1 запрос вместо 2."""
+    if not token:
+        return None
+    try:
+        async with async_session() as session:
+            result = await session.execute(
+                select(User)
+                .join(Session, Session.user_id == User.id)
+                .where(
+                    Session.token == token,
+                    Session.expires_at > datetime.utcnow()
+                )
+            )
+            return result.scalar_one_or_none()
+    except Exception as e:
+        logger.error('Ошибка validate_session: {}', repr(e))
+        return None
+
 
 async def create_session(token: str, user_id: str, request: web.Request) -> str:
     ip = request.remote
@@ -71,47 +111,63 @@ async def create_session(token: str, user_id: str, request: web.Request) -> str:
     return await db_create_session(token, user_id, ip_address=ip, user_agent=ua)
 
 
-async def validate_session(token: str):
-    if not token:
-        return None
-    session = await get_session_by_token(token)
-    if not session:
-        return None
-    user = await get_user_by_id(session.user_id)
-    return user
-
-
 async def destroy_session(token: str):
     await db_delete_session(token)
 
 
-# ─── Auth Middleware ─────────────────────────────────────────────────────
+# --- Public Routes ---
 
-def admin_required(handler):
-    @wraps(handler)
-    async def wrapper(request: web.Request):
-        token = request.cookies.get('admin_token')
-        user = await validate_session(token)
-        if not user or user.status != 'admin':
-            return web.json_response({'error': 'Доступ запрещён'}, status=401)
-        request['user'] = user
+PUBLIC_ROUTES = {
+    '/admin/login',
+    '/admin/logout',
+    '/version.json',
+}
+
+
+# --- Auth Middleware ---
+
+@web.middleware
+async def auth_middleware(request: web.Request, handler):
+    path = request.path
+
+    # Static files
+    if path.startswith('/static/'):
         return await handler(request)
-    return wrapper
 
-
-def auth_required(handler):
-    @wraps(handler)
-    async def wrapper(request: web.Request):
-        token = request.cookies.get('admin_token')
-        user = await validate_session(token)
-        if not user or user.status not in ('admin', 'user'):
-            return web.json_response({'error': 'Доступ запрещён'}, status=401)
-        request['user'] = user
+    # Public routes
+    if path in PUBLIC_ROUTES:
         return await handler(request)
-    return wrapper
+
+    # SPA routes (serve index.html) - check auth only for API
+    spa_prefixes = ('/panel/', '/admin/', '/conferences/', '/settings/')
+    if path == '/' or any(path.startswith(p) for p in spa_prefixes):
+        if not path.startswith('/admin/api/') and not path.startswith('/api/'):
+            return await handler(request)
+
+    # Check session
+    token = request.cookies.get('admin_token')
+    user = await validate_session(token)
+
+    if not user:
+        return web.json_response({'error': 'Не авторизован'}, status=401)
+
+    request['user'] = user
+    return await handler(request)
 
 
-# ─── Auth Handlers ──────────────────────────────────────────────────────
+# --- Auth Handlers ---
+
+def _set_cookie(response: web.Response, name: str, value: str, httponly: bool = True, max_age: int = 86400):
+    kwargs = {
+        'httponly': httponly,
+        'secure': False,
+        'max_age': max_age,
+        'samesite': 'Lax',
+    }
+    if COOKIE_DOMAIN:
+        kwargs['domain'] = COOKIE_DOMAIN
+    response.set_cookie(name, value, **kwargs)
+
 
 async def admin_login(request: web.Request) -> web.Response:
     client_ip = request.remote
@@ -151,20 +207,9 @@ async def admin_login(request: web.Request) -> web.Response:
         csrf_token = generate_csrf_token()
 
         response = web.json_response({'ok': True})
-        response.set_cookie(
-            'admin_token', token,
-            httponly=True,
-            secure=False,
-            max_age=86400,
-            samesite='Lax'
-        )
-        response.set_cookie(
-            'csrf_token', csrf_token,
-            httponly=False,
-            secure=False,
-            max_age=86400,
-            samesite='Lax'
-        )
+        _set_cookie(response, 'admin_token', token, httponly=True)
+        _set_cookie(response, 'csrf_token', csrf_token, httponly=False)
+
         logger.info('Пользователь {} (role={}) вошёл в панель', max_id, user.status)
         return response
 
