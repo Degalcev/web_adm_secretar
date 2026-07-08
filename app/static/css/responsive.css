@@ -108,9 +108,9 @@
   /* Filters — collapsible on mobile, collapsed by default */
   .filter-bar { flex-direction: column; align-items: stretch; gap: 0.5rem; padding: 0.625rem; position: relative; }
   .filter-bar.collapsed .filter-group,
-  .filter-bar.collapsed .filter-actions { display: none; }
+  .filter-bar.collapsed .filter-actions { display: none !important; }
   .filter-toggle {
-    display: flex;
+    display: flex !important;
     align-items: center;
     justify-content: space-between;
     width: 100%;
