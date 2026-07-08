@@ -119,15 +119,14 @@ function closeMobileMenu() {
 // ─── Role Restrictions ────────────────────────────────────────────
 function applyRoleRestrictions(container) {
     const root = container || document;
-    if (!window.currentUserRole || window.currentUserRole === 'admin') return;
+    const isAdmin = window.currentUserRole === 'admin';
 
-    // Скрыть только "Администрирование" для non-admin
     root.querySelectorAll('.nav-group').forEach(group => {
         const header = group.querySelector('.nav-group-header');
         if (header) {
             const text = header.textContent || '';
             if (text.includes('Администрирование')) {
-                group.style.display = 'none';
+                group.style.display = isAdmin ? '' : 'none';
             }
         }
     });
