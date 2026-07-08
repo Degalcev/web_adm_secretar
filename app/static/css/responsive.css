@@ -140,12 +140,13 @@
   .log-filter-group, .log-filter-narrow, .log-search-wrap { min-width: 0; width: 100%; flex: none; }
   .log-filters-actions { flex-wrap: wrap; gap: 0.5rem; }
 
-  /* Stats — evenly distributed */
+  /* Stats — evenly distributed, full width */
   .stats-row { grid-template-columns: repeat(4, 1fr); gap: 0.25rem; margin-bottom: 0.75rem; width: 100%; }
+  .stats-row:has(.stat-card:nth-child(2):last-child) { grid-template-columns: repeat(2, 1fr); }
 
   /* Tables */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { min-width: 400px; }
+  table { min-width: 300px; width: 100%; }
   thead th { padding: 0.5rem 0.5rem; font-size: 0.5rem; white-space: nowrap; }
   tbody td { padding: 0.5rem 0.5rem; font-size: 0.625rem; }
   tbody td:last-child { text-align: right; white-space: nowrap; }
@@ -160,6 +161,11 @@
   /* Organizers URL column — truncate */
   .table-wrap table th:nth-child(3),
   .table-wrap table td:nth-child(3) { max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Locations table — optimize columns */
+  #page-locations table { min-width: 200px; }
+  #page-locations thead th:first-child,
+  #page-locations tbody td:first-child { width: 100%; }
 
   /* Modals — very compact */
   .modal-overlay { padding: 0.25rem; }
