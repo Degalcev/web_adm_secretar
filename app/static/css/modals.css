@@ -131,7 +131,7 @@
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  background: transparent;
+  background: var(--bg-elevated);
   border: none;
   border-radius: 0;
 }
