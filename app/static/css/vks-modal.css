@@ -4,7 +4,6 @@
 /* ─── Container ─────────────────────────────────────────────────── */
 .vks-modal-flat {
   border-radius: 14px;
-  overflow: hidden;
   max-width: 460px;
   border: none;
   box-shadow: 0 12px 36px rgba(0,0,0,0.35);
@@ -147,6 +146,7 @@
   height: 4px;
   background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
   flex-shrink: 0;
+  border-radius: 14px 14px 0 0;
 }
 .vks-modal-accent.status-completed {
   background: linear-gradient(90deg, var(--success), rgba(74,222,128,0.4));
@@ -509,7 +509,6 @@
 .vks-modal-body-wrapper {
     display: flex;
     flex: 1;
-    overflow: hidden;
     position: relative;
 }
 
