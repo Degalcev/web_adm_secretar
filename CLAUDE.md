@@ -41,10 +41,10 @@ app/
     ├── index.html       # SPA entry point (?v=__VERSION__ → подставляется из version.json)
     ├── favicon.svg      # Иконка
     ├── partials/
-    │   ├── vks-modal.html      # VKS modal partial (загружается async из app.js)
-    │   ├── user-modal.html     # User modal partial
+    │   ├── vks-modal.html       # VKS modal partial (Compact Flat)
+    │   ├── user-modal.html      # User modal partial
     │   ├── organizer-modal.html # Organizer modal partial
-    │   └── location-modal.html # Location modal partial
+    │   └── location-modal.html  # Location modal partial
     ├── css/
     │   ├── base.css          # CSS переменные, темы, typography
     │   ├── layout.css        # Sidebar, content-area, навигация, independent page scroll
@@ -59,7 +59,7 @@ app/
     │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
     │   └── vks-modal.css     # Compact Flat стили модалок (ПОСЛЕ responsive.css!)
     └── js/
-        ├── utils.js          # Утилиты: esc(), debounce(), showToast(), markSSESkipped()
+        ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
         ├── auth.js           # Логин/выход/checkAuth()
         ├── router.js         # SPA роутинг (handleAuthState)
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
@@ -70,14 +70,14 @@ app/
         ├── vks-board.js      # VKS: рендеринг карточек, иконки, документы
         ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
-        ├── users.js          # CRUD пользователей
-        ├── organizers.js     # CRUD организаторов
-        ├── locations.js      # CRUD локаций
+        ├── users.js          # CRUD пользователей (через createCrudModule)
+        ├── organizers.js     # CRUD организаторов (через createCrudModule)
+        ├── locations.js      # CRUD локаций (через createCrudModule)
         ├── logs.js           # Просмотр логов
         ├── settings.js       # Настройки
         ├── profile.js        # Профиль пользователя
         ├── updater.js        # Обновление версии
-        ├── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
+        └── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
 
 database/
 ├── models.py            # User (ФИО+username+role), Organizer, Location, Session, Event (audit), Document
@@ -136,38 +136,28 @@ deploy/
 - 4 канала PostgreSQL LISTEN/NOTIFY: `update_event`, `update_users`, `update_locations`, `update_organizers`
 - Триггеры: `trg_notify_events`, `trg_notify_users`, `trg_notify_locations`, `trg_notify_organizers`
 - SSE endpoint без авторизации (auth_required убран)
-- Frontend: `sse.js` обновляет кэш и перерисовывает активные страницы
-
-### VKS виджет — дизайн карточек
-- Цветная полоска слева вместо бейджа статуса (completed/in-progress/missed)
-- Компактные документы: иконки по расширению + "ещё N" кнопка-разворот
-- Ссылка на встречу: иконка-кнопка рядом с документами
-- Документы свёрнуты по умолчанию (макс. 4 видимых)
-- Аудит: "Кто изменил" в footer модалки
+- Frontend: `sse.js` обновляет store и перерисовывает активные страницы
 
 ### VKS Modal — Compact Flat дизайн
-- Модалка вынесена в отдельный partial: `app/static/partials/vks-modal.html`
-- Загружается async через `app.js` → `_vksModalLoaded` promise
-- `openAddEventModal()` / `openEditEventModal()` ждут загрузки partial через `await window._vksModalLoaded`
-- Структура: accent-bar (3px градиент) → header (статус-бейдж + заголовок + icon-btn info/delete/close) → body (form-separators) → footer (btn-ghost + pill complete + btn-primary)
-- **НЕ** использует `.modal-section` (старый дизайн с карточками) — только `.form-separator`
+- Модалка вынесена в partial: `app/static/partials/vks-modal.html`
+- Загружается async через `app.js` → `_modalsLoaded` promise
+- Структура: accent-bar (4px градиент) → header (статус-бейдж + заголовок + icon-btn info/delete/close) → body (form-separators) → footer (btn-ghost + pill complete + btn-primary)
 - Accent bar цвет по статусу: default (accent gradient), completed (green), missed (red)
 - Кнопка «Перейти» (url-go-btn) рядом с полем ссылки — появляется если есть URL
-- П文档 удаления: standalone кнопка `.doc-card-delete` справа от карточки документа
+- Кнопка удаления: standalone кнопка `.doc-card-delete` справа от карточки документа
 - Кнопка «Добавить документ» — 100% ширины под списком документов
 
 ### VKS Modal — документы (scroll)
 - Список документов `.doc-card-list` — `overflow-y: auto` + `scrollbar-width: none`
-- Desktop: `max-height: 310px` (~4.5 документа видно), Mobile: `max-height: 140px` (~2 документа)
-- Gradient fade: `.doc-scroll-fade-top` / `.doc-scroll-fade-bottom` — реальные DOM-элементы внутри `.doc-scroll-wrap`
-- JS `_updateDocScrollGradients()`: проверяет `scrollHeight > clientHeight`, toggle классов `.is-visible`
+- Desktop: `max-height: 310px` (~4.5 документа), Mobile: `max-height: 140px` (~2 документа)
+- Gradient fade: `.doc-scroll-fade-top` / `.doc-scroll-fade-bottom` — реальные DOM-элементы
+- JS `_updateDocScrollGradients()`: проверяет `scrollHeight > clientHeight`, toggle `.is-visible`
 - Градиент top исчезает при `scrollTop <= 1`, bottom при прокрутке до конца
-- **Мобильный**: `.doc-card-info` flex-row (icon + name + size в одну строку), name обрезается через `text-overflow: ellipsis`
+- **Мобильный**: `.doc-card-info` flex-row (icon + name + size), name обрезается через `text-overflow: ellipsis`
 
 ### VKS Modal — CSS архитектура
-- Desktop стили `.vks-modal-flat` — в `modals.css` (после базовых стилей)
-- Mobile стили `@media (max-width: 768px)` — в **конце** `modals.css` (НЕ в `responsive.css`!)
-- Причина: в `responsive.css` есть базовые правила `.form-row { flex-direction: column }` и `.form-group textarea { min-height: 80px }` которые перезаписывают vks-modal-flat overrides из-за порядка声明
+- Все стили Compact Flat в `vks-modal.css` — отдельный файл после `responsive.css`
+- Причина: `responsive.css` содержит базовые `.form-row { flex-direction: column }` которые перезаписывают `.vks-modal-flat .form-row { flex-direction: row }`
 - `.vks-modal-flat` полностью переопределяет: `.modal-header`, `.modal-body`, `.modal-footer`, `.form-group`, `.form-group label/input/select/textarea`, `.form-separator`, `.form-row`
 - Header/footer: `background: var(--bg-elevated)` — не прозрачные
 - `border: none` на `.vks-modal-flat` — убрана рамка контейнера
@@ -177,13 +167,12 @@ deploy/
 - Все модалки (VKS, User, Organizer, Location) вынесены в `app/static/partials/*.html`
 - `app.js` загружает их последовательно через `_modalsLoaded` promise
 - JS функции открытия модалок (`openAdd*`, `openEdit*`) — async, ждут `await _modalsLoaded`
-- `_vksModalLoaded` — алиас на `_modalsLoaded` для обратной совместимости
 - Confirm overlay (удаление) остался в `index.html` — он общий для всех CRUD
 
 ### CRUD-абстракция
 - `createCrudModule(config)` в `utils.js` — фабрика CRUD-операций
 - Генерирует: `load()`, `openAdd()`, `openEdit()`, `save()`, `delete()`, `openConfirm()`, `filter()`, `resetFilters()`
-- Принимает конфиг: `name`, `api`, `fields[]`, `buildPayload()`, `render()`, `stats()`, `filters[]`, `messages`
+- Принимает конфиг: `name`, `api`, `storeKey`, `fields[]`, `buildPayload()`, `render()`, `stats()`, `filters[]`, `messages`
 - Используется: `users.js`, `organizers.js`, `locations.js`
 - Обратная совместимость — глобальные функции как алиасы (onclick в HTML)
 
@@ -193,16 +182,21 @@ deploy/
 - Заменяет 4 глобальные переменные (`deletingId/OrgId/LocId/EventId`)
 - `closeConfirm()` / `confirmDelete()` — алиасы для обратной совместимости
 
+### Store — централизованное хранилище
+- `window.store = { allEvents, allLocations, allOrganizers, allUsers }` в `utils.js`
+- Все load/SSE/preload функции пишут в `store.xxx`
+- CRUD модули используют `storeKey` для автоматической записи в store
+- Нет рассинхронизации между данными (ранее: `let allXxx` + `window.allXxx` — два хранилища)
+
 ### Утилиты (utils.js)
-- `getCsrfToken()` — CSRF из cookie (10 копий → 1 вызов)
+- `store` — централизованное хранилище данных
+- `getCsrfToken()` — CSRF из cookie
 - `localDateStr(d)` — формат `YYYY-MM-DD`
 - `MONTHS_FULL/SHORT/GENITIVE` — массивы месяцев
 - `ConfirmManager` — управление confirm-overlay
 - `createCrudModule(config)` — CRUD-абстракция
 
 ### Mobile оптимизация
-
-### Мобильная оптимизация
 - Гамбургер-меню для навигации (<768px)
 - Компактные карточки статистики (4 колонки → 2 на мобильном)
 - Сворачиваемые фильтры (filter-bar)
@@ -213,7 +207,6 @@ deploy/
 - `responsive.css` загружается ПОСЛЕДНИМ базовым CSS
 - `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
 - Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal**
-- Причина: в `responsive.css` есть базовые правила `.form-row { flex-direction: column }` которые перезаписывают `.vks-modal-flat .form-row { flex-direction: row }` если vks-modal.css загружается раньше
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
@@ -223,7 +216,6 @@ deploy/
 - `event.stopPropagation()` — кнопки delete НЕ должны открывать edit modal
 - `overflow: clip` на таблицах — красивые углы без создания nested scroll context
 - Hidden form inputs при замене UI (checkbox→button): `<input>`必须 сохраняться для FormData
-- Button IDs: `vks-complete-btn` (не `<input checkbox>`)
 
 ### Версионирование
 - `index.html` содержит `?v=__VERSION__` (плейсхолдер)
