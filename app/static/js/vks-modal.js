@@ -1,5 +1,7 @@
 // ─── VKS: Модалка ──────────────────────────────────────────────────────
 
+let isLockedByOther = false;
+
 async function openAddEventModal() {
     if (window._vksModalLoaded) await window._vksModalLoaded;
     editingEventId = null;
@@ -39,7 +41,7 @@ async function openEditEventModal(id) {
     editingEventId = id;
     pendingFiles = [];
     removedDocIds = [];
-    let isLockedByOther = false;
+    isLockedByOther = false;
 
     // Try to lock
     try {
@@ -162,7 +164,7 @@ async function openEditEventModal(id) {
 }
 
 function closeEventModal() {
-    if (editingEventId) {
+    if (editingEventId && !isLockedByOther) {
         fetch(`/admin/api/events/${editingEventId}/unlock`, {
             method: 'PUT',
             credentials: 'same-origin',
@@ -206,6 +208,11 @@ function refreshEventDocs() {
         docsContainer.innerHTML = '';
     }
     _updateDocScrollGradients();
+
+    // Disable doc delete buttons if locked by another user
+    if (isLockedByOther) {
+        document.querySelectorAll('.doc-card-delete').forEach(btn => btn.disabled = true);
+    }
 }
 
 function _updateDocScrollGradients() {
