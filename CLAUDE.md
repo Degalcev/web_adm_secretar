@@ -176,6 +176,28 @@ deploy/
 - `_vksModalLoaded` — алиас на `_modalsLoaded` для обратной совместимости
 - Confirm overlay (удаление) остался в `index.html` — он общий для всех CRUD
 
+### CRUD-абстракция
+- `createCrudModule(config)` в `utils.js` — фабрика CRUD-операций
+- Генерирует: `load()`, `openAdd()`, `openEdit()`, `save()`, `delete()`, `openConfirm()`, `filter()`, `resetFilters()`
+- Принимает конфиг: `name`, `api`, `fields[]`, `buildPayload()`, `render()`, `stats()`, `filters[]`, `messages`
+- Используется: `users.js`, `organizers.js`, `locations.js`
+- Обратная совместимость — глобальные функции как алиасы (onclick в HTML)
+
+### ConfirmManager
+- Единый объект `ConfirmManager` в `utils.js` — управляет модалкой подтверждения
+- `open(type, id, name, onConfirm)` / `close()` / `dispatch()`
+- Заменяет 4 глобальные переменные (`deletingId/OrgId/LocId/EventId`)
+- `closeConfirm()` / `confirmDelete()` — алиасы для обратной совместимости
+
+### Утилиты (utils.js)
+- `getCsrfToken()` — CSRF из cookie (10 копий → 1 вызов)
+- `localDateStr(d)` — формат `YYYY-MM-DD`
+- `MONTHS_FULL/SHORT/GENITIVE` — массивы месяцев
+- `ConfirmManager` — управление confirm-overlay
+- `createCrudModule(config)` — CRUD-абстракция
+
+### Mobile оптимизация
+
 ### Мобильная оптимизация
 - Гамбургер-меню для навигации (<768px)
 - Компактные карточки статистики (4 колонки → 2 на мобильном)
