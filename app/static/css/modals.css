@@ -238,7 +238,7 @@
 
 /* Docs scroll — max 4 items visible on desktop, hidden scrollbar, scroll hint */
 .vks-modal-flat .doc-card-list {
-  max-height: 260px;
+  max-height: 310px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
