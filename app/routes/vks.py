@@ -3,6 +3,7 @@ from loguru import logger
 from datetime import date, datetime, timedelta, time
 
 from app.auth import require_csrf
+from app.event_logger import capture_event_state, log_event_change, get_event_history
 from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
 from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
@@ -115,6 +116,8 @@ async def create_event_handler(request: web.Request) -> web.Response:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
             logger.info('Документ {} привязан к событию {}', f['name'], event_id)
 
+        await log_event_change(event_id, str(user.id) if user else None, 'create')
+
         return web.json_response({'ok': True, 'id': event_id})
     except Exception as e:
         logger.error('Ошибка создания события: {}', repr(e))
@@ -147,14 +150,15 @@ async def update_event_handler(request: web.Request) -> web.Response:
             update_data['last_changed_at'] = datetime.utcnow()
             update_data['last_change_action'] = 'update'
 
+        old_state = await capture_event_state(event_id)
+        existing_docs_before = await get_documents_by_event_id(event_id)
         await update_event(event_id=event_id, **update_data)
         logger.info('Событие обновлено: {}', event_id)
 
         keep_ids = fields.get('keep_doc_ids')
+        keep_list = [x.strip() for x in keep_ids.split(',') if x.strip()] if keep_ids else []
         if keep_ids is not None:
-            keep_list = [x.strip() for x in keep_ids.split(',') if x.strip()]
-            existing_docs = await get_documents_by_event_id(event_id)
-            for doc in existing_docs:
+            for doc in existing_docs_before:
                 if doc['id'] not in keep_list:
                     await delete_document(doc['id'])
                     logger.info('Документ {} удалён из события {}', doc['id'], event_id)
@@ -162,6 +166,18 @@ async def update_event_handler(request: web.Request) -> web.Response:
         for f in files:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
             logger.info('Документ {} добавлен в событие {}', f['name'], event_id)
+
+        new_state = await capture_event_state(event_id)
+        action = 'update'
+        if old_state and new_state and 'completed' in old_state and 'completed' in new_state:
+            if old_state['completed'] != new_state['completed']:
+                action = 'complete' if new_state['completed'] else 'uncomplete'
+
+        removed_docs = [{'name': d['name'], 'id': d['id']} for d in existing_docs_before if d['id'] not in keep_list]
+        added_docs = [{'name': f['name'], 'size': f['size']} for f in files]
+        doc_changes = {'added': added_docs, 'removed': removed_docs} if (removed_docs or added_docs) else None
+
+        await log_event_change(event_id, str(user.id) if user else None, action, old_state, new_state, doc_changes)
 
         return web.json_response({'ok': True})
     except Exception as e:
@@ -174,8 +190,10 @@ async def delete_event_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
         user = request.get('user')
+        old_state = await capture_event_state(event_id)
         if user:
             logger.info('Event {} deleted by user {} ({})', event_id, user.id, user.max_id)
+        await log_event_change(event_id, str(user.id) if user else None, 'delete', old_state)
         # Сначала удаляем документы события
         docs = await get_documents_by_event_id(event_id)
         for doc in docs:
@@ -245,9 +263,20 @@ async def dashboard_stats(request: web.Request) -> web.Response:
         return web.json_response({'error': str(e)}, status=500)
 
 
+async def get_event_history_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['event_id']
+        history = await get_event_history(event_id)
+        return web.json_response({'ok': True, 'history': history})
+    except Exception as e:
+        logger.error('Ошибка получения истории: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events', get_events_handler)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
     app.router.add_post('/admin/api/events', create_event_handler)
     app.router.add_put('/admin/api/events/{id}', update_event_handler)
     app.router.add_delete('/admin/api/events/{id}', delete_event_handler)
+    app.router.add_get('/admin/api/events/{event_id}/history', get_event_history_handler)
