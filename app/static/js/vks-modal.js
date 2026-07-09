@@ -334,6 +334,7 @@ async function loadEventHistory(eventId) {
             'complete': 'Завершение',
             'uncomplete': 'Отмена завершения',
             'delete': 'Удаление',
+            'doc_remove': 'Удаление документов',
         };
 
         const fieldLabels = {
@@ -355,9 +356,17 @@ async function loadEventHistory(eventId) {
             const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
             const actionLabel = actionLabels[entry.action] || entry.action;
+            const dotClass = {
+                'create': '',
+                'update': ' dot-muted',
+                'complete': ' dot-success',
+                'uncomplete': ' dot-warning',
+                'delete': ' dot-danger',
+                'doc_remove': ' dot-danger',
+            }[entry.action] || '';
 
             html += `<div class="timeline-entry">
-                <div class="timeline-dot"></div>
+                <div class="timeline-dot${dotClass}"></div>
                 <div class="timeline-content">
                     <div class="timeline-user">${esc(entry.user_name)}</div>
                     <div class="timeline-datetime">${dateStr}, ${timeStr}</div>
