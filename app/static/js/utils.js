@@ -156,8 +156,11 @@ function createCrudModule(config) {
             btn.classList.add('loading');
             const origText = btn.textContent;
             btn.textContent = 'Сохранение...';
-            const payload = {};
-            fields.forEach(f => { payload[f.key] = document.getElementById(f.id).value.trim(); });
+            const payload = config.buildPayload ? config.buildPayload() : (() => {
+                const p = {};
+                fields.forEach(f => { p[f.key] = document.getElementById(f.id).value.trim(); });
+                return p;
+            })();
             try {
                 const csrfToken = getCsrfToken();
                 const url = editingId ? `${BASE_URL}${api}/${editingId}` : `${BASE_URL}${api}`;
@@ -167,8 +170,14 @@ function createCrudModule(config) {
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
-                if (data.ok) { await this.load(); this.closeModal(); showToast(editingId ? 'Обновлено' : 'Добавлено', 'success'); }
-                else { showToast(data.error || 'Ошибка', 'error'); }
+                if (data.ok) {
+                    await this.load();
+                    this.closeModal();
+                    const msg = config.messages
+                        ? (editingId ? config.messages.updated : config.messages.created)
+                        : (editingId ? 'Обновлено' : 'Добавлено');
+                    showToast(msg, 'success');
+                } else { showToast(data.error || 'Ошибка', 'error'); }
             } catch (e) { showToast('Ошибка сети', 'error'); }
             btn.disabled = false;
             btn.classList.remove('loading');
