@@ -322,6 +322,7 @@ async function loadEventHistory(eventId) {
         container.style.bottom = (window.innerHeight - rect.bottom) + 'px';
         container.style.left = rect.right + 'px';
     }
+    container.style.display = 'block';
     container.classList.add('drawer-open');
     document.getElementById('event-modal').classList.add('drawer-open');
 
@@ -418,6 +419,7 @@ function hideEventHistory() {
     const container = document.getElementById('event-modal-audit');
     if (container) {
         container.classList.remove('drawer-open');
+        container.style.display = 'none';
         document.getElementById('event-modal').classList.remove('drawer-open');
         container.innerHTML = '';
     }
