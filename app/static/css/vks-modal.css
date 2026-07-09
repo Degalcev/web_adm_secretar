@@ -534,7 +534,7 @@
 
 /* Dim the modal when drawer is open */
 .modal-overlay.drawer-open .vks-modal-flat {
-    opacity: 0.3;
+    opacity: 0.5;
     pointer-events: none;
     transition: opacity 0.3s ease;
 }

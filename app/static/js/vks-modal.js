@@ -314,17 +314,21 @@ async function loadEventHistory(eventId) {
     if (!container) return;
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    // Position drawer next to modal
+    // Position drawer to OVERLAP right side of modal
     const modal = document.querySelector('.vks-modal-flat');
     if (modal) {
         const rect = modal.getBoundingClientRect();
+        const dw = 340; // drawer width
         container.style.top = rect.top + 'px';
         container.style.bottom = (window.innerHeight - rect.bottom) + 'px';
-        container.style.left = rect.right + 'px';
+        container.style.left = (rect.right - dw) + 'px';
     }
+    // Show first, then animate in (display:none blocks transitions)
     container.style.display = 'block';
-    container.classList.add('drawer-open');
-    document.getElementById('event-modal').classList.add('drawer-open');
+    requestAnimationFrame(() => {
+        container.classList.add('drawer-open');
+        document.getElementById('event-modal').classList.add('drawer-open');
+    });
 
     try {
         const res = await fetch(`/admin/api/events/${eventId}/history`, {
