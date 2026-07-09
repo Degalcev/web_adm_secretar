@@ -745,6 +745,23 @@ function refreshEventDocs() {
     } else {
         docsContainer.innerHTML = '';
     }
+    _updateDocScrollGradients();
+}
+
+function _updateDocScrollGradients() {
+    const el = document.getElementById('f-event-docs');
+    if (!el) return;
+    const scrollable = el.scrollHeight > el.clientHeight + 1;
+    el.classList.toggle('is-scrollable', scrollable);
+    if (!scrollable) return;
+    const update = () => {
+        el.classList.toggle('at-top', el.scrollTop <= 1);
+        el.classList.toggle('at-bottom', el.scrollTop + el.clientHeight >= el.scrollHeight - 1);
+    };
+    update();
+    el.removeEventListener('scroll', el._docScrollHandler);
+    el._docScrollHandler = update;
+    el.addEventListener('scroll', update);
 }
 
 function addPendingFiles(fileList) {
