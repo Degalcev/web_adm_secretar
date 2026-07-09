@@ -3,7 +3,7 @@ from loguru import logger
 from datetime import date, datetime, timedelta, time
 
 from app.auth import require_csrf
-from app.event_logger import capture_event_state, log_event_change, get_event_history
+from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
 from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
 from database.sending import add_event, update_event, delete_event, add_document, delete_document
 
@@ -176,6 +176,10 @@ async def update_event_handler(request: web.Request) -> web.Response:
         removed_docs = [{'name': d['name'], 'id': d['id']} for d in existing_docs_before if d['id'] not in keep_list]
         added_docs = [{'name': f['name'], 'size': f['size']} for f in files]
         doc_changes = {'added': added_docs, 'removed': removed_docs} if (removed_docs or added_docs) else None
+
+        changes = _compare_states(old_state, new_state)
+        if action == 'update' and doc_changes and doc_changes.get('removed') and not changes:
+            action = 'doc_remove'
 
         await log_event_change(event_id, str(user.id) if user else None, action, old_state, new_state, doc_changes)
 

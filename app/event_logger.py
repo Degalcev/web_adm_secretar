@@ -44,7 +44,7 @@ async def log_event_change(
 ) -> None:
     """Запись изменения в event_history."""
     changes = None
-    if action in ('update', 'complete', 'uncomplete'):
+    if action in ('update', 'complete', 'uncomplete', 'doc_remove'):
         changes = _compare_states(old_state, new_state)
         if doc_changes:
             if changes is None:
