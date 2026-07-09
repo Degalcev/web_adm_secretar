@@ -2,7 +2,6 @@
 
 let allEvents = [];
 let editingEventId = null;
-let deletingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
 let _pendingVksFilter = null;
@@ -707,9 +706,7 @@ function confirmDeleteFromModal() {
     if (!editingEventId) return;
     const e = allEvents.find(x => x.id === editingEventId);
     const desc = e ? (e.description || 'без описания') : '';
-    document.getElementById('confirm-text').textContent = `Удалить ВКС «${desc}»? Это действие нельзя отменить.`;
-    deletingEventId = editingEventId;
-    document.getElementById('confirm-overlay').classList.add('show');
+    ConfirmManager.open('event', editingEventId, desc, deleteEvent);
 }
 
 function refreshEventDocs() {
@@ -990,19 +987,13 @@ async function completeEvent(id, checked) {
 }
 
 function openConfirmEvent(id) {
-    deletingId = null;
-    deletingOrgId = null;
-    deletingLocId = null;
-    deletingEventId = id;
-    document.getElementById('confirm-text').textContent = 'Событие ВКС будет удалено.';
-    document.getElementById('confirm-overlay').classList.add('show');
+    ConfirmManager.open('event', id, 'Событие ВКС', deleteEvent);
 }
 
-async function confirmDeleteEvent() {
-    if (!deletingEventId) return;
+async function deleteEvent(id) {
     const csrfToken = getCsrfToken();
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, {
+        const resp = await fetch(`${BASE_URL}/admin/api/events/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }
         });
@@ -1016,11 +1007,11 @@ async function confirmDeleteEvent() {
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
-            closeConfirm();
+            ConfirmManager.close();
             closeEventModal();
             showToast('Удалено', 'success');
         } else {
-            closeConfirm();
+            ConfirmManager.close();
             showToast(data.error || 'Ошибка', 'error');
         }
     } catch (e) { showToast('Ошибка сети', 'error'); }

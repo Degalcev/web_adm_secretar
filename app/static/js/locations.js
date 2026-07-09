@@ -2,7 +2,6 @@
 
 let allLocations = [];
 let editingLocId = null;
-let deletingLocId = null;
 
 async function loadLocations() {
     const tbody = document.getElementById('locations-tbody');
@@ -104,23 +103,18 @@ async function saveLocation() {
 }
 
 function openConfirmLoc(id, name) {
-    deletingLocId = id;
-    deletingId = null;
-    deletingOrgId = null;
-    document.getElementById('confirm-text').textContent = `Локация «${name}» будет удалена.`;
-    document.getElementById('confirm-overlay').classList.add('show');
+    ConfirmManager.open('location', id, name, deleteLocation);
 }
 
-async function confirmDeleteLoc() {
-    if (!deletingLocId) return;
+async function deleteLocation(id) {
     try {
         const csrfToken = getCsrfToken();
-        const resp = await fetch(`${BASE_URL}/admin/api/locations/${deletingLocId}`, {
+        const resp = await fetch(`${BASE_URL}/admin/api/locations/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }
         });
         const data = await resp.json();
-        if (data.ok) { closeConfirm(); await loadLocations(); showToast('Удалено', 'success'); }
-        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
+        if (data.ok) { ConfirmManager.close(); await loadLocations(); showToast('Удалено', 'success'); }
+        else { ConfirmManager.close(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { ConfirmManager.close(); showToast('Ошибка сети', 'error'); }
 }

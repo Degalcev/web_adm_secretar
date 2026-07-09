@@ -697,8 +697,8 @@
     <h3>Подтвердите удаление</h3>
     <p id="confirm-text">Это действие нельзя отменить.</p>
     <div class="confirm-actions" id="confirm-actions">
-      <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
-      <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
+      <button class="btn btn-ghost" onclick="ConfirmManager.close()">Отмена</button>
+      <button class="btn btn-danger" onclick="ConfirmManager.dispatch()">Удалить</button>
     </div>
   </div>
 </div>

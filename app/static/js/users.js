@@ -2,7 +2,6 @@
 
 let allUsers = [];
 let editingId = null;
-let deletingId = null;
 
 async function loadUsers() {
     const tbody = document.getElementById('users-tbody');
@@ -171,65 +170,18 @@ async function saveUser() {
 // ─── Удаление пользователя ───────────────────────────────────────────
 
 function openConfirm(id, name) {
-    deletingId = id;
-    deletingOrgId = null;
-    deletingLocId = null;
-    document.getElementById('confirm-text').textContent = `Пользователь «${name}» будет удалён безвозвратно.`;
-    document.getElementById('confirm-overlay').classList.add('show');
+    ConfirmManager.open('user', id, name, deleteUser);
 }
 
-function closeConfirm() {
-    const overlay = document.getElementById('confirm-overlay');
-    overlay.classList.remove('show');
-    // Восстановить оригинальные кнопки
-    document.getElementById('confirm-actions').innerHTML = `
-        <button class="btn btn-ghost" onclick="closeConfirm()">Отмена</button>
-        <button class="btn btn-danger" onclick="confirmDelete()">Удалить</button>
-    `;
-    // Восстановить иконку и заголовок
-    const icon = overlay.querySelector('.confirm-icon');
-    const title = overlay.querySelector('h3');
-    icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
-    icon.style.background = '';
-    icon.style.color = '';
-    title.textContent = 'Подтвердите удаление';
-    document.getElementById('confirm-text').textContent = 'Это действие нельзя отменить.';
-    deletingId = null;
-    deletingOrgId = null;
-    deletingLocId = null;
-    deletingEventId = null;
-}
-
-async function confirmDelete() {
-    // Блокируем кнопки и показываем спиннер
-    const overlay = document.getElementById('confirm-overlay');
-    const okBtn = document.getElementById('confirm-ok-btn');
-    const cancelBtn = document.getElementById('confirm-cancel-btn');
-    if (okBtn) {
-        okBtn.disabled = true;
-        okBtn.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Выполняю...';
-    }
-    if (cancelBtn) {
-        cancelBtn.disabled = true;
-        cancelBtn.style.pointerEvents = 'none';
-        cancelBtn.style.opacity = '0.5';
-    }
-    overlay.querySelector('.confirm-icon').innerHTML = '<svg class="spin" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
-    overlay.querySelector('h3').textContent = 'Выполняю...';
-    overlay.querySelector('p').textContent = '';
-
-    if (deletingEventId) { await confirmDeleteEvent(); return; }
-    if (deletingOrgId) { await confirmDeleteOrg(); return; }
-    if (deletingLocId) { await confirmDeleteLoc(); return; }
-    if (!deletingId) return;
+async function deleteUser(id) {
     try {
         const csrfToken = getCsrfToken();
-        const resp = await fetch(`${BASE_URL}/admin/api/users/${deletingId}`, {
+        const resp = await fetch(`${BASE_URL}/admin/api/users/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }
         });
         const data = await resp.json();
-        if (data.ok) { closeConfirm(); await loadUsers(); showToast('Пользователь удалён', 'success'); }
-        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
+        if (data.ok) { ConfirmManager.close(); await loadUsers(); showToast('Пользователь удалён', 'success'); }
+        else { ConfirmManager.close(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { ConfirmManager.close(); showToast('Ошибка сети', 'error'); }
 }

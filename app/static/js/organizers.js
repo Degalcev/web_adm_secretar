@@ -2,7 +2,6 @@
 
 let allOrganizers = [];
 let editingOrgId = null;
-let deletingOrgId = null;
 
 async function loadOrganizers() {
     const tbody = document.getElementById('organizers-tbody');
@@ -117,23 +116,18 @@ async function saveOrganizer() {
 }
 
 function openConfirmOrg(id, name) {
-    deletingOrgId = id;
-    deletingId = null;
-    deletingLocId = null;
-    document.getElementById('confirm-text').textContent = `Организатор «${name}» будет удалён.`;
-    document.getElementById('confirm-overlay').classList.add('show');
+    ConfirmManager.open('organizer', id, name, deleteOrganizer);
 }
 
-async function confirmDeleteOrg() {
-    if (!deletingOrgId) return;
+async function deleteOrganizer(id) {
     try {
         const csrfToken = getCsrfToken();
-        const resp = await fetch(`${BASE_URL}/admin/api/organizers/${deletingOrgId}`, {
+        const resp = await fetch(`${BASE_URL}/admin/api/organizers/${id}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }
         });
         const data = await resp.json();
-        if (data.ok) { closeConfirm(); await loadOrganizers(); showToast('Удалено', 'success'); }
-        else { closeConfirm(); showToast(data.error || 'Ошибка', 'error'); }
-    } catch (e) { closeConfirm(); showToast('Ошибка сети', 'error'); }
+        if (data.ok) { ConfirmManager.close(); await loadOrganizers(); showToast('Удалено', 'success'); }
+        else { ConfirmManager.close(); showToast(data.error || 'Ошибка', 'error'); }
+    } catch (e) { ConfirmManager.close(); showToast('Ошибка сети', 'error'); }
 }
