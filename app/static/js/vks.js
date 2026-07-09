@@ -749,21 +749,23 @@ function refreshEventDocs() {
 }
 
 function _updateDocScrollGradients() {
-    const el = document.getElementById('f-event-docs');
-    const fadeTop = document.getElementById('doc-fade-top');
-    const fadeBottom = document.getElementById('doc-fade-bottom');
-    if (!el || !fadeTop || !fadeBottom) return;
-    const scrollable = el.scrollHeight > el.clientHeight + 1;
-    fadeTop.classList.toggle('is-visible', scrollable && el.scrollTop > 1);
-    fadeBottom.classList.toggle('is-visible', scrollable && el.scrollTop + el.clientHeight < el.scrollHeight - 1);
-    if (!scrollable) return;
-    const update = () => {
-        fadeTop.classList.toggle('is-visible', el.scrollTop > 1);
-        fadeBottom.classList.toggle('is-visible', el.scrollTop + el.clientHeight < el.scrollHeight - 1);
-    };
-    el.removeEventListener('scroll', el._docScrollHandler);
-    el._docScrollHandler = update;
-    el.addEventListener('scroll', update);
+    requestAnimationFrame(() => {
+        const el = document.getElementById('f-event-docs');
+        const fadeTop = document.getElementById('doc-fade-top');
+        const fadeBottom = document.getElementById('doc-fade-bottom');
+        if (!el || !fadeTop || !fadeBottom) return;
+        const scrollable = el.scrollHeight > el.clientHeight + 1;
+        fadeTop.classList.toggle('is-visible', scrollable && el.scrollTop > 1);
+        fadeBottom.classList.toggle('is-visible', scrollable && el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+        if (!scrollable) return;
+        const update = () => {
+            fadeTop.classList.toggle('is-visible', el.scrollTop > 1);
+            fadeBottom.classList.toggle('is-visible', el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+        };
+        el.removeEventListener('scroll', el._docScrollHandler);
+        el._docScrollHandler = update;
+        el.addEventListener('scroll', update);
+    });
 }
 
 function addPendingFiles(fileList) {
