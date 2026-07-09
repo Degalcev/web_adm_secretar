@@ -502,7 +502,6 @@
     min-width: 0;
     border-left: none;
     border-top: 1px solid var(--border);
-    max-height: 200px;
   }
 }
 
@@ -511,21 +510,39 @@
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
 }
 
 .vks-modal-body-wrapper .modal-body {
     flex: 1;
     overflow-y: auto;
     min-width: 0;
+    transition: opacity 0.3s ease;
 }
 
 .vks-modal-body-wrapper .event-timeline {
-    width: 320px;
-    min-width: 280px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 340px;
+    z-index: 10;
     overflow-y: auto;
     border-left: 1px solid var(--border);
     padding: 16px;
     background: var(--bg-elevated);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+/* Timeline drawer open state */
+.vks-modal-body-wrapper.timeline-open .event-timeline {
+    transform: translateX(0);
+}
+
+.vks-modal-body-wrapper.timeline-open .modal-body {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
@@ -615,6 +632,8 @@
     font-size: 0.75rem;
     line-height: 1.4;
     padding: 1px 0;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .timeline-change::before {
