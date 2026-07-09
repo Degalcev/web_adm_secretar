@@ -59,6 +59,11 @@ async function _refreshEvents() {
         } else if (page === 'dashboard') {
             renderDashboard();
         }
+
+        // Update modal lock state if open event changed
+        if (typeof editingEventId !== 'undefined' && editingEventId && typeof updateModalLockState === 'function') {
+            updateModalLockState();
+        }
     } catch (e) {}
 }
 
