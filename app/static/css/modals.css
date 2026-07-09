@@ -236,10 +236,15 @@
   color: var(--fg-subtle);
 }
 
-/* Docs scroll — max 4 items visible on desktop */
+/* Docs scroll — max 4 items visible on desktop, hidden scrollbar */
 .vks-modal-flat .doc-card-list {
   max-height: 260px;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.vks-modal-flat .doc-card-list::-webkit-scrollbar {
+  display: none;
 }
 
 /* Compact footer buttons */
@@ -606,5 +611,29 @@
   .vks-modal-flat .doc-card-list {
     max-height: 140px;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .vks-modal-flat .doc-card-list::-webkit-scrollbar {
+    display: none;
+  }
+  /* Doc card — name + size in one line on mobile */
+  .vks-modal-flat .doc-card {
+    padding: 8px 10px;
+  }
+  .vks-modal-flat .doc-card-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .vks-modal-flat .doc-card-name {
+    flex-shrink: 0;
+    max-width: none;
+  }
+  .vks-modal-flat .doc-card-meta {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 }
