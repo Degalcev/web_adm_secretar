@@ -512,11 +512,15 @@
 
 /* ─── VKS Modal Flat — Mobile (после всего файла, максимальный приоритет) */
 @media (max-width: 768px) {
-  .modal-overlay {
-    padding-top: 28px;
-    padding-bottom: 12px;
-    padding-left: 8px;
-    padding-right: 8px;
+  #event-modal {
+    top: 28px;
+    bottom: 12px;
+    left: 8px;
+    right: 8px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .modal {
     max-height: calc(100dvh - 40px);
