@@ -504,6 +504,7 @@
 .vks-modal-body-wrapper {
     display: flex;
     flex: 1;
+    position: relative;
 }
 
 .vks-modal-body-wrapper .modal-body {
@@ -530,12 +531,15 @@
     transform: scaleX(1);
 }
 
-/* Dim modal body behind drawer — backdrop effect like modal overlay */
-.vks-modal-body-wrapper.timeline-dimmed .modal-body {
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(3px);
+/* Dim modal body behind drawer — overlay covers all form elements */
+.vks-modal-body-wrapper.timeline-dimmed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(2px);
+    z-index: 5;
     pointer-events: none;
-    transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */

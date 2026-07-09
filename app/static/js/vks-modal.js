@@ -319,10 +319,10 @@ async function loadEventHistory(eventId) {
     if (body) {
         const rect = body.getBoundingClientRect();
         const w = Math.round(rect.width * 0.75);
-        container.style.top = rect.top + 'px';
+        container.style.top = (rect.top + 1) + 'px';
         container.style.left = (rect.right - w) + 'px';
         container.style.width = w + 'px';
-        container.style.height = rect.height + 'px';
+        container.style.height = (rect.height - 2) + 'px';
     }
     container.style.display = 'block';
     requestAnimationFrame(() => {
