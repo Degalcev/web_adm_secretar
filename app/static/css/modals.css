@@ -111,6 +111,7 @@
   padding: 12px 16px 10px;
   border-bottom: none;
   flex-shrink: 0;
+  background: var(--bg-elevated);
 }
 
 .vks-modal-flat .modal-header h3 {
@@ -144,6 +145,7 @@
   padding: 10px 16px;
   border-top: 1px solid var(--border);
   flex-shrink: 0;
+  background: var(--bg-elevated);
 }
 
 /* Form */
