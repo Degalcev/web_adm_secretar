@@ -314,20 +314,18 @@ async function loadEventHistory(eventId) {
     if (!container) return;
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    // Position drawer to OVERLAP right side of modal
-    const modal = document.querySelector('.vks-modal-flat');
-    if (modal) {
-        const rect = modal.getBoundingClientRect();
-        const dw = 340; // drawer width
+    // Position drawer to cover ONLY the modal-body area
+    const body = document.querySelector('.vks-modal-flat .modal-body');
+    if (body) {
+        const rect = body.getBoundingClientRect();
         container.style.top = rect.top + 'px';
-        container.style.bottom = (window.innerHeight - rect.bottom) + 'px';
-        container.style.left = (rect.right - dw) + 'px';
+        container.style.left = rect.left + 'px';
+        container.style.width = rect.width + 'px';
+        container.style.height = rect.height + 'px';
     }
-    // Show first, then animate in (display:none blocks transitions)
     container.style.display = 'block';
     requestAnimationFrame(() => {
         container.classList.add('drawer-open');
-        document.getElementById('event-modal').classList.add('drawer-open');
     });
 
     try {
@@ -424,7 +422,6 @@ function hideEventHistory() {
     if (container) {
         container.classList.remove('drawer-open');
         container.style.display = 'none';
-        document.getElementById('event-modal').classList.remove('drawer-open');
         container.innerHTML = '';
     }
 }

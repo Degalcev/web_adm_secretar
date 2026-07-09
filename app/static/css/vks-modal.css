@@ -512,15 +512,11 @@
     min-width: 0;
 }
 
-/* Timeline drawer — fixed positioned, outside modal */
+/* Timeline drawer — covers only modal-body, slides right-to-left */
 .event-timeline {
     position: fixed;
-    top: 0;
-    bottom: 0;
-    width: 340px;
     z-index: 101;
     overflow-y: auto;
-    border-left: 1px solid var(--border);
     padding: 16px;
     background: var(--bg-elevated);
     transform: translateX(100%);
@@ -530,13 +526,6 @@
 
 .event-timeline.drawer-open {
     transform: translateX(0);
-}
-
-/* Dim the modal when drawer is open */
-.modal-overlay.drawer-open .vks-modal-flat {
-    opacity: 0.5;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
