@@ -1,10 +1,9 @@
 // ─── Пользователи ────────────────────────────────────────────────────
 
-let allUsers = [];
-
 const users = createCrudModule({
     name: 'пользователя',
     api: '/admin/api/users',
+    storeKey: 'allUsers',
     confirmType: 'user',
     modalId: 'user-modal',
     titleId: 'modal-title',

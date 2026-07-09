@@ -29,6 +29,14 @@ function showToast(msg, type) {
 
 const BASE_URL = window.location.origin;
 
+// ─── Централизованное хранилище данных ────────────────────────────
+const store = {
+    allEvents: [],
+    allLocations: [],
+    allOrganizers: [],
+    allUsers: [],
+};
+
 function getCsrfToken() {
     return document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
 }
@@ -118,6 +126,7 @@ function createCrudModule(config) {
                 const resp = await fetch(`${BASE_URL}${api}`);
                 if (resp.status === 401) { showLogin(); return; }
                 const items = await resp.json();
+                if (config.storeKey) store[config.storeKey] = items;
                 config._items = items;
                 if (render) render(items);
                 if (stats) stats(items);

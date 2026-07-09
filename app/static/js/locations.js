@@ -1,10 +1,9 @@
 // ─── Локации ─────────────────────────────────────────────────────────
 
-let allLocations = [];
-
 const locations = createCrudModule({
     name: 'локацию',
     api: '/admin/api/locations',
+    storeKey: 'allLocations',
     confirmType: 'location',
     modalId: 'location-modal',
     titleId: 'loc-modal-title',

@@ -47,10 +47,9 @@ async function _refreshEvents() {
         const resp = await fetch('/admin/api/events', { credentials: 'same-origin' });
         if (!resp.ok) return;
         const events = await resp.json();
-        if (typeof allEvents !== 'undefined') allEvents = events;
+        store.allEvents = events;
         if (typeof _dashEvents !== 'undefined') _dashEvents = events;
 
-        // Перерисовать активную страницу
         const page = currentPage || '';
         if (page === 'vks-active') {
             renderVksBoard('vks-board-active', 'active');
@@ -68,16 +67,15 @@ async function _refreshLocations() {
         const resp = await fetch('/admin/api/locations', { credentials: 'same-origin' });
         if (!resp.ok) return;
         const locs = await resp.json();
-        if (window) window.allLocations = locs;
+        store.allLocations = locs;
         if (typeof _dashLocations !== 'undefined') {
             _dashLocations = {};
             locs.forEach(l => { _dashLocations[l.id] = l.name; });
         }
-        allLocations = locs;
         if ((currentPage || '') === 'locations') {
-            renderLocations(allLocations);
-            document.getElementById('stat-total-loc').textContent = allLocations.length;
-            document.getElementById('stat-shown-loc').textContent = allLocations.length;
+            renderLocations(store.allLocations);
+            document.getElementById('stat-total-loc').textContent = store.allLocations.length;
+            document.getElementById('stat-shown-loc').textContent = store.allLocations.length;
         }
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
@@ -88,16 +86,15 @@ async function _refreshOrganizers() {
         const resp = await fetch('/admin/api/organizers', { credentials: 'same-origin' });
         if (!resp.ok) return;
         const orgs = await resp.json();
-        if (window) window.allOrganizers = orgs;
+        store.allOrganizers = orgs;
         if (typeof _dashOrganizers !== 'undefined') {
             _dashOrganizers = {};
             orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
         }
-        allOrganizers = orgs;
         if ((currentPage || '') === 'organizers') {
-            renderOrganizers(allOrganizers);
-            document.getElementById('stat-total-org').textContent = allOrganizers.length;
-            document.getElementById('stat-shown-org').textContent = allOrganizers.length;
+            renderOrganizers(store.allOrganizers);
+            document.getElementById('stat-total-org').textContent = store.allOrganizers.length;
+            document.getElementById('stat-shown-org').textContent = store.allOrganizers.length;
         }
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
@@ -108,10 +105,10 @@ async function _refreshUsers() {
         const resp = await fetch('/admin/api/users', { credentials: 'same-origin' });
         if (!resp.ok) return;
         const users = await resp.json();
-        allUsers = users;
+        store.allUsers = users;
         if ((currentPage || '') === 'users') {
-            renderUsers(allUsers);
-            updateStats(allUsers);
+            renderUsers(store.allUsers);
+            updateStats(store.allUsers);
         }
     } catch (e) {}
 }

@@ -1,10 +1,9 @@
 // ─── Организаторы ────────────────────────────────────────────────────
 
-let allOrganizers = [];
-
 const organizers = createCrudModule({
     name: 'организатора',
     api: '/admin/api/organizers',
+    storeKey: 'allOrganizers',
     confirmType: 'organizer',
     modalId: 'organizer-modal',
     titleId: 'org-modal-title',

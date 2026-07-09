@@ -1,6 +1,5 @@
 // ─── ВКС ─────────────────────────────────────────────────────────────
 
-let allEvents = [];
 let editingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
@@ -46,17 +45,17 @@ function matchDateFilter(eventDate, filter) {
 }
 
 async function ensureOrgsAndLocs() {
-    if (!window.allOrganizers || !window.allOrganizers.length) {
+    if (!store.allOrganizers || !store.allOrganizers.length) {
         try {
             const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
-            if (resp.ok) window.allOrganizers = await resp.json();
-        } catch (e) { window.allOrganizers = []; }
+            if (resp.ok) store.allOrganizers = await resp.json();
+        } catch (e) { store.allOrganizers = []; }
     }
-    if (!window.allLocations || !window.allLocations.length) {
+    if (!store.allLocations || !store.allLocations.length) {
         try {
             const resp = await fetch(`${BASE_URL}/admin/api/locations`);
-            if (resp.ok) window.allLocations = await resp.json();
-        } catch (e) { window.allLocations = []; }
+            if (resp.ok) store.allLocations = await resp.json();
+        } catch (e) { store.allLocations = []; }
     }
 }
 
@@ -64,11 +63,11 @@ async function loadAllEvents() {
     await ensureOrgsAndLocs();
     const resp = await fetch(`${BASE_URL}/admin/api/events`);
     if (resp.status === 401) { showLogin(); return; }
-    allEvents = await resp.json();
+    store.allEvents = await resp.json();
 }
 
 async function loadVksActive() {
-    if (!allEvents.length) {
+    if (!store.allEvents.length) {
         await loadAllEvents();
     }
     populateDateSelects('f-vks-active');
@@ -142,7 +141,7 @@ function showFilterBanner(filter) {
     else if (filter === 'all') text = 'Фильтр: Все';
     else if (filter.startsWith('location:')) {
         const locId = filter.split(':')[1];
-        const loc = (window.allLocations || []).find(l => l.id === locId);
+        const loc = (store.allLocations || []).find(l => l.id === locId);
         text = `Фильтр: Локация — ${loc ? loc.name : locId}`;
     }
     if (!text) return;
@@ -172,7 +171,7 @@ function clearVksFilter() {
 }
 
 function updateVksStats() {
-    const active = allEvents.filter(e => !e.completed);
+    const active = store.allEvents.filter(e => !e.completed);
     const now = new Date();
     const today = localDateStr(now);
 
@@ -219,7 +218,7 @@ function filterVksByQuick(type) {
 }
 
 async function loadVksCompleted() {
-    if (!allEvents.length) {
+    if (!store.allEvents.length) {
         await loadAllEvents();
     }
     populateDateSelects('f-vks-completed');
@@ -238,7 +237,7 @@ function renderVksBoard(boardId, filter) {
     const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
     const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
 
-    let events = [...allEvents];
+    let events = [...store.allEvents];
 
     if (filter === 'active') {
         events = events.filter(e => !e.completed);
@@ -463,12 +462,12 @@ function toggleVksDocs(btn) {
 }
 
 function getOrganizerName(id) {
-    const o = (window.allOrganizers || []).find(x => x.id === id);
+    const o = (store.allOrganizers || []).find(x => x.id === id);
     return o ? o.short_name || o.name : '';
 }
 
 function getLocationName(id) {
-    const l = (window.allLocations || []).find(x => x.id === id);
+    const l = (store.allLocations || []).find(x => x.id === id);
     return l ? l.name : '';
 }
 
@@ -575,7 +574,7 @@ async function openAddEventModal() {
 
 async function openEditEventModal(id) {
     if (window._vksModalLoaded) await window._vksModalLoaded;
-    const e = allEvents.find(x => x.id === id);
+    const e = store.allEvents.find(x => x.id === id);
     if (!e) return;
     editingEventId = id;
     pendingFiles = [];
@@ -688,7 +687,7 @@ function toggleEventComplete() {
     } else {
         btn.classList.remove('active');
         if (pillLabel) pillLabel.textContent = 'Завершить';
-        const e = allEvents.find(x => x.id === editingEventId);
+        const e = store.allEvents.find(x => x.id === editingEventId);
         const today = localDateStr(new Date());
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'modal-event-status status-missed';
@@ -704,7 +703,7 @@ function toggleEventComplete() {
 
 function confirmDeleteFromModal() {
     if (!editingEventId) return;
-    const e = allEvents.find(x => x.id === editingEventId);
+    const e = store.allEvents.find(x => x.id === editingEventId);
     const desc = e ? (e.description || 'без описания') : '';
     ConfirmManager.open('event', editingEventId, desc, deleteEvent);
 }
@@ -713,7 +712,7 @@ function refreshEventDocs() {
     const docsContainer = document.getElementById('f-event-docs');
 
     const existing = (editingEventId)
-        ? (allEvents.find(x => x.id === editingEventId)?.documents || [])
+        ? (store.allEvents.find(x => x.id === editingEventId)?.documents || [])
             .filter(d => !removedDocIds.includes(d.id))
         : [];
 
@@ -804,10 +803,10 @@ async function loadEventSelects() {
     const locSelect = document.getElementById('f-event-location');
 
     orgSelect.innerHTML = '<option value="">Не указан</option>' +
-        (window.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+        (store.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
 
     locSelect.innerHTML = '<option value="">Не указана</option>' +
-        (window.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+        (store.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
 
     // Заполнить фильтры VKS
     populateVksFilters();
@@ -815,9 +814,9 @@ async function loadEventSelects() {
 
 function populateVksFilters() {
     const orgOptions = '<option value="">Все</option>' +
-        (window.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+        (store.allOrganizers || []).map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
     const locOptions = '<option value="">Все</option>' +
-        (window.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+        (store.allLocations || []).map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
 
     ['f-vks-active-org', 'f-vks-completed-org'].forEach(id => {
         const el = document.getElementById(id);
@@ -858,7 +857,7 @@ async function saveEvent() {
     formData.append('csrf_token', csrfToken);
 
     if (editingEventId) {
-        const existing = allEvents.find(x => x.id === editingEventId)?.documents || [];
+        const existing = store.allEvents.find(x => x.id === editingEventId)?.documents || [];
         const keepIds = existing.filter(d => !removedDocIds.includes(d.id)).map(d => d.id);
         formData.append('keep_doc_ids', keepIds.join(','));
     }
@@ -888,7 +887,7 @@ async function saveEvent() {
             if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
             // Refresh dashboard if visible
             if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...allEvents];
+                _dashEvents = [...store.allEvents];
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
@@ -907,7 +906,7 @@ async function saveEvent() {
 
 function confirmCompleteEvent(id, checked) {
     try {
-        const e = allEvents.find(x => x.id === id);
+        const e = store.allEvents.find(x => x.id === id);
         const desc = e ? (e.description || 'без описания') : '';
         const action = checked ? 'завершить' : 'снять завершение с';
         document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
@@ -975,7 +974,7 @@ async function completeEvent(id, checked) {
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
             if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...allEvents];
+                _dashEvents = [...store.allEvents];
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
@@ -1003,7 +1002,7 @@ async function deleteEvent(id) {
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
             if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...allEvents];
+                _dashEvents = [...store.allEvents];
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }

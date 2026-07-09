@@ -116,10 +116,10 @@ async function logout() {
     isAuthenticated = false;
     window.currentUserRole = null;
     window.currentUserName = '';
-    if (typeof allUsers !== 'undefined') allUsers = [];
-    if (typeof allEvents !== 'undefined') allEvents = [];
-    if (typeof allOrganizers !== 'undefined') allOrganizers = [];
-    if (typeof allLocations !== 'undefined') allLocations = [];
+    store.allUsers = [];
+    store.allEvents = [];
+    store.allOrganizers = [];
+    store.allLocations = [];
     const userEl = document.getElementById('topbar-user');
     if (userEl) userEl.style.display = 'none';
     // Сброс раскрытия меню

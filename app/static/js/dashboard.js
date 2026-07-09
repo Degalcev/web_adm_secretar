@@ -42,17 +42,17 @@ async function loadFullData() {
         if (!eventsResp.ok) throw new Error(eventsResp.status);
 
         _dashEvents = await eventsResp.json();
-        if (typeof allEvents !== 'undefined') allEvents = _dashEvents;
+        store.allEvents = _dashEvents;
 
         const locations = await locResp.json();
         _dashLocations = {};
         locations.forEach(l => { _dashLocations[l.id] = l.name; });
-        if (typeof window !== 'undefined') window.allLocations = locations;
+            store.allLocations = locations;
 
         const organizers = await orgResp.json();
         _dashOrganizers = {};
         organizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
-        if (typeof window !== 'undefined') window.allOrganizers = organizers;
+            store.allOrganizers = organizers;
 
         try {
             localStorage.setItem('dash_cache', JSON.stringify({
@@ -483,7 +483,7 @@ function drawChart() {
 }
 
 function dashConfirmCompleteEvent(id, checked) {
-    const e = allEvents.find(x => x.id === id);
+    const e = store.allEvents.find(x => x.id === id);
     const desc = e ? (e.description || 'без описания') : '';
     const action = checked ? 'завершить' : 'снять завершение с';
     document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
@@ -542,7 +542,7 @@ async function dashCompleteEvent(id, checked) {
         const data = await resp.json();
         if (data.ok) {
             await loadAllEvents();
-            _dashEvents = [...allEvents];
+            _dashEvents = [...store.allEvents];
             try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
             renderDashboard();
             showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');

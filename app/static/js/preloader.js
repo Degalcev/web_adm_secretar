@@ -7,14 +7,12 @@ function restoreFromCache() {
     if (!cached) return false;
     try {
         const c = JSON.parse(cached);
-        if (typeof allEvents !== 'undefined' && c.events) allEvents = c.events;
+        if (c.events) store.allEvents = c.events;
         if (typeof _dashEvents !== 'undefined') _dashEvents = c.events || [];
         if (typeof _dashLocations !== 'undefined') _dashLocations = c.locations || {};
         if (typeof _dashOrganizers !== 'undefined') _dashOrganizers = c.organizers || {};
-        if (window) {
-            window.allLocations = c.locations_raw || [];
-            window.allOrganizers = c.organizers_raw || [];
-        }
+        store.allLocations = c.locations_raw || [];
+        store.allOrganizers = c.organizers_raw || [];
         return true;
     } catch (e) { return false; }
 }
@@ -26,7 +24,7 @@ async function preloadAllData() {
         if (!resp.ok) return;
         const data = await resp.json();
 
-        if (typeof allEvents !== 'undefined') allEvents = data.events || [];
+        store.allEvents = data.events || [];
         if (typeof _dashEvents !== 'undefined') _dashEvents = data.events || [];
         if (typeof _dashLocations !== 'undefined') {
             _dashLocations = {};
@@ -36,10 +34,8 @@ async function preloadAllData() {
             _dashOrganizers = {};
             (data.organizers || []).forEach(o => { _dashOrganizers[o.id] = o.name; });
         }
-        if (window) {
-            window.allLocations = data.locations || [];
-            window.allOrganizers = data.organizers || [];
-        }
+        store.allLocations = data.locations || [];
+        store.allOrganizers = data.organizers || [];
 
         localStorage.setItem('dash_cache', JSON.stringify({
             events: data.events || [],
