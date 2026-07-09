@@ -204,8 +204,8 @@ function renderUpcomingItem(e, opts = {}) {
         : `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
 
     const timeHtml = opts.showDate
-        ? `<div class="dash-upcoming-time">${opts.dateStr} ${e.time || '--:--'}</div>`
-        : `<div class="dash-upcoming-time">${e.time || '--:--'}</div>`;
+        ? `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? '<span class="dash-upcoming-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>' : ''}${opts.dateStr} ${e.time || '--:--'}</div>`
+        : `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? '<span class="dash-upcoming-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>' : ''}${e.time || '--:--'}</div>`;
 
     return `
         <div class="dash-upcoming-item ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">

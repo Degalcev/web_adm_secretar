@@ -835,9 +835,34 @@
     padding: 2px 6px;
     background: rgba(245, 158, 11, 0.1);
     border-radius: 4px;
-    margin-top: 4px;
 }
 
 .vks-card-lock svg {
+    flex-shrink: 0;
+}
+
+/* Dashboard lock icon */
+.dash-upcoming-lock {
+    display: inline-flex;
+    align-items: center;
+    color: var(--warning, #f59e0b);
+    margin-right: 4px;
+}
+
+/* Modal lock info banner */
+.modal-lock-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    margin: 0 16px 8px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--warning, #f59e0b);
+}
+
+.modal-lock-info svg {
     flex-shrink: 0;
 }

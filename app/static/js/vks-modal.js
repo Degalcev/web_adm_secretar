@@ -160,6 +160,16 @@ async function openEditEventModal(id) {
         document.getElementById('event-doc-upload-label').style.display = '';
     }
 
+    // Lock info banner
+    const lockInfo = document.getElementById('event-modal-lock-info');
+    const lockText = document.getElementById('event-modal-lock-text');
+    if (isLockedByOther) {
+        lockText.textContent = `Редактирует: ${e.locked_by}`;
+        lockInfo.style.display = 'flex';
+    } else {
+        lockInfo.style.display = 'none';
+    }
+
     document.getElementById('event-modal').classList.add('show');
 }
 
