@@ -178,30 +178,6 @@ function closeEventModal() {
     removedDocIds = [];
 }
 
-function updateModalLockState() {
-    if (!editingEventId) return;
-    const e = store.allEvents.find(x => x.id === editingEventId);
-    if (!e) return;
-
-    const locked = e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id);
-    isLockedByOther = locked;
-
-    const fields = ['f-event-date', 'f-event-time', 'f-event-organizer', 'f-event-location', 'f-event-desc', 'f-event-url'];
-    const btns = ['event-modal-save-btn', 'event-modal-delete-btn', 'event-modal-complete-btn'];
-
-    fields.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = locked; });
-    btns.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = locked; });
-
-    const uploadLabel = document.getElementById('event-doc-upload-label');
-    if (uploadLabel) uploadLabel.style.display = locked ? 'none' : '';
-
-    document.querySelectorAll('.doc-card-delete').forEach(btn => { btn.disabled = locked; });
-
-    if (locked) {
-        showToast(`Редактирует: ${e.locked_by}`, 'warning');
-    }
-}
-
 function refreshEventDocs() {
     const docsContainer = document.getElementById('f-event-docs');
 
