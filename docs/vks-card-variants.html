@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VKS Card Variants</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elevated: #161b22;
+    --surface: #21262d;
+    --border: #30363d;
+    --fg: #e6edf3;
+    --fg-muted: #8b949e;
+    --fg-subtle: #6e7681;
+    --accent: #2dd4bf;
+    --accent-ambient: #9773fa;
+    --danger: #f87171;
+    --warning: #fbbf24;
+    --success: #4ade80;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .subtitle { color: var(--fg-muted); font-size: 0.875rem; margin-bottom: 2rem; }
+  .variant { margin-bottom: 3rem; }
+  .variant-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--accent); }
+  .variant-desc { color: var(--fg-muted); font-size: 0.8125rem; margin-bottom: 1rem; }
+  .section { border-top: 1px solid var(--border); padding-top: 2rem; margin-top: 2rem; }
+
+  /* Common doc styles */
+  .doc-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.6875rem; padding: 3px 8px; border-radius: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--fg-muted); cursor: pointer; transition: all 0.15s;
+    text-decoration: none;
+  }
+  .doc-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .doc-chip svg { flex-shrink: 0; }
+  .link-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px;
+    color: var(--accent); cursor: pointer; transition: all 0.15s;
+    text-decoration: none; flex-shrink: 0;
+  }
+  .link-icon:hover { background: rgba(45,212,191,0.12); }
+
+  /* ═══ VARIANT 1: Color stripe ═══ */
+  .v1-card {
+    display: flex; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 0.75rem; transition: all 0.2s;
+  }
+  .v1-card:hover { border-color: rgba(45,212,191,0.3); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .v1-stripe { width: 4px; flex-shrink: 0; }
+  .v1-stripe.missed { background: var(--danger); }
+  .v1-stripe.active { background: var(--warning); }
+  .v1-stripe.completed { background: var(--success); }
+  .v1-content { flex: 1; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+  .v1-time-block { min-width: 56px; text-align: center; flex-shrink: 0; }
+  .v1-time { font-size: 1.125rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .v1-date { font-size: 0.625rem; color: var(--fg-muted); margin-top: 2px; }
+  .v1-body { flex: 1; min-width: 0; }
+  .v1-desc { font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v1-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .v1-tag { font-size: 0.625rem; font-weight: 500; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; }
+  .v1-tag.org { background: rgba(151,115,250,0.12); color: var(--accent-ambient); }
+  .v1-tag.loc { background: rgba(45,212,191,0.12); color: var(--accent); }
+  .v1-actions { display: flex; gap: 4px; flex-shrink: 0; align-items: center; }
+  .v1-btn { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--fg-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .v1-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .v1-btn.done { color: var(--success); border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); }
+  .v1-btn.del:hover { color: var(--danger); border-color: rgba(248,113,113,0.3); }
+
+  /* ═══ VARIANT 2: Compact tiles ═══ */
+  .v2-card {
+    display: flex; align-items: stretch; background: var(--bg-elevated);
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 0.5rem; overflow: hidden; transition: all 0.2s;
+  }
+  .v2-card:hover { border-color: rgba(45,212,191,0.3); }
+  .v2-left { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0.75rem 0.875rem; min-width: 72px; }
+  .v2-time { font-size: 1rem; font-weight: 700; color: var(--fg); }
+  .v2-date { font-size: 0.5625rem; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+  .v2-status { font-size: 0.5rem; font-weight: 700; padding: 2px 5px; border-radius: 3px; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .v2-status.missed { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .v2-status.active { background: rgba(251,191,36,0.15); color: var(--warning); }
+  .v2-status.completed { background: rgba(74,222,128,0.15); color: var(--success); }
+  .v2-divider { width: 1px; background: var(--border); flex-shrink: 0; }
+  .v2-body { flex: 1; padding: 0.625rem 0.875rem; display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 4px; }
+  .v2-desc { font-size: 0.8125rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .v2-meta { display: flex; gap: 6px; font-size: 0.625rem; color: var(--fg-muted); }
+  .v2-meta span { display: inline-flex; align-items: center; gap: 2px; }
+  .v2-docs { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 2px; }
+  .v2-right { display: flex; align-items: center; padding: 0 0.625rem; gap: 4px; }
+  .v2-btn { width: 26px; height: 26px; border: none; border-radius: 5px; background: transparent; color: var(--fg-subtle); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .v2-btn:hover { background: var(--surface); color: var(--fg); }
+  .v2-btn.done { color: var(--success); }
+
+  /* ═══ VARIANT 3: Timeline ═══ */
+  .v3-item { display: flex; gap: 0.75rem; position: relative; }
+  .v3-timeline { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+  .v3-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; z-index: 1; }
+  .v3-dot.missed { background: var(--danger); box-shadow: 0 0 8px rgba(248,113,113,0.4); }
+  .v3-dot.active { background: var(--warning); box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+  .v3-dot.completed { background: var(--success); box-shadow: 0 0 8px rgba(74,222,128,0.4); }
+  .v3-line { width: 2px; flex: 1; background: var(--border); min-height: 16px; }
+  .v3-card {
+    flex: 1; background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; transition: all 0.2s;
+  }
+  .v3-card:hover { border-color: rgba(45,212,191,0.3); }
+  .v3-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .v3-time { font-size: 0.75rem; font-weight: 700; color: var(--accent); }
+  .v3-status { font-size: 0.5rem; font-weight: 700; padding: 2px 5px; border-radius: 3px; text-transform: uppercase; }
+  .v3-status.missed { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .v3-status.active { background: rgba(251,191,36,0.15); color: var(--warning); }
+  .v3-status.completed { background: rgba(74,222,128,0.15); color: var(--success); }
+  .v3-desc { font-size: 0.8125rem; font-weight: 600; margin-bottom: 6px; }
+  .v3-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .v3-tags { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; min-width: 0; }
+  .v3-tag { font-size: 0.5625rem; font-weight: 500; padding: 2px 5px; border-radius: 3px; background: var(--surface); color: var(--fg-muted); white-space: nowrap; }
+  .v3-actions { display: flex; gap: 3px; flex-shrink: 0; }
+  .v3-btn { width: 22px; height: 22px; border: none; border-radius: 4px; background: transparent; color: var(--fg-subtle); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .v3-btn:hover { background: var(--surface); color: var(--fg); }
+  .v3-btn.done { color: var(--success); }
+
+  /* ═══ VARIANT 4: Card grid ═══ */
+  .v4-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 0.75rem; }
+  .v4-card {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem; transition: all 0.2s; position: relative;
+  }
+  .v4-card:hover { border-color: rgba(45,212,191,0.3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .v4-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+  .v4-card.missed::before { background: var(--danger); }
+  .v4-card.active::before { background: var(--warning); }
+  .v4-card.completed::before { background: var(--success); }
+  .v4-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .v4-time-row { display: flex; align-items: baseline; gap: 6px; }
+  .v4-time { font-size: 1.125rem; font-weight: 700; color: var(--accent); }
+  .v4-date { font-size: 0.625rem; color: var(--fg-muted); }
+  .v4-status { font-size: 0.5rem; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; }
+  .v4-status.missed { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .v4-status.active { background: rgba(251,191,36,0.15); color: var(--warning); }
+  .v4-status.completed { background: rgba(74,222,128,0.15); color: var(--success); }
+  .v4-desc { font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; line-height: 1.3; }
+  .v4-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .v4-tag { font-size: 0.625rem; font-weight: 500; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; }
+  .v4-tag.org { background: rgba(151,115,250,0.12); color: var(--accent-ambient); }
+  .v4-tag.loc { background: rgba(45,212,191,0.12); color: var(--accent); }
+  .v4-docs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .v4-bottom { display: flex; align-items: center; justify-content: space-between; }
+  .v4-actions { display: flex; gap: 4px; }
+  .v4-btn { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--fg-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .v4-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .v4-btn.done { color: var(--success); border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.08); }
+  .v4-btn.del:hover { color: var(--danger); border-color: rgba(248,113,113,0.3); }
+</style>
+</head>
+<body>
+
+<h1>VKS Card Design Variants</h1>
+<p class="subtitle">4 варианта дизайна карточек ВКС — с документами и ссылками</p>
+
+<!-- ═══ VARIANT 1 ═══ -->
+<div class="variant">
+  <div class="variant-title">1. Цветная полоска слева</div>
+  <div class="variant-desc">Компактные карточки. Полоска = статус. Крупное время. Документы-чипы и ссылка.</div>
+
+  <div class="v1-card">
+    <div class="v1-stripe missed"></div>
+    <div class="v1-content">
+      <div class="v1-time-block">
+        <div class="v1-time">09:00</div>
+        <div class="v1-date">3 июля</div>
+      </div>
+      <div class="v1-body">
+        <div class="v1-desc">Совещание по проекту модернизации инфраструктуры</div>
+        <div class="v1-meta">
+          <span class="v1-tag org">ООО Технологии</span>
+          <span class="v1-tag loc">Москва</span>
+          <a class="doc-chip" href="#" onclick="return false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> report.pdf</a>
+          <a class="doc-chip" href="#" onclick="return false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> plan.docx</a>
+          <a class="link-icon" href="https://example.com/meeting" target="_blank" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        </div>
+      </div>
+      <div class="v1-actions">
+        <button class="v1-btn" title="Завершить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="v1-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="v1-card">
+    <div class="v1-stripe active"></div>
+    <div class="v1-content">
+      <div class="v1-time-block">
+        <div class="v1-time">14:30</div>
+        <div class="v1-date">Сегодня</div>
+      </div>
+      <div class="v1-body">
+        <div class="v1-desc">Ежедневный standup команды разработки</div>
+        <div class="v1-meta">
+          <span class="v1-tag org">DevTeam</span>
+          <span class="v1-tag loc">Онлайн</span>
+          <a class="link-icon" href="https://meet.google.com/abc-defg-hij" target="_blank" title="Присоединиться"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        </div>
+      </div>
+      <div class="v1-actions">
+        <button class="v1-btn done" title="Завершено"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="v1-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="v1-card">
+    <div class="v1-stripe completed"></div>
+    <div class="v1-content">
+      <div class="v1-time-block">
+        <div class="v1-time">11:00</div>
+        <div class="v1-date">5 июля</div>
+      </div>
+      <div class="v1-body">
+        <div class="v1-desc">Демонстрация нового функционала для заказчика</div>
+        <div class="v1-meta">
+          <span class="v1-tag org">Корпорация</span>
+          <span class="v1-tag loc">СПб</span>
+          <a class="doc-chip" href="#" onclick="return false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> demo.pptx</a>
+          <a class="doc-chip" href="#" onclick="return false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> specs.xlsx</a>
+          <a class="doc-chip" href="#" onclick="return false"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> notes.doc</a>
+          <a class="link-icon" href="https://example.com/demo" target="_blank" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        </div>
+      </div>
+      <div class="v1-actions">
+        <button class="v1-btn done" title="Завершено"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+        <button class="v1-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT 2 ═══ -->
+<div class="section variant">
+  <div class="variant-title">2. Компактные плитки</div>
+  <div class="variant-desc">Время+статус слева. Документы как мелкие чипы. Ссылка-иконка.</div>
+
+  <div class="v2-card">
+    <div class="v2-left">
+      <div class="v2-time">09:00</div>
+      <div class="v2-date">3 июля</div>
+      <div class="v2-status missed">Пропущено</div>
+    </div>
+    <div class="v2-divider"></div>
+    <div class="v2-body">
+      <div class="v2-desc">Совещание по проекту модернизации инфраструктуры</div>
+      <div class="v2-meta">
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> ООО Технологии</span>
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Москва</span>
+      </div>
+      <div class="v2-docs">
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> report.pdf</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> plan.docx</a>
+      </div>
+    </div>
+    <div class="v2-right">
+      <a class="link-icon" href="https://example.com" target="_blank" title="Открыть ссылку"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      <button class="v2-btn" title="Завершить"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <button class="v2-btn" title="Удалить"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+    </div>
+  </div>
+
+  <div class="v2-card">
+    <div class="v2-left">
+      <div class="v2-time">14:30</div>
+      <div class="v2-date">Сегодня</div>
+      <div class="v2-status active">В работе</div>
+    </div>
+    <div class="v2-divider"></div>
+    <div class="v2-body">
+      <div class="v2-desc">Ежедневный standup команды разработки</div>
+      <div class="v2-meta">
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> DevTeam</span>
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Онлайн</span>
+      </div>
+    </div>
+    <div class="v2-right">
+      <a class="link-icon" href="https://meet.google.com" target="_blank" title="Присоединиться"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      <button class="v2-btn done" title="Завершено"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <button class="v2-btn" title="Удалить"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+    </div>
+  </div>
+
+  <div class="v2-card">
+    <div class="v2-left">
+      <div class="v2-time">11:00</div>
+      <div class="v2-date">5 июля</div>
+      <div class="v2-status completed">Завершено</div>
+    </div>
+    <div class="v2-divider"></div>
+    <div class="v2-body">
+      <div class="v2-desc">Демонстрация нового функционала для заказчика</div>
+      <div class="v2-meta">
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> Корпорация</span>
+        <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> СПб</span>
+      </div>
+      <div class="v2-docs">
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> demo.pptx</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> specs.xlsx</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> notes.doc</a>
+      </div>
+    </div>
+    <div class="v2-right">
+      <a class="link-icon" href="https://example.com/demo" target="_blank" title="Открыть ссылку"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      <button class="v2-btn done" title="Завершено"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <button class="v2-btn" title="Удалить"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT 3 ═══ -->
+<div class="section variant">
+  <div class="variant-title">3. Таймлайн-лента</div>
+  <div class="variant-desc">Вертикальный таймлайн. Точки статуса. Компактные чипы документов.</div>
+
+  <div class="v3-item">
+    <div class="v3-timeline">
+      <div class="v3-dot missed"></div>
+      <div class="v3-line"></div>
+    </div>
+    <div class="v3-card">
+      <div class="v3-header">
+        <div class="v3-time">09:00 · 3 июля</div>
+        <div class="v3-status missed">Пропущено</div>
+      </div>
+      <div class="v3-desc">Совещание по проекту модернизации инфраструктуры</div>
+      <div class="v3-footer">
+        <div class="v3-tags">
+          <span class="v3-tag">ООО Технологии</span>
+          <span class="v3-tag">Москва</span>
+          <a class="doc-chip" href="#" onclick="return false" style="font-size:0.5625rem;padding:1px 5px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> report.pdf</a>
+          <a class="doc-chip" href="#" onclick="return false" style="font-size:0.5625rem;padding:1px 5px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> plan.docx</a>
+        </div>
+        <div class="v3-actions">
+          <a class="link-icon" href="https://example.com" target="_blank" title="Открыть ссылку" style="width:20px;height:20px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          <button class="v3-btn" title="Завершить"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v3-btn" title="Удалить"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="v3-item">
+    <div class="v3-timeline">
+      <div class="v3-dot active"></div>
+      <div class="v3-line"></div>
+    </div>
+    <div class="v3-card">
+      <div class="v3-header">
+        <div class="v3-time">14:30 · Сегодня</div>
+        <div class="v3-status active">В работе</div>
+      </div>
+      <div class="v3-desc">Ежедневный standup команды разработки</div>
+      <div class="v3-footer">
+        <div class="v3-tags">
+          <span class="v3-tag">DevTeam</span>
+          <span class="v3-tag">Онлайн</span>
+        </div>
+        <div class="v3-actions">
+          <a class="link-icon" href="https://meet.google.com" target="_blank" title="Присоединиться" style="width:20px;height:20px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          <button class="v3-btn done" title="Завершено"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v3-btn" title="Удалить"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="v3-item">
+    <div class="v3-timeline">
+      <div class="v3-dot completed"></div>
+    </div>
+    <div class="v3-card">
+      <div class="v3-header">
+        <div class="v3-time">11:00 · 5 июля</div>
+        <div class="v3-status completed">Завершено</div>
+      </div>
+      <div class="v3-desc">Демонстрация нового функционала для заказчика</div>
+      <div class="v3-footer">
+        <div class="v3-tags">
+          <span class="v3-tag">Корпорация</span>
+          <span class="v3-tag">СПб</span>
+          <a class="doc-chip" href="#" onclick="return false" style="font-size:0.5625rem;padding:1px 5px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> demo.pptx</a>
+          <a class="doc-chip" href="#" onclick="return false" style="font-size:0.5625rem;padding:1px 5px"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> specs.xlsx</a>
+        </div>
+        <div class="v3-actions">
+          <a class="link-icon" href="https://example.com/demo" target="_blank" title="Открыть ссылку" style="width:20px;height:20px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+          <button class="v3-btn done" title="Завершено"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v3-btn" title="Удалить"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VARIANT 4 ═══ -->
+<div class="section variant">
+  <div class="variant-title">4. Сетка карточек (Grid)</div>
+  <div class="variant-desc">Карточки в сетке. Цветная полоска сверху. Документы и ссылка внутри.</div>
+
+  <div class="v4-grid">
+    <div class="v4-card missed">
+      <div class="v4-top">
+        <div class="v4-time-row">
+          <div class="v4-time">09:00</div>
+          <div class="v4-date">3 июля</div>
+        </div>
+        <div class="v4-status missed">Пропущено</div>
+      </div>
+      <div class="v4-desc">Совещание по проекту модернизации инфраструктуры</div>
+      <div class="v4-meta">
+        <span class="v4-tag org">ООО Технологии</span>
+        <span class="v4-tag loc">Москва</span>
+      </div>
+      <div class="v4-docs">
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> report.pdf</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> plan.docx</a>
+      </div>
+      <div class="v4-bottom">
+        <a class="link-icon" href="https://example.com" target="_blank" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <div class="v4-actions">
+          <button class="v4-btn" title="Завершить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v4-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="v4-card active">
+      <div class="v4-top">
+        <div class="v4-time-row">
+          <div class="v4-time">14:30</div>
+          <div class="v4-date">Сегодня</div>
+        </div>
+        <div class="v4-status active">В работе</div>
+      </div>
+      <div class="v4-desc">Ежедневный standup команды разработки</div>
+      <div class="v4-meta">
+        <span class="v4-tag org">DevTeam</span>
+        <span class="v4-tag loc">Онлайн</span>
+      </div>
+      <div class="v4-bottom">
+        <a class="link-icon" href="https://meet.google.com" target="_blank" title="Присоединиться"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <div class="v4-actions">
+          <button class="v4-btn done" title="Завершено"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v4-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="v4-card completed">
+      <div class="v4-top">
+        <div class="v4-time-row">
+          <div class="v4-time">11:00</div>
+          <div class="v4-date">5 июля</div>
+        </div>
+        <div class="v4-status completed">Завершено</div>
+      </div>
+      <div class="v4-desc">Демонстрация нового функционала для заказчика</div>
+      <div class="v4-meta">
+        <span class="v4-tag org">Корпорация</span>
+        <span class="v4-tag loc">СПб</span>
+      </div>
+      <div class="v4-docs">
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> demo.pptx</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> specs.xlsx</a>
+        <a class="doc-chip" href="#" onclick="return false"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg> notes.doc</a>
+      </div>
+      <div class="v4-bottom">
+        <a class="link-icon" href="https://example.com/demo" target="_blank" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+        <div class="v4-actions">
+          <button class="v4-btn done" title="Завершено"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="v4-btn del" title="Удалить"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

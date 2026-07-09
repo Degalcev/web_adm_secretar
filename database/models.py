@@ -5,6 +5,7 @@ import logging
 from loguru import logger
 from sqlalchemy import (BigInteger, String, Integer, ForeignKey, Time, Date,
                         Boolean, LargeBinary, DateTime, Index)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import relationship, mapped_column, DeclarativeBase
 
@@ -152,6 +153,22 @@ class Event(Base):
         Index('idx_event_organizer_id', 'organizer_id'),
         Index('idx_event_location_id', 'location_id'),
         Index('idx_event_completed', 'completed'),
+    )
+
+
+class EventHistory(Base):
+    __tablename__ = 'event_history'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id   = mapped_column(String(), ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    user_id    = mapped_column(String(), ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    timestamp  = mapped_column(DateTime, nullable=False, default=datetime.utcnow)
+    action     = mapped_column(String(50), nullable=False)
+    changes    = mapped_column(JSONB, nullable=True)
+
+    __table_args__ = (
+        Index('idx_event_history_event_id', 'event_id'),
+        Index('idx_event_history_timestamp', 'timestamp'),
     )
 
 
