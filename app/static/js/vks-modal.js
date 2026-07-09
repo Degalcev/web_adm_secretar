@@ -86,7 +86,7 @@ async function openEditEventModal(id) {
     document.getElementById('f-event-time').value = e.time || '';
     document.getElementById('f-event-url').value = e.url || '';
     document.getElementById('f-event-desc').value = e.description || '';
-    loadEventSelects();
+    await loadEventSelects();
     document.getElementById('f-event-organizer').value = e.organizer_id || '';
     document.getElementById('f-event-location').value = e.location_id || '';
     document.getElementById('f-event-docs-group').style.display = 'block';
