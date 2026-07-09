@@ -492,11 +492,44 @@
     padding: 6px 10px;
     font-size: 0.75rem;
   }
+
+  .vks-modal-body-wrapper {
+    flex-direction: column;
+  }
+
+  .vks-modal-body-wrapper .event-timeline {
+    width: 100%;
+    min-width: 0;
+    border-left: none;
+    border-top: 1px solid var(--border);
+    max-height: 200px;
+  }
+}
+
+/* Modal body wrapper — form + timeline side panel */
+.vks-modal-body-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.vks-modal-body-wrapper .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+.vks-modal-body-wrapper .event-timeline {
+    width: 320px;
+    min-width: 280px;
+    overflow-y: auto;
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    background: var(--bg-elevated);
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
 .event-timeline {
-    padding: 0.75rem 0;
 }
 
 .timeline-loading,
@@ -543,6 +576,12 @@
     background: var(--accent);
     border: 2px solid var(--bg);
 }
+
+/* Timeline dot colors by action */
+.timeline-dot.dot-muted { background: var(--fg-muted); }
+.timeline-dot.dot-success { background: var(--success); }
+.timeline-dot.dot-warning { background: var(--warning, #f59e0b); }
+.timeline-dot.dot-danger { background: var(--danger); }
 
 .timeline-content {
     font-size: 0.8125rem;
