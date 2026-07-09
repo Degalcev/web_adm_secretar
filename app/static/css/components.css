@@ -245,3 +245,6 @@
 .toggle-input:checked ~ .toggle-text {
   color: var(--accent);
 }
+
+.btn-full-width { width: 100%; }
+.section-narrow { max-width: 420px; }
