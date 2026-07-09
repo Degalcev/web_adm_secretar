@@ -86,7 +86,7 @@ async function openEditEventModal(id) {
     document.getElementById('f-event-time').value = e.time || '';
     document.getElementById('f-event-url').value = e.url || '';
     document.getElementById('f-event-desc').value = e.description || '';
-    await loadEventSelects();
+    loadEventSelects();
     document.getElementById('f-event-organizer').value = e.organizer_id || '';
     document.getElementById('f-event-location').value = e.location_id || '';
     document.getElementById('f-event-docs-group').style.display = 'block';
@@ -314,7 +314,8 @@ async function loadEventHistory(eventId) {
     if (!container) return;
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    container.style.display = 'block';
+    const wrapper = container.closest('.vks-modal-body-wrapper');
+    if (wrapper) wrapper.classList.add('timeline-open');
 
     try {
         const res = await fetch(`/admin/api/events/${eventId}/history`, {
@@ -408,7 +409,8 @@ async function loadEventHistory(eventId) {
 function hideEventHistory() {
     const container = document.getElementById('event-modal-audit');
     if (container) {
-        container.style.display = 'none';
+        const wrapper = container.closest('.vks-modal-body-wrapper');
+        if (wrapper) wrapper.classList.remove('timeline-open');
         container.innerHTML = '';
     }
 }
