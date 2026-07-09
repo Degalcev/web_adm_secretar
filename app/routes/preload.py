@@ -1,7 +1,7 @@
 from aiohttp import web
 from loguru import logger
 
-from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids
+from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids, get_user_by_id
 
 
 async def preload_data(request: web.Request) -> web.Response:
@@ -9,6 +9,19 @@ async def preload_data(request: web.Request) -> web.Response:
         events, orgs, locs = await get_events(), await get_organizers(), await get_locations()
         event_ids = [e.id for e in events]
         docs_map = await get_documents_by_event_ids(event_ids)
+
+        # Resolve lock users
+        lock_user_ids = set()
+        for e in events:
+            if e.locked_by:
+                lock_user_ids.add(e.locked_by)
+        lock_users = {}
+        for uid in lock_user_ids:
+            u = await get_user_by_id(uid)
+            if u:
+                parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
+                lock_users[uid] = ' '.join(p for p in parts if p).strip() or u.name or str(u.max_id)
+
         return web.json_response({
             'events': [
                 {
@@ -19,6 +32,9 @@ async def preload_data(request: web.Request) -> web.Response:
                     'url': e.url or '', 'description': e.description or '',
                     'completed': e.completed, 'notification': e.notification,
                     'documents': docs_map.get(e.id, []),
+                    'locked_by': lock_users.get(e.locked_by),
+                    'locked_by_id': e.locked_by,
+                    'locked_at': e.locked_at.isoformat() if e.locked_at else None,
                 }
                 for e in events
             ],
