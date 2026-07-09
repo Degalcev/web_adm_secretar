@@ -11,7 +11,7 @@ async def capture_event_state(event_id: str) -> dict | None:
     return {
         'type': event.type,
         'date': event.date.isoformat() if event.date else None,
-        'time': event.time,
+        'time': event.time.strftime('%H:%M') if event.time else None,
         'organizer_id': str(event.organizer_id) if event.organizer_id else None,
         'location_id': str(event.location_id) if event.location_id else None,
         'url': event.url or '',
