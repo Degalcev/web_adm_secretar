@@ -512,10 +512,19 @@
 
 /* ─── VKS Modal Flat — Mobile (после всего файла, максимальный приоритет) */
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
+  }
+  .modal {
+    max-height: calc(100dvh - env(safe-area-inset-top, 12px) - env(safe-area-inset-bottom, 8px) - 16px);
+  }
   .vks-modal-flat { border-radius: 12px; }
   .vks-modal-flat .modal-header {
     padding: 10px 12px 8px;
     background: var(--bg-elevated);
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
   .vks-modal-flat .modal-header h3 { font-size: 0.8125rem; }
   .vks-modal-flat .modal-body {
@@ -529,6 +538,9 @@
     gap: 8px;
     background: var(--bg-elevated);
     border-top: 1px solid var(--border);
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
   }
   .vks-modal-flat .modal-footer .btn-ghost {
     flex: 0 0 auto;
