@@ -39,6 +39,7 @@ async function openEditEventModal(id) {
     editingEventId = id;
     pendingFiles = [];
     removedDocIds = [];
+    let isLockedByOther = false;
 
     // Try to lock
     try {
@@ -49,6 +50,7 @@ async function openEditEventModal(id) {
         });
         const lockData = await lockRes.json();
         if (!lockData.ok && lockData.locked_by) {
+            isLockedByOther = true;
             showToast(`Редактирует: ${lockData.locked_by}`, 'warning');
         }
     } catch (err) {}
@@ -129,6 +131,31 @@ async function openEditEventModal(id) {
         };
     } else {
         auditBtn.style.display = 'none';
+    }
+
+    // If locked by another user — disable editing
+    if (isLockedByOther) {
+        document.getElementById('event-modal-save-btn').disabled = true;
+        document.getElementById('event-modal-delete-btn').disabled = true;
+        document.getElementById('event-modal-complete-btn').disabled = true;
+        document.getElementById('f-event-date').disabled = true;
+        document.getElementById('f-event-time').disabled = true;
+        document.getElementById('f-event-organizer').disabled = true;
+        document.getElementById('f-event-location').disabled = true;
+        document.getElementById('f-event-desc').disabled = true;
+        document.getElementById('f-event-url').disabled = true;
+        document.getElementById('event-doc-upload-label').style.display = 'none';
+    } else {
+        document.getElementById('event-modal-save-btn').disabled = false;
+        document.getElementById('event-modal-delete-btn').disabled = false;
+        document.getElementById('event-modal-complete-btn').disabled = false;
+        document.getElementById('f-event-date').disabled = false;
+        document.getElementById('f-event-time').disabled = false;
+        document.getElementById('f-event-organizer').disabled = false;
+        document.getElementById('f-event-location').disabled = false;
+        document.getElementById('f-event-desc').disabled = false;
+        document.getElementById('f-event-url').disabled = false;
+        document.getElementById('event-doc-upload-label').style.display = '';
     }
 
     document.getElementById('event-modal').classList.add('show');
