@@ -1,5 +1,25 @@
 // ─── Инициализация ───────────────────────────────────────────────────
 
+// Загрузка VKS modal partial
+window._vksModalLoaded = new Promise((resolve) => {
+    async function _loadVKSModal() {
+        try {
+            const resp = await fetch('/static/partials/vks-modal.html?v=' + (window.__VERSION || ''));
+            const html = await resp.text();
+            document.body.insertAdjacentHTML('beforeend', html);
+            resolve();
+        } catch (e) {
+            console.error('Failed to load VKS modal:', e);
+            resolve();
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _loadVKSModal);
+    } else {
+        _loadVKSModal();
+    }
+});
+
 document.getElementById('login-password').addEventListener('keydown', e => {
     if (e.key === 'Enter') login();
 });

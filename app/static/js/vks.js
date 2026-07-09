@@ -547,6 +547,7 @@ function resetVksCompletedFilters() {
 // ─── Модалка события ──────────────────────────────────────────────────
 
 async function openAddEventModal() {
+    if (window._vksModalLoaded) await window._vksModalLoaded;
     editingEventId = null;
     pendingFiles = [];
     removedDocIds = [];
@@ -578,6 +579,7 @@ async function openAddEventModal() {
 }
 
 async function openEditEventModal(id) {
+    if (window._vksModalLoaded) await window._vksModalLoaded;
     const e = allEvents.find(x => x.id === id);
     if (!e) return;
     editingEventId = id;
