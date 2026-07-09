@@ -41,7 +41,10 @@ app/
     ├── index.html       # SPA entry point (?v=__VERSION__ → подставляется из version.json)
     ├── favicon.svg      # Иконка
     ├── partials/
-    │   └── vks-modal.html  # VKS modal partial (загружается async из app.js)
+    │   ├── vks-modal.html      # VKS modal partial (загружается async из app.js)
+    │   ├── user-modal.html     # User modal partial
+    │   ├── organizer-modal.html # Organizer modal partial
+    │   └── location-modal.html # Location modal partial
     ├── css/
     │   ├── base.css          # CSS переменные, темы, typography
     │   ├── layout.css        # Sidebar, content-area, навигация, independent page scroll
@@ -165,6 +168,13 @@ deploy/
 - Header/footer: `background: var(--bg-elevated)` — не прозрачные
 - `border: none` на `.vks-modal-flat` — убрана рамка контейнера
 - `overflow: hidden` на `.vks-modal-flat` — accent bar обрезается по border-radius
+
+### Partial загрузка модалок
+- Все модалки (VKS, User, Organizer, Location) вынесены в `app/static/partials/*.html`
+- `app.js` загружает их последовательно через `_modalsLoaded` promise
+- JS функции открытия модалок (`openAdd*`, `openEdit*`) — async, ждут `await _modalsLoaded`
+- `_vksModalLoaded` — алиас на `_modalsLoaded` для обратной совместимости
+- Confirm overlay (удаление) остался в `index.html` — он общий для всех CRUD
 
 ### Мобильная оптимизация
 - Гамбургер-меню для навигации (<768px)
