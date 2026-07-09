@@ -163,8 +163,19 @@ async function openEditEventModal(id) {
     }
 
     // Lock info banner
-    const lockInfo = document.getElementById('event-modal-lock-info');
-    const lockText = document.getElementById('event-modal-lock-text');
+    let lockInfo = document.getElementById('event-modal-lock-info');
+    let lockText = document.getElementById('event-modal-lock-text');
+    // Create dynamically if partial not loaded yet
+    if (!lockInfo) {
+        lockInfo = document.createElement('div');
+        lockInfo.id = 'event-modal-lock-info';
+        lockInfo.className = 'modal-lock-info';
+        lockInfo.style.display = 'none';
+        lockInfo.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span id="event-modal-lock-text"></span>';
+        const modalBody = document.querySelector('.vks-modal-flat .modal-body');
+        if (modalBody) modalBody.insertBefore(lockInfo, modalBody.firstChild);
+        lockText = document.getElementById('event-modal-lock-text');
+    }
     if (lockInfo && lockText) {
         if (isLockedByOther && lockedByName) {
             lockText.textContent = `Редактирует: ${lockedByName}`;
