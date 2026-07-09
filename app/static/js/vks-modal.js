@@ -314,18 +314,21 @@ async function loadEventHistory(eventId) {
     if (!container) return;
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    // Position drawer to cover ONLY the modal-body area
+    // Position drawer at right edge of modal-body, 3/4 width
     const body = document.querySelector('.vks-modal-flat .modal-body');
     if (body) {
         const rect = body.getBoundingClientRect();
+        const w = Math.round(rect.width * 0.75);
         container.style.top = rect.top + 'px';
-        container.style.left = rect.left + 'px';
-        container.style.width = rect.width + 'px';
+        container.style.left = (rect.right - w) + 'px';
+        container.style.width = w + 'px';
         container.style.height = rect.height + 'px';
     }
     container.style.display = 'block';
     requestAnimationFrame(() => {
         container.classList.add('drawer-open');
+        const wrapper = container.closest('.vks-modal-body-wrapper') || document.querySelector('.vks-modal-body-wrapper');
+        if (wrapper) wrapper.classList.add('timeline-dimmed');
     });
 
     try {
@@ -423,5 +426,7 @@ function hideEventHistory() {
         container.classList.remove('drawer-open');
         container.style.display = 'none';
         container.innerHTML = '';
+        const wrapper = document.querySelector('.vks-modal-body-wrapper');
+        if (wrapper) wrapper.classList.remove('timeline-dimmed');
     }
 }

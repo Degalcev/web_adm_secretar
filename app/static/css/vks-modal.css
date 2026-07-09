@@ -512,20 +512,28 @@
     min-width: 0;
 }
 
-/* Timeline drawer — covers only modal-body, slides right-to-left */
+/* Timeline drawer — expands from right edge of modal-body */
 .event-timeline {
     position: fixed;
     z-index: 101;
     overflow-y: auto;
     padding: 16px;
     background: var(--bg-elevated);
-    transform: translateX(100%);
+    border-left: 1px solid var(--border);
+    transform-origin: right center;
+    transform: scaleX(0);
     transition: transform 0.3s ease;
     box-shadow: -4px 0 20px rgba(0,0,0,0.15);
 }
 
 .event-timeline.drawer-open {
-    transform: translateX(0);
+    transform: scaleX(1);
+}
+
+/* Dim modal body behind drawer */
+.vks-modal-body-wrapper.timeline-dimmed .modal-body {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
