@@ -102,20 +102,18 @@ async function openEditEventModal(id) {
         urlGo.style.display = 'none';
     }
 
-    // Кнопка «Инфо» (будущая история изменений)
+    // Кнопка «История» (таймлайн)
     const auditBtn = document.getElementById('event-modal-audit-btn');
-    if (e.last_changed_by) {
+    if (e.last_changed_by || e.id) {
         auditBtn.style.display = 'inline-flex';
-        const userName = e.last_changed_by || 'Неизвестно';
-        const action = e.last_change_action || '';
-        const date = e.last_changed_at ? new Date(e.last_changed_at).toLocaleString('ru-RU') : '';
-        const actionText = {
-            'create': 'создал',
-            'update': 'изменил',
-            'complete': 'завершил',
-            'delete': 'удалил'
-        }[action] || action;
-        auditBtn.title = `Последнее изменение: ${userName}, ${date} — ${actionText}`;
+        auditBtn.onclick = () => {
+            const container = document.getElementById('event-modal-audit');
+            if (container.style.display === 'block') {
+                hideEventHistory();
+            } else {
+                loadEventHistory(e.id);
+            }
+        };
     } else {
         auditBtn.style.display = 'none';
     }
@@ -124,6 +122,7 @@ async function openEditEventModal(id) {
 }
 
 function closeEventModal() {
+    hideEventHistory();
     document.getElementById('event-modal').classList.remove('show');
     document.getElementById('event-url-go').style.display = 'none';
     pendingFiles = [];
@@ -308,4 +307,99 @@ async function saveEvent() {
     btn.disabled = false;
     btn.classList.remove('loading');
     btn.textContent = origText;
+}
+
+async function loadEventHistory(eventId) {
+    const container = document.getElementById('event-modal-audit');
+    if (!container) return;
+
+    container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
+    container.style.display = 'block';
+
+    try {
+        const res = await fetch(`/admin/api/events/${eventId}/history`, {
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': getCsrfToken() }
+        });
+        const data = await res.json();
+
+        if (!data.ok || !data.history || data.history.length === 0) {
+            container.innerHTML = '<div class="timeline-empty">История изменений пуста</div>';
+            return;
+        }
+
+        const actionLabels = {
+            'create': 'Создание',
+            'update': 'Редактирование',
+            'complete': 'Завершение',
+            'uncomplete': 'Отмена завершения',
+            'delete': 'Удаление',
+        };
+
+        const fieldLabels = {
+            'type': 'Тип',
+            'date': 'Дата',
+            'time': 'Время',
+            'organizer_id': 'Организатор',
+            'location_id': 'Локация',
+            'url': 'Ссылка',
+            'description': 'Описание',
+            'completed': 'Статус',
+            'notification': 'Уведомление',
+            'documents': 'Документы',
+        };
+
+        let html = '';
+        for (const entry of data.history) {
+            const date = new Date(entry.timestamp);
+            const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            const actionLabel = actionLabels[entry.action] || entry.action;
+
+            html += `<div class="timeline-entry">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <div class="timeline-user">${esc(entry.user_name)}</div>
+                    <div class="timeline-datetime">${dateStr}, ${timeStr}</div>
+                    <div class="timeline-action">${actionLabel}</div>`;
+
+            if (entry.changes) {
+                html += '<div class="timeline-changes">';
+                for (const [field, diff] of Object.entries(entry.changes)) {
+                    if (field === 'documents') {
+                        if (diff.added) {
+                            for (const doc of diff.added) {
+                                html += `<div class="timeline-change">+ Документ: ${esc(doc.name)}</div>`;
+                            }
+                        }
+                        if (diff.removed) {
+                            for (const doc of diff.removed) {
+                                html += `<div class="timeline-change timeline-change-remove">- Документ: ${esc(doc.name || doc.id)}</div>`;
+                            }
+                        }
+                    } else {
+                        const label = fieldLabels[field] || field;
+                        const oldVal = diff.old !== null && diff.old !== undefined ? String(diff.old) : '(пусто)';
+                        const newVal = diff.new !== null && diff.new !== undefined ? String(diff.new) : '(пусто)';
+                        html += `<div class="timeline-change">${esc(label)}: ${esc(oldVal)} → ${esc(newVal)}</div>`;
+                    }
+                }
+                html += '</div>';
+            }
+
+            html += '</div></div>';
+        }
+
+        container.innerHTML = html;
+    } catch (err) {
+        container.innerHTML = '<div class="timeline-error">Ошибка загрузки истории</div>';
+    }
+}
+
+function hideEventHistory() {
+    const container = document.getElementById('event-modal-audit');
+    if (container) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+    }
 }
