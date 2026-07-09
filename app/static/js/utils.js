@@ -103,3 +103,112 @@ const ConfirmManager = {
 // Обратная совместимость
 function closeConfirm() { ConfirmManager.close(); }
 function confirmDelete() { ConfirmManager.dispatch(); }
+
+// ─── CRUD Module Factory ────────────────────────────────────────
+function createCrudModule(config) {
+    const { name, api, modalId, titleId, saveBtnId, fields, render, stats, filters, modalLoaded } = config;
+    let editingId = null;
+
+    return {
+        get editingId() { return editingId; },
+        set editingId(v) { editingId = v; },
+
+        async load() {
+            try {
+                const resp = await fetch(`${BASE_URL}${api}`);
+                if (resp.status === 401) { showLogin(); return; }
+                const items = await resp.json();
+                config._items = items;
+                if (render) render(items);
+                if (stats) stats(items);
+                return items;
+            } catch (e) {
+                showToast(`Ошибка загрузки ${name}`, 'error');
+            }
+        },
+
+        async openAdd() {
+            if (modalLoaded && window._modalsLoaded) await window._modalsLoaded;
+            editingId = null;
+            document.getElementById(titleId).textContent = `Добавить ${name}`;
+            fields.forEach(f => { const el = document.getElementById(f.id); if (el) el.value = f.default || ''; });
+            document.getElementById(modalId).classList.add('show');
+        },
+
+        async openEdit(id) {
+            if (modalLoaded && window._modalsLoaded) await window._modalsLoaded;
+            const items = config._items || [];
+            const item = items.find(x => x.id === id);
+            if (!item) return;
+            editingId = id;
+            document.getElementById(titleId).textContent = `Редактировать ${name}`;
+            fields.forEach(f => { const el = document.getElementById(f.id); if (el) el.value = item[f.key] || ''; });
+            document.getElementById(modalId).classList.add('show');
+        },
+
+        closeModal() {
+            document.getElementById(modalId).classList.remove('show');
+        },
+
+        async save() {
+            const btn = document.getElementById(saveBtnId);
+            btn.disabled = true;
+            btn.classList.add('loading');
+            const origText = btn.textContent;
+            btn.textContent = 'Сохранение...';
+            const payload = {};
+            fields.forEach(f => { payload[f.key] = document.getElementById(f.id).value.trim(); });
+            try {
+                const csrfToken = getCsrfToken();
+                const url = editingId ? `${BASE_URL}${api}/${editingId}` : `${BASE_URL}${api}`;
+                const resp = await fetch(url, {
+                    method: editingId ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data.ok) { await this.load(); this.closeModal(); showToast(editingId ? 'Обновлено' : 'Добавлено', 'success'); }
+                else { showToast(data.error || 'Ошибка', 'error'); }
+            } catch (e) { showToast('Ошибка сети', 'error'); }
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = origText;
+        },
+
+        async delete(id) {
+            try {
+                const csrfToken = getCsrfToken();
+                const resp = await fetch(`${BASE_URL}${api}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-Token': csrfToken }
+                });
+                const data = await resp.json();
+                if (data.ok) { ConfirmManager.close(); await this.load(); showToast('Удалено', 'success'); }
+                else { ConfirmManager.close(); showToast(data.error || 'Ошибка', 'error'); }
+            } catch (e) { ConfirmManager.close(); showToast('Ошибка сети', 'error'); }
+        },
+
+        openConfirm(id, displayName) {
+            ConfirmManager.open(config.confirmType, id, displayName, (delId) => this.delete(delId));
+        },
+
+        filter() {
+            if (!filters) return;
+            const items = config._items || [];
+            const filtered = items.filter(item => {
+                return filters.every(f => {
+                    const val = (document.getElementById(f.inputId)?.value || '').toLowerCase();
+                    return !val || String(item[f.key] || '').toLowerCase().includes(val);
+                });
+            });
+            if (render) render(filtered);
+            if (stats && stats.shown) stats.shown(filtered);
+        },
+
+        resetFilters() {
+            if (!filters) return;
+            filters.forEach(f => { const el = document.getElementById(f.inputId); if (el) el.value = ''; });
+            this.filter();
+        }
+    };
+}
