@@ -188,24 +188,27 @@
   .vks-modal-flat { border-radius: 12px; }
   .vks-modal-flat .modal-header { padding: 10px 12px 8px; }
   .vks-modal-flat .modal-header h3 { font-size: 0.8125rem; }
-  .vks-modal-flat .modal-body { padding: 0 12px 12px; margin: 0; background: var(--bg-elevated); border: none; }
-  .vks-modal-flat .modal-footer { padding: 8px 12px; gap: 8px; }
-  .vks-modal-flat .modal-footer .btn { flex: 1; justify-content: center; padding: 0.5rem; font-size: 0.8125rem; }
-
-  .icon-btn { width: 28px; height: 28px; }
-  .icon-btn svg { width: 12px; height: 12px; }
-  .vks-modal-title { font-size: 0.8125rem; }
-  .modal-header-actions { gap: 4px; }
-  .footer-right { flex: 1; }
-  .footer-right .btn { flex: 1; }
-  .pill-btn { flex: 1; justify-content: center; padding: 6px 10px; }
-  .url-go-btn { min-width: 32px; padding: 0 8px; }
-  .doc-card-delete { width: 30px; }
-  .doc-card-delete svg { width: 12px; height: 12px; }
-
-  /* VKS Flat form — mobile */
+  .vks-modal-flat .modal-body { padding: 0 12px 12px; margin: 0; background: var(--bg-elevated); border: none; gap: 0; }
+  .vks-modal-flat .modal-footer { padding: 8px 12px; gap: 8px; background: var(--bg-elevated); border-top: 1px solid var(--border); }
+  .vks-modal-flat .modal-footer .btn { flex: 1; justify-content: center; padding: 0.375rem 0.75rem; font-size: 0.75rem; }
   .vks-modal-flat .form-row { flex-direction: column; gap: 10px; }
-  .vks-modal-flat .form-group { flex: auto !important; }
+  .vks-modal-flat .form-group { flex: auto !important; margin-bottom: 10px; }
+  .vks-modal-flat .form-row .form-group { margin-bottom: 0; }
+  .vks-modal-flat .form-group textarea { min-height: 64px; rows: 3; }
+  .vks-modal-flat .form-group input, .vks-modal-flat .form-group select {
+    padding: 0.5rem 0.625rem; font-size: 0.8125rem;
+  }
+  .vks-modal-flat .form-separator { padding: 8px 0; }
+  .vks-modal-flat .url-row { gap: 6px; }
+  .vks-modal-flat .footer-right { gap: 6px; }
+  .vks-modal-flat .pill-btn { flex: 1; justify-content: center; padding: 5px 8px; font-size: 0.6875rem; }
+  .vks-modal-flat .icon-btn { width: 28px; height: 28px; }
+  .vks-modal-flat .icon-btn svg { width: 12px; height: 12px; }
+  .vks-modal-flat .modal-header-actions { gap: 4px; }
+  .vks-modal-flat .doc-card-delete { width: 28px; }
+  .vks-modal-flat .doc-card-delete svg { width: 12px; height: 12px; }
+  .vks-modal-flat .doc-add-btn { padding: 6px 10px; font-size: 0.75rem; }
+  .vks-modal-flat .modal-event-status { padding: 2px 6px; font-size: 0.5rem; }
 
   /* Base modals — compact (only for non-flat modals) */
   .icon-btn { width: 28px; height: 28px; }
