@@ -50,13 +50,14 @@ app/
     │   ├── layout.css        # Sidebar, content-area, навигация, independent page scroll
     │   ├── components.css    # Кнопки, бейджи, формы, тултипы
     │   ├── tables.css        # Таблицы CRUD (overflow: clip для углов)
-    │   ├── modals.css        # Модалки (единая структура: .modal → .modal-header + .modal-body + .modal-footer)
+    │   ├── modals.css        # Базовые стили модалок (section, header, body, footer, confirm)
     │   ├── dashboard.css     # Дашборд карточки, VKS панели
     │   ├── vks.css           # VKS страницы (цветная полоска статуса, компактные документы)
     │   ├── logs.css          # Логи (elevated фон контейнера)
     │   ├── filters.css       # Filter-bar компонент, select фильтры
     │   ├── settings.css      # Страницы настроек/профиля
-    │   └── responsive.css    # ⚠️ ПОСЛЕДНИЙ CSS — медиа-запросы для всех страниц
+    │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
+    │   └── vks-modal.css     # Compact Flat стили модалок (ПОСЛЕ responsive.css!)
     └── js/
         ├── utils.js          # Утилиты: esc(), debounce(), showToast(), markSSESkipped()
         ├── auth.js           # Логин/выход/checkAuth()
@@ -209,9 +210,10 @@ deploy/
 - Независимый per-page скролл (`.content-area` flex + `.page.active` overflow-y)
 
 ### CSS архитектура — порядок загрузки
-- `responsive.css` ОБЯЗАН быть ПОСЛЕДНИМ CSS файлом в `index.html`
-- Иначе dashboard.css перезаписывает media queries
-- Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive
+- `responsive.css` загружается ПОСЛЕДНИМ базовым CSS
+- `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
+- Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal**
+- Причина: в `responsive.css` есть базовые правила `.form-row { flex-direction: column }` которые перезаписывают `.vks-modal-flat .form-row { flex-direction: row }` если vks-modal.css загружается раньше
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
