@@ -4,6 +4,7 @@
 /* ─── Container ─────────────────────────────────────────────────── */
 .vks-modal-flat {
   border-radius: 14px;
+  overflow: hidden;
   max-width: 460px;
   border: none;
   box-shadow: 0 12px 36px rgba(0,0,0,0.35);
@@ -146,7 +147,6 @@
   height: 4px;
   background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
   flex-shrink: 0;
-  border-radius: 14px 14px 0 0;
 }
 .vks-modal-accent.status-completed {
   background: linear-gradient(90deg, var(--success), rgba(74,222,128,0.4));
@@ -493,60 +493,53 @@
     font-size: 0.75rem;
   }
 
-  .vks-modal-body-wrapper {
-    flex-direction: column;
-  }
-
-  .vks-modal-body-wrapper .event-timeline {
+  .event-timeline {
     width: 100%;
-    min-width: 0;
     border-left: none;
     border-top: 1px solid var(--border);
   }
 }
 
-/* Modal body wrapper — form + timeline side panel */
+/* Modal body wrapper */
 .vks-modal-body-wrapper {
     display: flex;
     flex: 1;
-    position: relative;
 }
 
 .vks-modal-body-wrapper .modal-body {
     flex: 1;
     overflow-y: auto;
     min-width: 0;
-    transition: opacity 0.3s ease;
 }
 
-.vks-modal-body-wrapper .event-timeline {
-    position: absolute;
-    right: 0;
+/* Timeline drawer — fixed positioned, outside modal */
+.event-timeline {
+    position: fixed;
     top: 0;
     bottom: 0;
     width: 340px;
-    z-index: 10;
+    z-index: 101;
     overflow-y: auto;
     border-left: 1px solid var(--border);
     padding: 16px;
     background: var(--bg-elevated);
     transform: translateX(100%);
     transition: transform 0.3s ease;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
 }
 
-/* Timeline drawer open state */
-.vks-modal-body-wrapper.timeline-open .event-timeline {
+.event-timeline.drawer-open {
     transform: translateX(0);
 }
 
-.vks-modal-body-wrapper.timeline-open .modal-body {
+/* Dim the modal when drawer is open */
+.modal-overlay.drawer-open .vks-modal-flat {
     opacity: 0.3;
     pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
-.event-timeline {
-}
 
 .timeline-loading,
 .timeline-empty,

@@ -314,8 +314,16 @@ async function loadEventHistory(eventId) {
     if (!container) return;
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    const wrapper = container.closest('.vks-modal-body-wrapper');
-    if (wrapper) wrapper.classList.add('timeline-open');
+    // Position drawer next to modal
+    const modal = document.querySelector('.vks-modal-flat');
+    if (modal) {
+        const rect = modal.getBoundingClientRect();
+        container.style.top = rect.top + 'px';
+        container.style.bottom = (window.innerHeight - rect.bottom) + 'px';
+        container.style.left = rect.right + 'px';
+    }
+    container.classList.add('drawer-open');
+    document.getElementById('event-modal').classList.add('drawer-open');
 
     try {
         const res = await fetch(`/admin/api/events/${eventId}/history`, {
@@ -409,8 +417,8 @@ async function loadEventHistory(eventId) {
 function hideEventHistory() {
     const container = document.getElementById('event-modal-audit');
     if (container) {
-        const wrapper = container.closest('.vks-modal-body-wrapper');
-        if (wrapper) wrapper.classList.remove('timeline-open');
+        container.classList.remove('drawer-open');
+        document.getElementById('event-modal').classList.remove('drawer-open');
         container.innerHTML = '';
     }
 }
