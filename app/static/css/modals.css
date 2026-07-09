@@ -101,6 +101,8 @@
   border-radius: 14px;
   overflow: hidden;
   max-width: 460px;
+  border: none;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.35);
 }
 
 /* Header */
@@ -253,7 +255,7 @@
 }
 
 .vks-modal-accent {
-  height: 3px;
+  height: 4px;
   background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
   flex-shrink: 0;
 }
