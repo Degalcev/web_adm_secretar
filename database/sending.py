@@ -6,7 +6,7 @@ from loguru import logger
 from sqlalchemy import select, update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location, Session, Event, Document
+from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory
 from config import DOCUMENTS_DIR
 
 
@@ -290,3 +290,26 @@ async def delete_document(doc_id: str):
             await session.rollback()
             logger.error('Ошибка удаления документа {}: {}', doc_id, repr(e))
             raise
+
+
+# ─── Event History ──────────────────────────────────────────────────
+
+async def add_event_history(
+    event_id: str,
+    user_id: str | None,
+    action: str,
+    changes: dict | None = None
+) -> None:
+    try:
+        new_entry = EventHistory(
+            event_id=event_id,
+            user_id=user_id,
+            action=action,
+            changes=changes,
+        )
+        async with async_session() as session:
+            session.add(new_entry)
+            await session.commit()
+        logger.debug('event_history: event={} action={}', event_id, action)
+    except Exception as e:
+        logger.error('Ошибка записи event_history: {}', repr(e))

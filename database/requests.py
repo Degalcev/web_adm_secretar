@@ -2,7 +2,7 @@ from datetime import datetime, date
 from loguru import logger
 from sqlalchemy import select, and_
 
-from database.models import async_session, User, Organizer, Location, Session, Event, Document
+from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory
 
 
 async def get_user(user_max_id=None):
@@ -120,3 +120,38 @@ async def get_document_by_id(doc_id: str):
         if row:
             return {'id': row[0], 'name': row[1], 'size': row[2], 'file_path': row[3], 'content': row[4]}
         return None
+
+
+# ─── Event History ──────────────────────────────────────────────────
+
+async def get_event_history_by_event_id(event_id: str) -> list[dict]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(
+                EventHistory.id,
+                EventHistory.timestamp,
+                EventHistory.action,
+                EventHistory.changes,
+                User.last_name,
+                User.first_name,
+                User.patronymic,
+                User.name,
+                User.username,
+            )
+            .join(User, EventHistory.user_id == User.id, isouter=True)
+            .where(EventHistory.event_id == event_id)
+            .order_by(EventHistory.timestamp.desc())
+        )
+        rows = result.all()
+        history = []
+        for row in rows:
+            user_parts = [row.last_name or '', row.first_name or '', row.patronymic or '']
+            user_name = ' '.join(p for p in user_parts if p).strip() or row.name or row.username or 'Система'
+            history.append({
+                'id': row.id,
+                'user_name': user_name,
+                'timestamp': row.timestamp.isoformat() if row.timestamp else None,
+                'action': row.action,
+                'changes': row.changes,
+            })
+        return history
