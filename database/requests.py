@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from loguru import logger
-from sqlalchemy import select, and_
+from sqlalchemy import select, update, and_
 
 from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory
 
@@ -123,6 +123,24 @@ async def get_document_by_id(doc_id: str):
 
 
 # ─── Event History ──────────────────────────────────────────────────
+
+async def cleanup_stale_locks() -> int:
+    try:
+        from datetime import timedelta
+        async with async_session() as session:
+            cutoff = datetime.utcnow() - timedelta(minutes=10)
+            result = await session.execute(
+                update(Event).where(Event.locked_at < cutoff, Event.locked_at.isnot(None)).values(locked_by=None, locked_at=None)
+            )
+            await session.commit()
+            count = result.rowcount
+            if count:
+                logger.info('Очищено {} просроченных lock\'ов', count)
+            return count
+    except Exception as e:
+        logger.error('Ошибка cleanup_stale_locks: {}', repr(e))
+        return 0
+
 
 async def get_event_history_by_event_id(event_id: str) -> list[dict]:
     async with async_session() as session:

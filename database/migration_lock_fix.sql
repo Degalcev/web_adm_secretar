@@ -1,0 +1,1 @@
+ALTER TABLE events ALTER COLUMN locked_by TYPE TEXT USING locked_by::TEXT;

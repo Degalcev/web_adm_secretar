@@ -141,7 +141,7 @@ class Event(Base):
     doc_id         = mapped_column(String(), nullable=True)
     notification   = mapped_column(Boolean(), default=True)
     updated_at     = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    locked_by      = mapped_column(Integer(), nullable=True)
+    locked_by      = mapped_column(String(), nullable=True)
     locked_at      = mapped_column(DateTime, nullable=True)
     last_changed_by    = mapped_column(String(), nullable=True)
     last_changed_at    = mapped_column(DateTime, nullable=True)

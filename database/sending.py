@@ -244,6 +244,43 @@ async def delete_event(event_id: str):
             raise
 
 
+async def lock_event(event_id: str, user_id: str) -> dict:
+    try:
+        async with async_session() as session:
+            event = await session.scalar(select(Event).where(Event.id == event_id))
+            if not event:
+                return {'ok': False, 'error': 'Событие не найдено'}
+            if event.locked_by and event.locked_by != user_id:
+                if event.locked_at and (datetime.utcnow() - event.locked_at).total_seconds() < 600:
+                    lu = await session.scalar(select(User).where(User.id == event.locked_by))
+                    name = ''
+                    if lu:
+                        parts = [lu.last_name or '', lu.first_name or '', lu.patronymic or '']
+                        name = ' '.join(p for p in parts if p).strip() or lu.name or str(lu.max_id)
+                    return {'ok': False, 'locked_by': name or str(event.locked_by), 'locked_at': event.locked_at.isoformat() if event.locked_at else None}
+            event.locked_by = user_id
+            event.locked_at = datetime.utcnow()
+            await session.commit()
+            logger.debug('Lock event {} by user {}', event_id, user_id)
+            return {'ok': True}
+    except Exception as e:
+        logger.error('Ошибка lock_event: {}', repr(e))
+        return {'ok': False, 'error': str(e)}
+
+
+async def unlock_event(event_id: str) -> None:
+    try:
+        async with async_session() as session:
+            event = await session.scalar(select(Event).where(Event.id == event_id))
+            if event:
+                event.locked_by = None
+                event.locked_at = None
+                await session.commit()
+                logger.debug('Unlock event {}', event_id)
+    except Exception as e:
+        logger.error('Ошибка unlock_event: {}', repr(e))
+
+
 # ─── Documents ────────────────────────────────────────────────────────
 
 async def add_document(event_id: str, name: str, size: int, content: bytes) -> str:
