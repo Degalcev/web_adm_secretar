@@ -523,17 +523,19 @@
     transform-origin: right center;
     transform: scaleX(0);
     transition: transform 0.3s ease;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    box-shadow: -8px 0 24px rgba(0,0,0,0.25);
 }
 
 .event-timeline.drawer-open {
     transform: scaleX(1);
 }
 
-/* Dim modal body behind drawer */
+/* Dim modal body behind drawer — backdrop effect like modal overlay */
 .vks-modal-body-wrapper.timeline-dimmed .modal-body {
-    opacity: 0.3;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(3px);
     pointer-events: none;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
 
 /* ═══ Event Timeline ═══════════════════════════════════════════════ */
