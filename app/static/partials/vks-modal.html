@@ -24,72 +24,75 @@
       </div>
     </div>
 
-    <!-- Body -->
-    <div class="modal-body">
-      <!-- Скрытые контейнеры для совместимости с JS -->
-      <div class="modal-event-actions" id="event-modal-actions" style="display:none"></div>
+    <!-- Body wrapper: form + timeline side panel -->
+    <div class="vks-modal-body-wrapper">
+      <div class="modal-body">
+        <!-- Скрытые контейнеры для совместимости с JS -->
+        <div class="modal-event-actions" id="event-modal-actions" style="display:none"></div>
+
+        <!-- Дата и время -->
+        <div class="form-row form-separator">
+          <div class="form-group flex-2">
+            <label>Дата *</label>
+            <input type="date" id="f-event-date" required>
+          </div>
+          <div class="form-group">
+            <label>Время *</label>
+            <input type="time" id="f-event-time" required>
+          </div>
+        </div>
+
+        <!-- Организатор и локация -->
+        <div class="form-row form-separator">
+          <div class="form-group">
+            <label>Организатор *</label>
+            <select id="f-event-organizer" required><option value="">Не указан</option></select>
+          </div>
+          <div class="form-group">
+            <label>Локация *</label>
+            <select id="f-event-location" required><option value="">Не указана</option></select>
+          </div>
+        </div>
+
+        <!-- Описание -->
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <textarea id="f-event-desc" rows="2" placeholder="Описание встречи..." maxlength="200"></textarea>
+          <span class="form-hint">Максимум 200 символов</span>
+        </div>
+
+        <!-- Ссылка -->
+        <div class="form-separator form-group">
+          <label>Ссылка</label>
+          <div class="url-row">
+            <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
+            <a class="url-go-btn" id="event-url-go" href="#" target="_blank" rel="noopener" title="Открыть ссылку" style="display:none">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Документы -->
+        <div id="f-event-docs-group" style="display:none">
+          <div class="form-separator">
+            <div class="docs-header">
+              <span class="docs-label" id="f-event-docs-count"></span>
+            </div>
+            <div class="doc-scroll-wrap">
+              <div class="doc-scroll-fade-top" id="doc-fade-top"></div>
+              <div id="f-event-docs" class="doc-card-list"></div>
+              <div class="doc-scroll-fade-bottom" id="doc-fade-bottom"></div>
+            </div>
+            <label class="doc-add-btn" id="event-doc-upload-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Добавить документ
+              <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
+            </label>
+          </div>
+        </div>
+      </div>
+      <!-- Timeline side panel -->
       <div class="event-timeline" id="event-modal-audit" style="display:none"></div>
-
-      <!-- Дата и время -->
-      <div class="form-row form-separator">
-        <div class="form-group flex-2">
-          <label>Дата *</label>
-          <input type="date" id="f-event-date" required>
-        </div>
-        <div class="form-group">
-          <label>Время *</label>
-          <input type="time" id="f-event-time" required>
-        </div>
-      </div>
-
-      <!-- Организатор и локация -->
-      <div class="form-row form-separator">
-        <div class="form-group">
-          <label>Организатор *</label>
-          <select id="f-event-organizer" required><option value="">Не указан</option></select>
-        </div>
-        <div class="form-group">
-          <label>Локация *</label>
-          <select id="f-event-location" required><option value="">Не указана</option></select>
-        </div>
-      </div>
-
-      <!-- Описание -->
-      <div class="form-separator form-group">
-        <label>Описание</label>
-        <textarea id="f-event-desc" rows="2" placeholder="Описание встречи..." maxlength="200"></textarea>
-        <span class="form-hint">Максимум 200 символов</span>
-      </div>
-
-      <!-- Ссылка -->
-      <div class="form-separator form-group">
-        <label>Ссылка</label>
-        <div class="url-row">
-          <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
-          <a class="url-go-btn" id="event-url-go" href="#" target="_blank" rel="noopener" title="Открыть ссылку" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          </a>
-        </div>
-      </div>
-
-      <!-- Документы -->
-      <div id="f-event-docs-group" style="display:none">
-        <div class="form-separator">
-          <div class="docs-header">
-            <span class="docs-label" id="f-event-docs-count"></span>
-          </div>
-          <div class="doc-scroll-wrap">
-            <div class="doc-scroll-fade-top" id="doc-fade-top"></div>
-            <div id="f-event-docs" class="doc-card-list"></div>
-            <div class="doc-scroll-fade-bottom" id="doc-fade-bottom"></div>
-          </div>
-          <label class="doc-add-btn" id="event-doc-upload-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Добавить документ
-            <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
-          </label>
-        </div>
-      </div>
     </div>
 
     <!-- Footer -->
