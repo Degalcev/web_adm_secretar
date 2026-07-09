@@ -38,7 +38,7 @@ app/
 │   ├── preload.py       # Preload API (events + organizers + locations одним запросом)
 │   └── sse.py           # SSE endpoint (/admin/api/events/stream, без auth)
 └── static/
-    ├── index.html       # SPA entry point (?v=__VERSION__ → подставляется из version.json)
+    ├── index.html       # SPA entry point (653 строк, ?v=__VERSION__)
     ├── favicon.svg      # Иконка
     ├── partials/
     │   ├── vks-modal.html       # VKS modal partial (Compact Flat)
@@ -74,7 +74,7 @@ app/
         ├── organizers.js     # CRUD организаторов (через createCrudModule)
         ├── locations.js      # CRUD локаций (через createCrudModule)
         ├── logs.js           # Просмотр логов
-        ├── settings.js       # Настройки
+        ├── settings.js       # Настройки (THEMES_META + renderThemeGrid)
         ├── profile.js        # Профиль пользователя
         ├── updater.js        # Обновление версии
         └── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
