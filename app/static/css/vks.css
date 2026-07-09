@@ -824,3 +824,20 @@
   vertical-align: middle;
   margin-left: 6px;
 }
+
+/* Event lock indicator */
+.vks-card-lock {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.6875rem;
+    color: var(--warning, #f59e0b);
+    padding: 2px 6px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 4px;
+    margin-top: 4px;
+}
+
+.vks-card-lock svg {
+    flex-shrink: 0;
+}

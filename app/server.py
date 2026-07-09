@@ -18,6 +18,7 @@ from app.routes.preload import setup_preload_routes
 from app.routes.sse import setup_sse_routes
 from app.sse_listener import start_listener, stop_listener
 from database.sending import cleanup_expired_sessions
+from database.requests import cleanup_stale_locks
 
 STATIC_PATH = Path(__file__).parent / 'static'
 VERSION = 'dev'
@@ -60,7 +61,8 @@ async def periodic_session_cleanup():
         await asyncio.sleep(6 * 3600)
         try:
             await cleanup_expired_sessions()
-            logger.info('Периодическая очистка сессий выполнена')
+            await cleanup_stale_locks()
+            logger.info('Периодическая очистка сессий и lock\'ов выполнена')
         except Exception as e:
             logger.error('Ошибка очистки сессий: {}', repr(e))
 
@@ -69,7 +71,8 @@ async def on_startup(app):
     """Действия при старте сервера."""
     try:
         await cleanup_expired_sessions()
-        logger.info('Очистка истёкших сессий выполнена при старте')
+        await cleanup_stale_locks()
+        logger.info('Очистка истёкших сессий и stale lock\'ов выполнена при старте')
     except Exception as e:
         logger.error('Ошибка очистки сессий при старте: {}', repr(e))
 

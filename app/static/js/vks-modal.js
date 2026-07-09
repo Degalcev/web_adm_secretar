@@ -39,6 +39,19 @@ async function openEditEventModal(id) {
     editingEventId = id;
     pendingFiles = [];
     removedDocIds = [];
+
+    // Try to lock
+    try {
+        const lockRes = await fetch(`/admin/api/events/${id}/lock`, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': getCsrfToken() }
+        });
+        const lockData = await lockRes.json();
+        if (!lockData.ok && lockData.locked_by) {
+            showToast(`Редактирует: ${lockData.locked_by}`, 'warning');
+        }
+    } catch (err) {}
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
 
     // Показать элементы режима редактирования
@@ -122,6 +135,13 @@ async function openEditEventModal(id) {
 }
 
 function closeEventModal() {
+    if (editingEventId) {
+        fetch(`/admin/api/events/${editingEventId}/unlock`, {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': getCsrfToken() }
+        }).catch(() => {});
+    }
     hideEventHistory();
     document.getElementById('event-modal').classList.remove('show');
     document.getElementById('event-url-go').style.display = 'none';

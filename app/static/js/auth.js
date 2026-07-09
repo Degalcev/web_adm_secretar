@@ -28,6 +28,7 @@ async function checkAuth() {
     isAuthenticated = false;
     window.currentUserRole = null;
     window.currentUserName = '';
+    window.currentUser = null;
     showLogin();
     return false;
 }
@@ -41,6 +42,7 @@ async function loadCurrentUser() {
         if (meResp.ok) {
             const me = await meResp.json();
             window.currentUserRole = me.status || 'user';
+            window.currentUser = me;
             const lastName = me.last_name || '';
             const firstName = me.first_name || '';
             if (lastName && firstName) {
@@ -116,6 +118,7 @@ async function logout() {
     isAuthenticated = false;
     window.currentUserRole = null;
     window.currentUserName = '';
+    window.currentUser = null;
     store.allUsers = [];
     store.allEvents = [];
     store.allOrganizers = [];
