@@ -137,7 +137,7 @@ async function saveUser() {
     if (password) payload.password = password;
 
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         let resp;
         if (editingId) {
             resp = await fetch(`${BASE_URL}/admin/api/users/${editingId}`, {
@@ -223,7 +223,7 @@ async function confirmDelete() {
     if (deletingLocId) { await confirmDeleteLoc(); return; }
     if (!deletingId) return;
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         const resp = await fetch(`${BASE_URL}/admin/api/users/${deletingId}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }

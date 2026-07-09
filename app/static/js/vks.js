@@ -103,7 +103,7 @@ async function loadVksActive() {
                 _quickFilter = 'missed';
             } else if (f === 'today') {
                 _quickFilter = 'today';
-                if (dateInput) dateInput.value = _getLocalDateStr(new Date());
+                if (document.getElementById('f-vks-active-day')) document.getElementById('f-vks-active-day').value = localDateStr(new Date());
             } else if (f === 'soon') {
                 _quickFilter = 'soon';
             }
@@ -172,14 +172,10 @@ function clearVksFilter() {
     renderVksBoard('vks-board-active', 'active');
 }
 
-function _getLocalDateStr(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-
 function updateVksStats() {
     const active = allEvents.filter(e => !e.completed);
     const now = new Date();
-    const today = _getLocalDateStr(now);
+    const today = localDateStr(now);
 
     let total = active.length;
     let todayCount = 0;
@@ -265,7 +261,7 @@ function renderVksBoard(boardId, filter) {
 
     if (_quickFilter && filter === 'active') {
         const now = new Date();
-        const today = _getLocalDateStr(now);
+        const today = localDateStr(now);
         if (_quickFilter === 'today') {
             events = events.filter(e => e.date === today);
         } else if (_quickFilter === 'soon') {
@@ -593,7 +589,7 @@ async function openEditEventModal(id) {
 
     // Accent bar — цвет по статусу
     const accent = document.getElementById('vks-modal-accent');
-    const today = _getLocalDateStr(new Date());
+    const today = localDateStr(new Date());
     if (e.completed) {
         accent.className = 'vks-modal-accent status-completed';
     } else if (!e.date || e.date < today) {
@@ -694,7 +690,7 @@ function toggleEventComplete() {
         btn.classList.remove('active');
         if (pillLabel) pillLabel.textContent = 'Завершить';
         const e = allEvents.find(x => x.id === editingEventId);
-        const today = _getLocalDateStr(new Date());
+        const today = localDateStr(new Date());
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'modal-event-status status-missed';
             statusEl.innerHTML = '<span class="status-dot"></span>Пропущено';
@@ -853,7 +849,7 @@ async function saveEvent() {
     if (!organizer) { showToast('Выберите организатора', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
     if (!location) { showToast('Выберите локацию', 'error'); btn.disabled = false; btn.classList.remove('loading'); btn.textContent = origText; return; }
 
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const csrfToken = getCsrfToken();
     const formData = new FormData();
     formData.append('date', date);
     formData.append('time', time);
@@ -966,7 +962,7 @@ function confirmCompleteEvent(id, checked) {
 }
 
 async function completeEvent(id, checked) {
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const csrfToken = getCsrfToken();
     try {
         const formData = new FormData();
         formData.append('completed', checked ? 'true' : 'false');
@@ -1004,7 +1000,7 @@ function openConfirmEvent(id) {
 
 async function confirmDeleteEvent() {
     if (!deletingEventId) return;
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const csrfToken = getCsrfToken();
     try {
         const resp = await fetch(`${BASE_URL}/admin/api/events/${deletingEventId}`, {
             method: 'DELETE',

@@ -57,13 +57,10 @@ document.getElementById('log-date-select').addEventListener('change', function (
 });
 
 // ─── Автообновление при смене дня ──────────────────────────────────
-function _localDateStr(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-let _currentDay = _localDateStr(new Date());
+let _currentDay = localDateStr(new Date());
 
 function _checkDayChange() {
-    const today = _localDateStr(new Date());
+    const today = localDateStr(new Date());
     if (today !== _currentDay) {
         _currentDay = today;
         if (typeof loadVksActive === 'function') loadVksActive();

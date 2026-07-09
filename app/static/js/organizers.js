@@ -96,7 +96,7 @@ async function saveOrganizer() {
         base_url: document.getElementById('f-org-base-url').value.trim(),
     };
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         let resp;
         if (editingOrgId) {
             resp = await fetch(`${BASE_URL}/admin/api/organizers/${editingOrgId}`, {
@@ -127,7 +127,7 @@ function openConfirmOrg(id, name) {
 async function confirmDeleteOrg() {
     if (!deletingOrgId) return;
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         const resp = await fetch(`${BASE_URL}/admin/api/organizers/${deletingOrgId}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }

@@ -15,8 +15,6 @@ function initDashboard() {
     preloadAllData().then(() => renderDashboard());
 }
 
-let _dashLastDay = '';
-
 function setupDashboardClicks() {
     document.querySelectorAll('.dash-card[data-href]').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -31,38 +29,6 @@ function setupDashboardClicks() {
             navigateTo(href);
         });
     });
-}
-
-function applyDashboardFilter(filter) {
-    if (!filter) return;
-    if (typeof _pendingVksFilter !== 'undefined') {
-        _pendingVksFilter = filter;
-    }
-}
-
-async function loadDashboardData() {
-    try {
-        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (!resp.ok) throw new Error(resp.status);
-        const data = await resp.json();
-
-        // Обновляем счётчики мгновенно
-        document.getElementById('dash-total').textContent = data.total;
-        document.getElementById('dash-active').textContent = data.active;
-        document.getElementById('dash-completed').textContent = data.completed;
-        document.getElementById('dash-missed').textContent = data.missed;
-
-        // Обновляем today/soon
-        const todayEl = document.getElementById('dash-today');
-        const soonEl = document.getElementById('dash-soon');
-        if (todayEl && data.today) renderTodayFromData(data.today);
-        if (soonEl && data.soon) renderSoonFromData(data.soon);
-
-        // Полные данные для локаций и графика — загружаем отдельно
-        loadFullData();
-    } catch (e) {
-        console.error('Dashboard load error:', e);
-    }
 }
 
 async function loadFullData() {
@@ -315,17 +281,6 @@ function setupLocToggle() {
     updateLocControls();
 }
 
-function updateLocControls() {
-    const showYearNav = _locPeriod === 'year' || _locPeriod === 'month';
-    const yearLabel = document.getElementById('dash-loc-year-label');
-    const yearPrev = document.getElementById('dash-loc-year-prev');
-    const yearNext = document.getElementById('dash-loc-year-next');
-    if (yearLabel) yearLabel.style.display = showYearNav ? 'inline' : 'none';
-    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
-    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
-    if (yearLabel && showYearNav) yearLabel.textContent = _locYear;
-}
-
 function dashLocYearNav(dir) {
     _locYear += dir;
     renderDashLocations();
@@ -574,7 +529,7 @@ function dashConfirmCompleteEvent(id, checked) {
 }
 
 async function dashCompleteEvent(id, checked) {
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const csrfToken = getCsrfToken();
     try {
         const formData = new FormData();
         formData.append('completed', checked ? 'true' : 'false');

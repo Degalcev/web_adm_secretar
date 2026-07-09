@@ -36,7 +36,7 @@ async function changeMyPassword() {
         return;
     }
 
-    const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+    const csrfToken = getCsrfToken();
 
     try {
         const resp = await fetch('/admin/api/change-password', {

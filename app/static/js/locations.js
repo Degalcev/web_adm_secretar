@@ -83,7 +83,7 @@ async function saveLocation() {
     btn.textContent = 'Сохранение...';
     const payload = { name: document.getElementById('f-loc-name-modal').value.trim() };
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         let resp;
         if (editingLocId) {
             resp = await fetch(`${BASE_URL}/admin/api/locations/${editingLocId}`, {
@@ -114,7 +114,7 @@ function openConfirmLoc(id, name) {
 async function confirmDeleteLoc() {
     if (!deletingLocId) return;
     try {
-        const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '';
+        const csrfToken = getCsrfToken();
         const resp = await fetch(`${BASE_URL}/admin/api/locations/${deletingLocId}`, {
             method: 'DELETE',
             headers: { 'X-CSRF-Token': csrfToken }
