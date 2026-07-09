@@ -4,12 +4,13 @@ from datetime import date, datetime, timedelta, time
 
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
-from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
-from database.sending import add_event, update_event, delete_event, add_document, delete_document
+from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id, cleanup_stale_locks
+from database.sending import add_event, update_event, delete_event, add_document, delete_document, lock_event, unlock_event
 
 
 async def get_events_handler(request: web.Request) -> web.Response:
     try:
+        await cleanup_stale_locks()
         status = request.query.get('status', '').strip()
         if status == 'completed':
             events = await get_events(completed=True)
@@ -36,6 +37,16 @@ async def get_events_handler(request: web.Request) -> web.Response:
 
         for e in events:
             changed_by_name = audit_users.get(e.last_changed_by, '') if e.last_changed_by else ''
+
+            # Resolve lock user
+            locked_by_name = None
+            locked_by_id = e.locked_by
+            if e.locked_by:
+                lu = await get_user_by_id(e.locked_by)
+                if lu:
+                    parts = [lu.last_name or '', lu.first_name or '', lu.patronymic or '']
+                    locked_by_name = ' '.join(p for p in parts if p).strip() or lu.name or str(lu.max_id)
+
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -51,6 +62,9 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'last_changed_by': changed_by_name,
                 'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
                 'last_change_action': e.last_change_action or '',
+                'locked_by': locked_by_name,
+                'locked_by_id': locked_by_id,
+                'locked_at': e.locked_at.isoformat() if e.locked_at else None,
             })
         logger.debug('Загружено {} событий', len(data))
         return web.json_response(data)
@@ -277,6 +291,31 @@ async def get_event_history_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
+@require_csrf
+async def lock_event_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        user = request.get('user')
+        if not user:
+            return web.json_response({'ok': False, 'error': 'Не авторизован'}, status=401)
+        result = await lock_event(event_id, user.id)
+        return web.json_response(result)
+    except Exception as e:
+        logger.error('Ошибка lock: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@require_csrf
+async def unlock_event_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        await unlock_event(event_id)
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка unlock: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events', get_events_handler)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
@@ -284,3 +323,5 @@ def setup_vks_routes(app: web.Application):
     app.router.add_put('/admin/api/events/{id}', update_event_handler)
     app.router.add_delete('/admin/api/events/{id}', delete_event_handler)
     app.router.add_get('/admin/api/events/{event_id}/history', get_event_history_handler)
+    app.router.add_put('/admin/api/events/{id}/lock', lock_event_handler)
+    app.router.add_put('/admin/api/events/{id}/unlock', unlock_event_handler)
