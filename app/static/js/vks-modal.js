@@ -42,6 +42,7 @@ async function openEditEventModal(id) {
     pendingFiles = [];
     removedDocIds = [];
     isLockedByOther = false;
+    let lockedByName = '';
 
     // Try to lock
     try {
@@ -53,6 +54,7 @@ async function openEditEventModal(id) {
         const lockData = await lockRes.json();
         if (!lockData.ok && lockData.locked_by) {
             isLockedByOther = true;
+            lockedByName = lockData.locked_by;
             showToast(`Редактирует: ${lockData.locked_by}`, 'warning');
         }
     } catch (err) {}
@@ -164,8 +166,8 @@ async function openEditEventModal(id) {
     const lockInfo = document.getElementById('event-modal-lock-info');
     const lockText = document.getElementById('event-modal-lock-text');
     if (lockInfo && lockText) {
-        if (isLockedByOther) {
-            lockText.textContent = `Редактирует: ${e.locked_by}`;
+        if (isLockedByOther && lockedByName) {
+            lockText.textContent = `Редактирует: ${lockedByName}`;
             lockInfo.style.display = 'flex';
         } else {
             lockInfo.style.display = 'none';
