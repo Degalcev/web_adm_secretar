@@ -53,14 +53,16 @@ function resetLocFilters() {
     filterLocations();
 }
 
-function openAddLocationModal() {
+async function openAddLocationModal() {
+    if (window._modalsLoaded) await window._modalsLoaded;
     editingLocId = null;
     document.getElementById('loc-modal-title').textContent = 'Добавить локацию';
     document.getElementById('f-loc-name-modal').value = '';
     document.getElementById('location-modal').classList.add('show');
 }
 
-function openEditLocationModal(id) {
+async function openEditLocationModal(id) {
+    if (window._modalsLoaded) await window._modalsLoaded;
     const l = allLocations.find(x => x.id === id);
     if (!l) return;
     editingLocId = id;

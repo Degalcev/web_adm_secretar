@@ -1,24 +1,35 @@
 // ─── Инициализация ───────────────────────────────────────────────────
 
-// Загрузка VKS modal partial
-window._vksModalLoaded = new Promise((resolve) => {
-    async function _loadVKSModal() {
+// Загрузка всех модалок из partials
+window._modalsLoaded = new Promise((resolve) => {
+    async function _loadModals() {
         try {
-            const resp = await fetch('/static/partials/vks-modal.html?v=' + (window.__VERSION || ''));
-            const html = await resp.text();
-            document.body.insertAdjacentHTML('beforeend', html);
+            const files = [
+                '/static/partials/vks-modal.html',
+                '/static/partials/user-modal.html',
+                '/static/partials/organizer-modal.html',
+                '/static/partials/location-modal.html'
+            ];
+            for (const url of files) {
+                const resp = await fetch(url + '?v=' + (window.__VERSION || ''));
+                const html = await resp.text();
+                document.body.insertAdjacentHTML('beforeend', html);
+            }
             resolve();
         } catch (e) {
-            console.error('Failed to load VKS modal:', e);
+            console.error('Failed to load modals:', e);
             resolve();
         }
     }
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', _loadVKSModal);
+        document.addEventListener('DOMContentLoaded', _loadModals);
     } else {
-        _loadVKSModal();
+        _loadModals();
     }
 });
+
+// Обратная совместимость с VKS modal
+window._vksModalLoaded = window._modalsLoaded;
 
 document.getElementById('login-password').addEventListener('keydown', e => {
     if (e.key === 'Enter') login();

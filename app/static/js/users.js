@@ -73,7 +73,8 @@ function resetUserFilters() {
 
 // ─── Модалка пользователя ────────────────────────────────────────────
 
-function openAddModal() {
+async function openAddModal() {
+    if (window._modalsLoaded) await window._modalsLoaded;
     editingId = null;
     document.getElementById('modal-title').textContent = 'Добавить пользователя';
     document.getElementById('modal-save-btn').textContent = 'Добавить';
@@ -89,7 +90,8 @@ function openAddModal() {
     document.getElementById('user-modal').classList.add('show');
 }
 
-function openEditModal(id) {
+async function openEditModal(id) {
+    if (window._modalsLoaded) await window._modalsLoaded;
     const u = allUsers.find(u => u.id === id);
     if (!u) return;
     editingId = id;

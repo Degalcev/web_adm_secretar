@@ -58,7 +58,8 @@ function resetOrgFilters() {
     filterOrganizers();
 }
 
-function openAddOrganizerModal() {
+async function openAddOrganizerModal() {
+    if (window._modalsLoaded) await window._modalsLoaded;
     editingOrgId = null;
     document.getElementById('org-modal-title').textContent = 'Добавить организатора';
     document.getElementById('f-org-name-modal').value = '';
@@ -67,7 +68,8 @@ function openAddOrganizerModal() {
     document.getElementById('organizer-modal').classList.add('show');
 }
 
-function openEditOrganizerModal(id) {
+async function openEditOrganizerModal(id) {
+    if (window._modalsLoaded) await window._modalsLoaded;
     const o = allOrganizers.find(x => x.id === id);
     if (!o) return;
     editingOrgId = id;

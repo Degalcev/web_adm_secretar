@@ -1,0 +1,47 @@
+<div class="modal-overlay" id="user-modal">
+  <div class="modal vks-modal-flat">
+    <div class="modal-header">
+      <div class="vks-modal-header-left">
+        <h3 id="modal-title" class="vks-modal-title">Добавить пользователя</h3>
+      </div>
+      <div class="modal-header-actions">
+        <button class="icon-btn" onclick="closeModal()" title="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-separator">
+        <label style="display:block;font-size:0.625rem;font-weight:600;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Данные пользователя</label>
+        <div class="form-row">
+          <div class="form-group"><label>Фамилия</label><input type="text" id="f-last-name" placeholder="Иванов"></div>
+          <div class="form-group"><label>Имя</label><input type="text" id="f-first-name" placeholder="Иван"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Отчество</label><input type="text" id="f-patronymic" placeholder="Иванович"></div>
+          <div class="form-group"><label>Юзернейм</label><input type="text" id="f-username" placeholder="ivanov"></div>
+        </div>
+        <div class="form-group"><label>Имя (отображение)</label><input type="text" id="f-name" placeholder="Иван Иванов"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Telegram ID</label><input type="number" id="f-tg-id" placeholder="123456789"></div>
+          <div class="form-group"><label>MAX ID</label><input type="number" id="f-max-id" placeholder="987654321"></div>
+        </div>
+      </div>
+      <div class="form-separator">
+        <label style="display:block;font-size:0.625rem;font-weight:600;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Безопасность</label>
+        <div class="form-group">
+          <label>Пароль <span style="font-weight:400;text-transform:none;letter-spacing:0">(оставьте пустым чтобы не менять)</span></label>
+          <input type="password" id="f-password" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label>Статус</label>
+          <select id="f-status"><option value="user">user</option><option value="admin">admin</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveUser()">Сохранить</button>
+    </div>
+  </div>
+</div>

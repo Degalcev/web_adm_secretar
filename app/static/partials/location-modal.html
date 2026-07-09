@@ -1,0 +1,24 @@
+<div class="modal-overlay" id="location-modal">
+  <div class="modal vks-modal-flat">
+    <div class="modal-header">
+      <div class="vks-modal-header-left">
+        <h3 id="loc-modal-title" class="vks-modal-title">Добавить локацию</h3>
+      </div>
+      <div class="modal-header-actions">
+        <button class="icon-btn" onclick="closeLocationModal()" title="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="form-separator form-group">
+        <label>Название</label>
+        <input type="text" id="f-loc-name-modal" placeholder="Название локации">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeLocationModal()">Отмена</button>
+      <button class="btn btn-primary" id="loc-modal-save-btn" onclick="saveLocation()">Сохранить</button>
+    </div>
+  </div>
+</div>
