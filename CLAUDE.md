@@ -40,6 +40,8 @@ app/
 └── static/
     ├── index.html       # SPA entry point (?v=__VERSION__ → подставляется из version.json)
     ├── favicon.svg      # Иконка
+    ├── partials/
+    │   └── vks-modal.html  # VKS modal partial (загружается async из app.js)
     ├── css/
     │   ├── base.css          # CSS переменные, темы, typography
     │   ├── layout.css        # Sidebar, content-area, навигация, independent page scroll
@@ -68,7 +70,7 @@ app/
         ├── settings.js       # Настройки
         ├── profile.js        # Профиль пользователя
         ├── updater.js        # Обновление версии
-        └── app.js            # Инициализация, кнопка «Наверх»
+        ├── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
 
 database/
 ├── models.py            # User (ФИО+username+role), Organizer, Location, Session, Event (audit), Document
@@ -135,6 +137,34 @@ deploy/
 - Ссылка на встречу: иконка-кнопка рядом с документами
 - Документы свёрнуты по умолчанию (макс. 4 видимых)
 - Аудит: "Кто изменил" в footer модалки
+
+### VKS Modal — Compact Flat дизайн
+- Модалка вынесена в отдельный partial: `app/static/partials/vks-modal.html`
+- Загружается async через `app.js` → `_vksModalLoaded` promise
+- `openAddEventModal()` / `openEditEventModal()` ждут загрузки partial через `await window._vksModalLoaded`
+- Структура: accent-bar (3px градиент) → header (статус-бейдж + заголовок + icon-btn info/delete/close) → body (form-separators) → footer (btn-ghost + pill complete + btn-primary)
+- **НЕ** использует `.modal-section` (старый дизайн с карточками) — только `.form-separator`
+- Accent bar цвет по статусу: default (accent gradient), completed (green), missed (red)
+- Кнопка «Перейти» (url-go-btn) рядом с полем ссылки — появляется если есть URL
+- П文档 удаления: standalone кнопка `.doc-card-delete` справа от карточки документа
+- Кнопка «Добавить документ» — 100% ширины под списком документов
+
+### VKS Modal — документы (scroll)
+- Список документов `.doc-card-list` — `overflow-y: auto` + `scrollbar-width: none`
+- Desktop: `max-height: 310px` (~4.5 документа видно), Mobile: `max-height: 140px` (~2 документа)
+- Gradient fade: `.doc-scroll-fade-top` / `.doc-scroll-fade-bottom` — реальные DOM-элементы внутри `.doc-scroll-wrap`
+- JS `_updateDocScrollGradients()`: проверяет `scrollHeight > clientHeight`, toggle классов `.is-visible`
+- Градиент top исчезает при `scrollTop <= 1`, bottom при прокрутке до конца
+- **Мобильный**: `.doc-card-info` flex-row (icon + name + size в одну строку), name обрезается через `text-overflow: ellipsis`
+
+### VKS Modal — CSS архитектура
+- Desktop стили `.vks-modal-flat` — в `modals.css` (после базовых стилей)
+- Mobile стили `@media (max-width: 768px)` — в **конце** `modals.css` (НЕ в `responsive.css`!)
+- Причина: в `responsive.css` есть базовые правила `.form-row { flex-direction: column }` и `.form-group textarea { min-height: 80px }` которые перезаписывают vks-modal-flat overrides из-за порядка声明
+- `.vks-modal-flat` полностью переопределяет: `.modal-header`, `.modal-body`, `.modal-footer`, `.form-group`, `.form-group label/input/select/textarea`, `.form-separator`, `.form-row`
+- Header/footer: `background: var(--bg-elevated)` — не прозрачные
+- `border: none` на `.vks-modal-flat` — убрана рамка контейнера
+- `overflow: hidden` на `.vks-modal-flat` — accent bar обрезается по border-radius
 
 ### Мобильная оптимизация
 - Гамбургер-меню для навигации (<768px)
