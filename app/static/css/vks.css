@@ -855,7 +855,7 @@
     align-items: center;
     gap: 6px;
     padding: 8px 12px;
-    margin: 0 16px 8px;
+    margin: 0 0 8px;
     background: rgba(245, 158, 11, 0.08);
     border: 1px solid rgba(245, 158, 11, 0.2);
     border-radius: 8px;
@@ -865,4 +865,12 @@
 
 .modal-lock-info svg {
     flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .modal-lock-info {
+        margin: 0 0 8px;
+        padding: 6px 10px;
+        font-size: 0.6875rem;
+    }
 }
