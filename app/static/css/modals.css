@@ -247,41 +247,32 @@
 .vks-modal-flat .doc-card-list::-webkit-scrollbar {
   display: none;
 }
-/* Gradient hints — hidden by default, shown when scrollable */
-.vks-modal-flat .doc-card-list::before,
-.vks-modal-flat .doc-card-list::after {
-  content: '';
-  position: sticky;
+/* Scroll wrapper with gradient fades */
+.doc-scroll-wrap {
+  position: relative;
+}
+.doc-scroll-fade-top,
+.doc-scroll-fade-bottom {
+  position: absolute;
   left: 0;
   right: 0;
-  display: block;
   height: 20px;
   pointer-events: none;
   z-index: 1;
-  flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.2s;
 }
-.vks-modal-flat .doc-card-list::before {
+.doc-scroll-fade-top {
   top: 0;
   background: linear-gradient(to bottom, var(--bg-elevated), transparent);
 }
-.vks-modal-flat .doc-card-list::after {
+.doc-scroll-fade-bottom {
   bottom: 0;
   background: linear-gradient(to top, var(--bg-elevated), transparent);
 }
-/* Show gradients when scrollable */
-.vks-modal-flat .doc-card-list.is-scrollable::before,
-.vks-modal-flat .doc-card-list.is-scrollable::after {
+.doc-scroll-fade-top.is-visible,
+.doc-scroll-fade-bottom.is-visible {
   opacity: 1;
-}
-/* Hide top gradient when scrolled to top */
-.vks-modal-flat .doc-card-list.is-scrollable.at-top::before {
-  opacity: 0;
-}
-/* Hide bottom gradient when scrolled to bottom */
-.vks-modal-flat .doc-card-list.is-scrollable.at-bottom::after {
-  opacity: 0;
 }
 
 /* Compact footer buttons */

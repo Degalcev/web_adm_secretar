@@ -750,15 +750,17 @@ function refreshEventDocs() {
 
 function _updateDocScrollGradients() {
     const el = document.getElementById('f-event-docs');
-    if (!el) return;
+    const fadeTop = document.getElementById('doc-fade-top');
+    const fadeBottom = document.getElementById('doc-fade-bottom');
+    if (!el || !fadeTop || !fadeBottom) return;
     const scrollable = el.scrollHeight > el.clientHeight + 1;
-    el.classList.toggle('is-scrollable', scrollable);
+    fadeTop.classList.toggle('is-visible', scrollable && el.scrollTop > 1);
+    fadeBottom.classList.toggle('is-visible', scrollable && el.scrollTop + el.clientHeight < el.scrollHeight - 1);
     if (!scrollable) return;
     const update = () => {
-        el.classList.toggle('at-top', el.scrollTop <= 1);
-        el.classList.toggle('at-bottom', el.scrollTop + el.clientHeight >= el.scrollHeight - 1);
+        fadeTop.classList.toggle('is-visible', el.scrollTop > 1);
+        fadeBottom.classList.toggle('is-visible', el.scrollTop + el.clientHeight < el.scrollHeight - 1);
     };
-    update();
     el.removeEventListener('scroll', el._docScrollHandler);
     el._docScrollHandler = update;
     el.addEventListener('scroll', update);
