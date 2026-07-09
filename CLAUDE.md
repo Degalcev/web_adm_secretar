@@ -65,7 +65,10 @@ app/
         ├── preloader.js      # preloadAllData()
         ├── sse.js            # SSE обработчики (4 канала: events/users/locations/organizers)
         ├── dashboard.js      # Дашборд (renderDashLocations — НЕ collides с locations.js)
-        ├── vks.js            # VKS страницы (board, фильтры, модалки, документы)
+        ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика
+        ├── vks-board.js      # VKS: рендеринг карточек, иконки, документы
+        ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы)
+        ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей
         ├── organizers.js     # CRUD организаторов
         ├── locations.js      # CRUD локаций
