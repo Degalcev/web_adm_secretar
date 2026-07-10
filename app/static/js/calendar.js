@@ -139,9 +139,15 @@ function _calRenderGrid() {
     html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
-        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
     html += '</div></div>';
+
+    // Full-width hour lines overlay
+    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:0">`;
+    for (let h = CAL_H_START; h < CAL_H_END; h++) {
+        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
+    }
+    html += '</div>';
 
     // Location columns
     const locations = store.allLocations || [];
