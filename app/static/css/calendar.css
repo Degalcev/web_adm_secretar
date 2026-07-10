@@ -348,7 +348,6 @@
 
 /* Hover expand */
 .cal-ev:hover .ev-org,
-.cal-ev:hover .ev-desc,
 .cal-ev:hover .ev-badges {
   display: flex !important;
 }
@@ -370,8 +369,6 @@
 }
 
 .cal-ev:hover .ev-desc {
-  white-space: nowrap;
-  overflow: visible;
   font-size: 0.6875rem;
 }
 
