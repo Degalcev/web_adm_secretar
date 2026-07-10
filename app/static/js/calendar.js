@@ -143,7 +143,7 @@ function _calRenderGrid() {
     html += '</div></div>';
 
     // Full-width hour lines overlay
-    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:0">`;
+    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:1">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
@@ -265,12 +265,16 @@ function calUpdateNowLine() {
         inner.appendChild(line);
     });
 
-    // Time label on the time column only
+    // Now-line + time label on the time column
     const timeBody = document.querySelector('.cal-time-body');
     if (timeBody) {
+        const line = document.createElement('div');
+        line.className = 'now-line';
+        line.style.top = top + 'px';
+        timeBody.appendChild(line);
         const lbl = document.createElement('div');
         lbl.className = 'now-time';
-        lbl.style.top = (top - 10) + 'px';
+        lbl.style.top = (top + 4) + 'px';
         lbl.textContent = `${String(hm).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
         timeBody.appendChild(lbl);
     }
