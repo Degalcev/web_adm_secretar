@@ -314,28 +314,32 @@ function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
 let _calHoveredEl = null;
+let _calHoverOrigRect = null;
 
 function _calInitHoverFix() {
     document.querySelectorAll('.cal-ev').forEach(el => {
         el.addEventListener('mouseenter', _calOnEvEnter);
-        el.addEventListener('mouseleave', _calOnEvLeave);
     });
 }
 
 function _calOnEvEnter(e) {
     const el = e.currentTarget;
+    if (_calHoveredEl === el) return;
+    if (_calHoveredEl) _calReset(_calHoveredEl);
+
     const rect = el.getBoundingClientRect();
-    const origW = rect.width;
     const wrap = document.getElementById('cal-wrap');
     const wrapRect = wrap ? wrap.getBoundingClientRect() : null;
     el.dataset.origTop = el.style.top;
     el.dataset.origLeft = el.style.left;
     el.dataset.origWidth = el.style.width;
+    _calHoverOrigRect = rect;
+
     el.style.position = 'fixed';
     el.style.top = rect.top + 'px';
     el.style.width = 'auto';
-    el.style.minWidth = origW + 'px';
-    el.style.maxWidth = (origW * 1.8) + 'px';
+    el.style.minWidth = rect.width + 'px';
+    el.style.maxWidth = (rect.width * 1.8) + 'px';
 
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
     if (isRightEdge) {
@@ -348,8 +352,7 @@ function _calOnEvEnter(e) {
     _calHoveredEl = el;
 }
 
-function _calOnEvLeave(e) {
-    const el = e.currentTarget;
+function _calReset(el) {
     el.style.position = 'absolute';
     el.style.top = el.dataset.origTop || '';
     el.style.left = el.dataset.origLeft || '';
@@ -358,7 +361,18 @@ function _calOnEvLeave(e) {
     el.style.maxWidth = '';
     el.style.right = 'auto';
     _calHoveredEl = null;
+    _calHoverOrigRect = null;
 }
+
+document.addEventListener('mousemove', function(e) {
+    if (!_calHoveredEl) return;
+    const r = _calHoveredEl.getBoundingClientRect();
+    const margin = 4;
+    if (e.clientX < r.left - margin || e.clientX > r.right + margin ||
+        e.clientY < r.top - margin || e.clientY > r.bottom + margin) {
+        _calReset(_calHoveredEl);
+    }
+});
 
 function _calOnEvLeave(e) {
     const el = e.currentTarget;
