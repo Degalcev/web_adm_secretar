@@ -139,9 +139,15 @@ function _calRenderGrid() {
     html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
-        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
     html += '</div></div>';
+
+    // Full-width hour lines layer
+    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:52px;right:0;height:${CAL_TOTAL_H}px;pointer-events:none">`;
+    for (let h = CAL_H_START; h < CAL_H_END; h++) {
+        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
+    }
+    html += '</div>';
 
     // Location columns
     const locations = store.allLocations || [];
@@ -154,10 +160,6 @@ function _calRenderGrid() {
             .sort((a, b) => calTimeToMin(a.time) - calTimeToMin(b.time));
 
         html += `<div class="cal-col"><div class="cal-col-hdr h${li % 4}">${esc(loc.name)}</div><div style="height:${CAL_TOTAL_H}px;position:relative">`;
-
-        for (let h = CAL_H_START; h < CAL_H_END; h++) {
-            html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
-        }
 
         const groups = _calFindOverlapGroups(locEvents);
         groups.forEach(group => {
