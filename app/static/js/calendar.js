@@ -23,8 +23,10 @@ function getMonday(d) {
 function initCalendar() {
     calWeekStart = getMonday(new Date());
     calActiveDay = new Date();
-    renderCalendar(true);
-    calStartNowLineTimer();
+    preloadAllData().then(() => {
+        renderCalendar(true);
+        calStartNowLineTimer();
+    });
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────

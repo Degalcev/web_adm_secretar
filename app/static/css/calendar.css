@@ -1,6 +1,7 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
-#page-calendar.active {
+.page#page-calendar.active {
   gap: 16px;
+  overflow: hidden;
 }
 
 /* ─── Toolbar (filter bar — matches .filter-bar style) ─────────────── */
