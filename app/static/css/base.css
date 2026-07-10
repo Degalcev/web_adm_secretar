@@ -33,6 +33,8 @@
   --radius-lg: 12px;
   --motion-fast: 0.15s;
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-sm: 0 1px 6px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 :root[data-panel-theme="midnight"] {
@@ -167,6 +169,8 @@
   --code-bg: rgba(255, 255, 255, 0.94);
   --accent: #007aff;
   --accent-ambient: #ff9f0a;
+  --shadow-sm: 0 1px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* ─── Background Patterns ──────────────────────────────────────────── */

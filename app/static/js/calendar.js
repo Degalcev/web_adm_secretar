@@ -102,8 +102,7 @@ function _calRenderToolbar() {
     html += '</select></div>';
 
     html += '<div class="cal-filter-group"><span class="cal-filter-label">Месяц</span><select class="cal-filter-select" onchange="calSelectMonth(this.value)">';
-    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    months.forEach((m, i) => {
+    CAL_MONTHS_FULL.forEach((m, i) => {
         const sel = i === calActiveDay.getMonth() ? ' selected' : '';
         html += `<option value="${i}"${sel}>${m}</option>`;
     });
@@ -212,6 +211,8 @@ function renderCalendar(full) {
 
     if (full) {
         // Full rebuild: toolbar + tabs + grid
+        _calNowLines = [];
+        _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div class="cal-wrap" id="cal-wrap"></div>';
@@ -229,6 +230,8 @@ function renderCalendar(full) {
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
     } else {
         // Partial rebuild: tabs + grid only (toolbar stays)
+        _calNowLines = [];
+        _calNowTimeLabel = null;
         const tabsEl = document.getElementById('cal-day-tabs');
         const wrapEl = document.getElementById('cal-wrap');
         if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
@@ -242,43 +245,60 @@ function renderCalendar(full) {
 
 // ─── Now-line ───────────────────────────────────────────────────────
 
+let _calNowLines = [];
+let _calNowTimeLabel = null;
+
 function calUpdateNowLine() {
     const ds = localDateStr(calActiveDay);
     const now = new Date();
     const today = localDateStr(now);
 
-    document.querySelectorAll('.cal .now-line, .cal .now-time').forEach(el => el.remove());
-
-    if (ds !== today) return;
+    if (ds !== today || now.getHours() < CAL_H_START || now.getHours() >= CAL_H_END) {
+        _calNowLines.forEach(el => el.remove());
+        _calNowLines = [];
+        if (_calNowTimeLabel) { _calNowTimeLabel.remove(); _calNowTimeLabel = null; }
+        return;
+    }
 
     const hm = now.getHours();
     const mm = now.getMinutes();
-    if (hm < CAL_H_START || hm >= CAL_H_END) return;
-
     const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H;
 
-    // Now-line in each location column
-    document.querySelectorAll('.cal-col').forEach(col => {
+    // Create or update now-lines in each location column
+    const cols = document.querySelectorAll('.cal-col');
+    while (_calNowLines.length > cols.length) _calNowLines.pop().remove();
+
+    cols.forEach((col, i) => {
         const inner = col.querySelector('div[style]');
         if (!inner) return;
-        const line = document.createElement('div');
-        line.className = 'now-line';
-        line.style.top = top + 'px';
-        inner.appendChild(line);
+        if (!_calNowLines[i]) {
+            const line = document.createElement('div');
+            line.className = 'now-line';
+            inner.appendChild(line);
+            _calNowLines[i] = line;
+        }
+        _calNowLines[i].style.top = top + 'px';
     });
 
-    // Now-line + time label on the time column
+    // Create or update now-time on the time column
     const timeBody = document.querySelector('.cal-time-body');
     if (timeBody) {
-        const line = document.createElement('div');
-        line.className = 'now-line';
-        line.style.top = top + 'px';
-        timeBody.appendChild(line);
-        const lbl = document.createElement('div');
-        lbl.className = 'now-time';
-        lbl.style.top = (top + 4) + 'px';
-        lbl.textContent = `${String(hm).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-        timeBody.appendChild(lbl);
+        // Ensure a now-line exists on the time column too
+        if (!_calNowLines[cols.length]) {
+            const line = document.createElement('div');
+            line.className = 'now-line';
+            timeBody.appendChild(line);
+            _calNowLines[cols.length] = line;
+        }
+        _calNowLines[cols.length].style.top = top + 'px';
+
+        if (!_calNowTimeLabel) {
+            _calNowTimeLabel = document.createElement('div');
+            _calNowTimeLabel.className = 'now-time';
+            timeBody.appendChild(_calNowTimeLabel);
+        }
+        _calNowTimeLabel.style.top = (top + 4) + 'px';
+        _calNowTimeLabel.textContent = `${String(hm).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
     }
 }
 
@@ -332,5 +352,16 @@ function _calOnEvLeave(e) {
 // ─── Timer ──────────────────────────────────────────────────────────
 
 let calNowLineTimer = null;
-function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calUpdateNowLine(); calNowLineTimer = setInterval(calUpdateNowLine, 60000); }
-function calStopNowLineTimer() { if (calNowLineTimer) { clearInterval(calNowLineTimer); calNowLineTimer = null; } }
+
+function calStartNowLineTimer() {
+    if (calNowLineTimer) clearTimeout(calNowLineTimer);
+    calUpdateNowLine();
+    const now = new Date();
+    const msUntilNextMin = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+    calNowLineTimer = setTimeout(function tick() {
+        calUpdateNowLine();
+        calNowLineTimer = setTimeout(tick, 60000);
+    }, msUntilNextMin);
+}
+
+function calStopNowLineTimer() { if (calNowLineTimer) { clearTimeout(calNowLineTimer); calNowLineTimer = null; } }

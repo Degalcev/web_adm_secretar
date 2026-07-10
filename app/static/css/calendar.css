@@ -25,7 +25,7 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   margin-bottom: 16px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .cal-toolbar-nav {
@@ -101,7 +101,7 @@
   border-radius: var(--radius-lg);
   flex-shrink: 0;
   margin-bottom: 16px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
 }
 
 .cal-day-tab {
@@ -154,7 +154,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm);
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0 8px 0 0;
@@ -247,7 +247,7 @@
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   border-left: 3px solid var(--accent);
-  background: rgba(34, 211, 238, 0.2);
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
   cursor: pointer;
   transition: box-shadow var(--motion-fast) var(--ease-standard), z-index 0s;
   overflow: hidden;
@@ -255,25 +255,21 @@
 }
 
 .cal-ev:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-lg);
   z-index: 100 !important;
-  overflow: visible;
-  background: var(--bg-elevated);
-  border: 1px solid var(--accent);
-  opacity: 1;
   min-height: fit-content;
   font-size: 0.8125rem;
 }
 
-.cal-ev.h0 { border-left-color: var(--accent); background: rgba(34, 211, 238, 0.2); }
-.cal-ev.h1 { border-left-color: var(--success); background: rgba(74, 222, 128, 0.2); }
-.cal-ev.h2 { border-left-color: var(--warning); background: rgba(251, 191, 36, 0.2); }
-.cal-ev.h3 { border-left-color: var(--danger); background: rgba(248, 113, 113, 0.2); }
+.cal-ev.h0 { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.cal-ev.h1 { border-left-color: var(--success); background: color-mix(in srgb, var(--success) 20%, transparent); }
+.cal-ev.h2 { border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 20%, transparent); }
+.cal-ev.h3 { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 20%, transparent); }
 
-.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: rgba(45, 210, 230, 0.95); }
-.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: rgba(60, 220, 120, 0.95); }
-.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: rgba(230, 190, 50, 0.95); }
-.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: rgba(240, 110, 110, 0.95); }
+.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 75%, var(--bg)); }
+.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: color-mix(in srgb, var(--success) 75%, var(--bg)); }
+.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 75%, var(--bg)); }
+.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 75%, var(--bg)); }
 
 .cal-ev .ev-type {
   font-weight: 600;
@@ -359,37 +355,37 @@
   white-space: nowrap;
   overflow: visible;
   font-size: 0.8125rem;
-  color: #1a1a1a;
+  color: var(--bg);
 }
 
 .cal-ev:hover .ev-time {
   font-size: 0.6875rem;
-  color: #1a1a1a;
+  color: var(--bg);
 }
 
 .cal-ev:hover .ev-org {
   white-space: nowrap;
   overflow: visible;
   font-size: 0.6875rem;
-  color: #1a1a1a;
+  color: var(--bg);
 }
 
 .cal-ev:hover .ev-desc {
   white-space: nowrap;
   overflow: visible;
   font-size: 0.6875rem;
-  color: #1a1a1a;
+  color: var(--bg);
 }
 
 .cal-ev:hover .ev-badge {
   font-size: 0.625rem;
-  color: #1a1a1a;
+  color: var(--bg);
 }
 
 .cal-ev:hover .ev-badge svg {
   width: 11px;
   height: 11px;
-  stroke: #1a1a1a;
+  stroke: var(--bg);
 }
 
 /* Split events — hide extra, show on hover */
@@ -418,7 +414,7 @@
   background: var(--surface);
   padding: 1px 4px;
   border-radius: 3px;
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
   right: 4px;
 }
 
