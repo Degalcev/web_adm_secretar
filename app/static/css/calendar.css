@@ -370,6 +370,9 @@
 
 .cal-ev:hover .ev-desc {
   font-size: 0.6875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .cal-ev:hover .ev-badge {
