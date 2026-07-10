@@ -1,0 +1,287 @@
+/* ─── Calendar Container ────────────────────────────────────────────── */
+.cal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Day Tabs ──────────────────────────────────────────────────────── */
+.day-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.day-tab {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+  text-align: center;
+  min-width: 60px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  transition: all var(--motion-fast) var(--ease-standard);
+}
+
+.day-tab:hover {
+  background: var(--surface-strong);
+  color: var(--fg);
+  border-color: var(--border-strong);
+}
+
+.day-tab.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+
+.day-tab.today {
+  border-color: var(--accent);
+}
+
+.day-tab .dn {
+  font-weight: 600;
+  font-size: 0.8125rem;
+  display: block;
+}
+
+.day-tab .dd {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* ─── Calendar Grid ─────────────────────────────────────────────────── */
+.cal {
+  display: flex;
+  position: relative;
+  min-width: 700px;
+}
+
+.cal-time {
+  width: 56px;
+  flex-shrink: 0;
+  position: relative;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.cal-time-label {
+  position: absolute;
+  right: 6px;
+  font-size: 0.625rem;
+  color: var(--fg-muted);
+  transform: translateY(-50%);
+}
+
+.cal-col {
+  flex: 1;
+  position: relative;
+  border-right: 1px solid var(--border);
+}
+
+.cal-col:last-child {
+  border-right: none;
+}
+
+.cal-col-hdr {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.cal-col-hdr.h0 { color: var(--accent); }
+.cal-col-hdr.h1 { color: var(--success); }
+.cal-col-hdr.h2 { color: var(--warning); }
+.cal-col-hdr.h3 { color: var(--danger); }
+
+/* ─── Hour Lines ────────────────────────────────────────────────────── */
+.hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+
+/* ─── Event Cards ───────────────────────────────────────────────────── */
+.cal-ev {
+  position: absolute;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  border-left: 3px solid var(--accent);
+  background: rgba(34, 211, 238, 0.2);
+  cursor: pointer;
+  transition: all var(--motion-fast) var(--ease-standard);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.cal-ev:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  filter: brightness(1.1);
+}
+
+.cal-ev.h0 { border-left-color: var(--accent); background: rgba(34, 211, 238, 0.2); }
+.cal-ev.h1 { border-left-color: var(--success); background: rgba(74, 222, 128, 0.2); }
+.cal-ev.h2 { border-left-color: var(--warning); background: rgba(251, 191, 36, 0.2); }
+.cal-ev.h3 { border-left-color: var(--danger); background: rgba(248, 113, 113, 0.2); }
+
+.cal-ev .ev-type {
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.6875rem;
+}
+
+.cal-ev .ev-time {
+  color: var(--accent-ambient);
+  font-weight: 500;
+  font-size: 0.625rem;
+}
+
+.cal-ev .ev-org {
+  color: var(--fg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+  font-size: 0.5625rem;
+}
+
+.cal-ev .ev-desc {
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.5625rem;
+  margin-top: 1px;
+}
+
+.cal-ev .ev-status {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cal-ev .ev-status.active { background: var(--warning); }
+.cal-ev .ev-status.done { background: var(--success); }
+.cal-ev .ev-status.missed { background: var(--danger); }
+
+.cal-ev .ev-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.cal-ev .ev-badge {
+  font-size: 0.5rem;
+  color: var(--fg-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.cal-ev .ev-badge svg {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+/* ─── Hover Expand ──────────────────────────────────────────────────── */
+.cal-ev:hover {
+  min-width: 180px;
+  z-index: 20 !important;
+  overflow: visible;
+}
+
+.cal-ev:hover .ev-org,
+.cal-ev:hover .ev-desc,
+.cal-ev:hover .ev-badges {
+  display: flex !important;
+}
+
+.cal-ev:hover .ev-type { white-space: normal; }
+.cal-ev:hover .ev-org { white-space: normal; }
+.cal-ev:hover .ev-desc { white-space: normal; }
+
+/* ─── Split Events ──────────────────────────────────────────────────── */
+.cal-ev.split:not(:hover) .ev-org { display: none; }
+.cal-ev.split:not(:hover) .ev-desc { display: none; }
+.cal-ev.split:not(:hover) .ev-badges { display: none; }
+
+/* ─── Now Line ──────────────────────────────────────────────────────── */
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--danger);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.now-line::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.4);
+}
+
+.now-time {
+  position: absolute;
+  font-size: 0.5625rem;
+  color: var(--danger);
+  font-weight: 600;
+  z-index: 11;
+  pointer-events: none;
+  background: var(--bg-elevated);
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+/* ─── Mobile Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .day-tabs {
+    padding: 6px 12px;
+    overflow-x: auto;
+  }
+
+  .day-tab {
+    min-width: 48px;
+    padding: 6px 10px;
+  }
+
+  .cal {
+    min-width: 500px;
+  }
+}
