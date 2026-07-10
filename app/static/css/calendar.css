@@ -97,8 +97,60 @@
   gap: 2px;
   padding: 0;
   margin: 0;
-  list-style: none;
   flex-shrink: 0;
+}
+
+.cal-day-tab {
+  flex: 1;
+  padding: 6px 0 8px;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  text-align: center;
+  background: var(--surface);
+  color: var(--fg-muted);
+  border: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: padding var(--motion-fast) var(--ease-standard);
+  z-index: 1;
+}
+
+.cal-day-tab:first-child { z-index: 3; }
+.cal-day-tab:nth-child(2) { z-index: 2; }
+
+.cal-day-tab:hover {
+  margin-top: -2px;
+  padding-bottom: 10px;
+}
+
+.cal-day-tab.active {
+  margin-top: -4px;
+  padding: 8px 0 10px;
+  background: var(--bg-elevated);
+  color: var(--accent);
+  font-weight: 600;
+  z-index: 4;
+}
+
+.cal-day-tab.weekend {
+  color: var(--danger);
+  opacity: 0.7;
+}
+
+.cal-day-tab.weekend.active {
+  opacity: 1;
+  color: var(--danger);
+}
+
+.cal-day-tab .dn {
+  font-weight: 500;
+  font-size: 0.6875rem;
+  display: block;
+}
+
+.cal-day-tab .dd {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  opacity: 0.6;
 }
 
 .cal-day-tab {

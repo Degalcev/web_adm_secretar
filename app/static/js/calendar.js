@@ -6,6 +6,7 @@ const CAL_HOUR_H = 60;
 const CAL_TOTAL_H = (CAL_H_END - CAL_H_START) * CAL_HOUR_H;
 
 const CAL_DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const CAL_DAY_NAMES_FULL = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 const CAL_MONTHS_GEN = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 const CAL_MONTHS_FULL = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 
@@ -122,7 +123,9 @@ function _calRenderTabs() {
         const today = localDateStr(new Date());
         const act = ds === localDateStr(calActiveDay);
         const isToday = ds === today;
-        html += `<div class="cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES[i]}</span><span class="dd">${d.getDate()}</span></div>`;
+        const isWeekend = i >= 5;
+        const cls = `cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
+        html += `<div class="${cls}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES_FULL[i]}</span><span class="dd">${d.getDate()}</span></div>`;
     }
     return html;
 }
