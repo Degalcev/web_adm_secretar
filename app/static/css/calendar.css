@@ -182,6 +182,10 @@
   height: 36px;
   background: var(--surface);
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid var(--border);
 }
 
 .cal-time-label {
@@ -212,7 +216,7 @@
 .cal-col-hdr {
   position: sticky;
   top: 0;
-  z-index: 4;
+  z-index: 6;
   height: 36px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
