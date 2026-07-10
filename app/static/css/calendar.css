@@ -1,3 +1,18 @@
+/* ─── Calendar Page Container ──────────────────────────────────────── */
+#page-calendar {
+  padding: 1rem 1.5rem;
+}
+
+#page-calendar .cal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
 /* ─── Toolbar ──────────────────────────────────────────────────────── */
 .cal-toolbar {
   display: flex;
@@ -8,8 +23,6 @@
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   flex-wrap: wrap;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .cal-toolbar-nav {
@@ -109,15 +122,11 @@
   opacity: 0.7;
 }
 
-/* ─── Calendar Container ────────────────────────────────────────────── */
+/* ─── Calendar Grid Wrapper ─────────────────────────────────────────── */
 .cal-wrap {
   flex: 1;
   overflow: auto;
-  margin: 8px 12px 12px;
-  padding: 0 8px 0 0;
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-height: 0;
 }
 
 /* ─── Calendar Grid ─────────────────────────────────────────────────── */
@@ -133,15 +142,14 @@
   flex-shrink: 0;
   position: relative;
   background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
 }
 
 .cal-time-header {
   height: 36px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 5;
+  flex-shrink: 0;
 }
 
 .cal-time-label {
@@ -153,7 +161,7 @@
 }
 
 .cal-time-body {
-  padding-top: 20px;
+  padding-top: 30px;
 }
 
 .cal-col {
@@ -356,10 +364,10 @@
 
 /* ─── Mobile ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  #page-calendar { padding: 0.75rem; }
   .cal-toolbar { padding: 8px 12px; gap: 8px; }
   .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
   .cal-day-tabs { padding: 6px 12px; overflow-x: auto; }
   .cal-day-tab { min-width: 48px; padding: 6px 10px; }
-  .cal-wrap { margin: 6px 8px 8px; padding: 0 6px 0 0; }
   .cal { min-width: 500px; }
 }
