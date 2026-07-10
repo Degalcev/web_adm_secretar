@@ -222,6 +222,7 @@ function renderCalendar(full) {
         document.getElementById('cal-wrap').innerHTML = _calRenderGrid();
 
         calUpdateNowLine();
+        _calInitHoverFix();
 
         // Scroll to 08:00
         const wrap = document.getElementById('cal-wrap');
@@ -234,6 +235,7 @@ function renderCalendar(full) {
         if (wrapEl) {
             wrapEl.innerHTML = _calRenderGrid();
             calUpdateNowLine();
+            _calInitHoverFix();
         }
     }
 }
@@ -289,8 +291,46 @@ function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.s
 function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
 
+// ─── Hover fix: position:fixed для выхода за overflow ────────────────
+
+let _calHoveredEl = null;
+
+function _calInitHoverFix() {
+    document.querySelectorAll('.cal-ev').forEach(el => {
+        el.addEventListener('mouseenter', _calOnEvEnter);
+        el.addEventListener('mouseleave', _calOnEvLeave);
+    });
+}
+
+function _calOnEvEnter(e) {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    el.dataset.origTop = el.style.top;
+    el.dataset.origLeft = el.style.left;
+    el.dataset.origWidth = el.style.width;
+    el.dataset.origHeight = el.style.height;
+    el.style.position = 'fixed';
+    el.style.top = rect.top + 'px';
+    el.style.left = rect.left + 'px';
+    el.style.width = 'auto';
+    el.style.minWidth = Math.max(rect.width, 180) + 'px';
+    el.style.height = 'auto';
+    _calHoveredEl = el;
+}
+
+function _calOnEvLeave(e) {
+    const el = e.currentTarget;
+    el.style.position = 'absolute';
+    el.style.top = el.dataset.origTop || '';
+    el.style.left = el.dataset.origLeft || '';
+    el.style.width = el.dataset.origWidth || '';
+    el.style.minWidth = '';
+    el.style.height = el.dataset.origHeight || '';
+    _calHoveredEl = null;
+}
+
 // ─── Timer ──────────────────────────────────────────────────────────
 
 let calNowLineTimer = null;
-function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calUpdateNowLine(); calNowLineTimer = setInterval(calUpdateNowLine, 10000); }
+function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calUpdateNowLine(); calNowLineTimer = setInterval(calUpdateNowLine, 60000); }
 function calStopNowLineTimer() { if (calNowLineTimer) { clearInterval(calNowLineTimer); calNowLineTimer = null; } }
