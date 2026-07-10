@@ -131,7 +131,7 @@ function renderCalendar() {
 }
 
 function _calRenderGrid() {
-    const container = document.getElementById('cal-content');
+    const container = document.getElementById('cal-container');
     if (!container) return;
 
     const ds = localDateStr(calActiveDay);
