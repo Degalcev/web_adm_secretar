@@ -66,6 +66,7 @@ function switchPage(page) {
     if (page === 'vks-active') loadVksActive();
     if (page === 'vks-completed') loadVksCompleted();
     if (page === 'settings') initTheme();
+    if (page === 'calendar') initCalendar();
 }
 
 // ─── Mobile Menu ──────────────────────────────────────────────────

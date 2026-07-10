@@ -10,6 +10,7 @@ const ROUTES = {
     '/admin/logs/':             { page: 'logs',           title: 'Логи' },
     '/conferences/':            { page: 'vks-active',     title: 'Текущие ВКС' },
     '/conferences/completed/':  { page: 'vks-completed',  title: 'Завершённые ВКС' },
+    '/calendar/':               { page: 'calendar',       title: 'Календарь' },
     '/settings/general/':       { page: 'settings',       title: 'Настройки' },
     '/settings/profile/':       { page: 'profile',        title: 'Пользователь' },
 };
