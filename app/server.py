@@ -47,6 +47,7 @@ SPA_PATHS = [
     '/admin/logs/',
     '/conferences/',
     '/conferences/completed/',
+    '/calendar/',
     '/settings/',
     '/settings/general/',
     '/settings/profile/',
