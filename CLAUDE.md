@@ -27,15 +27,17 @@
 app/
 ├── auth.py              # Auth middleware, CSRF (multipart fallback), rate limiting, cookie domain
 ├── server.py            # Точка входа aiohttp (middleware + SPA + API + static + cleanup + version.json)
+├── event_logger.py      # Логирование изменений VKS (сравнение состояний, запись в event_history)
+├── event_logger.py      # Логирование изменений VKS (сравнение состояний, запись в event_history)
 ├── sse_listener.py      # SSE listener (PostgreSQL LISTEN/NOTIFY → broadcast)
 ├── routes/
 │   ├── users.py         # CRUD пользователей + смена пароля + /me + /auth/check
 │   ├── organizers.py    # CRUD организаторов
 │   ├── locations.py     # CRUD локаций
 │   ├── logs.py          # Просмотр логов (panel + bot)
-│   ├── vks.py           # CRUD событий ВКС + batch документы + audit
+│   ├── vks.py           # CRUD событий ВКС + batch документы + audit + lock/unlock + history + lock/unlock + history
 │   ├── documents.py     # CRUD документов (download/upload/delete)
-│   ├── preload.py       # Preload API (events + organizers + locations одним запросом)
+│   ├── preload.py       # Preload API (events + organizers + locations + lock data одним запросом)
 │   └── sse.py           # SSE endpoint (/admin/api/events/stream, без auth)
 └── static/
     ├── index.html       # SPA entry point (653 строк, ?v=__VERSION__)
@@ -57,7 +59,7 @@ app/
     │   ├── filters.css       # Filter-bar компонент, select фильтры
     │   ├── settings.css      # Страницы настроек/профиля
     │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
-    │   └── vks-modal.css     # Compact Flat стили модалок (ПОСЛЕ responsive.css!)
+    │   └── vks-modal.css     # Compact Flat стили модалок + drawer overlay таймлайна (ПОСЛЕ responsive.css!)
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
         ├── auth.js           # Логин/выход/checkAuth()
@@ -68,7 +70,7 @@ app/
         ├── dashboard.js      # Дашборд (renderDashLocations — НЕ collides с locations.js)
         ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика
         ├── vks-board.js      # VKS: рендеринг карточек, иконки, документы
-        ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы)
+        ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
         ├── organizers.js     # CRUD организаторов (через createCrudModule)
@@ -80,9 +82,11 @@ app/
         └── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
 
 database/
-├── models.py            # User (ФИО+username+role), Organizer, Location, Session, Event (audit), Document
-├── requests.py          # Запросы (чтение, batch: get_documents_by_event_ids)
-└── sending.py           # Операции (запись, cleanup_expired_sessions)
+├── models.py            # User, Organizer, Location, Session, Event (audit+lock), EventHistory, Document
+├── requests.py          # Запросы (чтение, batch, cleanup_stale_locks)
+├── sending.py           # Операции (запись, lock_event, unlock_event)
+├── migration_event_history.sql  # Таблица event_history
+└── migration_lock_fix.sql       # locked_by: Integer → String
 
 deploy/
 ├── deploy.py            # Скрипт деплоя (test/prod), инкремент patch + rollback при ошибке
@@ -258,6 +262,33 @@ Events принимают `multipart/form-data`:
 - Поля: type, date, time, organizer_id, location_id, url, description, completed, notification
 - Файлы: field name = 'files' (множественные)
 - `keep_doc_ids` — запятые ID документов для сохранения при обновлении
+
+### История изменений VKS (таймлайн)
+- Таблица `event_history` — append-only лог всех изменений (id, event_id, user_id, timestamp, action, changes JSONB)
+- Модуль `app/event_logger.py`: `capture_event_state()`, `log_event_change()`, `get_event_history()`
+- Действия: create, update, complete, uncomplete, delete, doc_remove
+- `doc_remove` — отдельное действие при удалении документов без изменения полей формы
+- Changes JSONB: `{field: {old, new}, documents: {added: [...], removed: [...]}}`
+- API: `GET /admin/api/events/{event_id}/history`
+- Frontend: drawer overlay таймлайн (раскрывается от правого края модалки, 3/4 ширины)
+- Drawer: `position: fixed`, JS вычисляет позицию по `getBoundingClientRect()` modal-body
+- Цвета точек по action: create (accent), update (muted), complete (success), uncomplete (warning), delete/doc_remove (danger)
+- `overflow: hidden` на `.vks-modal-flat` clip accent bar — drawer вынесен на уровень `.modal-overlay`
+- Dim body: `::after` pseudo-element с `backdrop-filter: blur(2px)` (затрагивает все элементы формы)
+- `padding-bottom` на scroll-контейнере не работает — используем `::after` pseudo-element
+
+### Блокировка VKS при редактировании
+- Поля Event: `locked_by` (String/UUID), `locked_at` (DateTime) — хранят кто блокирует
+- API: `PUT /admin/api/events/{id}/lock` / `PUT /admin/api/events/{id}/unlock`
+- Auto-timeout: lock'ы старше 10 минут снимаются при GET /events + при старте сервера (`cleanup_stale_locks`)
+- Lock при открытии модалки: `openEditEventModal()` → PUT /lock → если занято: read-only + toast + banner
+- Unlock при закрытии: `closeEventModal()` → PUT /unlock (только если текущий пользователь владеет lock)
+- Иконка замка 🔒 на карточках VKS и дашборде (реалтайм через SSE)
+- Banner "Редактирует: ..." в модалке (динамическое создание если partial не загружен)
+- Disabled CSS: `.pill-btn:disabled`, `.icon-btn:disabled`, `.doc-card-delete:disabled` — opacity 0.4, pointer-events none
+- Lock/unlock — отдельные эндпоинты, НЕ проходят через update_handler → в историю не попадают
+- Preload endpoint возвращает `locked_by`, `locked_by_id`, `locked_at`
+- SSE: lock/unlock обновляет events → триггер → все клиенты видят замок на карточках
 
 ## Правила разработки
 1. **Деплой по веткам**: `develop` → test, `main` → prod
