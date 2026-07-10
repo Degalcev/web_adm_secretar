@@ -255,11 +255,12 @@
 
 .cal-ev:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-  min-width: 200px;
   z-index: 100 !important;
   overflow: visible;
   background: var(--bg-elevated);
   border: 1px solid var(--accent);
+  opacity: 1;
+  min-height: fit-content;
 }
 
 .cal-ev.h0 { border-left-color: var(--accent); background: rgba(34, 211, 238, 0.2); }
@@ -357,6 +358,7 @@
 .cal-ev:hover .ev-desc {
   white-space: normal;
   overflow: visible;
+  text-overflow: unset;
 }
 
 /* Split events — hide extra, show on hover */
