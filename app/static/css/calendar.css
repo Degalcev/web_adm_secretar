@@ -168,6 +168,7 @@
   position: relative;
   min-width: 600px;
   min-height: 100%;
+  overflow: visible;
 }
 
 .cal-time {
@@ -201,6 +202,7 @@
   position: relative;
   border-left: 1px solid var(--border);
   background: transparent;
+  overflow: visible;
 }
 
 .cal-col:first-child {

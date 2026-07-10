@@ -292,5 +292,5 @@ function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = 
 // ─── Timer ──────────────────────────────────────────────────────────
 
 let calNowLineTimer = null;
-function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calNowLineTimer = setInterval(calUpdateNowLine, 60000); }
+function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calUpdateNowLine(); calNowLineTimer = setInterval(calUpdateNowLine, 10000); }
 function calStopNowLineTimer() { if (calNowLineTimer) { clearInterval(calNowLineTimer); calNowLineTimer = null; } }
