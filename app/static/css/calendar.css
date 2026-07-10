@@ -1,6 +1,16 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
 .page#page-calendar.active {
   overflow: hidden;
+  padding: 0;
+}
+
+/* ─── Cal Container ─────────────────────────────────────────────────── */
+.cal-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 16px 24px;
 }
 
 /* ─── Toolbar (filter bar — matches .filter-bar style) ─────────────── */
@@ -15,7 +25,7 @@
   flex-shrink: 0;
   flex-wrap: wrap;
   margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 .cal-toolbar-nav {
@@ -91,7 +101,7 @@
   border-radius: var(--radius-lg);
   flex-shrink: 0;
   margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
 }
 
 .cal-day-tab {
@@ -145,7 +155,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -383,6 +393,7 @@
 
 /* ─── Mobile ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .cal-container { padding: 12px; }
   .cal-toolbar { padding: 10px 12px; gap: 8px; }
   .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
   .cal-day-tabs { padding: 8px 12px; overflow-x: auto; }
