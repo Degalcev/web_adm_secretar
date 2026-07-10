@@ -282,30 +282,32 @@
 }
 
 .cal-ev .ev-time {
-  color: var(--accent-ambient);
+  color: var(--fg);
   font-weight: 500;
   font-size: 0.625rem;
   line-height: 1.3;
 }
 
 .cal-ev .ev-org {
-  color: var(--fg-muted);
+  color: var(--fg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 2px;
   font-size: 0.5625rem;
   line-height: 1.3;
+  opacity: 0.8;
 }
 
 .cal-ev .ev-desc {
-  color: var(--fg-subtle);
+  color: var(--fg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 0.5625rem;
   margin-top: 2px;
   line-height: 1.3;
+  opacity: 0.65;
 }
 
 .cal-ev .ev-status {
