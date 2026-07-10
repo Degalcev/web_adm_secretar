@@ -345,9 +345,6 @@ function _calOnEvEnter(e) {
     }
     _calHoveredEl = el;
 }
-    el.style.top = rect.top + 'px';
-    _calHoveredEl = el;
-}
 
 function _calOnEvLeave(e) {
     const el = e.currentTarget;
