@@ -265,6 +265,11 @@
   font-size: 0.8125rem;
 }
 
+.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); }
+.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); }
+.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); }
+.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); }
+
 .cal-ev .ev-type {
   font-weight: 600;
   color: var(--fg);
