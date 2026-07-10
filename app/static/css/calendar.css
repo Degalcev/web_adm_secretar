@@ -98,6 +98,8 @@
   padding: 0;
   margin: 0;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .cal-day-tab {
@@ -213,7 +215,7 @@
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2), -4px 0 12px rgba(0, 0, 0, 0.15), 4px 0 12px rgba(0, 0, 0, 0.15);
 }
 
 .cal-wrap::-webkit-scrollbar { display: none; }
