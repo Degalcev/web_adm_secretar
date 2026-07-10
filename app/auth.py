@@ -140,7 +140,7 @@ async def auth_middleware(request: web.Request, handler):
 
     # SPA routes (serve index.html) - check auth only for API
     spa_paths = {'/', '/admin'}
-    spa_prefixes = ('/panel/', '/admin/', '/conferences/', '/settings/')
+    spa_prefixes = ('/panel/', '/admin/', '/conferences/', '/calendar/', '/settings/')
     if path in spa_paths or any(path.startswith(p) for p in spa_prefixes):
         if not path.startswith('/admin/api/') and not path.startswith('/api/'):
             return await handler(request)
