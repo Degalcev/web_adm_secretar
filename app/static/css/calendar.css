@@ -169,6 +169,7 @@
   min-width: 600px;
   min-height: 100%;
   overflow: visible;
+  padding-right: 12px;
 }
 
 .cal-time {
@@ -218,16 +219,20 @@
   top: 0;
   z-index: 6;
   height: 36px;
-  background: var(--bg-elevated);
-  border-bottom: 2px solid var(--border);
-  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 10px;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-subtle);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-left: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
 }
 
 .cal-col-hdr.h0 { color: var(--accent); }
