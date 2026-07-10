@@ -354,12 +354,30 @@
   display: flex !important;
 }
 
-.cal-ev:hover .ev-type,
-.cal-ev:hover .ev-org,
+.cal-ev:hover .ev-type {
+  white-space: nowrap;
+  overflow: visible;
+  font-size: 0.8125rem;
+}
+
+.cal-ev:hover .ev-time {
+  font-size: 0.6875rem;
+}
+
+.cal-ev:hover .ev-org {
+  white-space: nowrap;
+  overflow: visible;
+  font-size: 0.6875rem;
+}
+
 .cal-ev:hover .ev-desc {
   white-space: nowrap;
   overflow: visible;
-  text-overflow: unset;
+  font-size: 0.6875rem;
+}
+
+.cal-ev:hover .ev-badge {
+  font-size: 0.5625rem;
 }
 
 /* Split events — hide extra, show on hover */
