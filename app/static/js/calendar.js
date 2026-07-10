@@ -142,13 +142,6 @@ function _calRenderGrid() {
     }
     html += '</div></div>';
 
-    // Full-width hour lines layer
-    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:52px;right:0;height:${CAL_TOTAL_H}px;pointer-events:none">`;
-    for (let h = CAL_H_START; h < CAL_H_END; h++) {
-        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
-    }
-    html += '</div>';
-
     // Location columns
     const locations = store.allLocations || [];
     const ds = localDateStr(calActiveDay);
