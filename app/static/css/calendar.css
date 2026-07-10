@@ -8,6 +8,8 @@
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   flex-wrap: wrap;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .cal-toolbar-nav {
@@ -112,8 +114,10 @@
   flex: 1;
   overflow: auto;
   margin: 8px 12px 12px;
+  padding: 0 8px 0 0;
   border-radius: var(--radius-md);
   background: var(--bg-elevated);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* ─── Calendar Grid ─────────────────────────────────────────────────── */
@@ -149,7 +153,7 @@
 }
 
 .cal-time-body {
-  padding-top: 12px;
+  padding-top: 20px;
 }
 
 .cal-col {
@@ -356,6 +360,6 @@
   .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
   .cal-day-tabs { padding: 6px 12px; overflow-x: auto; }
   .cal-day-tab { min-width: 48px; padding: 6px 10px; }
-  .cal-wrap { margin: 6px 8px 8px; }
+  .cal-wrap { margin: 6px 8px 8px; padding: 0 6px 0 0; }
   .cal { min-width: 500px; }
 }
