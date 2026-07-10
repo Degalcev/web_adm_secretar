@@ -328,13 +328,11 @@ function _calOnEvEnter(e) {
     el.dataset.origTop = el.style.top;
     el.dataset.origLeft = el.style.left;
     el.dataset.origWidth = el.style.width;
-    el.dataset.origHeight = el.style.height;
     el.style.position = 'fixed';
     el.style.top = rect.top + 'px';
     el.style.left = rect.left + 'px';
     el.style.width = 'auto';
     el.style.minWidth = Math.max(rect.width, 180) + 'px';
-    el.style.height = 'auto';
     _calHoveredEl = el;
 }
 
@@ -345,7 +343,6 @@ function _calOnEvLeave(e) {
     el.style.left = el.dataset.origLeft || '';
     el.style.width = el.dataset.origWidth || '';
     el.style.minWidth = '';
-    el.style.height = el.dataset.origHeight || '';
     _calHoveredEl = null;
 }
 
