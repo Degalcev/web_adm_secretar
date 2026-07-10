@@ -217,8 +217,8 @@ function renderCalendar(full) {
         _calNowLines = [];
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
-        html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
-        html += '<div class="cal-wrap" id="cal-wrap"></div>';
+        html += '<div class="cal-panel"><div class="cal-day-tabs" id="cal-day-tabs"></div>';
+        html += '<div class="cal-wrap" id="cal-wrap"></div></div>';
         container.innerHTML = html;
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
