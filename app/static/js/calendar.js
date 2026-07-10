@@ -333,6 +333,7 @@ function _calOnEvEnter(e) {
     el.style.left = rect.left + 'px';
     el.style.width = 'auto';
     el.style.minWidth = Math.max(rect.width, 180) + 'px';
+    el.style.maxWidth = (rect.width * 1.8) + 'px';
     _calHoveredEl = el;
 }
 
@@ -343,6 +344,7 @@ function _calOnEvLeave(e) {
     el.style.left = el.dataset.origLeft || '';
     el.style.width = el.dataset.origWidth || '';
     el.style.minWidth = '';
+    el.style.maxWidth = '';
     _calHoveredEl = null;
 }
 
