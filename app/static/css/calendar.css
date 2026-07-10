@@ -261,6 +261,7 @@
   border: 1px solid var(--accent);
   opacity: 1;
   min-height: fit-content;
+  font-size: 0.8125rem;
 }
 
 .cal-ev.h0 { border-left-color: var(--accent); background: rgba(34, 211, 238, 0.2); }
@@ -356,7 +357,7 @@
 .cal-ev:hover .ev-type,
 .cal-ev:hover .ev-org,
 .cal-ev:hover .ev-desc {
-  white-space: normal;
+  white-space: nowrap;
   overflow: visible;
   text-overflow: unset;
 }
