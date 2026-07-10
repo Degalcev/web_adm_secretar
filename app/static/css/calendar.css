@@ -266,10 +266,10 @@
 .cal-ev.h2 { border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 20%, transparent); }
 .cal-ev.h3 { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 20%, transparent); }
 
-.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 75%, var(--bg)); }
-.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: color-mix(in srgb, var(--success) 75%, var(--bg)); }
-.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 75%, var(--bg)); }
-.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 75%, var(--bg)); }
+.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 55%, var(--bg)); }
+.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: color-mix(in srgb, var(--success) 55%, var(--bg)); }
+.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 55%, var(--bg)); }
+.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 55%, var(--bg)); }
 
 .cal-ev .ev-type {
   font-weight: 600;
