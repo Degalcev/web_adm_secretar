@@ -355,37 +355,31 @@
   white-space: nowrap;
   overflow: visible;
   font-size: 0.8125rem;
-  color: var(--bg);
 }
 
 .cal-ev:hover .ev-time {
   font-size: 0.6875rem;
-  color: var(--bg);
 }
 
 .cal-ev:hover .ev-org {
   white-space: nowrap;
   overflow: visible;
   font-size: 0.6875rem;
-  color: var(--bg);
 }
 
 .cal-ev:hover .ev-desc {
   white-space: nowrap;
   overflow: visible;
   font-size: 0.6875rem;
-  color: var(--bg);
 }
 
 .cal-ev:hover .ev-badge {
   font-size: 0.625rem;
-  color: var(--bg);
 }
 
 .cal-ev:hover .ev-badge svg {
   width: 11px;
   height: 11px;
-  stroke: var(--bg);
 }
 
 /* Split events — hide extra, show on hover */
