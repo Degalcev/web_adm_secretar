@@ -329,12 +329,9 @@ function _calOnEvEnter(e) {
     const wrapRect = wrap ? wrap.getBoundingClientRect() : null;
     el.dataset.origTop = el.style.top;
     el.dataset.origLeft = el.style.left;
-    el.dataset.origWidth = el.style.width;
     el.style.position = 'fixed';
     el.style.top = rect.top + 'px';
-    el.style.maxWidth = (rect.width * 1.8) + 'px';
 
-    // Если элемент близко к правому краю контейнера — расширяем влево
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
     if (isRightEdge) {
         el.style.left = 'auto';
@@ -351,9 +348,6 @@ function _calOnEvLeave(e) {
     el.style.position = 'absolute';
     el.style.top = el.dataset.origTop || '';
     el.style.left = el.dataset.origLeft || '';
-    el.style.width = el.dataset.origWidth || '';
-    el.style.minWidth = '';
-    el.style.maxWidth = '';
     el.style.right = 'auto';
     _calHoveredEl = null;
 }
