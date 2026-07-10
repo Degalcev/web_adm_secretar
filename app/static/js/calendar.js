@@ -11,9 +11,6 @@ const CAL_MONTHS_FULL = ['января', 'февраля', 'марта', 'апр
 
 let calWeekStart = getMonday(new Date());
 let calActiveDay = new Date();
-let calNowLineTimer = null;
-
-// ─── Утилиты ────────────────────────────────────────────────────────
 
 function getMonday(d) {
     const r = new Date(d);
@@ -21,6 +18,13 @@ function getMonday(d) {
     r.setDate(r.getDate() - day + (day === 0 ? -6 : 1));
     r.setHours(0, 0, 0, 0);
     return r;
+}
+
+function initCalendar() {
+    calWeekStart = getMonday(new Date());
+    calActiveDay = new Date();
+    renderCalendar();
+    calStartNowLineTimer();
 }
 
 function calAddDays(d, n) {
@@ -124,23 +128,60 @@ function renderDayTabs() {
 // ─── Рендер сетки ───────────────────────────────────────────────────
 
 function renderCalendar() {
-    calUpdateTitle();
-    renderDayTabs();
-    _calRenderGrid();
-    calUpdateNowLine();
-}
-
-function _calRenderGrid() {
     const container = document.getElementById('cal-container');
     if (!container) return;
 
-    const ds = localDateStr(calActiveDay);
-    const dayEvents = _calGetEventsForDate(ds);
-    const locations = store.allLocations || [];
+    const weekEnd = new Date(calWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
 
-    let html = '<div class="cal">';
+    // Build toolbar
+    let html = '<div class="cal-toolbar">';
+    html += '<div class="cal-toolbar-nav">';
+    html += '<button class="btn btn-icon" onclick="calPrevWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>';
+    html += `<span class="cal-toolbar-title">${_calFmtDate(calWeekStart)} – ${_calFmtDate(weekEnd)}</span>`;
+    html += '<button class="btn btn-icon" onclick="calNextWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
+    html += '<button class="btn btn-accent" onclick="calGoToday()">Сегодня</button>';
+    html += '</div>';
+    html += '<div class="cal-toolbar-sep"></div>';
 
-    // Колонка времени
+    // Filters
+    html += '<div class="cal-filter-group"><span class="cal-filter-label">Неделя</span><select class="cal-filter-select" onchange="calSelectWeek(this.value)">';
+    for (let i = -2; i <= 4; i++) {
+        const d = new Date(calWeekStart);
+        d.setDate(d.getDate() + i * 7);
+        const de = new Date(d);
+        de.setDate(de.getDate() + 6);
+        const sel = i === 0 ? ' selected' : '';
+        html += `<option value="${i}"${sel}>${_calFmtShort(d)} – ${_calFmtShort(de)}</option>`;
+    }
+    html += '</select></div>';
+
+    html += '<div class="cal-filter-group"><span class="cal-filter-label">Месяц</span><select class="cal-filter-select" onchange="calSelectMonth(this.value)">';
+    const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    months.forEach((m, i) => {
+        const sel = i === calActiveDay.getMonth() ? ' selected' : '';
+        html += `<option value="${i}"${sel}>${m}</option>`;
+    });
+    html += '</select></div>';
+    html += '</div>';
+
+    // Day tabs
+    html += '<div class="cal-day-tabs">';
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(calWeekStart);
+        d.setDate(d.getDate() + i);
+        const ds = localDateStr(d);
+        const today = localDateStr(new Date());
+        const act = ds === localDateStr(calActiveDay);
+        const isToday = ds === today;
+        html += `<div class="cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES[i]}</span><span class="dd">${d.getDate()}</span></div>`;
+    }
+    html += '</div>';
+
+    // Calendar grid
+    html += '<div class="cal-wrap"><div class="cal">';
+
+    // Time column
     html += `<div class="cal-time" style="height:${CAL_TOTAL_H}px">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
@@ -148,7 +189,11 @@ function _calRenderGrid() {
     }
     html += '</div>';
 
-    // Колонки локаций
+    // Location columns
+    const locations = store.allLocations || [];
+    const ds = localDateStr(calActiveDay);
+    const dayEvents = _calGetEventsForDate(ds);
+
     locations.forEach((loc, li) => {
         const locEvents = dayEvents
             .filter(e => e.location_id === loc.id)
@@ -156,13 +201,11 @@ function _calRenderGrid() {
 
         html += `<div class="cal-col"><div class="cal-col-hdr h${li % 4}">${esc(loc.name)}</div><div style="height:${CAL_TOTAL_H}px;position:relative">`;
 
-        // Горизонтальные линии часов
         for (let h = CAL_H_START; h < CAL_H_END; h++) {
             html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
         }
 
-        // Группы пересекающихся событий
-        const groups = findOverlapGroups(locEvents);
+        const groups = _calFindOverlapGroups(locEvents);
         groups.forEach(group => {
             const cols = group.length;
             group.forEach((e, ci) => {
@@ -172,44 +215,72 @@ function _calRenderGrid() {
                 const height = (dur / 60) * CAL_HOUR_H;
                 const w = `calc((100% - ${(cols - 1) * 3}px) / ${cols})`;
                 const left = ci === 0 ? '0' : `calc(${ci} * (100% - ${(cols - 1) * 3}px) / ${cols} + ${ci * 3}px)`;
+                const splitCls = cols > 1 ? ' split' : '';
 
-                const isSplit = cols > 1;
-                const status = calEventStatus(e);
-                const orgName = calGetOrgName(e.organizer_id);
-                const docCount = (e.documents || []).length;
-                const hasUrl = e.url && e.url.trim().length > 0;
+                const now = new Date();
+                const today = localDateStr(now);
+                let status = 'active';
+                if (e.completed) status = 'done';
+                else if (ds < today && !e.completed) status = 'missed';
 
-                html += `<div class="cal-ev h${li % 4}${isSplit ? ' split' : ''}" style="top:${top}px;height:${height}px;left:${left};width:${w}" onclick="openEditEventModal('${esc(e.id)}')" title="${esc(e.type || 'ВКС')}: ${esc(e.description || '')}${orgName ? ' (' + esc(orgName) + ')' : ''}\\n${esc(e.time || '')}–${calFmtEnd(e)}">`;
+                const orgName = (store.allOrganizers || []).find(o => o.id === e.organizer_id)?.name || '';
+
+                html += `<div class="cal-ev h${li % 4}${splitCls}" style="top:${top}px;height:${height}px;left:${left};width:${w}" onclick="openEditEventModal('${e.id}')">`;
                 html += `<div style="display:flex;align-items:center;gap:4px"><span class="ev-status ${status}"></span><span class="ev-type">${esc(e.type || 'ВКС')}</span></div>`;
-                html += `<div class="ev-time">${esc(e.time || '--:--')}–${calFmtEnd(e)}</div>`;
+                html += `<div class="ev-time">${esc(e.time || '')}${dur ? ' – ' + _calFmtEnd(e) : ''}</div>`;
                 if (orgName) html += `<div class="ev-org">${esc(orgName)}</div>`;
                 if (e.description) html += `<div class="ev-desc">${esc(e.description)}</div>`;
                 html += '<div class="ev-badges">';
-                if (docCount > 0) html += `<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`;
-                if (hasUrl) html += '<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>';
-                html += '</div>';
-                html += '</div>';
+                if (e.documents && e.documents.length > 0) {
+                    html += `<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${e.documents.length}</span>`;
+                }
+                if (e.url) {
+                    html += '<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>';
+                }
+                html += '</div></div>';
             });
         });
 
         html += '</div></div>';
     });
 
-    html += '</div>';
+    html += '</div></div>';
+
     container.innerHTML = html;
 
-    // Прокрутка к 8:00
-    const scrollEl = container.closest('.page.active') || container.parentElement;
-    if (scrollEl) scrollEl.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+    // Now line
+    calUpdateNowLine();
+
+    // Scroll to 08:00
+    const wrap = container.querySelector('.cal-wrap');
+    if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
 }
 
 function _calGetEventsForDate(ds) {
     return (store.allEvents || []).filter(e => e.date === ds);
 }
 
-// ─── Группировка пересекающихся событий ─────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────
 
-function findOverlapGroups(events) {
+function _calFmtDate(d) {
+    return `${d.getDate()} ${CAL_MONTHS_FULL[d.getMonth()]}`;
+}
+
+function _calFmtShort(d) {
+    return `${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}`;
+}
+
+function _calFmtEnd(e) {
+    const s = calTimeToMin(e.time) + (e.dur || 60);
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function calTimeToMin(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function _calFindOverlapGroups(events) {
     if (!events.length) return [];
     const groups = [];
     events.forEach(e => {
@@ -239,7 +310,6 @@ function calUpdateNowLine() {
     const now = new Date();
     const today = localDateStr(now);
 
-    // Удалить старые now-line элементы
     document.querySelectorAll('.cal .now-line, .cal .now-time').forEach(el => el.remove());
 
     if (ds !== today) return;
@@ -266,19 +336,21 @@ function calUpdateNowLine() {
     });
 }
 
-// ─── Тема ───────────────────────────────────────────────────────────
+// ─── Navigation ─────────────────────────────────────────────────────
 
-function calSetTheme(id) {
-    applyTheme(id);
-}
+function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); calActiveDay = new Date(calWeekStart); renderCalendar(); }
+function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); calActiveDay = new Date(calWeekStart); renderCalendar(); }
+function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new Date(); renderCalendar(); }
+function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(); }
+function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(); }
+function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); renderCalendar(); }
 
-// ─── Запуск таймера now-line ────────────────────────────────────────
+// ─── Theme ──────────────────────────────────────────────────────────
 
-function calStartNowLineTimer() {
-    if (calNowLineTimer) clearInterval(calNowLineTimer);
-    calNowLineTimer = setInterval(calUpdateNowLine, 60000);
-}
+function calSetTheme(id) { if (typeof applyTheme === 'function') applyTheme(id); }
 
-function calStopNowLineTimer() {
-    if (calNowLineTimer) { clearInterval(calNowLineTimer); calNowLineTimer = null; }
-}
+// ─── Timer ──────────────────────────────────────────────────────────
+
+let calNowLineTimer = null;
+function calStartNowLineTimer() { if (calNowLineTimer) clearInterval(calNowLineTimer); calNowLineTimer = setInterval(calUpdateNowLine, 60000); }
+function calStopNowLineTimer() { if (calNowLineTimer) { clearInterval(calNowLineTimer); calNowLineTimer = null; } }

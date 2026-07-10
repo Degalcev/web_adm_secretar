@@ -1,12 +1,65 @@
-/* ─── Calendar Container ────────────────────────────────────────────── */
-.cal-container {
+/* ─── Calendar Page ────────────────────────────────────────────────── */
+.cal-page {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100vh - 4px);
+  padding: 0;
+}
+
+/* ─── Toolbar ──────────────────────────────────────────────────────── */
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.cal-toolbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-toolbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg);
+  min-width: 200px;
+}
+
+.cal-toolbar-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+.cal-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cal-filter-label {
+  font-size: 0.6875rem;
+  color: var(--fg-muted);
+}
+
+.cal-filter-select {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
 }
 
 /* ─── Day Tabs ──────────────────────────────────────────────────────── */
-.day-tabs {
+.cal-day-tabs {
   display: flex;
   gap: 4px;
   padding: 8px 16px;
@@ -15,57 +68,67 @@
   flex-shrink: 0;
 }
 
-.day-tab {
-  padding: 8px 14px;
+.cal-day-tab {
+  padding: 6px 12px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.75rem;
   text-align: center;
-  min-width: 60px;
+  min-width: 56px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--fg-muted);
   transition: all var(--motion-fast) var(--ease-standard);
 }
 
-.day-tab:hover {
+.cal-day-tab:hover {
   background: var(--surface-strong);
   color: var(--fg);
   border-color: var(--border-strong);
 }
 
-.day-tab.active {
+.cal-day-tab.active {
   background: var(--accent);
   color: var(--bg);
   border-color: var(--accent);
   font-weight: 500;
 }
 
-.day-tab.today {
+.cal-day-tab.today {
   border-color: var(--accent);
 }
 
-.day-tab .dn {
+.cal-day-tab .dn {
   font-weight: 600;
   font-size: 0.8125rem;
   display: block;
 }
 
-.day-tab .dd {
+.cal-day-tab .dd {
   font-size: 0.5625rem;
   text-transform: uppercase;
   opacity: 0.7;
+}
+
+/* ─── Calendar Container ────────────────────────────────────────────── */
+.cal-wrap {
+  flex: 1;
+  overflow: auto;
+  margin: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
 }
 
 /* ─── Calendar Grid ─────────────────────────────────────────────────── */
 .cal {
   display: flex;
   position: relative;
-  min-width: 700px;
+  min-width: 600px;
 }
 
 .cal-time {
-  width: 56px;
+  width: 52px;
   flex-shrink: 0;
   position: relative;
   border-right: 1px solid var(--border);
@@ -96,7 +159,7 @@
   z-index: 4;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 8px;
+  padding: 6px 8px;
   font-size: 0.6875rem;
   font-weight: 600;
   text-align: center;
@@ -133,7 +196,9 @@
 
 .cal-ev:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  z-index: 2;
+  min-width: 180px;
+  z-index: 20 !important;
+  overflow: visible;
   filter: brightness(1.1);
 }
 
@@ -211,24 +276,20 @@
   flex-shrink: 0;
 }
 
-/* ─── Hover Expand ──────────────────────────────────────────────────── */
-.cal-ev:hover {
-  min-width: 180px;
-  z-index: 20 !important;
-  overflow: visible;
-}
-
+/* Hover expand */
 .cal-ev:hover .ev-org,
 .cal-ev:hover .ev-desc,
 .cal-ev:hover .ev-badges {
   display: flex !important;
 }
 
-.cal-ev:hover .ev-type { white-space: normal; }
-.cal-ev:hover .ev-org { white-space: normal; }
-.cal-ev:hover .ev-desc { white-space: normal; }
+.cal-ev:hover .ev-type,
+.cal-ev:hover .ev-org,
+.cal-ev:hover .ev-desc {
+  white-space: normal;
+}
 
-/* ─── Split Events ──────────────────────────────────────────────────── */
+/* Split events — hide extra, show on hover */
 .cal-ev.split:not(:hover) .ev-org { display: none; }
 .cal-ev.split:not(:hover) .ev-desc { display: none; }
 .cal-ev.split:not(:hover) .ev-badges { display: none; }
@@ -269,19 +330,18 @@
   border: 1px solid rgba(248, 113, 113, 0.3);
 }
 
-/* ─── Mobile Responsive ─────────────────────────────────────────────── */
+/* ─── Scrollbar ─────────────────────────────────────────────────────── */
+.cal-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+.cal-wrap::-webkit-scrollbar-track { background: transparent; }
+.cal-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.cal-wrap::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ─── Mobile ────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .day-tabs {
-    padding: 6px 12px;
-    overflow-x: auto;
-  }
-
-  .day-tab {
-    min-width: 48px;
-    padding: 6px 10px;
-  }
-
-  .cal {
-    min-width: 500px;
-  }
+  .cal-toolbar { padding: 8px 12px; gap: 8px; }
+  .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
+  .cal-day-tabs { padding: 6px 12px; overflow-x: auto; }
+  .cal-day-tab { min-width: 48px; padding: 6px 10px; }
+  .cal-wrap { margin: 4px 8px; }
+  .cal { min-width: 500px; }
 }
