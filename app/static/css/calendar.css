@@ -270,10 +270,10 @@
 .cal-ev.h2 { border-left-color: var(--warning); background: rgba(251, 191, 36, 0.2); }
 .cal-ev.h3 { border-left-color: var(--danger); background: rgba(248, 113, 113, 0.2); }
 
-.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: rgba(35, 180, 200, 0.95); }
-.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: rgba(50, 190, 100, 0.95); }
-.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: rgba(200, 160, 40, 0.95); }
-.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: rgba(210, 90, 90, 0.95); }
+.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); background: rgba(45, 210, 230, 0.95); }
+.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); background: rgba(60, 220, 120, 0.95); }
+.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: rgba(230, 190, 50, 0.95); }
+.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: rgba(240, 110, 110, 0.95); }
 
 .cal-ev .ev-type {
   font-weight: 600;
