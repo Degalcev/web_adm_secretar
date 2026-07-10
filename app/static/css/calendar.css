@@ -1,7 +1,5 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
-#page-calendar {
-  display: flex;
-  flex-direction: column;
+#page-calendar.active {
   gap: 1rem;
 }
 
