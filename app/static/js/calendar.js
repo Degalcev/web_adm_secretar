@@ -325,15 +325,25 @@ function _calInitHoverFix() {
 function _calOnEvEnter(e) {
     const el = e.currentTarget;
     const rect = el.getBoundingClientRect();
+    const wrap = document.getElementById('cal-wrap');
+    const wrapRect = wrap ? wrap.getBoundingClientRect() : null;
     el.dataset.origTop = el.style.top;
     el.dataset.origLeft = el.style.left;
     el.dataset.origWidth = el.style.width;
     el.style.position = 'fixed';
-    el.style.top = rect.top + 'px';
-    el.style.left = rect.left + 'px';
-    el.style.width = 'auto';
     el.style.minWidth = Math.max(rect.width, 180) + 'px';
     el.style.maxWidth = (rect.width * 1.8) + 'px';
+
+    // Если элемент близко к правому краю контейнера — расширяем влево
+    const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
+    if (isRightEdge) {
+        el.style.left = 'auto';
+        el.style.right = (window.innerWidth - rect.right) + 'px';
+    } else {
+        el.style.left = rect.left + 'px';
+        el.style.right = 'auto';
+    }
+    el.style.top = rect.top + 'px';
     _calHoveredEl = el;
 }
 
@@ -345,6 +355,7 @@ function _calOnEvLeave(e) {
     el.style.width = el.dataset.origWidth || '';
     el.style.minWidth = '';
     el.style.maxWidth = '';
+    el.style.right = 'auto';
     _calHoveredEl = null;
 }
 
