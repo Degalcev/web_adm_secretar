@@ -325,12 +325,17 @@ function _calInitHoverFix() {
 function _calOnEvEnter(e) {
     const el = e.currentTarget;
     const rect = el.getBoundingClientRect();
+    const origW = rect.width;
     const wrap = document.getElementById('cal-wrap');
     const wrapRect = wrap ? wrap.getBoundingClientRect() : null;
     el.dataset.origTop = el.style.top;
     el.dataset.origLeft = el.style.left;
+    el.dataset.origWidth = el.style.width;
     el.style.position = 'fixed';
     el.style.top = rect.top + 'px';
+    el.style.width = 'auto';
+    el.style.minWidth = origW + 'px';
+    el.style.maxWidth = (origW * 1.8) + 'px';
 
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
     if (isRightEdge) {
@@ -341,6 +346,18 @@ function _calOnEvEnter(e) {
         el.style.right = 'auto';
     }
     _calHoveredEl = el;
+}
+
+function _calOnEvLeave(e) {
+    const el = e.currentTarget;
+    el.style.position = 'absolute';
+    el.style.top = el.dataset.origTop || '';
+    el.style.left = el.dataset.origLeft || '';
+    el.style.width = el.dataset.origWidth || '';
+    el.style.minWidth = '';
+    el.style.maxWidth = '';
+    el.style.right = 'auto';
+    _calHoveredEl = null;
 }
 
 function _calOnEvLeave(e) {
