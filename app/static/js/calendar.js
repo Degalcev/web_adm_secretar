@@ -139,6 +139,7 @@ function _calRenderGrid() {
     html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
+        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
     html += '</div></div>';
 
@@ -248,6 +249,7 @@ function calUpdateNowLine() {
 
     const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H;
 
+    // Now-line in each location column
     document.querySelectorAll('.cal-col').forEach(col => {
         const inner = col.querySelector('div[style]');
         if (!inner) return;
@@ -255,12 +257,17 @@ function calUpdateNowLine() {
         line.className = 'now-line';
         line.style.top = top + 'px';
         inner.appendChild(line);
+    });
+
+    // Time label on the time column only
+    const timeBody = document.querySelector('.cal-time-body');
+    if (timeBody) {
         const lbl = document.createElement('div');
         lbl.className = 'now-time';
         lbl.style.top = (top - 10) + 'px';
         lbl.textContent = `${String(hm).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-        inner.appendChild(lbl);
-    });
+        timeBody.appendChild(lbl);
+    }
 }
 
 // ─── Navigation ─────────────────────────────────────────────────────
