@@ -318,8 +318,8 @@ function calUpdateNowLine() {
     const mm = now.getMinutes();
     if (hm < CAL_H_START || hm >= CAL_H_END) return;
 
-    const hdrH = document.querySelector('.cal-col-hdr')?.offsetHeight || 40;
-    const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H + hdrH;
+    // Position relative to the inner scrollable div (no header offset needed)
+    const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H;
 
     document.querySelectorAll('.cal-col').forEach(col => {
         const inner = col.querySelector('div[style]');
