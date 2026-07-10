@@ -23,120 +23,64 @@ function getMonday(d) {
 function initCalendar() {
     calWeekStart = getMonday(new Date());
     calActiveDay = new Date();
-    renderCalendar();
+    renderCalendar(true);
     calStartNowLineTimer();
 }
 
-function calAddDays(d, n) {
-    const r = new Date(d);
-    r.setDate(r.getDate() + n);
-    return r;
-}
-
-function calFmtShort(d) {
-    return `${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}`;
-}
-
-function calFmtFull(d) {
-    return `${calAddDays(calWeekStart, 0).getDate()} – ${calAddDays(calWeekStart, 6).getDate()} ${CAL_MONTHS_FULL[calWeekStart.getMonth()]} ${calWeekStart.getFullYear()}`;
-}
+// ─── Helpers ────────────────────────────────────────────────────────
 
 function calTimeToMin(t) {
     const [h, m] = t.split(':').map(Number);
     return h * 60 + m;
 }
 
-function calFmtEnd(e) {
+function _calFmtDate(d) {
+    return `${d.getDate()} ${CAL_MONTHS_FULL[d.getMonth()]}`;
+}
+
+function _calFmtShort(d) {
+    return `${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}`;
+}
+
+function _calFmtEnd(e) {
     const s = calTimeToMin(e.time) + (e.dur || 60);
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function calEventStatus(e) {
-    if (e.completed) return 'done';
-    const today = localDateStr(new Date());
-    if (e.date && e.date < today) return 'missed';
-    return 'active';
+function _calGetEventsForDate(ds) {
+    return (store.allEvents || []).filter(e => e.date === ds);
 }
 
-function calGetOrgName(id) {
-    const o = (store.allOrganizers || []).find(x => x.id === id);
-    return o ? (o.short_name || o.name) : '';
+function _calFindOverlapGroups(events) {
+    if (!events.length) return [];
+    const groups = [];
+    events.forEach(e => {
+        const s = calTimeToMin(e.time);
+        const end = s + (e.dur || 60);
+        let placed = false;
+        for (const g of groups) {
+            if (g.some(ge => {
+                const gs = calTimeToMin(ge.time);
+                const ge2 = gs + (ge.dur || 60);
+                return s < ge2 && end > gs;
+            })) {
+                g.push(e);
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) groups.push([e]);
+    });
+    return groups;
 }
 
-function calGetLocName(id) {
-    const l = (store.allLocations || []).find(x => x.id === id);
-    return l ? l.name : '';
-}
+// ─── Рендер: Toolbar ───────────────────────────────────────────────
 
-// ─── Инициализация ──────────────────────────────────────────────────
-
-function initCalendar() {
-    calWeekStart = getMonday(new Date());
-    calActiveDay = new Date();
-    renderCalendar();
-}
-
-// ─── Навигация ──────────────────────────────────────────────────────
-
-function calPrevWeek() {
-    calWeekStart.setDate(calWeekStart.getDate() - 7);
-    calActiveDay = new Date(calWeekStart);
-    renderCalendar();
-}
-
-function calNextWeek() {
-    calWeekStart.setDate(calWeekStart.getDate() + 7);
-    calActiveDay = new Date(calWeekStart);
-    renderCalendar();
-}
-
-function calGoToday() {
-    calWeekStart = getMonday(new Date());
-    calActiveDay = new Date();
-    renderCalendar();
-}
-
-function calSelectDay(idx) {
-    calActiveDay = calAddDays(calWeekStart, idx);
-    renderCalendar();
-}
-
-// ─── Заголовок ──────────────────────────────────────────────────────
-
-function calUpdateTitle() {
-    const el = document.getElementById('cal-title');
-    if (el) el.textContent = calFmtFull(calActiveDay);
-}
-
-// ─── Вкладки дней ────────────────────────────────────────────────────
-
-function renderDayTabs() {
-    const tabs = document.getElementById('cal-day-tabs');
-    if (!tabs) return;
-    const today = localDateStr(new Date());
-    let html = '';
-    for (let i = 0; i < 7; i++) {
-        const d = calAddDays(calWeekStart, i);
-        const ds = localDateStr(d);
-        const isActive = ds === localDateStr(calActiveDay);
-        const isToday = ds === today;
-        html += `<div class="day-tab${isActive ? ' active' : ''}${isToday ? ' today' : ''}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES[i]}</span><span class="dd">${d.getDate()}</span></div>`;
-    }
-    tabs.innerHTML = html;
-}
-
-// ─── Рендер сетки ───────────────────────────────────────────────────
-
-function renderCalendar() {
-    const container = document.getElementById('cal-container');
-    if (!container) return;
-
+function _calRenderToolbar() {
     const weekEnd = new Date(calWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
 
-    // Build toolbar
-    let html = '<div class="cal-toolbar">';
-    html += '<div class="cal-toolbar-nav">';
+    let html = '<div class="cal-toolbar-nav">';
     html += '<button class="btn btn-icon" onclick="calPrevWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>';
     html += `<span class="cal-toolbar-title">${_calFmtDate(calWeekStart)} – ${_calFmtDate(weekEnd)}</span>`;
     html += '<button class="btn btn-icon" onclick="calNextWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
@@ -144,7 +88,6 @@ function renderCalendar() {
     html += '</div>';
     html += '<div class="cal-toolbar-sep"></div>';
 
-    // Filters
     html += '<div class="cal-filter-group"><span class="cal-filter-label">Неделя</span><select class="cal-filter-select" onchange="calSelectWeek(this.value)">';
     for (let i = -2; i <= 4; i++) {
         const d = new Date(calWeekStart);
@@ -163,10 +106,14 @@ function renderCalendar() {
         html += `<option value="${i}"${sel}>${m}</option>`;
     });
     html += '</select></div>';
-    html += '</div>';
 
-    // Day tabs
-    html += '<div class="cal-day-tabs">';
+    return html;
+}
+
+// ─── Рендер: Day Tabs ──────────────────────────────────────────────
+
+function _calRenderTabs() {
+    let html = '';
     for (let i = 0; i < 7; i++) {
         const d = new Date(calWeekStart);
         d.setDate(d.getDate() + i);
@@ -176,15 +123,18 @@ function renderCalendar() {
         const isToday = ds === today;
         html += `<div class="cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES[i]}</span><span class="dd">${d.getDate()}</span></div>`;
     }
-    html += '</div>';
+    return html;
+}
 
-    // Calendar grid
-    html += '<div class="cal-wrap"><div class="cal">';
+// ─── Рендер: Grid ──────────────────────────────────────────────────
+
+function _calRenderGrid() {
+    let html = '<div class="cal">';
 
     // Time column
     html += '<div class="cal-time">';
     html += '<div class="cal-time-header"></div>';
-    html += `<div style="height:${CAL_TOTAL_H}px;position:relative">`;
+    html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
         html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
@@ -246,63 +196,42 @@ function renderCalendar() {
         html += '</div></div>';
     });
 
-    html += '</div></div>';
-
-    container.innerHTML = html;
-
-    // Now line
-    calUpdateNowLine();
-
-    // Scroll to 08:00
-    const wrap = container.querySelector('.cal-wrap');
-    if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+    html += '</div>';
+    return html;
 }
 
-function _calGetEventsForDate(ds) {
-    return (store.allEvents || []).filter(e => e.date === ds);
-}
+// ─── Рендер: Main ──────────────────────────────────────────────────
 
-// ─── Helpers ────────────────────────────────────────────────────────
+function renderCalendar(full) {
+    const container = document.getElementById('cal-container');
+    if (!container) return;
 
-function _calFmtDate(d) {
-    return `${d.getDate()} ${CAL_MONTHS_FULL[d.getMonth()]}`;
-}
+    if (full) {
+        // Full rebuild: toolbar + tabs + grid
+        let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
+        html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
+        html += '<div class="cal-wrap" id="cal-wrap"></div>';
+        container.innerHTML = html;
 
-function _calFmtShort(d) {
-    return `${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}`;
-}
+        document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
+        document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
+        document.getElementById('cal-wrap').innerHTML = _calRenderGrid();
 
-function _calFmtEnd(e) {
-    const s = calTimeToMin(e.time) + (e.dur || 60);
-    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
+        calUpdateNowLine();
 
-function calTimeToMin(t) {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + m;
-}
-
-function _calFindOverlapGroups(events) {
-    if (!events.length) return [];
-    const groups = [];
-    events.forEach(e => {
-        const s = calTimeToMin(e.time);
-        const end = s + (e.dur || 60);
-        let placed = false;
-        for (const g of groups) {
-            if (g.some(ge => {
-                const gs = calTimeToMin(ge.time);
-                const ge2 = gs + (ge.dur || 60);
-                return s < ge2 && end > gs;
-            })) {
-                g.push(e);
-                placed = true;
-                break;
-            }
+        // Scroll to 08:00
+        const wrap = document.getElementById('cal-wrap');
+        if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+    } else {
+        // Partial rebuild: tabs + grid only (toolbar stays)
+        const tabsEl = document.getElementById('cal-day-tabs');
+        const wrapEl = document.getElementById('cal-wrap');
+        if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
+        if (wrapEl) {
+            wrapEl.innerHTML = _calRenderGrid();
+            calUpdateNowLine();
         }
-        if (!placed) groups.push([e]);
-    });
-    return groups;
+    }
 }
 
 // ─── Now-line ───────────────────────────────────────────────────────
@@ -320,7 +249,6 @@ function calUpdateNowLine() {
     const mm = now.getMinutes();
     if (hm < CAL_H_START || hm >= CAL_H_END) return;
 
-    // Position relative to the inner scrollable div (no header offset needed)
     const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H;
 
     document.querySelectorAll('.cal-col').forEach(col => {
@@ -340,16 +268,12 @@ function calUpdateNowLine() {
 
 // ─── Navigation ─────────────────────────────────────────────────────
 
-function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); calActiveDay = new Date(calWeekStart); renderCalendar(); }
-function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); calActiveDay = new Date(calWeekStart); renderCalendar(); }
-function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new Date(); renderCalendar(); }
-function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(); }
-function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(); }
-function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); renderCalendar(); }
-
-// ─── Theme ──────────────────────────────────────────────────────────
-
-function calSetTheme(id) { if (typeof applyTheme === 'function') applyTheme(id); }
+function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); calActiveDay = new Date(calWeekStart); renderCalendar(true); }
+function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); calActiveDay = new Date(calWeekStart); renderCalendar(true); }
+function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new Date(); renderCalendar(true); }
+function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
+function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
+function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
 
 // ─── Timer ──────────────────────────────────────────────────────────
 

@@ -58,6 +58,8 @@ async function _refreshEvents() {
             renderVksBoard('vks-board-completed', 'completed');
         } else if (page === 'dashboard') {
             renderDashboard();
+        } else if (page === 'calendar') {
+            renderCalendar(false);
         }
     } catch (e) {}
 }

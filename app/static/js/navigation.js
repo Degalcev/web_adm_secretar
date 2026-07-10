@@ -56,6 +56,11 @@ function switchPage(page) {
         }
     }
 
+    // Остановить таймер now-line при уходе со страницы календаря
+    if (page !== 'calendar' && typeof calStopNowLineTimer === 'function') {
+        calStopNowLineTimer();
+    }
+
     // Загрузить данные
     if (page === 'dashboard') initDashboard();
     if (page === 'profile') initProfile();
