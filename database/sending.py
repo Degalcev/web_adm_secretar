@@ -247,20 +247,24 @@ async def delete_event(event_id: str):
 async def lock_event(event_id: str, user_id: str) -> dict:
     try:
         async with async_session() as session:
-            event = await session.scalar(select(Event).where(Event.id == event_id))
-            if not event:
-                return {'ok': False, 'error': 'Событие не найдено'}
-            if event.locked_by and event.locked_by != user_id:
-                if event.locked_at and (datetime.utcnow() - event.locked_at).total_seconds() < 600:
+            cutoff = datetime.utcnow() - timedelta(minutes=10)
+            result = await session.execute(
+                update(Event).where(
+                    Event.id == event_id,
+                    (Event.locked_by.is_(None)) | (Event.locked_at < cutoff)
+                ).values(locked_by=user_id, locked_at=datetime.utcnow())
+            )
+            await session.commit()
+            if result.rowcount == 0:
+                event = await session.scalar(select(Event).where(Event.id == event_id))
+                if event and event.locked_by and event.locked_by != user_id:
                     lu = await session.scalar(select(User).where(User.id == event.locked_by))
                     name = ''
                     if lu:
                         parts = [lu.last_name or '', lu.first_name or '', lu.patronymic or '']
                         name = ' '.join(p for p in parts if p).strip() or lu.name or str(lu.max_id)
                     return {'ok': False, 'locked_by': name or str(event.locked_by), 'locked_at': event.locked_at.isoformat() if event.locked_at else None}
-            event.locked_by = user_id
-            event.locked_at = datetime.utcnow()
-            await session.commit()
+                return {'ok': False, 'error': 'Не удалось заблокировать'}
             logger.debug('Lock event {} by user {}', event_id, user_id)
             return {'ok': True}
     except Exception as e:

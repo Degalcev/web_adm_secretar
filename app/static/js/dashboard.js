@@ -199,13 +199,11 @@ function renderUpcomingItem(e, opts = {}) {
     if (docCount > 0) badges.push(`<span class="dash-indicator dash-indicator-doc" title="${docCount} док."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`);
     if (hasUrl) badges.push(`<span class="dash-indicator dash-indicator-link" title="Есть ссылка"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>`);
 
-    const meta = opts.showDate
-        ? `${locName(e.location_id)} · ${orgName(e.organizer_id)}`
-        : `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
+    const meta = `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
 
     const timeHtml = opts.showDate
-        ? `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? '<span class="dash-upcoming-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>' : ''}${opts.dateStr} ${e.time || '--:--'}</div>`
-        : `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? '<span class="dash-upcoming-lock"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>' : ''}${e.time || '--:--'}</div>`;
+        ? `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? `<span class="dash-upcoming-lock">${LOCK_SVG}</span>` : ''}${opts.dateStr} ${e.time || '--:--'}</div>`
+        : `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? `<span class="dash-upcoming-lock">${LOCK_SVG}</span>` : ''}${e.time || '--:--'}</div>`;
 
     return `
         <div class="dash-upcoming-item ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">

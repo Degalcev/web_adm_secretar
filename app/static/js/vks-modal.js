@@ -4,6 +4,7 @@ let isLockedByOther = false;
 
 async function openAddEventModal() {
     if (window._vksModalLoaded) await window._vksModalLoaded;
+    isLockedByOther = false;
     editingEventId = null;
     pendingFiles = [];
     removedDocIds = [];
@@ -57,7 +58,7 @@ async function openEditEventModal(id) {
             lockedByName = lockData.locked_by;
             showToast(`Редактирует: ${lockData.locked_by}`, 'warning');
         }
-    } catch (err) {}
+    } catch (err) { console.warn('Lock failed:', err); }
     document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
 
     // Показать элементы режима редактирования
@@ -171,7 +172,7 @@ async function openEditEventModal(id) {
         lockInfo.id = 'event-modal-lock-info';
         lockInfo.className = 'modal-lock-info';
         lockInfo.style.display = 'none';
-        lockInfo.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg><span id="event-modal-lock-text"></span>';
+        lockInfo.innerHTML = `${LOCK_SVG}<span id="event-modal-lock-text"></span>`;
         const modalBody = document.querySelector('.vks-modal-flat .modal-body');
         if (modalBody) modalBody.insertBefore(lockInfo, modalBody.firstChild);
         lockText = document.getElementById('event-modal-lock-text');

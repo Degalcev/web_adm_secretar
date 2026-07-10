@@ -507,12 +507,6 @@
     padding: 6px 10px;
     font-size: 0.75rem;
   }
-
-  .event-timeline {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--border);
-  }
 }
 
 /* Modal body wrapper */
