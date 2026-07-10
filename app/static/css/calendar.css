@@ -244,27 +244,34 @@
 .cal-ev {
   position: absolute;
   border-radius: var(--radius-sm);
-  padding: 4px 6px;
+  padding: 6px 8px;
   border-left: 3px solid var(--accent);
-  background: rgba(34, 211, 238, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--border);
   cursor: pointer;
-  transition: all var(--motion-fast) var(--ease-standard);
+  transition: box-shadow var(--motion-fast) var(--ease-standard), z-index 0s;
   overflow: hidden;
   z-index: 1;
 }
 
 .cal-ev:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-  min-width: 180px;
-  z-index: 20 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  min-width: 200px;
+  z-index: 100 !important;
   overflow: visible;
-  filter: brightness(1.1);
+  background: var(--bg-elevated);
+  border-color: var(--accent);
 }
 
-.cal-ev.h0 { border-left-color: var(--accent); background: rgba(34, 211, 238, 0.2); }
-.cal-ev.h1 { border-left-color: var(--success); background: rgba(74, 222, 128, 0.2); }
-.cal-ev.h2 { border-left-color: var(--warning); background: rgba(251, 191, 36, 0.2); }
-.cal-ev.h3 { border-left-color: var(--danger); background: rgba(248, 113, 113, 0.2); }
+.cal-ev.h0 { border-left-color: var(--accent); }
+.cal-ev.h1 { border-left-color: var(--success); }
+.cal-ev.h2 { border-left-color: var(--warning); }
+.cal-ev.h3 { border-left-color: var(--danger); }
+
+.cal-ev:hover.h0 { border-color: var(--accent); border-left-color: var(--accent); }
+.cal-ev:hover.h1 { border-color: var(--success); border-left-color: var(--success); }
+.cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); }
+.cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); }
 
 .cal-ev .ev-type {
   font-weight: 600;
@@ -273,12 +280,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 0.6875rem;
+  line-height: 1.3;
 }
 
 .cal-ev .ev-time {
   color: var(--accent-ambient);
   font-weight: 500;
   font-size: 0.625rem;
+  line-height: 1.3;
 }
 
 .cal-ev .ev-org {
@@ -286,8 +295,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 1px;
+  margin-top: 2px;
   font-size: 0.5625rem;
+  line-height: 1.3;
 }
 
 .cal-ev .ev-desc {
@@ -296,7 +306,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 0.5625rem;
-  margin-top: 1px;
+  margin-top: 2px;
+  line-height: 1.3;
 }
 
 .cal-ev .ev-status {
@@ -346,6 +357,7 @@
 .cal-ev:hover .ev-org,
 .cal-ev:hover .ev-desc {
   white-space: normal;
+  overflow: visible;
 }
 
 /* Split events — hide extra, show on hover */
