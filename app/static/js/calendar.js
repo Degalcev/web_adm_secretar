@@ -331,7 +331,7 @@ function _calOnEvEnter(e) {
     el.dataset.origLeft = el.style.left;
     el.dataset.origWidth = el.style.width;
     el.style.position = 'fixed';
-    el.style.minWidth = Math.max(rect.width, 180) + 'px';
+    el.style.top = rect.top + 'px';
     el.style.maxWidth = (rect.width * 1.8) + 'px';
 
     // Если элемент близко к правому краю контейнера — расширяем влево
@@ -343,6 +343,8 @@ function _calOnEvEnter(e) {
         el.style.left = rect.left + 'px';
         el.style.right = 'auto';
     }
+    _calHoveredEl = el;
+}
     el.style.top = rect.top + 'px';
     _calHoveredEl = el;
 }
