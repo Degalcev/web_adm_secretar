@@ -24,7 +24,7 @@
   border-radius: var(--radius-lg);
   flex-shrink: 0;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   box-shadow: var(--shadow-sm);
 }
 
@@ -94,39 +94,42 @@
 /* ─── Day Tabs ──────────────────────────────────────────────────────── */
 .cal-day-tabs {
   display: flex;
-  gap: 4px;
-  padding: 10px 16px;
+  gap: 0;
+  padding: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-bottom: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   flex-shrink: 0;
-  margin-bottom: 16px;
-  box-shadow: var(--shadow-sm);
 }
 
 .cal-day-tab {
   flex: 1;
-  padding: 8px 0;
-  border-radius: var(--radius-sm);
+  padding: 10px 0;
   cursor: pointer;
   font-size: 0.75rem;
   text-align: center;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  border-bottom: 2px solid transparent;
   color: var(--fg-muted);
   transition: all var(--motion-fast) var(--ease-standard);
 }
 
+.cal-day-tab:last-child {
+  border-right: none;
+}
+
 .cal-day-tab:hover {
-  background: var(--surface-strong);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--fg);
-  border-color: var(--border-strong);
 }
 
 .cal-day-tab.active {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-bottom-color: var(--accent);
   font-weight: 500;
 }
 
@@ -153,8 +156,8 @@
   min-height: 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0;
