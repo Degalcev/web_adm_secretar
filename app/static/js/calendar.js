@@ -182,12 +182,14 @@ function renderCalendar() {
     html += '<div class="cal-wrap"><div class="cal">';
 
     // Time column
-    html += `<div class="cal-time" style="height:${CAL_TOTAL_H}px">`;
+    html += '<div class="cal-time">';
+    html += '<div class="cal-time-header"></div>';
+    html += `<div style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
         html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
-    html += '</div>';
+    html += '</div></div>';
 
     // Location columns
     const locations = store.allLocations || [];
