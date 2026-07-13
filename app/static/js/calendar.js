@@ -335,7 +335,7 @@ function _calPositionBridge() {
     const panelRect = panel.getBoundingClientRect();
     bridge.style.left = (btnRect.left - panelRect.left) + 'px';
     bridge.style.width = btnRect.width + 'px';
-    bridge.style.top = (btnRect.bottom - panelRect.top - 6) + 'px';
+    bridge.style.top = (btnRect.bottom - panelRect.top - 10) + 'px';
 }
 
 window.addEventListener('resize', _calPositionBridge);

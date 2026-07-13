@@ -107,7 +107,7 @@
 /* ─── Tab Bridge (covers shadow seam between active tab and header) ── */
 .cal-tab-bridge {
   position: absolute;
-  height: 12px;
+  height: 16px;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   pointer-events: none;
   z-index: 10;
@@ -125,7 +125,28 @@
 .cal-rooms-header {
   display: flex;
   flex-shrink: 0;
+  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+  box-shadow:
+    -2px 0 8px rgba(0, 0, 0, 0.12),
+    2px 0 8px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cal-rooms-hdr-cell {
+  flex: 1;
+  padding: 10px 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: center;
   border-bottom: 1px solid var(--border);
+}
+
+.cal-rooms-header {
+  display: flex;
+  flex-shrink: 0;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   box-shadow:
     -2px 0 8px rgba(0, 0, 0, 0.12),
