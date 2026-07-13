@@ -103,6 +103,15 @@
   background: var(--bg-elevated);
 }
 
+/* ─── Shadow Layer (clip-path + drop-shadow behind tab+header) ─────── */
+.cal-shadow {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.25));
+}
+
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
 #cal-grid-area {
   display: flex;
