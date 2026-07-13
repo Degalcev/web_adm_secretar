@@ -79,7 +79,15 @@
   min-height: 0;
   flex: 1;
   background: var(--bg-elevated);
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+}
+
+/* ─── Shadow SVG ────────────────────────────────────────────────── */
+.cal-shadow-svg {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
 }
 
 /* ─── Grid Area ──────────────────────────────────────────────────── */

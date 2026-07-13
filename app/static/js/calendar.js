@@ -225,6 +225,7 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" fill="none" stroke="rgba(0,0,0,0.01)" stroke-width="1" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
@@ -235,6 +236,7 @@ function renderCalendar(full) {
 
         calUpdateNowLine();
         _calInitHoverFix();
+        _calUpdateShadow();
 
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
@@ -248,6 +250,7 @@ function renderCalendar(full) {
             gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
+            _calUpdateShadow();
         }
     }
 }
@@ -319,6 +322,51 @@ function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
 function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
+
+// ─── Shadow SVG ─────────────────────────────────────────────────────
+
+function _calUpdateShadow() {
+    const activeTab = document.querySelector('.cal-day-tab.active');
+    const header = document.querySelector('.cal-rooms-header');
+    const panel = document.getElementById('cal-panel');
+    const path = document.getElementById('cal-shadow-path');
+    if (!activeTab || !header || !panel || !path) return;
+
+    const tabRect = activeTab.getBoundingClientRect();
+    const hdrRect = header.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+
+    const rt = 10;  // tab border-radius
+    const rp = 12;  // panel border-radius
+    const tx = tabRect.left - panelRect.left;
+    const ty = tabRect.top - panelRect.top;
+    const tw = tabRect.width;
+    const th = tabRect.height;
+    const pw = panelRect.width;
+    const ph = panelRect.height;
+
+    const d = [
+        `M ${tx + rt} ${ty}`,
+        `L ${tx + tw - rt} ${ty}`,
+        `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
+        `L ${tx + tw} ${ty + th}`,
+        `L ${pw - rp} ${ty + th}`,
+        `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
+        `L ${pw} ${ph - rp}`,
+        `A ${rp} ${rp} 0 0 1 ${pw - rp} ${ph}`,
+        `L ${rp} ${ph}`,
+        `A ${rp} ${rp} 0 0 1 0 ${ph - rp}`,
+        `L 0 ${ty + th}`,
+        `L ${tx} ${ty + th}`,
+        `L ${tx} ${ty + rt}`,
+        `A ${rt} ${rt} 0 0 1 ${tx + rt} ${ty}`,
+        'Z'
+    ].join(' ');
+
+    path.setAttribute('d', d);
+}
+
+window.addEventListener('resize', _calUpdateShadow);
 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
