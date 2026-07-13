@@ -96,21 +96,26 @@ function _calRenderToolbar() {
     html += '<button class="cal-week-nav-btn" onclick="calNextWeek()" aria-label="Следующая неделя">›</button>';
     html += '</div>';
 
-    html += '<div style="position:relative">';
     html += '<button class="cal-date-trigger" onclick="calToggleDatePicker()">';
     html += '<span id="cal-date-label"></span>';
     html += '</button>';
-    html += '<div class="cal-date-picker" id="cal-date-picker">';
-    html += '<select id="cal-month-sel" class="cal-filter-select"></select>';
-    html += '<select id="cal-year-sel" class="cal-filter-select"></select>';
-    html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 10px;font-size:0.8125rem" onclick="calApplyDatePicker()">OK</button>';
-    html += '</div>';
-    html += '</div>';
 
     html += '<div class="cal-toolbar-sep"></div>';
     html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 12px;font-size:0.8125rem;font-weight:600" onclick="calGoToday()">Сегодня</button>';
 
+    html += '<div class="cal-date-picker" id="cal-date-picker">';
+    html += '<select id="cal-month-sel" class="cal-filter-select"></select>';
+    html += '<select id="cal-year-sel" class="cal-filter-select"></select>';
+    html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 10px;font-size:0.8125rem" onclick="calApplyDatePicker()">Применить</button>';
+    html += '</div>';
+
     return html;
+}
+
+function _calRenderWeekLabel() {
+    const weekEnd = new Date(calWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    return `<div class="cal-week-label">Неделя с ${_calFmtDate(calWeekStart)} по ${_calFmtDate(weekEnd)}</div>`;
 }
 
 // ─── Рендер: Day Tabs ──────────────────────────────────────────────
@@ -225,6 +230,7 @@ function renderCalendar(full) {
         _calNowLines = [];
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
+        html += '<div id="cal-week-label"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
         html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
@@ -233,6 +239,8 @@ function renderCalendar(full) {
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
         _calUpdateDateLabel();
+        const wlEl = document.getElementById('cal-week-label');
+        if (wlEl) wlEl.innerHTML = _calRenderWeekLabel();
         document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
         document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
 

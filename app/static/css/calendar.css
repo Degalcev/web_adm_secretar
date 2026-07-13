@@ -16,14 +16,13 @@
 .cal-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 10px 16px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   flex-shrink: 0;
   flex-wrap: wrap;
-  margin-bottom: 12px;
   box-shadow: var(--shadow-sm);
 }
 
@@ -72,21 +71,25 @@
 .cal-date-trigger:hover { border-color: var(--accent); }
 
 .cal-date-picker {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
   display: none;
   gap: 8px;
   align-items: center;
-  padding: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-sm);
-  z-index: 20;
+  width: 100%;
+  padding: 8px 0 2px;
 }
 
 .cal-date-picker.open { display: flex; }
+
+.cal-week-label {
+  padding: 6px 16px 8px;
+  font-size: 0.75rem;
+  color: var(--fg-subtle);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
 
 .cal-toolbar-sep { width: 1px; height: 24px; background: var(--border); }
 
@@ -122,6 +125,7 @@
   min-height: 0;
   flex: 1;
   background: var(--bg-elevated);
+  margin-top: 12px;
 }
 
 /* ─── Shadow SVG ────────────────────────────────────────────────── */
@@ -357,6 +361,7 @@
   .cal-container { padding: 12px; }
   .cal-toolbar { padding: 10px 12px; gap: 8px; }
   .cal-date-picker { flex-wrap: wrap; }
+  .cal-date-picker .cal-filter-select { min-width: 0; flex: 1; }
   .cal-day-tabs { padding: 8px 8px 0; gap: 4px; overflow-x: auto; }
   .cal-day-tab { min-width: 48px; flex: none; padding: 6px 6px 8px; font-size: 0.6875rem; }
   .cal-day-tab .dn { font-size: 0.6875rem; }
