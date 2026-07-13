@@ -225,7 +225,7 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg"><defs><filter id="tabShadow"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
@@ -335,7 +335,6 @@ function _calUpdateShadow() {
     const activeTab = document.querySelector('.cal-day-tab.active');
     const header = document.querySelector('.cal-rooms-header');
     const panel = document.getElementById('cal-panel');
-    const svgEl = document.getElementById('cal-shadow-svg');
     const path = document.getElementById('cal-shadow-path');
     if (!activeTab || !header || !panel || !path) return;
 
@@ -343,22 +342,29 @@ function _calUpdateShadow() {
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    const x = tabRect.left - panelRect.left;
-    const y = tabRect.top - panelRect.top;
-    const w = tabRect.width;
-    const tabH = tabRect.height;
-    const hdrW = hdrRect.width;
-    const hdrH = hdrRect.height;
+    const r = 10;
+    const tx = tabRect.left - panelRect.left;
+    const ty = tabRect.top - panelRect.top;
+    const tw = tabRect.width;
+    const th = tabRect.height;
+    const pw = panelRect.width;
+    const ph = panelRect.height;
 
     const d = [
-        `M ${x} ${y}`,
-        `L ${x + w} ${y}`,
-        `L ${x + w} ${y + tabH}`,
-        `L ${hdrW} ${y + tabH}`,
-        `L ${hdrW} ${y + tabH + hdrH}`,
-        `L 0 ${y + tabH + hdrH}`,
-        `L 0 ${y + tabH}`,
-        `L ${x} ${y + tabH}`,
+        `M ${tx + r} ${ty}`,
+        `H ${tx + tw - r}`,
+        `Q ${tx + tw} ${ty} ${tx + tw} ${ty + r}`,
+        `V ${ty + th}`,
+        `H ${pw - r}`,
+        `Q ${pw} ${ty + th} ${pw} ${ty + th + r}`,
+        `V ${ph - r}`,
+        `Q ${pw} ${ph} ${pw - r} ${ph}`,
+        `H ${r}`,
+        `Q 0 ${ph} 0 ${ph - r}`,
+        `V ${ty + th}`,
+        `H ${tx}`,
+        `V ${ty + r}`,
+        `Q ${tx} ${ty} ${tx + r} ${ty}`,
         'Z'
     ].join(' ');
 

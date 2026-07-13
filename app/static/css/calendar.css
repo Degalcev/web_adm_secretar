@@ -75,7 +75,6 @@
   position: relative;
   z-index: 0;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -83,6 +82,7 @@
   background: var(--bg-elevated);
 }
 
+/* ─── Shadow SVG (L-contour) ──────────────────────────────────────── */
 .cal-shadow-svg {
   position: absolute;
   top: 0;
@@ -90,8 +90,8 @@
   width: 100%;
   height: 100%;
   z-index: -1;
-  pointer-events: none;
   overflow: visible;
+  pointer-events: none;
 }
 
 /* ─── Grid Area ────────────────────────────────────────────────────── */
@@ -181,6 +181,7 @@
   overflow-y: auto;
   min-height: 0;
   background: var(--bg-elevated);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0;
