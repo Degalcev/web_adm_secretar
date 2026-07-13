@@ -396,6 +396,10 @@ function _calScheduleShadowUpdate() {
 
 window.addEventListener('resize', _calScheduleShadowUpdate);
 
+document.getElementById('cal-day-tabs').addEventListener('transitionend', (e) => {
+    if (e.propertyName === 'padding') _calScheduleShadowUpdate();
+});
+
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
 let _calHoveredEl = null;

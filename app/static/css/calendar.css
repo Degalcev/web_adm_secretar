@@ -132,12 +132,16 @@
 /* ─── Day Tabs ─────────────────────────────────────────────────────── */
 .cal-day-tabs {
   display: flex;
+  align-items: flex-end;
   padding: 10px 10px 0;
   gap: 6px;
   margin: 0;
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .cal-day-tab {
