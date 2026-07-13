@@ -161,7 +161,7 @@ function _calRenderGrid() {
             .filter(e => e.location_id === loc.id)
             .sort((a, b) => calTimeToMin(a.time) - calTimeToMin(b.time));
 
-        html += `<div class="cal-col"><div class="cal-col-hdr h${li % 4}">${esc(loc.name)}</div><div style="height:${CAL_TOTAL_H}px;position:relative">`;
+        html += `<div class="cal-col"><div class="cal-col-hdr h${li % 4}">${esc(loc.name)}</div><div class="cal-col-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
 
         const groups = _calFindOverlapGroups(locEvents);
         groups.forEach(group => {
