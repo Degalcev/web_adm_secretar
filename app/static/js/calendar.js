@@ -350,9 +350,7 @@ function _calUpdateShadow() {
     const panelRect = panel.getBoundingClientRect();
 
     const inset = 1;
-    const rt = 10;
-    const rp = 12;
-    const re = 3;
+    const rt = 10, rp = 12;
 
     const tx = Math.round(tabRect.left - panelRect.left);
     const ty = Math.round(tabRect.top - panelRect.top);
@@ -365,8 +363,7 @@ function _calUpdateShadow() {
         `M ${tx + rt} ${ty}`,
         `L ${tx + tw - rt} ${ty}`,
         `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
-        `L ${tx + tw} ${ty + th - re}`,
-        `A ${re} ${re} 0 0 0 ${tx + tw + re} ${ty + th}`,
+        `L ${tx + tw} ${ty + th}`,
         `L ${pw - rp} ${ty + th}`,
         `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
         `L ${pw} ${ph - rp}`,
@@ -374,8 +371,7 @@ function _calUpdateShadow() {
         `L ${rp + inset} ${ph}`,
         `A ${rp} ${rp} 0 0 1 ${inset} ${ph - rp}`,
         `L ${inset} ${ty + th}`,
-        `L ${tx - re} ${ty + th}`,
-        `A ${re} ${re} 0 0 0 ${tx} ${ty + th - re}`,
+        `L ${tx} ${ty + th}`,
         `L ${tx} ${ty + rt}`,
         `A ${rt} ${rt} 0 0 1 ${tx + rt} ${ty}`,
         'Z'
