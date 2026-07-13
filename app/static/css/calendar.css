@@ -145,8 +145,8 @@
 }
 
 .cal-day-tab.active {
-  margin-top: -4px;
-  padding: 14px 4px 15px;
+  margin-top: -6px;
+  padding: 16px 4px 17px;
   background: var(--bg-elevated);
   color: var(--accent);
   font-weight: 600;
