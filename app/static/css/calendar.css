@@ -109,8 +109,12 @@
   position: absolute;
   pointer-events: none;
   z-index: 1;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
+}
+
+.cal-tab-bridge canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */

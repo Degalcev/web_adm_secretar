@@ -336,11 +336,54 @@ function _calPositionBridge() {
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    bridge.style.left = (tabRect.left - panelRect.left) + 'px';
-    bridge.style.top = (tabRect.top - panelRect.top) + 'px';
-    bridge.style.width = tabRect.width + 'px';
-    bridge.style.height = (hdrRect.bottom - tabRect.top) + 'px';
-    bridge.style.borderRadius = '10px 10px 0 0';
+    const shadow = 12;
+    const ox = tabRect.left - panelRect.left - shadow;
+    const oy = tabRect.top - panelRect.top - shadow;
+    const totalW = tabRect.width + shadow * 2;
+    const totalH = (hdrRect.bottom - tabRect.top) + shadow * 2;
+
+    bridge.style.left = ox + 'px';
+    bridge.style.top = oy + 'px';
+    bridge.style.width = totalW + 'px';
+    bridge.style.height = totalH + 'px';
+
+    const cvs = bridge.querySelector('canvas') || document.createElement('canvas');
+    if (!cvs.parentNode) bridge.appendChild(cvs);
+    const dpr = window.devicePixelRatio || 1;
+    cvs.width = totalW * dpr;
+    cvs.height = totalH * dpr;
+    cvs.style.width = totalW + 'px';
+    cvs.style.height = totalH + 'px';
+
+    const ctx = cvs.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, totalW, totalH);
+
+    const relX = shadow;
+    const relY = shadow;
+    const relW = tabRect.width;
+    const tabH = tabRect.height;
+    const hdrH = hdrRect.height;
+    const r = 10;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowBlur = shadow;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 3;
+
+    ctx.beginPath();
+    ctx.moveTo(relX + r, relY);
+    ctx.lineTo(relX + relW - r, relY);
+    ctx.quadraticCurveTo(relX + relW, relY, relX + relW, relY + r);
+    ctx.lineTo(relX + relW, relY + tabH + hdrH);
+    ctx.lineTo(relX, relY + tabH + hdrH);
+    ctx.lineTo(relX, relY + r);
+    ctx.quadraticCurveTo(relX, relY, relX + r, relY);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
+    ctx.fill();
+    ctx.restore();
 }
 
 window.addEventListener('resize', _calPositionBridge);
