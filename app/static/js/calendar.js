@@ -125,7 +125,7 @@ function _calRenderTabs() {
         const isToday = ds === today;
         const isWeekend = i >= 5;
         const cls = `cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
-        html += `<div class="${cls}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES_FULL[i]}</span><span class="dd">${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}</span></div>`;
+        html += `<div class="${cls}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES_FULL[i]}</span><span class="dd">${d.getDate()} ${CAL_MONTHS_FULL[d.getMonth()]}</span></div>`;
     }
     return html;
 }
@@ -354,14 +354,12 @@ function _calUpdateShadow() {
     const ph = Math.round(panelRect.height) - inset;
 
     const rl = Math.max(0, Math.min(rp, tx - inset));
-    const rr = Math.max(0, Math.min(rp, pw - (tx + tw)));
 
     const d = [
         `M ${tx + rt} ${ty}`,
         `L ${tx + tw - rt} ${ty}`,
         `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
-        `L ${tx + tw} ${ty + th - rr}`,
-        `A ${rr} ${rr} 0 0 0 ${tx + tw + rr} ${ty + th}`,
+        `L ${tx + tw} ${ty + th}`,
         `L ${pw - rp} ${ty + th}`,
         `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
         `L ${pw} ${ph - rp}`,
