@@ -225,7 +225,7 @@ function renderCalendar(full) {
         _calNowLines = [];
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
-        html += '<div class="cal-panel" id="cal-panel"><div class="cal-tab-bridge" id="cal-tab-bridge"></div><div class="cal-day-tabs" id="cal-day-tabs"></div>';
+        html += '<div class="cal-panel" id="cal-panel"><div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
 
@@ -235,8 +235,8 @@ function renderCalendar(full) {
 
         calUpdateNowLine();
         _calInitHoverFix();
-        _calPositionBridge();
 
+        // Scroll to 08:00
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
     } else {
@@ -249,7 +249,6 @@ function renderCalendar(full) {
             gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
-            _calPositionBridge();
         }
     }
 }
@@ -321,21 +320,6 @@ function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
 function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
-
-// ─── Tab Bridge ─────────────────────────────────────────────────────
-
-function _calPositionBridge() {
-    const activeTab = document.querySelector('.cal-day-tab.active');
-    const panel = document.getElementById('cal-panel');
-    const bridge = document.getElementById('cal-tab-bridge');
-    if (!activeTab || !panel || !bridge) return;
-    const btnRect = activeTab.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    bridge.style.left = (btnRect.left - panelRect.left) + 'px';
-    bridge.style.width = btnRect.width + 'px';
-}
-
-window.addEventListener('resize', _calPositionBridge);
 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 

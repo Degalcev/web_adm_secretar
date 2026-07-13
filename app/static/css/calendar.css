@@ -110,17 +110,7 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-}
-
-/* ─── Tab Bridge (strip under active tab) ───────────────────────────── */
-.cal-tab-bridge {
-  position: absolute;
-  top: -1px;
-  height: 2px;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  pointer-events: none;
-  z-index: 10;
-  transition: left 0.12s ease, width 0.12s ease;
+  margin-top: -1px;
 }
 
 /* ─── Day Tabs ──────────────────────────────────────────────────────── */
