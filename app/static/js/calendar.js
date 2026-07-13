@@ -233,9 +233,7 @@ function renderCalendar(full) {
         const panelEl = document.getElementById('cal-panel');
         const shadowPath = document.getElementById('cal-shadow-path');
         if (panelEl && shadowPath) {
-            const hdr = document.querySelector('.cal-rooms-header');
-            const fillColor = hdr ? getComputedStyle(hdr).backgroundColor : getComputedStyle(panelEl).backgroundColor;
-            shadowPath.setAttribute('fill', fillColor);
+            shadowPath.setAttribute('fill', getComputedStyle(panelEl).backgroundColor);
         }
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
