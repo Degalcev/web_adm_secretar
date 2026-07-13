@@ -366,12 +366,12 @@ function _calPositionBridge() {
     const hdrH = hdrRect.height;
     const r = 10;
 
+    // Main shape shadow
     ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
     ctx.shadowBlur = shadow;
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 3;
-
+    ctx.shadowOffsetY = 2;
     ctx.beginPath();
     ctx.moveTo(relX + r, relY);
     ctx.lineTo(relX + relW - r, relY);
@@ -383,6 +383,16 @@ function _calPositionBridge() {
     ctx.closePath();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
     ctx.fill();
+    ctx.restore();
+
+    // Shadow under tab bottom edge
+    ctx.save();
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 2;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
+    ctx.fillRect(relX + 4, relY + tabH - 1, relW - 8, 2);
     ctx.restore();
 }
 

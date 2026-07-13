@@ -95,7 +95,6 @@
 .cal-panel {
   position: relative;
   border-radius: var(--radius-lg);
-  overflow: hidden;
   box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
