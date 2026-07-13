@@ -337,6 +337,7 @@ function _calUpdateShadow() {
     const activeTab = document.querySelector('.cal-day-tab.active');
     const header = document.querySelector('.cal-rooms-header');
     const panel = document.getElementById('cal-panel');
+    const svgEl = document.getElementById('cal-shadow-svg');
     const path = document.getElementById('cal-shadow-path');
     if (!activeTab || !header || !panel || !path) return;
 
@@ -350,20 +351,18 @@ function _calUpdateShadow() {
     const tabH = tabRect.height;
     const hdrW = hdrRect.width;
     const hdrH = hdrRect.height;
-    const r = 10;
+
+    svgEl.setAttribute('viewBox', `0 0 ${hdrW} ${y + tabH + hdrH}`);
 
     const d = [
-        `M ${x + r} ${y}`,
-        `L ${x + w - r} ${y}`,
-        `Q ${x + w} ${y} ${x + w} ${y + r}`,
+        `M ${x} ${y}`,
+        `L ${x + w} ${y}`,
         `L ${x + w} ${y + tabH}`,
         `L ${hdrW} ${y + tabH}`,
         `L ${hdrW} ${y + tabH + hdrH}`,
         `L 0 ${y + tabH + hdrH}`,
         `L 0 ${y + tabH}`,
         `L ${x} ${y + tabH}`,
-        `L ${x} ${y + r}`,
-        `Q ${x} ${y} ${x + r} ${y}`,
         'Z'
     ].join(' ');
 
