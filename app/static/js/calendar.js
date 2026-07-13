@@ -9,6 +9,7 @@ const CAL_DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const CAL_DAY_NAMES_FULL = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'];
 const CAL_MONTHS_GEN = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
 const CAL_MONTHS_FULL = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const CAL_MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 
 let calWeekStart = getMonday(new Date());
 let calActiveDay = new Date();
@@ -367,7 +368,7 @@ function calToggleDatePicker() {
     const monthSel = document.getElementById('cal-month-sel');
     const yearSel = document.getElementById('cal-year-sel');
     if (monthSel && yearSel) {
-        monthSel.innerHTML = CAL_MONTHS_FULL.map((m, i) =>
+        monthSel.innerHTML = CAL_MONTHS_NOM.map((m, i) =>
             `<option value="${i}"${i === calWeekStart.getMonth() ? ' selected' : ''}>${m}</option>`
         ).join('');
         const curYear = calWeekStart.getFullYear();
@@ -395,7 +396,7 @@ function _calUpdateDateLabel() {
     if (!el) return;
     const weekEnd = new Date(calWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
-    el.textContent = `${CAL_MONTHS_FULL[calWeekStart.getMonth()]} ${calWeekStart.getFullYear()}`;
+    el.textContent = `${CAL_MONTHS_NOM[calWeekStart.getMonth()]} ${calWeekStart.getFullYear()}`;
 }
 
 // ─── Shadow SVG ─────────────────────────────────────────────────────
