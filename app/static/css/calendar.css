@@ -135,7 +135,7 @@
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  background: rgba(0, 0, 0, 0.25);
   color: var(--fg-subtle);
   border: none;
   border-radius: 10px 10px 0 0;
@@ -239,8 +239,13 @@
 .cal-col {
   flex: 1;
   position: relative;
+  border-left: 1px solid var(--border);
   background: transparent;
   overflow: visible;
+}
+
+.cal-col:first-child {
+  border-left: none;
 }
 
 .cal-col-hdr {
@@ -248,19 +253,19 @@
   top: 0;
   z-index: 6;
   height: 36px;
-  background: rgba(0, 0, 0, 0.15);
-  color: var(--fg-subtle);
+  background: var(--bg-elevated);
+  margin-left: -1px;
+  padding-left: calc(8px + 1px);
   border-bottom: 1px solid var(--border);
-  padding: 6px 8px;
   font-size: 0.6875rem;
   font-weight: 700;
+  color: var(--fg-subtle);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-left: none;
 }
 
 /* ─── Hour Lines ────────────────────────────────────────────────────── */
