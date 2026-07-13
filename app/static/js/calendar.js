@@ -225,16 +225,10 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
-
-        const panelEl = document.getElementById('cal-panel');
-        const shadowPath = document.getElementById('cal-shadow-path');
-        if (panelEl && shadowPath) {
-            shadowPath.setAttribute('fill', getComputedStyle(panelEl).backgroundColor);
-        }
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
         document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
@@ -382,8 +376,19 @@ function _calUpdateShadow() {
 
 let _calShadowRO = null;
 
+function _calUpdateShadowFill() {
+    const activeTabEl = document.querySelector('.cal-day-tab.active');
+    const shadowPath = document.getElementById('cal-shadow-path');
+    if (activeTabEl && shadowPath) {
+        shadowPath.setAttribute('fill', getComputedStyle(activeTabEl).backgroundColor);
+    }
+}
+
 function _calScheduleShadowUpdate() {
-    requestAnimationFrame(_calUpdateShadow);
+    requestAnimationFrame(() => {
+        _calUpdateShadowFill();
+        _calUpdateShadow();
+    });
 }
 
 window.addEventListener('resize', _calScheduleShadowUpdate);
