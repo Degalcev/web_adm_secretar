@@ -111,8 +111,6 @@
   flex: none;
 }
 
-.cal-rooms-hdr-cell:last-child {
-
 .cal-rooms-hdr-cell {
   flex: 1;
   padding: 10px 8px;
