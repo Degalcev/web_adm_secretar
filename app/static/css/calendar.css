@@ -379,6 +379,7 @@
   .cal-day-tab { display: none; }
   .cal-toolbar-spacer { display: none; }
   .cal-add-label { display: none; }
+  .cal-add-btn { margin-left: auto; }
 
   /* Мобильные компактные вкладки */
   .cal-mob-day {
