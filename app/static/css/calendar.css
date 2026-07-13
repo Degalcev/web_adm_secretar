@@ -108,7 +108,7 @@
   position: absolute;
   top: -1px;
   height: 2px;
-  background: var(--accent-ambient);
+  background: rgba(0, 0, 0, 0.15);
   pointer-events: none;
   z-index: 10;
   transition: left 0.12s ease, width 0.12s ease;
@@ -151,8 +151,8 @@
 .cal-day-tab.active {
   margin-top: -6px;
   padding: 12px 4px 14px;
-  background: var(--accent-ambient);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--accent);
   font-weight: 600;
   z-index: 4;
 }
@@ -214,7 +214,7 @@
 
 .cal-time-header {
   height: 36px;
-  background: var(--accent-ambient);
+  background: rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -226,7 +226,7 @@
   position: absolute;
   right: 6px;
   font-size: 0.625rem;
-  color: #fff;
+  color: var(--fg-subtle);
   top: 0;
 }
 
@@ -252,12 +252,14 @@
   top: 0;
   z-index: 6;
   height: 36px;
-  background: var(--accent-ambient);
-  color: #fff;
-  border-bottom: 2px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--fg-subtle);
+  border-bottom: 1px solid var(--border);
   padding: 6px 8px;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   text-align: center;
   display: flex;
   align-items: center;
