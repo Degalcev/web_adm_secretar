@@ -107,7 +107,7 @@
   background: var(--bg-elevated);
   pointer-events: none;
   z-index: 10;
-  transition: left 0.18s ease, width 0.18s ease;
+  transition: left 0.12s ease, width 0.12s ease;
 }
 
 /* ─── Day Tabs ──────────────────────────────────────────────────────── */
@@ -124,9 +124,9 @@
 .cal-day-tab {
   flex: 1;
   min-width: 0;
-  padding: 12px 4px 13px;
+  padding: 8px 4px 10px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -134,19 +134,19 @@
   color: var(--fg-muted);
   border: none;
   border-radius: 10px 10px 0 0;
-  transition: background 0.22s ease, color 0.22s ease, margin-top 0.22s ease, padding 0.22s ease, z-index 0s;
+  transition: background 0.12s ease, color 0.12s ease, margin-top 0.12s ease, padding 0.12s ease;
   z-index: 1;
 }
 
 .cal-day-tab:hover {
   background: color-mix(in srgb, var(--surface) 80%, var(--bg));
   margin-top: -2px;
-  padding-bottom: 15px;
+  padding-bottom: 12px;
 }
 
 .cal-day-tab.active {
   margin-top: -6px;
-  padding: 16px 4px 17px;
+  padding: 12px 4px 14px;
   background: var(--bg-elevated);
   color: var(--accent);
   font-weight: 600;
@@ -163,16 +163,16 @@
 
 .cal-day-tab .dn {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   display: block;
 }
 
 .cal-day-tab .dd {
   display: block;
   font-weight: 500;
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   opacity: 0.7;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 
@@ -456,8 +456,8 @@
   .cal-toolbar { padding: 10px 12px; gap: 8px; }
   .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
   .cal-day-tabs { padding: 8px 8px 0; gap: 4px; overflow-x: auto; }
-  .cal-day-tab { min-width: 48px; flex: none; padding: 8px 6px 10px; font-size: 0.75rem; }
-  .cal-day-tab .dn { font-size: 0.75rem; }
-  .cal-day-tab .dd { font-size: 0.625rem; }
+  .cal-day-tab { min-width: 48px; flex: none; padding: 6px 6px 8px; font-size: 0.6875rem; }
+  .cal-day-tab .dn { font-size: 0.6875rem; }
+  .cal-day-tab .dd { font-size: 0.5625rem; }
   .cal { min-width: 500px; }
 }

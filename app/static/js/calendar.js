@@ -125,7 +125,7 @@ function _calRenderTabs() {
         const isToday = ds === today;
         const isWeekend = i >= 5;
         const cls = `cal-day-tab${act ? ' active' : ''}${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
-        html += `<div class="${cls}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES_FULL[i]}</span><span class="dd">${d.getDate()}</span></div>`;
+        html += `<div class="${cls}" onclick="calSelectDay(${i})"><span class="dn">${CAL_DAY_NAMES_FULL[i]}</span><span class="dd">${d.getDate()} ${CAL_MONTHS_GEN[d.getMonth()]}</span></div>`;
     }
     return html;
 }
