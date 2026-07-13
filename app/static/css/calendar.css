@@ -93,6 +93,21 @@
 
 .cal-toolbar-sep { width: 1px; height: 24px; background: var(--border); }
 
+.cal-add-btn {
+  padding: 6px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.12s;
+}
+.cal-add-btn:hover { opacity: 0.85; }
+
 .cal-filter-select {
   width: 100%;
   padding: 8px 12px;
@@ -375,6 +390,7 @@
 
   /* Десктопные вкладки скрываем на мобильном */
   .cal-day-tab { display: none; }
+  .cal-add-btn { display: none; }
 
   /* Мобильные компактные вкладки */
   .cal-mob-day {
