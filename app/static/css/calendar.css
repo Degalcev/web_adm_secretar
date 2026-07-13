@@ -1,5 +1,6 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
 .page#page-calendar.active {
+  overflow: hidden;
   padding: 0;
 }
 
@@ -79,16 +80,6 @@
   min-height: 0;
   flex: 1;
   background: var(--bg-elevated);
-}
-
-.cal-shadow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.25));
 }
 
 /* ─── Grid Area ────────────────────────────────────────────────────── */
