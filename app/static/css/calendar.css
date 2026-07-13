@@ -152,7 +152,7 @@
   margin-top: -6px;
   padding: 12px 4px 14px;
   background: rgba(0, 0, 0, 0.15);
-  color: var(--accent);
+  color: var(--fg-subtle);
   font-weight: 600;
   z-index: 4;
 }
@@ -238,13 +238,13 @@
 .cal-col {
   flex: 1;
   position: relative;
-  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   background: transparent;
   overflow: visible;
 }
 
-.cal-col:first-child {
-  border-left: none;
+.cal-col:last-child {
+  border-right: none;
 }
 
 .cal-col-hdr {
