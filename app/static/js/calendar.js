@@ -496,13 +496,32 @@ function _calOnEvEnter(e) {
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
 
     if (isSplit || isRightEdge) {
-        // Expand left: anchor right edge
         el.style.left = 'auto';
         el.style.right = (window.innerWidth - rect.right) + 'px';
     } else {
         el.style.left = rect.left + 'px';
         el.style.right = 'auto';
     }
+
+    // Clamp inside cal-wrap boundaries
+    if (wrapRect) {
+        requestAnimationFrame(() => {
+            const r = el.getBoundingClientRect();
+            const margin = 4;
+            let newLeft = r.left;
+            if (r.right > wrapRect.right - margin) {
+                newLeft = wrapRect.right - margin - r.width;
+            }
+            if (newLeft < wrapRect.left + margin) {
+                newLeft = wrapRect.left + margin;
+            }
+            if (newLeft !== r.left) {
+                el.style.left = newLeft + 'px';
+                el.style.right = 'auto';
+            }
+        });
+    }
+
     _calHoveredEl = el;
 }
 
