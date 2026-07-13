@@ -136,7 +136,7 @@
   text-align: center;
   text-decoration: none;
   background: rgba(0, 0, 0, 0.35);
-  color: var(--fg-subtle);
+  color: var(--fg-muted);
   border: none;
   border-radius: 10px 10px 0 0;
   transition: background 0.12s ease, color 0.12s ease, margin-top 0.12s ease, padding 0.12s ease;
@@ -144,7 +144,7 @@
 }
 
 .cal-day-tab:hover {
-  background: color-mix(in srgb, var(--surface) 80%, var(--bg));
+  background: rgba(0, 0, 0, 0.28);
   margin-top: -2px;
   padding-bottom: 12px;
 }
@@ -239,13 +239,19 @@
 .cal-col {
   flex: 1;
   position: relative;
-  border-left: 1px solid var(--border);
   background: transparent;
   overflow: visible;
 }
 
-.cal-col:first-child {
-  border-left: none;
+.cal-col + .cal-col::before {
+  content: '';
+  position: absolute;
+  top: 36px;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: var(--border);
+  pointer-events: none;
 }
 
 .cal-col-hdr {
@@ -254,9 +260,8 @@
   z-index: 6;
   height: 36px;
   background: rgba(0, 0, 0, 0.15);
-  margin-left: -1px;
-  padding-left: calc(8px + 1px);
   border-bottom: 1px solid var(--border);
+  padding: 6px 8px;
   font-size: 0.6875rem;
   font-weight: 700;
   color: var(--fg-subtle);
