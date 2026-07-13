@@ -232,9 +232,8 @@ function renderCalendar(full) {
 
         const panelEl = document.getElementById('cal-panel');
         const shadowPath = document.getElementById('cal-shadow-path');
-        const activeTab = panelEl.querySelector('.cal-day-tab.active');
-        if (shadowPath && activeTab) {
-            shadowPath.setAttribute('fill', getComputedStyle(activeTab).backgroundColor);
+        if (panelEl && shadowPath) {
+            shadowPath.setAttribute('fill', getComputedStyle(panelEl).backgroundColor);
         }
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
@@ -343,7 +342,8 @@ function _calUpdateShadow() {
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    const r = 12;
+    const rt = 10;  // tab corner radius (matches .cal-day-tab border-radius)
+    const rp = 12;  // panel corner radius (matches .cal-panel border-radius)
     const tx = tabRect.left - panelRect.left;
     const ty = tabRect.top - panelRect.top;
     const tw = tabRect.width;
@@ -351,22 +351,21 @@ function _calUpdateShadow() {
     const pw = panelRect.width;
     const ph = panelRect.height;
 
-    // L-contour with arc corners (matches CSS border-radius exactly)
     const d = [
-        `M ${tx + r} ${ty}`,
-        `L ${tx + tw - r} ${ty}`,
-        `A ${r} ${r} 0 0 1 ${tx + tw} ${ty + r}`,
+        `M ${tx + rt} ${ty}`,
+        `L ${tx + tw - rt} ${ty}`,
+        `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
         `L ${tx + tw} ${ty + th}`,
-        `L ${pw - r} ${ty + th}`,
-        `A ${r} ${r} 0 0 1 ${pw} ${ty + th + r}`,
-        `L ${pw} ${ph - r}`,
-        `A ${r} ${r} 0 0 1 ${pw - r} ${ph}`,
-        `L ${r} ${ph}`,
-        `A ${r} ${r} 0 0 1 0 ${ph - r}`,
+        `L ${pw - rp} ${ty + th}`,
+        `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
+        `L ${pw} ${ph - rp}`,
+        `A ${rp} ${rp} 0 0 1 ${pw - rp} ${ph}`,
+        `L ${rp} ${ph}`,
+        `A ${rp} ${rp} 0 0 1 0 ${ph - rp}`,
         `L 0 ${ty + th}`,
         `L ${tx} ${ty + th}`,
-        `L ${tx} ${ty + r}`,
-        `A ${r} ${r} 0 0 1 ${tx + r} ${ty}`,
+        `L ${tx} ${ty + rt}`,
+        `A ${rt} ${rt} 0 0 1 ${tx + rt} ${ty}`,
         'Z'
     ].join(' ');
 
