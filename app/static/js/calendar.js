@@ -697,6 +697,8 @@ function _calInitMobileSwipe() {
     panel._mobSwipeInited = true;
 
     panel.addEventListener('touchstart', e => {
+        // Не перехватывать свайп на фильтре залов
+        if (e.target.closest('.cal-mob-room-bar')) { _mobSwiping = false; return; }
         _mobSwipeStartX = e.touches[0].clientX;
         _mobSwipeStartY = e.touches[0].clientY;
         _mobSwiping = true;
