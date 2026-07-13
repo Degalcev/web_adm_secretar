@@ -225,6 +225,7 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg"><defs><filter id="tabShadow"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.25)"/></filter></defs><path id="cal-shadow-path" fill="rgba(0,0,0,0.01)" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
@@ -235,6 +236,7 @@ function renderCalendar(full) {
 
         calUpdateNowLine();
         _calInitHoverFix();
+        _calUpdateShadow();
 
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
@@ -248,6 +250,7 @@ function renderCalendar(full) {
             gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
+            _calUpdateShadow();
         }
     }
 }
@@ -319,6 +322,47 @@ function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
 function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
+
+// ─── Shadow SVG ─────────────────────────────────────────────────────
+
+function _calUpdateShadow() {
+    const activeTab = document.querySelector('.cal-day-tab.active');
+    const header = document.querySelector('.cal-rooms-header');
+    const panel = document.getElementById('cal-panel');
+    const path = document.getElementById('cal-shadow-path');
+    if (!activeTab || !header || !panel || !path) return;
+
+    const tabRect = activeTab.getBoundingClientRect();
+    const hdrRect = header.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+
+    const x = tabRect.left - panelRect.left;
+    const y = tabRect.top - panelRect.top;
+    const w = tabRect.width;
+    const tabH = tabRect.height;
+    const hdrW = hdrRect.width;
+    const hdrH = hdrRect.height;
+    const r = 10;
+
+    const d = [
+        `M ${x + r} ${y}`,
+        `L ${x + w - r} ${y}`,
+        `Q ${x + w} ${y} ${x + w} ${y + r}`,
+        `L ${x + w} ${y + tabH}`,
+        `L ${hdrW} ${y + tabH}`,
+        `L ${hdrW} ${y + tabH + hdrH}`,
+        `L 0 ${y + tabH + hdrH}`,
+        `L 0 ${y + tabH}`,
+        `L ${x} ${y + tabH}`,
+        `L ${x} ${y + r}`,
+        `Q ${x} ${y} ${x + r} ${y}`,
+        'Z'
+    ].join(' ');
+
+    path.setAttribute('d', d);
+}
+
+window.addEventListener('resize', _calUpdateShadow);
 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
