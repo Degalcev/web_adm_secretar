@@ -108,9 +108,9 @@
 .cal-tab-bridge {
   position: absolute;
   height: 12px;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+  background: var(--bg-elevated);
   pointer-events: none;
-  z-index: 3;
+  z-index: 10;
 }
 
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
