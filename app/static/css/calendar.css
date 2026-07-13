@@ -184,6 +184,7 @@
   overflow-y: auto;
   min-height: 0;
   background: var(--bg-elevated);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0;
