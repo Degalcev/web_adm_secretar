@@ -492,8 +492,11 @@ function _calOnEvEnter(e) {
     el.style.minWidth = rect.width + 'px';
     el.style.maxWidth = Math.max(rect.width * 2.5, 300) + 'px';
 
+    const isSplit = el.classList.contains('split');
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
-    if (isRightEdge) {
+
+    if (isSplit || isRightEdge) {
+        // Expand left: anchor right edge
         el.style.left = 'auto';
         el.style.right = (window.innerWidth - rect.right) + 'px';
     } else {
