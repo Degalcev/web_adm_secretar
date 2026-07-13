@@ -352,8 +352,6 @@ function _calUpdateShadow() {
     const hdrW = hdrRect.width;
     const hdrH = hdrRect.height;
 
-    svgEl.setAttribute('viewBox', `0 0 ${hdrW} ${y + tabH + hdrH}`);
-
     const d = [
         `M ${x} ${y}`,
         `L ${x + w} ${y}`,
