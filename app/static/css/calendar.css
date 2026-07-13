@@ -103,12 +103,12 @@
   flex: 1;
 }
 
-/* ─── Tab Bridge (white strip under active tab) ─────────────────────── */
+/* ─── Tab Bridge (strip under active tab) ───────────────────────────── */
 .cal-tab-bridge {
   position: absolute;
   top: -1px;
   height: 2px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-elevated);
   pointer-events: none;
   z-index: 10;
   transition: left 0.12s ease, width 0.12s ease;
@@ -151,7 +151,7 @@
 .cal-day-tab.active {
   margin-top: -6px;
   padding: 12px 4px 14px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-elevated);
   color: var(--fg-subtle);
   font-weight: 600;
   z-index: 4;
@@ -214,7 +214,7 @@
 
 .cal-time-header {
   height: 36px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-elevated);
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -238,13 +238,8 @@
 .cal-col {
   flex: 1;
   position: relative;
-  border-right: 1px solid var(--border);
   background: transparent;
   overflow: visible;
-}
-
-.cal-col:last-child {
-  border-right: none;
 }
 
 .cal-col-hdr {
@@ -252,7 +247,7 @@
   top: 0;
   z-index: 6;
   height: 36px;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-elevated);
   color: var(--fg-subtle);
   border-bottom: 1px solid var(--border);
   padding: 6px 8px;
