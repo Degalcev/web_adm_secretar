@@ -107,7 +107,7 @@
 .cal-tab-bridge {
   position: absolute;
   pointer-events: none;
-  z-index: 1;
+  z-index: 20;
 }
 
 .cal-tab-bridge canvas {
@@ -177,8 +177,6 @@
 }
 
 .cal-day-tab.active {
-  margin-top: -6px;
-  padding: 12px 4px 14px;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   color: var(--fg-subtle);
   font-weight: 600;
