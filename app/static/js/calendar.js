@@ -328,14 +328,17 @@ function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = 
 
 function _calPositionBridge() {
     const activeTab = document.querySelector('.cal-day-tab.active');
+    const header = document.querySelector('.cal-rooms-header');
     const panel = document.getElementById('cal-panel');
     const bridge = document.getElementById('cal-tab-bridge');
-    if (!activeTab || !panel || !bridge) return;
-    const btnRect = activeTab.getBoundingClientRect();
+    if (!activeTab || !header || !panel || !bridge) return;
+    const tabRect = activeTab.getBoundingClientRect();
+    const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
-    bridge.style.left = (btnRect.left - panelRect.left) + 'px';
-    bridge.style.width = btnRect.width + 'px';
-    bridge.style.top = (btnRect.bottom - panelRect.top - 10) + 'px';
+    bridge.style.left = (tabRect.left - panelRect.left) + 'px';
+    bridge.style.width = tabRect.width + 'px';
+    bridge.style.top = (tabRect.top - panelRect.top) + 'px';
+    bridge.style.height = (hdrRect.bottom - tabRect.top) + 'px';
 }
 
 window.addEventListener('resize', _calPositionBridge);

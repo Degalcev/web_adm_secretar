@@ -107,10 +107,14 @@
 /* ─── Tab Bridge (covers shadow seam between active tab and header) ── */
 .cal-tab-bridge {
   position: absolute;
-  height: 16px;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   pointer-events: none;
-  z-index: 10;
+  z-index: -1;
+  box-shadow:
+    0 -3px 10px rgba(0, 0, 0, 0.2),
+    -3px 0 10px rgba(0, 0, 0, 0.12),
+    3px 0 10px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
@@ -126,10 +130,6 @@
   display: flex;
   flex-shrink: 0;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  box-shadow:
-    -2px 0 8px rgba(0, 0, 0, 0.12),
-    2px 0 8px rgba(0, 0, 0, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cal-rooms-hdr-cell {
@@ -195,10 +195,6 @@
   color: var(--fg-subtle);
   font-weight: 600;
   z-index: 4;
-  box-shadow:
-    0 -3px 10px rgba(0, 0, 0, 0.18),
-    -2px 0 8px rgba(0, 0, 0, 0.12),
-    2px 0 8px rgba(0, 0, 0, 0.12);
 }
 
 .cal-day-tab.weekend {
