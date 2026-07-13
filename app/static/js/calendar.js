@@ -242,10 +242,19 @@ function renderCalendar(full) {
 
         calUpdateNowLine();
         _calInitHoverFix();
-        _calUpdateShadow();
+        _calScheduleShadowUpdate();
 
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+
+        // ResizeObserver для пересчёта тени при изменении размера панели
+        if (!_calShadowRO) {
+            const panelEl = document.getElementById('cal-panel');
+            if (panelEl) {
+                _calShadowRO = new ResizeObserver(_calScheduleShadowUpdate);
+                _calShadowRO.observe(panelEl);
+            }
+        }
     } else {
         _calNowLines = [];
         _calNowTimeLabel = null;
@@ -256,7 +265,7 @@ function renderCalendar(full) {
             gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
-            _calUpdateShadow();
+            _calScheduleShadowUpdate();
         }
     }
 }
@@ -333,37 +342,40 @@ function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = 
 
 function _calUpdateShadow() {
     const activeTab = document.querySelector('.cal-day-tab.active');
-    const header = document.querySelector('.cal-rooms-header');
     const panel = document.getElementById('cal-panel');
     const path = document.getElementById('cal-shadow-path');
-    if (!activeTab || !header || !panel || !path) return;
+    if (!activeTab || !panel || !path) return;
 
     const tabRect = activeTab.getBoundingClientRect();
-    const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    const rt = 10;  // tab border-radius
-    const rp = 12;  // panel border-radius
-    const tx = tabRect.left - panelRect.left;
-    const ty = tabRect.top - panelRect.top;
-    const tw = tabRect.width;
-    const th = tabRect.height;
-    const pw = panelRect.width;
-    const ph = panelRect.height;
+    const inset = 1;
+    const rt = 10;
+    const rp = 12;
+    const re = 3;
+
+    const tx = Math.round(tabRect.left - panelRect.left);
+    const ty = Math.round(tabRect.top - panelRect.top);
+    const tw = Math.round(tabRect.width);
+    const th = Math.round(tabRect.height);
+    const pw = Math.round(panelRect.width) - inset;
+    const ph = Math.round(panelRect.height) - inset;
 
     const d = [
         `M ${tx + rt} ${ty}`,
         `L ${tx + tw - rt} ${ty}`,
         `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
-        `L ${tx + tw} ${ty + th}`,
+        `L ${tx + tw} ${ty + th - re}`,
+        `A ${re} ${re} 0 0 0 ${tx + tw + re} ${ty + th}`,
         `L ${pw - rp} ${ty + th}`,
         `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
         `L ${pw} ${ph - rp}`,
         `A ${rp} ${rp} 0 0 1 ${pw - rp} ${ph}`,
-        `L ${rp} ${ph}`,
-        `A ${rp} ${rp} 0 0 1 0 ${ph - rp}`,
-        `L 0 ${ty + th}`,
-        `L ${tx} ${ty + th}`,
+        `L ${rp + inset} ${ph}`,
+        `A ${rp} ${rp} 0 0 1 ${inset} ${ph - rp}`,
+        `L ${inset} ${ty + th}`,
+        `L ${tx - re} ${ty + th}`,
+        `A ${re} ${re} 0 0 0 ${tx} ${ty + th - re}`,
         `L ${tx} ${ty + rt}`,
         `A ${rt} ${rt} 0 0 1 ${tx + rt} ${ty}`,
         'Z'
@@ -372,7 +384,13 @@ function _calUpdateShadow() {
     path.setAttribute('d', d);
 }
 
-window.addEventListener('resize', _calUpdateShadow);
+let _calShadowRO = null;
+
+function _calScheduleShadowUpdate() {
+    requestAnimationFrame(_calUpdateShadow);
+}
+
+window.addEventListener('resize', _calScheduleShadowUpdate);
 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
