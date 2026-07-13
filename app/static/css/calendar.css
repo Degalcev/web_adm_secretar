@@ -116,7 +116,7 @@
 .cal-tab-bridge {
   position: absolute;
   top: -1px;
-  height: 2px;
+  height: 4px;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   pointer-events: none;
   z-index: 10;
@@ -164,6 +164,10 @@
   color: var(--fg-subtle);
   font-weight: 600;
   z-index: 4;
+  box-shadow:
+    0 -4px 12px rgba(0, 0, 0, 0.25),
+    -3px 0 10px rgba(0, 0, 0, 0.15),
+    3px 0 10px rgba(0, 0, 0, 0.15);
 }
 
 .cal-day-tab.weekend {
@@ -241,6 +245,9 @@
   border-bottom: 1px solid var(--border);
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow:
+    -3px 0 10px rgba(0, 0, 0, 0.15),
+    3px 0 10px rgba(0, 0, 0, 0.15);
 }
 
 .cal-rooms-hdr-cell {
