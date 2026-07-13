@@ -134,7 +134,6 @@ function _calRenderTabs() {
 
 function _calRenderGrid() {
     const locations = store.allLocations || [];
-    const numCols = locations.length;
 
     let html = '<div class="cal-rooms-header">';
     html += '<div class="cal-rooms-hdr-cell"></div>';
@@ -432,15 +431,6 @@ document.addEventListener('mousemove', function(e) {
         _calReset(_calHoveredEl);
     }
 });
-
-function _calOnEvLeave(e) {
-    const el = e.currentTarget;
-    el.style.position = 'absolute';
-    el.style.top = el.dataset.origTop || '';
-    el.style.left = el.dataset.origLeft || '';
-    el.style.right = 'auto';
-    _calHoveredEl = null;
-}
 
 // ─── Timer ──────────────────────────────────────────────────────────
 

@@ -1,10 +1,8 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
 .page#page-calendar.active {
-  overflow: hidden;
   padding: 0;
 }
 
-/* ─── Cal Container ─────────────────────────────────────────────────── */
 .cal-container {
   display: flex;
   flex-direction: column;
@@ -13,7 +11,7 @@
   padding: 16px 24px;
 }
 
-/* ─── Toolbar (filter bar — matches .filter-bar style) ─────────────── */
+/* ─── Toolbar ──────────────────────────────────────────────────────── */
 .cal-toolbar {
   display: flex;
   align-items: flex-end;
@@ -28,11 +26,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-.cal-toolbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+.cal-toolbar-nav { display: flex; align-items: center; gap: 6px; }
 
 .cal-toolbar-title {
   font-size: 1rem;
@@ -41,19 +35,9 @@
   min-width: 200px;
 }
 
-.cal-toolbar-sep {
-  width: 1px;
-  height: 24px;
-  background: var(--border);
-}
+.cal-toolbar-sep { width: 1px; height: 24px; background: var(--border); }
 
-.cal-filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 120px;
-  flex: 1;
-}
+.cal-filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 120px; flex: 1; }
 
 .cal-filter-label {
   font-size: 0.625rem;
@@ -82,16 +66,10 @@
   padding-right: 30px;
 }
 
-.cal-filter-select:focus {
-  border-color: var(--accent);
-}
+.cal-filter-select:focus { border-color: var(--accent); }
+.cal-filter-select option { background: var(--bg-elevated); color: var(--fg); }
 
-.cal-filter-select option {
-  background: var(--bg-elevated);
-  color: var(--fg);
-}
-
-/* ─── Calendar Panel (tabs + grid unified card) ─────────────────────── */
+/* ─── Panel + Shadow ───────────────────────────────────────────────── */
 .cal-panel {
   position: relative;
   border-radius: var(--radius-lg);
@@ -103,16 +81,17 @@
   background: var(--bg-elevated);
 }
 
-/* ─── Shadow Layer (clip-path + drop-shadow behind tab+header) ─────── */
 .cal-shadow {
   position: absolute;
+  top: 0;
+  left: 0;
   z-index: 0;
   pointer-events: none;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.25));
 }
 
-/* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
+/* ─── Grid Area ────────────────────────────────────────────────────── */
 #cal-grid-area {
   display: flex;
   flex-direction: column;
@@ -138,7 +117,7 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* ─── Day Tabs ──────────────────────────────────────────────────────── */
+/* ─── Day Tabs ─────────────────────────────────────────────────────── */
 .cal-day-tabs {
   display: flex;
   padding: 10px 10px 0;
@@ -162,15 +141,11 @@
   color: var(--fg-muted);
   border: none;
   border-radius: 10px 10px 0 0;
-  transition: background 0.12s ease, color 0.12s ease, margin-top 0.12s ease, padding 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
   z-index: 1;
 }
 
-.cal-day-tab:hover {
-  background: rgba(0, 0, 0, 0.28);
-  margin-top: -2px;
-  padding-bottom: 12px;
-}
+.cal-day-tab:hover { background: rgba(0, 0, 0, 0.28); }
 
 .cal-day-tab.active {
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
@@ -179,32 +154,13 @@
   z-index: 4;
 }
 
-.cal-day-tab.weekend {
-  color: var(--danger);
-}
+.cal-day-tab.weekend { color: var(--danger); }
+.cal-day-tab.weekend.active { color: var(--danger); }
 
-.cal-day-tab.weekend.active {
-  color: var(--danger);
-}
+.cal-day-tab .dn { font-weight: 600; font-size: 0.8125rem; display: block; }
+.cal-day-tab .dd { display: block; font-weight: 500; font-size: 0.625rem; opacity: 0.7; margin-top: 2px; }
 
-.cal-day-tab .dn {
-  font-weight: 600;
-  font-size: 0.8125rem;
-  display: block;
-}
-
-.cal-day-tab .dd {
-  display: block;
-  font-weight: 500;
-  font-size: 0.625rem;
-  opacity: 0.7;
-  margin-top: 2px;
-}
-
-
-
-
-/* ─── Calendar Grid Container ───────────────────────────────────────── */
+/* ─── Grid Container ───────────────────────────────────────────────── */
 .cal-wrap {
   flex: 1;
   overflow-y: auto;
@@ -217,7 +173,6 @@
 
 .cal-wrap::-webkit-scrollbar { display: none; }
 
-/* ─── Calendar Grid ─────────────────────────────────────────────────── */
 .cal {
   display: flex;
   position: relative;
@@ -226,12 +181,7 @@
   overflow: visible;
 }
 
-.cal-time {
-  width: 52px;
-  flex-shrink: 0;
-  position: relative;
-  background: transparent;
-}
+.cal-time { width: 52px; flex-shrink: 0; position: relative; background: transparent; }
 
 .cal-time-label {
   position: absolute;
@@ -241,39 +191,7 @@
   top: 0;
 }
 
-.cal-time-body {
-  padding-top: 30px;
-  position: relative;
-}
-
-/* ─── Rooms Header (static, above scrollable grid) ──────────────────── */
-.cal-rooms-header {
-  display: flex;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  box-shadow:
-    -3px 0 10px rgba(0, 0, 0, 0.15),
-    3px 0 10px rgba(0, 0, 0, 0.15);
-}
-
-.cal-rooms-hdr-cell {
-  flex: 1;
-  padding: 10px 8px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: var(--fg-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-.cal-rooms-hdr-cell:first-child {
-  width: 52px;
-  flex-shrink: 0;
-  flex: none;
-}
+.cal-time-body { padding-top: 30px; position: relative; }
 
 .cal-col {
   flex: 1;
@@ -283,11 +201,9 @@
   overflow: visible;
 }
 
-.cal-col:first-child {
-  border-left: none;
-}
+.cal-col:first-child { border-left: none; }
 
-/* ─── Hour Lines ────────────────────────────────────────────────────── */
+/* ─── Hour Lines ───────────────────────────────────────────────────── */
 .hour-line {
   position: absolute;
   left: 0;
@@ -298,7 +214,7 @@
   opacity: 0.3;
 }
 
-/* ─── Event Cards ───────────────────────────────────────────────────── */
+/* ─── Event Cards ──────────────────────────────────────────────────── */
 .cal-ev {
   position: absolute;
   border-radius: var(--radius-sm);
@@ -328,135 +244,34 @@
 .cal-ev:hover.h2 { border-color: var(--warning); border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 55%, var(--bg)); }
 .cal-ev:hover.h3 { border-color: var(--danger); border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 55%, var(--bg)); }
 
-.cal-ev .ev-type {
-  font-weight: 600;
-  color: var(--fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.6875rem;
-  line-height: 1.3;
-}
+.cal-ev .ev-type { font-weight: 600; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.6875rem; line-height: 1.3; }
+.cal-ev .ev-time { color: var(--fg); font-weight: 500; font-size: 0.625rem; line-height: 1.3; }
+.cal-ev .ev-org { color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; font-size: 0.5625rem; line-height: 1.3; opacity: 0.8; }
+.cal-ev .ev-desc { color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.5625rem; margin-top: 2px; line-height: 1.3; opacity: 0.65; }
 
-.cal-ev .ev-time {
-  color: var(--fg);
-  font-weight: 500;
-  font-size: 0.625rem;
-  line-height: 1.3;
-}
-
-.cal-ev .ev-org {
-  color: var(--fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
-  font-size: 0.5625rem;
-  line-height: 1.3;
-  opacity: 0.8;
-}
-
-.cal-ev .ev-desc {
-  color: var(--fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 0.5625rem;
-  margin-top: 2px;
-  line-height: 1.3;
-  opacity: 0.65;
-}
-
-.cal-ev .ev-status {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
+.cal-ev .ev-status { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .cal-ev .ev-status.active { background: var(--warning); }
 .cal-ev .ev-status.done { background: var(--success); }
 .cal-ev .ev-status.missed { background: var(--danger); }
 
-.cal-ev .ev-badges {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
+.cal-ev .ev-badges { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+.cal-ev .ev-badge { font-size: 0.5rem; color: var(--fg-muted); display: inline-flex; align-items: center; gap: 2px; background: none; padding: 0; border-radius: 3px; }
+.cal-ev .ev-badge svg { width: 8px; height: 8px; flex-shrink: 0; }
 
-.cal-ev .ev-badge {
-  font-size: 0.5rem;
-  color: var(--fg-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  background: none;
-  padding: 0;
-  border-radius: 3px;
-}
+.cal-ev:hover .ev-org, .cal-ev:hover .ev-badges { display: flex !important; }
+.cal-ev:hover .ev-type { white-space: nowrap; overflow: visible; font-size: 0.8125rem; }
+.cal-ev:hover .ev-time { font-size: 0.6875rem; }
+.cal-ev:hover .ev-org { white-space: nowrap; overflow: visible; font-size: 0.6875rem; }
+.cal-ev:hover .ev-desc { font-size: 0.6875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.cal-ev:hover .ev-badge { font-size: 0.625rem; }
+.cal-ev:hover .ev-badge svg { width: 11px; height: 11px; }
 
-.cal-ev .ev-badge svg {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-}
-
-/* Hover expand */
-.cal-ev:hover .ev-org,
-.cal-ev:hover .ev-badges {
-  display: flex !important;
-}
-
-.cal-ev:hover .ev-type {
-  white-space: nowrap;
-  overflow: visible;
-  font-size: 0.8125rem;
-}
-
-.cal-ev:hover .ev-time {
-  font-size: 0.6875rem;
-}
-
-.cal-ev:hover .ev-org {
-  white-space: nowrap;
-  overflow: visible;
-  font-size: 0.6875rem;
-}
-
-.cal-ev:hover .ev-desc {
-  font-size: 0.6875rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.cal-ev:hover .ev-badge {
-  font-size: 0.625rem;
-}
-
-.cal-ev:hover .ev-badge svg {
-  width: 11px;
-  height: 11px;
-}
-
-/* Split events — hide extra, show on hover */
 .cal-ev.split:not(:hover) .ev-org { display: none; }
 .cal-ev.split:not(:hover) .ev-desc { display: none; }
 .cal-ev.split:not(:hover) .ev-badges { display: none; }
 
-/* ─── Now Line ──────────────────────────────────────────────────────── */
-.now-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--danger);
-  z-index: 10;
-  pointer-events: none;
-}
+/* ─── Now Line ─────────────────────────────────────────────────────── */
+.now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 10; pointer-events: none; }
 
 .now-time {
   position: absolute;
@@ -472,7 +287,7 @@
   right: 4px;
 }
 
-/* ─── Mobile ────────────────────────────────────────────────────────── */
+/* ─── Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .cal-container { padding: 12px; }
   .cal-toolbar { padding: 10px 12px; gap: 8px; }
