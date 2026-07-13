@@ -110,7 +110,7 @@ function _calRenderToolbar() {
     html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 12px;font-size:0.8125rem;font-weight:600" onclick="calGoToday()">Сегодня</button>';
 
     html += '<div class="cal-toolbar-spacer"></div>';
-    html += '<button class="cal-add-btn" onclick="openAddEventModal()">+ Добавить</button>';
+    html += '<button class="cal-week-nav-btn cal-add-btn" style="width:auto;padding:0 12px;font-size:0.8125rem;font-weight:600" onclick="openAddEventModal()">+ <span class="cal-add-label">Добавить</span></button>';
 
     html += '<div class="cal-date-picker" id="cal-date-picker">';
     html += '<select id="cal-month-sel" class="cal-filter-select"></select>';
