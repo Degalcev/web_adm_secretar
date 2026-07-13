@@ -490,7 +490,7 @@ function _calOnEvEnter(e) {
     el.style.top = rect.top + 'px';
     el.style.width = 'auto';
     el.style.minWidth = rect.width + 'px';
-    el.style.maxWidth = (rect.width * 1.8) + 'px';
+    el.style.maxWidth = Math.max(rect.width * 2.5, 300) + 'px';
 
     const isRightEdge = wrapRect && (rect.right > wrapRect.right - 40);
     if (isRightEdge) {
