@@ -225,7 +225,7 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" fill="none" stroke="black" stroke-width="1" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="rgba(0,0,0,0.3)"/></filter></defs><path id="cal-shadow-path" fill="none" stroke="black" stroke-width="0.01" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;

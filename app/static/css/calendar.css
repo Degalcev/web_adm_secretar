@@ -102,19 +102,15 @@
   display: flex;
   flex-shrink: 0;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 .cal-rooms-hdr-cell:first-child {
   width: 52px;
   flex-shrink: 0;
   flex: none;
-  border-radius: var(--radius-lg) 0 0 0;
 }
 
 .cal-rooms-hdr-cell:last-child {
-  border-radius: 0 var(--radius-lg) 0 0;
-}
 
 .cal-rooms-hdr-cell {
   flex: 1;
