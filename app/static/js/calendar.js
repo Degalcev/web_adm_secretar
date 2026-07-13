@@ -342,7 +342,7 @@ function _calUpdateShadow() {
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    const r = 10;
+    const r = 12;
     const tx = tabRect.left - panelRect.left;
     const ty = tabRect.top - panelRect.top;
     const tw = tabRect.width;
@@ -350,21 +350,22 @@ function _calUpdateShadow() {
     const pw = panelRect.width;
     const ph = panelRect.height;
 
+    // L-contour with arc corners (matches CSS border-radius exactly)
     const d = [
         `M ${tx + r} ${ty}`,
-        `H ${tx + tw - r}`,
-        `Q ${tx + tw} ${ty} ${tx + tw} ${ty + r}`,
-        `V ${ty + th}`,
-        `H ${pw - r}`,
-        `Q ${pw} ${ty + th} ${pw} ${ty + th + r}`,
-        `V ${ph - r}`,
-        `Q ${pw} ${ph} ${pw - r} ${ph}`,
-        `H ${r}`,
-        `Q 0 ${ph} 0 ${ph - r}`,
-        `V ${ty + th}`,
-        `H ${tx}`,
-        `V ${ty + r}`,
-        `Q ${tx} ${ty} ${tx + r} ${ty}`,
+        `L ${tx + tw - r} ${ty}`,
+        `A ${r} ${r} 0 0 1 ${tx + tw} ${ty + r}`,
+        `L ${tx + tw} ${ty + th}`,
+        `L ${pw - r} ${ty + th}`,
+        `A ${r} ${r} 0 0 1 ${pw} ${ty + th + r}`,
+        `L ${pw} ${ph - r}`,
+        `A ${r} ${r} 0 0 1 ${pw - r} ${ph}`,
+        `L ${r} ${ph}`,
+        `A ${r} ${r} 0 0 1 0 ${ph - r}`,
+        `L 0 ${ty + th}`,
+        `L ${tx} ${ty + th}`,
+        `L ${tx} ${ty + r}`,
+        `A ${r} ${r} 0 0 1 ${tx + r} ${ty}`,
         'Z'
     ].join(' ');
 
