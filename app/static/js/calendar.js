@@ -335,8 +335,17 @@ function calUpdateNowLine() {
 
 // ─── Navigation ─────────────────────────────────────────────────────
 
-function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); calActiveDay = new Date(calWeekStart); renderCalendar(true); }
-function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); calActiveDay = new Date(calWeekStart); renderCalendar(true); }
+function _calSetActiveForWeek() {
+    const today = getMonday(new Date());
+    if (calWeekStart.getTime() === today.getTime()) {
+        calActiveDay = new Date();
+    } else {
+        calActiveDay = new Date(calWeekStart);
+    }
+}
+
+function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); _calSetActiveForWeek(); renderCalendar(true); }
+function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); _calSetActiveForWeek(); renderCalendar(true); }
 function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new Date(); renderCalendar(true); }
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
 
@@ -375,7 +384,7 @@ function calApplyDatePicker() {
     const m = parseInt(document.getElementById('cal-month-sel').value, 10);
     const y = parseInt(document.getElementById('cal-year-sel').value, 10);
     calWeekStart = calFirstWeekOf(y, m);
-    calActiveDay = new Date(calWeekStart);
+    _calSetActiveForWeek();
     const picker = document.getElementById('cal-date-picker');
     if (picker) picker.classList.remove('open');
     renderCalendar(true);
