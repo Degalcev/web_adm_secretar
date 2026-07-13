@@ -141,6 +141,7 @@
   z-index: 2;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;  /* ← вернуть, только для формы box-shadow */
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+  clip-path: inset(-14px -14px 0 -14px);
 }
 
 .cal-day-tab {
@@ -172,6 +173,7 @@
   padding: 10px 4px 12px;
   font-size: 0.8125rem;
   z-index: 4;
+  clip-path: inset(-14px -14px 0 -14px);
 }
 
 .cal-day-tab.weekend { color: var(--danger); }
