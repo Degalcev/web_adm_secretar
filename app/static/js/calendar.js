@@ -31,6 +31,14 @@ function initCalendar() {
             if (e.propertyName === 'padding') _calScheduleShadowUpdate();
         });
     });
+    // Close date picker on outside click
+    document.addEventListener('click', (e) => {
+        const picker = document.getElementById('cal-date-picker');
+        const trigger = document.querySelector('.cal-date-trigger');
+        if (picker && !picker.contains(e.target) && trigger && !trigger.contains(e.target)) {
+            picker.classList.remove('open');
+        }
+    });
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -83,34 +91,24 @@ function _calFindOverlapGroups(events) {
 // ─── Рендер: Toolbar ───────────────────────────────────────────────
 
 function _calRenderToolbar() {
-    const weekEnd = new Date(calWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-
-    let html = '<div class="cal-toolbar-nav">';
-    html += '<button class="btn btn-icon" onclick="calPrevWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>';
-    html += `<span class="cal-toolbar-title">${_calFmtDate(calWeekStart)} – ${_calFmtDate(weekEnd)}</span>`;
-    html += '<button class="btn btn-icon" onclick="calNextWeek()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>';
-    html += '<button class="btn btn-accent" onclick="calGoToday()">Сегодня</button>';
+    let html = '<div class="cal-week-nav">';
+    html += '<button class="cal-week-nav-btn" onclick="calPrevWeek()" aria-label="Предыдущая неделя">‹</button>';
+    html += '<button class="cal-week-nav-btn" onclick="calNextWeek()" aria-label="Следующая неделя">›</button>';
     html += '</div>';
+
+    html += '<div style="position:relative">';
+    html += '<button class="cal-date-trigger" onclick="calToggleDatePicker()">';
+    html += '<span id="cal-date-label"></span>';
+    html += '</button>';
+    html += '<div class="cal-date-picker" id="cal-date-picker">';
+    html += '<select id="cal-month-sel" class="cal-filter-select"></select>';
+    html += '<select id="cal-year-sel" class="cal-filter-select"></select>';
+    html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 10px;font-size:0.8125rem" onclick="calApplyDatePicker()">OK</button>';
+    html += '</div>';
+    html += '</div>';
+
     html += '<div class="cal-toolbar-sep"></div>';
-
-    html += '<div class="cal-filter-group"><span class="cal-filter-label">Неделя</span><select class="cal-filter-select" onchange="calSelectWeek(this.value)">';
-    for (let i = -2; i <= 4; i++) {
-        const d = new Date(calWeekStart);
-        d.setDate(d.getDate() + i * 7);
-        const de = new Date(d);
-        de.setDate(de.getDate() + 6);
-        const sel = i === 0 ? ' selected' : '';
-        html += `<option value="${i}"${sel}>${_calFmtShort(d)} – ${_calFmtShort(de)}</option>`;
-    }
-    html += '</select></div>';
-
-    html += '<div class="cal-filter-group"><span class="cal-filter-label">Месяц</span><select class="cal-filter-select" onchange="calSelectMonth(this.value)">';
-    CAL_MONTHS_FULL.forEach((m, i) => {
-        const sel = i === calActiveDay.getMonth() ? ' selected' : '';
-        html += `<option value="${i}"${sel}>${m}</option>`;
-    });
-    html += '</select></div>';
+    html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 12px;font-size:0.8125rem;font-weight:600" onclick="calGoToday()">Сегодня</button>';
 
     return html;
 }
@@ -234,6 +232,7 @@ function renderCalendar(full) {
         container.innerHTML = html;
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
+        _calUpdateDateLabel();
         document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
         document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
 
@@ -332,8 +331,55 @@ function calPrevWeek() { calWeekStart.setDate(calWeekStart.getDate() - 7); calAc
 function calNextWeek() { calWeekStart.setDate(calWeekStart.getDate() + 7); calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new Date(); renderCalendar(true); }
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
-function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
-function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
+
+// ─── Date Picker ──────────────────────────────────────────────────
+
+function calFirstWeekOf(year, month) {
+    const d = new Date(year, month, 1);
+    return getMonday(d);
+}
+
+function calToggleDatePicker() {
+    const picker = document.getElementById('cal-date-picker');
+    if (!picker) return;
+    if (picker.classList.contains('open')) {
+        picker.classList.remove('open');
+        return;
+    }
+    // Populate selects
+    const monthSel = document.getElementById('cal-month-sel');
+    const yearSel = document.getElementById('cal-year-sel');
+    if (monthSel && yearSel) {
+        monthSel.innerHTML = CAL_MONTHS_FULL.map((m, i) =>
+            `<option value="${i}"${i === calWeekStart.getMonth() ? ' selected' : ''}>${m}</option>`
+        ).join('');
+        const curYear = calWeekStart.getFullYear();
+        const years = [];
+        for (let y = curYear - 3; y <= curYear + 3; y++) years.push(y);
+        yearSel.innerHTML = years.map(y =>
+            `<option value="${y}"${y === curYear ? ' selected' : ''}>${y}</option>`
+        ).join('');
+    }
+    picker.classList.add('open');
+}
+
+function calApplyDatePicker() {
+    const m = parseInt(document.getElementById('cal-month-sel').value, 10);
+    const y = parseInt(document.getElementById('cal-year-sel').value, 10);
+    calWeekStart = calFirstWeekOf(y, m);
+    calActiveDay = new Date(calWeekStart);
+    const picker = document.getElementById('cal-date-picker');
+    if (picker) picker.classList.remove('open');
+    renderCalendar(true);
+}
+
+function _calUpdateDateLabel() {
+    const el = document.getElementById('cal-date-label');
+    if (!el) return;
+    const weekEnd = new Date(calWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    el.textContent = `${CAL_MONTHS_FULL[calWeekStart.getMonth()]} ${calWeekStart.getFullYear()}`;
+}
 
 // ─── Shadow SVG ─────────────────────────────────────────────────────
 

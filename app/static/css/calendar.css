@@ -15,9 +15,9 @@
 /* ─── Toolbar ──────────────────────────────────────────────────────── */
 .cal-toolbar {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 10px 16px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -27,26 +27,68 @@
   box-shadow: var(--shadow-sm);
 }
 
-.cal-toolbar-nav { display: flex; align-items: center; gap: 6px; }
-
-.cal-toolbar-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--fg);
-  min-width: 200px;
+.cal-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
+
+.cal-week-nav-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  font-family: inherit;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.cal-week-nav-btn:hover { border-color: var(--accent); color: var(--fg); }
+
+.cal-date-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.12s;
+}
+
+.cal-date-trigger:hover { border-color: var(--accent); }
+
+.cal-date-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  display: none;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  z-index: 20;
+}
+
+.cal-date-picker.open { display: flex; }
 
 .cal-toolbar-sep { width: 1px; height: 24px; background: var(--border); }
-
-.cal-filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 120px; flex: 1; }
-
-.cal-filter-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--fg-subtle);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
 
 .cal-filter-select {
   width: 100%;
@@ -314,7 +356,7 @@
 @media (max-width: 768px) {
   .cal-container { padding: 12px; }
   .cal-toolbar { padding: 10px 12px; gap: 8px; }
-  .cal-toolbar-title { font-size: 0.875rem; min-width: auto; }
+  .cal-date-picker { flex-wrap: wrap; }
   .cal-day-tabs { padding: 8px 8px 0; gap: 4px; overflow-x: auto; }
   .cal-day-tab { min-width: 48px; flex: none; padding: 6px 6px 8px; font-size: 0.6875rem; }
   .cal-day-tab .dn { font-size: 0.6875rem; }
