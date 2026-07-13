@@ -116,7 +116,7 @@
 .cal-tab-bridge {
   position: absolute;
   top: -1px;
-  height: 4px;
+  height: 2px;
   background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   pointer-events: none;
   z-index: 10;
