@@ -335,10 +335,12 @@ function _calPositionBridge() {
     const tabRect = activeTab.getBoundingClientRect();
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
+
     bridge.style.left = (tabRect.left - panelRect.left) + 'px';
-    bridge.style.width = tabRect.width + 'px';
     bridge.style.top = (tabRect.top - panelRect.top) + 'px';
+    bridge.style.width = tabRect.width + 'px';
     bridge.style.height = (hdrRect.bottom - tabRect.top) + 'px';
+    bridge.style.borderRadius = '10px 10px 0 0';
 }
 
 window.addEventListener('resize', _calPositionBridge);

@@ -107,14 +107,10 @@
 /* ─── Tab Bridge (covers shadow seam between active tab and header) ── */
 .cal-tab-bridge {
   position: absolute;
-  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
   pointer-events: none;
   z-index: 1;
-  box-shadow:
-    0 -3px 10px rgba(0, 0, 0, 0.2),
-    -3px 0 10px rgba(0, 0, 0, 0.12),
-    3px 0 10px rgba(0, 0, 0, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
 }
 
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
