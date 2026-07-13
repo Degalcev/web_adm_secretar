@@ -452,6 +452,15 @@
     color: #fff;
   }
 
+  .cal-mob-add {
+    margin-left: auto;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
+  .cal-mob-add:active { opacity: 0.8; }
+
   /* Мобильная временная сетка */
   .cal-mob-scroll {
     flex: 1;

@@ -171,6 +171,7 @@ function _calRenderMobileRoomChips() {
         const active = _calMobileRoomFilter === loc.id;
         html += `<div class="cal-mob-chip${active ? ' active' : ''}" onclick="calMobSelectRoom('${loc.id}')">${esc(loc.name)}</div>`;
     });
+    html += `<div class="cal-mob-chip cal-mob-add" onclick="openAddEventModal()">+ Добавить</div>`;
     html += `</div>`;
     return html;
 }
