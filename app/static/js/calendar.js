@@ -133,11 +133,21 @@ function _calRenderTabs() {
 // ─── Рендер: Grid ──────────────────────────────────────────────────
 
 function _calRenderGrid() {
-    let html = '<div class="cal">';
+    const locations = store.allLocations || [];
+    const numCols = locations.length;
+
+    let html = '<div class="cal-rooms-header">';
+    html += '<div class="cal-rooms-hdr-cell"></div>';
+    locations.forEach((loc, li) => {
+        html += `<div class="cal-rooms-hdr-cell">${esc(loc.name)}</div>`;
+    });
+    html += '</div>';
+
+    html += '<div class="cal-wrap" id="cal-wrap">';
+    html += '<div class="cal">';
 
     // Time column
     html += '<div class="cal-time">';
-    html += '<div class="cal-time-header"></div>';
     html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="cal-time-label" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2, '0')}:00</div>`;
@@ -145,14 +155,13 @@ function _calRenderGrid() {
     html += '</div></div>';
 
     // Full-width hour lines overlay
-    html += `<div class="cal-hour-lines" style="position:absolute;top:36px;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:1">`;
+    html += `<div class="cal-hour-lines" style="position:absolute;top:0;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:1">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
     html += '</div>';
 
-    // Location columns
-    const locations = store.allLocations || [];
+    // Location columns (no header inside)
     const ds = localDateStr(calActiveDay);
     const dayEvents = _calGetEventsForDate(ds);
 
@@ -161,7 +170,7 @@ function _calRenderGrid() {
             .filter(e => e.location_id === loc.id)
             .sort((a, b) => calTimeToMin(a.time) - calTimeToMin(b.time));
 
-        html += `<div class="cal-col"><div class="cal-col-hdr h${li % 4}">${esc(loc.name)}</div><div style="height:${CAL_TOTAL_H}px;position:relative">`;
+        html += `<div class="cal-col"><div style="height:${CAL_TOTAL_H}px;position:relative">`;
 
         const groups = _calFindOverlapGroups(locEvents);
         groups.forEach(group => {
@@ -202,7 +211,7 @@ function _calRenderGrid() {
         html += '</div></div>';
     });
 
-    html += '</div>';
+    html += '</div></div>';
     return html;
 }
 
@@ -213,34 +222,31 @@ function renderCalendar(full) {
     if (!container) return;
 
     if (full) {
-        // Full rebuild: toolbar + tabs + grid
         _calNowLines = [];
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel"><div class="cal-tab-bridge" id="cal-tab-bridge"></div><div class="cal-day-tabs" id="cal-day-tabs"></div>';
-        html += '<div class="cal-wrap" id="cal-wrap"></div></div>';
+        html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
 
         document.getElementById('cal-toolbar').innerHTML = _calRenderToolbar();
         document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
-        document.getElementById('cal-wrap').innerHTML = _calRenderGrid();
+        document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
 
         calUpdateNowLine();
         _calInitHoverFix();
         _calPositionBridge();
 
-        // Scroll to 08:00
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
     } else {
-        // Partial rebuild: tabs + grid only (toolbar stays)
         _calNowLines = [];
         _calNowTimeLabel = null;
         const tabsEl = document.getElementById('cal-day-tabs');
-        const wrapEl = document.getElementById('cal-wrap');
+        const gridArea = document.getElementById('cal-grid-area');
         if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
-        if (wrapEl) {
-            wrapEl.innerHTML = _calRenderGrid();
+        if (gridArea) {
+            gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
             _calPositionBridge();
