@@ -130,7 +130,7 @@
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
   color: var(--fg-muted);
   border: none;
   border-radius: 10px 10px 0 0;
@@ -139,7 +139,7 @@
 }
 
 .cal-day-tab:hover {
-  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg));
   margin-top: -2px;
   padding-bottom: 15px;
 }
