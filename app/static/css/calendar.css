@@ -358,13 +358,145 @@
 
 /* ─── Mobile ───────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .cal-container { padding: 12px; }
-  .cal-toolbar { padding: 10px 12px; gap: 8px; }
+  .cal-container { padding: 8px 10px; }
+  .cal-toolbar { padding: 8px 10px; gap: 6px; flex-wrap: wrap; }
   .cal-date-picker { flex-wrap: wrap; }
   .cal-date-picker .cal-filter-select { min-width: 0; flex: 1; }
-  .cal-day-tabs { padding: 8px 8px 0; gap: 4px; overflow-x: auto; }
-  .cal-day-tab { min-width: 48px; flex: none; padding: 6px 6px 8px; font-size: 0.6875rem; }
-  .cal-day-tab .dn { font-size: 0.6875rem; }
-  .cal-day-tab .dd { font-size: 0.5625rem; }
-  .cal { min-width: 500px; }
+
+  /* Мобильные вкладки дней */
+  .cal-day-tabs {
+    padding: 6px 6px 0;
+    gap: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cal-day-tabs::-webkit-scrollbar { display: none; }
+
+  /* Десктопные вкладки скрываем на мобильном */
+  .cal-day-tab { display: none; }
+
+  /* Мобильные компактные вкладки */
+  .cal-mob-day {
+    flex: 1;
+    min-width: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 2px 7px;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    background: rgba(0, 0, 0, 0.32);
+    border: none;
+    transition: background 0.12s ease, padding 0.12s ease;
+  }
+
+  .cal-mob-day:hover { background: rgba(0, 0, 0, 0.26); }
+
+  .cal-mob-day.active {
+    background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+    padding: 8px 2px 10px;
+  }
+
+  .cal-mob-day .mob-wd {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+  }
+
+  .cal-mob-day .mob-dt {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fg-subtle);
+  }
+
+  .cal-mob-day.active .mob-wd { color: var(--fg-subtle); }
+  .cal-mob-day.active .mob-dt { color: var(--fg); }
+  .cal-mob-day.today .mob-dt { color: var(--accent); }
+  .cal-mob-day.weekend .mob-dt { color: var(--danger); }
+
+  /* Фильтр аудиторий */
+  .cal-mob-room-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+    border-bottom: 1px solid var(--border);
+  }
+  .cal-mob-room-bar::-webkit-scrollbar { display: none; }
+
+  .cal-mob-chip {
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--fg-subtle);
+    background: var(--bg-elevated);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s ease, border-color 0.1s ease;
+  }
+
+  .cal-mob-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Мобильная временная сетка */
+  .cal-mob-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .cal-mob-scroll::-webkit-scrollbar { display: none; }
+
+  .cal-mob-inner {
+    display: flex;
+    position: relative;
+    min-height: 100%;
+  }
+
+  .cal-mob-times {
+    width: 44px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .cal-mob-tlabel {
+    position: absolute;
+    right: 6px;
+    font-size: 0.5625rem;
+    color: var(--fg-muted);
+    transform: translateY(-50%);
+    white-space: nowrap;
+  }
+
+  .cal-mob-col {
+    flex: 1;
+    border-left: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  /* Скрываем десктоп-элементы на мобильном */
+  .cal-rooms-header { display: none; }
+  .cal-wrap { display: none; }
+}
+
+/* Показываем десктопные вкладки только на десктопе */
+@media (min-width: 769px) {
+  .cal-mob-day { display: none; }
+  .cal-mob-room-bar { display: none; }
+  .cal-mob-scroll { display: none; }
 }

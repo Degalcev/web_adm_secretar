@@ -14,6 +14,11 @@ const CAL_MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апре�
 let calWeekStart = getMonday(new Date());
 let calActiveDay = new Date();
 
+// ─── Mobile detection ───────────────────────────────────────────────
+function _calIsMobile() { return window.innerWidth <= 768; }
+
+let _calMobileRoomFilter = null; // null = все аудитории
+
 function getMonday(d) {
     const r = new Date(d);
     const day = r.getDay();
@@ -137,7 +142,116 @@ function _calRenderTabs() {
     return html;
 }
 
-// ─── Рендер: Grid ──────────────────────────────────────────────────
+// ─── Рендер: Mobile ────────────────────────────────────────────────
+
+function _calRenderMobileTabs() {
+    let html = '';
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(calWeekStart);
+        d.setDate(d.getDate() + i);
+        const ds = localDateStr(d);
+        const today = localDateStr(new Date());
+        const act = ds === localDateStr(calActiveDay);
+        const isToday = ds === today;
+        const isWeekend = i >= 5;
+        const cls = `cal-mob-day${act ? ' active' : ''}${isToday ? ' today' : ''}${isWeekend ? ' weekend' : ''}`;
+        html += `<div class="${cls}" onclick="calSelectDay(${i})">`;
+        html += `<span class="mob-wd">${CAL_DAY_NAMES[i]}</span>`;
+        html += `<span class="mob-dt">${d.getDate()}</span>`;
+        html += `</div>`;
+    }
+    return html;
+}
+
+function _calRenderMobileRoomChips() {
+    const locations = store.allLocations || [];
+    let html = `<div class="cal-mob-room-bar" id="cal-mob-room-bar">`;
+    html += `<div class="cal-mob-chip${_calMobileRoomFilter === null ? ' active' : ''}" onclick="calMobSelectRoom(null)">Все залы</div>`;
+    locations.forEach(loc => {
+        const active = _calMobileRoomFilter === loc.id;
+        html += `<div class="cal-mob-chip${active ? ' active' : ''}" onclick="calMobSelectRoom('${loc.id}')">${esc(loc.name)}</div>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+function _calRenderMobileGrid() {
+    const locations = store.allLocations || [];
+    const ds = localDateStr(calActiveDay);
+    const dayEvents = _calGetEventsForDate(ds);
+
+    const filteredLocations = _calMobileRoomFilter === null
+        ? locations
+        : locations.filter(l => l.id === _calMobileRoomFilter);
+
+    let allEvents = [];
+    filteredLocations.forEach((loc, li) => {
+        const locEvents = dayEvents.filter(e => e.location_id === loc.id);
+        locEvents.forEach(e => allEvents.push({ ...e, _locName: loc.name, _locIdx: locations.indexOf(loc) }));
+    });
+    allEvents.sort((a, b) => calTimeToMin(a.time) - calTimeToMin(b.time));
+
+    let html = `<div class="cal-mob-scroll" id="cal-mob-scroll">`;
+    html += `<div class="cal-mob-inner">`;
+
+    html += `<div class="cal-mob-times">`;
+    for (let h = CAL_H_START; h < CAL_H_END; h++) {
+        html += `<div class="cal-mob-tlabel" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px">${String(h).padStart(2,'0')}:00</div>`;
+    }
+    html += `</div>`;
+
+    html += `<div class="cal-mob-col" id="cal-mob-col" style="height:${CAL_TOTAL_H}px;position:relative">`;
+
+    for (let h = CAL_H_START; h < CAL_H_END; h++) {
+        html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
+    }
+
+    const groups = _calFindOverlapGroups(allEvents);
+    groups.forEach(group => {
+        const cols = group.length;
+        group.forEach((e, ci) => {
+            const start = calTimeToMin(e.time);
+            const dur = e.dur || 60;
+            const top = ((start - CAL_H_START * 60) / 60) * CAL_HOUR_H;
+            const height = Math.max((dur / 60) * CAL_HOUR_H - 3, 18);
+            const w = `calc((100% - ${(cols - 1) * 3}px) / ${cols})`;
+            const left = ci === 0 ? '0' : `calc(${ci} * (100% - ${(cols - 1) * 3}px) / ${cols} + ${ci * 3}px)`;
+
+            const now = new Date();
+            const today = localDateStr(now);
+            let status = 'active';
+            if (e.completed) status = 'done';
+            else if (ds < today && !e.completed) status = 'missed';
+
+            const orgName = (store.allOrganizers || []).find(o => o.id === e.organizer_id)?.name || '';
+            const hIdx = e._locIdx % 4;
+
+            html += `<div class="cal-ev h${hIdx}" style="top:${top}px;height:${height}px;left:${left};width:${w};position:absolute" onclick="openEditEventModal('${e.id}')">`;
+            html += `<div style="display:flex;align-items:center;gap:4px"><span class="ev-status ${status}"></span><span class="ev-type">${esc(e.type || 'ВКС')}</span></div>`;
+            html += `<div class="ev-time">${esc(e.time || '')}${dur ? ' – ' + _calFmtEnd(e) : ''}</div>`;
+            if (e._locName) html += `<div class="ev-org">${esc(e._locName)}</div>`;
+            if (orgName) html += `<div class="ev-org">${esc(orgName)}</div>`;
+            html += `</div>`;
+        });
+    });
+
+    html += `</div></div></div>`;
+    return html;
+}
+
+function calMobSelectRoom(id) {
+    _calMobileRoomFilter = id;
+    const gridArea = document.getElementById('cal-grid-area');
+    if (gridArea) {
+        gridArea.innerHTML = _calRenderMobileRoomChips() + _calRenderMobileGrid();
+        calUpdateNowLine();
+        _calInitMobileSwipe();
+        const wrap = document.getElementById('cal-mob-scroll');
+        if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+    }
+}
+
+// ─── Рендер: Grid (Desktop) ────────────────────────────────────────
 
 function _calRenderGrid() {
     const locations = store.allLocations || [];
@@ -152,7 +266,6 @@ function _calRenderGrid() {
     html += '<div class="cal-wrap" id="cal-wrap">';
     html += '<div class="cal">';
 
-    // Time column
     html += '<div class="cal-time">';
     html += `<div class="cal-time-body" style="height:${CAL_TOTAL_H}px;position:relative">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
@@ -160,14 +273,12 @@ function _calRenderGrid() {
     }
     html += '</div></div>';
 
-    // Full-width hour lines overlay
     html += `<div class="cal-hour-lines" style="position:absolute;top:0;left:0;right:0;height:${CAL_TOTAL_H}px;pointer-events:none;z-index:1">`;
     for (let h = CAL_H_START; h < CAL_H_END; h++) {
         html += `<div class="hour-line" style="top:${(h - CAL_H_START) * CAL_HOUR_H}px"></div>`;
     }
     html += '</div>';
 
-    // Location columns (no header inside)
     const ds = localDateStr(calActiveDay);
     const dayEvents = _calGetEventsForDate(ds);
 
@@ -242,17 +353,24 @@ function renderCalendar(full) {
         _calUpdateDateLabel();
         const wlEl = document.getElementById('cal-week-label');
         if (wlEl) wlEl.innerHTML = _calRenderWeekLabel();
-        document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
-        document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
 
-        calUpdateNowLine();
-        _calInitHoverFix();
-        _calScheduleShadowUpdate();
+        if (_calIsMobile()) {
+            document.getElementById('cal-day-tabs').innerHTML = _calRenderMobileTabs();
+            document.getElementById('cal-grid-area').innerHTML = _calRenderMobileRoomChips() + _calRenderMobileGrid();
+            calUpdateNowLine();
+            _calInitMobileSwipe();
+            const wrap = document.getElementById('cal-mob-scroll');
+            if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+        } else {
+            document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
+            document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
+            calUpdateNowLine();
+            _calInitHoverFix();
+            _calScheduleShadowUpdate();
+            const wrap = document.getElementById('cal-wrap');
+            if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+        }
 
-        const wrap = document.getElementById('cal-wrap');
-        if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
-
-        // ResizeObserver для пересчёта тени при изменении размера панели
         if (!_calShadowRO) {
             const panelEl = document.getElementById('cal-panel');
             if (panelEl) {
@@ -265,12 +383,23 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         const tabsEl = document.getElementById('cal-day-tabs');
         const gridArea = document.getElementById('cal-grid-area');
-        if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
-        if (gridArea) {
-            gridArea.innerHTML = _calRenderGrid();
-            calUpdateNowLine();
-            _calInitHoverFix();
-            _calScheduleShadowUpdate();
+        if (_calIsMobile()) {
+            if (tabsEl) tabsEl.innerHTML = _calRenderMobileTabs();
+            if (gridArea) {
+                gridArea.innerHTML = _calRenderMobileRoomChips() + _calRenderMobileGrid();
+                calUpdateNowLine();
+                _calInitMobileSwipe();
+                const wrap = document.getElementById('cal-mob-scroll');
+                if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+            }
+        } else {
+            if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
+            if (gridArea) {
+                gridArea.innerHTML = _calRenderGrid();
+                calUpdateNowLine();
+                _calInitHoverFix();
+                _calScheduleShadowUpdate();
+            }
         }
     }
 }
@@ -296,33 +425,45 @@ function calUpdateNowLine() {
     const mm = now.getMinutes();
     const top = ((hm * 60 + mm - CAL_H_START * 60) / 60) * CAL_HOUR_H;
 
-    // Create or update now-lines in each location column
-    const cols = document.querySelectorAll('.cal-col');
-    while (_calNowLines.length > cols.length) _calNowLines.pop().remove();
-
-    cols.forEach((col, i) => {
-        const inner = col.querySelector('div[style]');
-        if (!inner) return;
-        if (!_calNowLines[i]) {
-            const line = document.createElement('div');
-            line.className = 'now-line';
-            inner.appendChild(line);
-            _calNowLines[i] = line;
+    if (_calIsMobile()) {
+        const mobCol = document.getElementById('cal-mob-col');
+        if (mobCol) {
+            if (!_calNowLines[0]) {
+                const line = document.createElement('div');
+                line.className = 'now-line';
+                line.style.zIndex = '2';
+                mobCol.appendChild(line);
+                _calNowLines[0] = line;
+            }
+            _calNowLines[0].style.top = top + 'px';
         }
-        _calNowLines[i].style.top = top + 'px';
-    });
+    } else {
+        const cols = document.querySelectorAll('.cal-col');
+        while (_calNowLines.length > cols.length) _calNowLines.pop().remove();
 
-    // Create or update now-time on the time column
-    const timeBody = document.querySelector('.cal-time-body');
+        cols.forEach((col, i) => {
+            const inner = col.querySelector('div[style]');
+            if (!inner) return;
+            if (!_calNowLines[i]) {
+                const line = document.createElement('div');
+                line.className = 'now-line';
+                inner.appendChild(line);
+                _calNowLines[i] = line;
+            }
+            _calNowLines[i].style.top = top + 'px';
+        });
+    }
+
+    const timeBody = document.querySelector('.cal-time-body, .cal-mob-times');
     if (timeBody) {
-        // Ensure a now-line exists on the time column too
-        if (!_calNowLines[cols.length]) {
+        const linesCount = _calIsMobile() ? 1 : document.querySelectorAll('.cal-col').length;
+        if (!_calNowLines[linesCount]) {
             const line = document.createElement('div');
             line.className = 'now-line';
             timeBody.appendChild(line);
-            _calNowLines[cols.length] = line;
+            _calNowLines[linesCount] = line;
         }
-        _calNowLines[cols.length].style.top = top + 'px';
+        _calNowLines[linesCount].style.top = top + 'px';
 
         if (!_calNowTimeLabel) {
             _calNowTimeLabel = document.createElement('div');
@@ -364,7 +505,6 @@ function calToggleDatePicker() {
         picker.classList.remove('open');
         return;
     }
-    // Populate selects
     const monthSel = document.getElementById('cal-month-sel');
     const yearSel = document.getElementById('cal-year-sel');
     if (monthSel && yearSel) {
@@ -394,8 +534,6 @@ function calApplyDatePicker() {
 function _calUpdateDateLabel() {
     const el = document.getElementById('cal-date-label');
     if (!el) return;
-    const weekEnd = new Date(calWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
     el.textContent = `${CAL_MONTHS_NOM[calWeekStart.getMonth()]} ${calWeekStart.getFullYear()}`;
 }
 
@@ -504,7 +642,6 @@ function _calOnEvEnter(e) {
         el.style.right = 'auto';
     }
 
-    // Clamp inside cal-wrap boundaries
     if (wrapRect) {
         requestAnimationFrame(() => {
             const r = el.getBoundingClientRect();
@@ -546,6 +683,62 @@ document.addEventListener('mousemove', function(e) {
         e.clientY < r.top - margin || e.clientY > r.bottom + margin) {
         _calReset(_calHoveredEl);
     }
+});
+
+// ─── Mobile Swipe ───────────────────────────────────────────────────
+
+let _mobSwipeStartX = 0;
+let _mobSwipeStartY = 0;
+let _mobSwiping = false;
+
+function _calInitMobileSwipe() {
+    const panel = document.getElementById('cal-panel');
+    if (!panel || panel._mobSwipeInited) return;
+    panel._mobSwipeInited = true;
+
+    panel.addEventListener('touchstart', e => {
+        _mobSwipeStartX = e.touches[0].clientX;
+        _mobSwipeStartY = e.touches[0].clientY;
+        _mobSwiping = true;
+    }, { passive: true });
+
+    panel.addEventListener('touchend', e => {
+        if (!_mobSwiping) return;
+        _mobSwiping = false;
+        const dx = e.changedTouches[0].clientX - _mobSwipeStartX;
+        const dy = e.changedTouches[0].clientY - _mobSwipeStartY;
+        if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return;
+
+        const cur = localDateStr(calActiveDay);
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(calWeekStart);
+            d.setDate(d.getDate() + i);
+            days.push(localDateStr(d));
+        }
+        const idx = days.indexOf(cur);
+
+        if (dx < 0) {
+            if (idx < 6) calSelectDay(idx + 1);
+            else calNextWeek();
+        } else {
+            if (idx > 0) calSelectDay(idx - 1);
+            else calPrevWeek();
+        }
+    }, { passive: true });
+}
+
+// ─── Resize: переключение между desktop и mobile ─────────────────────
+
+let _calLastMobile = null;
+window.addEventListener('resize', () => {
+    const isMob = _calIsMobile();
+    if (_calLastMobile !== null && _calLastMobile !== isMob) {
+        _calMobileRoomFilter = null;
+        renderCalendar(true);
+    }
+    _calLastMobile = isMob;
+    _calScheduleShadowUpdate();
 });
 
 // ─── Timer ──────────────────────────────────────────────────────────
