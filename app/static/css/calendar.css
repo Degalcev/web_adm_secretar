@@ -104,6 +104,15 @@
   background: var(--bg-elevated);
 }
 
+/* ─── Tab Bridge (covers shadow seam between active tab and header) ── */
+.cal-tab-bridge {
+  position: absolute;
+  height: 12px;
+  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* ─── Grid Area (rooms-header + scrollable grid) ────────────────────── */
 #cal-grid-area {
   display: flex;
