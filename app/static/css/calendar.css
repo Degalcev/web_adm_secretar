@@ -97,6 +97,10 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
 }
 
 /* ─── Tab Bridge (white strip under active tab) ─────────────────────── */
@@ -131,7 +135,7 @@
   text-align: center;
   text-decoration: none;
   background: color-mix(in srgb, var(--surface) 60%, var(--bg));
-  color: var(--fg-muted);
+  color: var(--fg-subtle);
   border: none;
   border-radius: 10px 10px 0 0;
   transition: background 0.12s ease, color 0.12s ease, margin-top 0.12s ease, padding 0.12s ease;
