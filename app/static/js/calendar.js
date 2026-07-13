@@ -353,18 +353,23 @@ function _calUpdateShadow() {
     const pw = Math.round(panelRect.width) - inset;
     const ph = Math.round(panelRect.height) - inset;
 
+    const rl = Math.max(0, Math.min(rp, tx - inset));
+    const rr = Math.max(0, Math.min(rp, pw - (tx + tw)));
+
     const d = [
         `M ${tx + rt} ${ty}`,
         `L ${tx + tw - rt} ${ty}`,
         `A ${rt} ${rt} 0 0 1 ${tx + tw} ${ty + rt}`,
-        `L ${tx + tw} ${ty + th}`,
+        `L ${tx + tw} ${ty + th - rr}`,
+        `A ${rr} ${rr} 0 0 0 ${tx + tw + rr} ${ty + th}`,
         `L ${pw - rp} ${ty + th}`,
         `A ${rp} ${rp} 0 0 1 ${pw} ${ty + th + rp}`,
         `L ${pw} ${ph - rp}`,
         `A ${rp} ${rp} 0 0 1 ${pw - rp} ${ph}`,
         `L ${rp + inset} ${ph}`,
         `A ${rp} ${rp} 0 0 1 ${inset} ${ph - rp}`,
-        `L ${inset} ${ty + th}`,
+        `L ${inset} ${ty + th + rl}`,
+        `A ${rl} ${rl} 0 0 1 ${inset + rl} ${ty + th}`,
         `L ${tx} ${ty + th}`,
         `L ${tx} ${ty + rt}`,
         `A ${rt} ${rt} 0 0 1 ${tx + rt} ${ty}`,
