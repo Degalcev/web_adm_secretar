@@ -336,11 +336,11 @@ function _calPositionBridge() {
     const hdrRect = header.getBoundingClientRect();
     const panelRect = panel.getBoundingClientRect();
 
-    const shadow = 12;
-    const ox = tabRect.left - panelRect.left - shadow;
-    const oy = tabRect.top - panelRect.top - shadow;
-    const totalW = tabRect.width + shadow * 2;
-    const totalH = (hdrRect.bottom - tabRect.top) + shadow * 2;
+    const blur = 12;
+    const ox = tabRect.left - panelRect.left - blur;
+    const oy = tabRect.top - panelRect.top - blur;
+    const totalW = tabRect.width + blur * 2;
+    const totalH = (hdrRect.bottom - tabRect.top) + blur * 2;
 
     bridge.style.left = ox + 'px';
     bridge.style.top = oy + 'px';
@@ -359,40 +359,28 @@ function _calPositionBridge() {
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, totalW, totalH);
 
-    const relX = shadow;
-    const relY = shadow;
-    const relW = tabRect.width;
-    const tabH = tabRect.height;
-    const hdrH = hdrRect.height;
+    const x = blur;
+    const y = blur;
+    const w = tabRect.width;
+    const totalInner = hdrRect.bottom - tabRect.top;
     const r = 10;
 
-    // Main shape shadow
     ctx.save();
     ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = shadow;
+    ctx.shadowBlur = blur;
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 2;
     ctx.beginPath();
-    ctx.moveTo(relX + r, relY);
-    ctx.lineTo(relX + relW - r, relY);
-    ctx.quadraticCurveTo(relX + relW, relY, relX + relW, relY + r);
-    ctx.lineTo(relX + relW, relY + tabH + hdrH);
-    ctx.lineTo(relX, relY + tabH + hdrH);
-    ctx.lineTo(relX, relY + r);
-    ctx.quadraticCurveTo(relX, relY, relX + r, relY);
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + totalInner);
+    ctx.lineTo(x, y + totalInner);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
     ctx.closePath();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
     ctx.fill();
-    ctx.restore();
-
-    // Shadow under tab bottom edge
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
-    ctx.fillRect(relX + 4, relY + tabH - 1, relW - 8, 2);
     ctx.restore();
 }
 
