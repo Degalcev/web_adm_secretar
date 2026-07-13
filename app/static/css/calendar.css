@@ -1,5 +1,6 @@
 /* ─── Calendar Page ─────────────────────────────────────────────────── */
 .page#page-calendar.active {
+  overflow: hidden;
   padding: 0;
 }
 
