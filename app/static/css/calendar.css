@@ -108,6 +108,8 @@
 }
 .cal-add-btn:hover { opacity: 0.85; }
 
+.cal-toolbar-spacer { flex: 1; }
+
 .cal-filter-select {
   width: 100%;
   padding: 8px 12px;
@@ -390,7 +392,7 @@
 
   /* Десктопные вкладки скрываем на мобильном */
   .cal-day-tab { display: none; }
-  .cal-add-btn { display: none; }
+  .cal-toolbar-spacer { display: none; }
 
   /* Мобильные компактные вкладки */
   .cal-mob-day {
@@ -467,15 +469,6 @@
     border-color: var(--accent);
     color: #fff;
   }
-
-  .cal-mob-add {
-    margin-left: auto;
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-    font-weight: 700;
-  }
-  .cal-mob-add:active { opacity: 0.8; }
 
   /* Мобильная временная сетка */
   .cal-mob-scroll {

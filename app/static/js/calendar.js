@@ -109,7 +109,7 @@ function _calRenderToolbar() {
     html += '<div class="cal-toolbar-sep"></div>';
     html += '<button class="cal-week-nav-btn" style="width:auto;padding:0 12px;font-size:0.8125rem;font-weight:600" onclick="calGoToday()">Сегодня</button>';
 
-    html += '<div style="flex:1"></div>';
+    html += '<div class="cal-toolbar-spacer"></div>';
     html += '<button class="cal-add-btn" onclick="openAddEventModal()">+ Добавить</button>';
 
     html += '<div class="cal-date-picker" id="cal-date-picker">';
@@ -174,7 +174,6 @@ function _calRenderMobileRoomChips() {
         const active = _calMobileRoomFilter === loc.id;
         html += `<div class="cal-mob-chip${active ? ' active' : ''}" onclick="calMobSelectRoom('${loc.id}')">${esc(loc.name)}</div>`;
     });
-    html += `<div class="cal-mob-chip cal-mob-add" onclick="openAddEventModal()">+</div>`;
     html += `</div>`;
     return html;
 }
