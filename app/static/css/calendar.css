@@ -110,7 +110,14 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  margin-top: -1px;
+  margin-top: -4px;
+}
+
+.cal-rooms-header {
+  display: flex;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated) 85%, black);
 }
 
 /* ─── Day Tabs ──────────────────────────────────────────────────────── */
@@ -191,7 +198,6 @@
   overflow-y: auto;
   min-height: 0;
   background: var(--bg-elevated);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding: 0;
