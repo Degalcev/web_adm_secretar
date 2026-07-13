@@ -226,7 +226,6 @@ function renderCalendar(full) {
         _calNowTimeLabel = null;
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<div class="cal-tab-bridge" id="cal-tab-bridge"></div>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
@@ -237,7 +236,6 @@ function renderCalendar(full) {
 
         calUpdateNowLine();
         _calInitHoverFix();
-        _calPositionBridge();
 
         const wrap = document.getElementById('cal-wrap');
         if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
@@ -251,7 +249,6 @@ function renderCalendar(full) {
             gridArea.innerHTML = _calRenderGrid();
             calUpdateNowLine();
             _calInitHoverFix();
-            _calPositionBridge();
         }
     }
 }
@@ -323,68 +320,6 @@ function calGoToday() { calWeekStart = getMonday(new Date()); calActiveDay = new
 function calSelectDay(i) { calActiveDay = new Date(calWeekStart); calActiveDay.setDate(calActiveDay.getDate() + i); renderCalendar(false); }
 function calSelectWeek(v) { const b = new Date(calWeekStart); b.setDate(b.getDate() + parseInt(v) * 7); calWeekStart = b; calActiveDay = new Date(calWeekStart); renderCalendar(true); }
 function calSelectMonth(m) { calActiveDay.setMonth(parseInt(m)); calWeekStart = getMonday(calActiveDay); renderCalendar(true); }
-
-// ─── Tab Bridge ─────────────────────────────────────────────────────
-
-function _calPositionBridge() {
-    const activeTab = document.querySelector('.cal-day-tab.active');
-    const header = document.querySelector('.cal-rooms-header');
-    const panel = document.getElementById('cal-panel');
-    const bridge = document.getElementById('cal-tab-bridge');
-    if (!activeTab || !header || !panel || !bridge) return;
-    const tabRect = activeTab.getBoundingClientRect();
-    const hdrRect = header.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-
-    const blur = 12;
-    const ox = tabRect.left - panelRect.left - blur;
-    const oy = tabRect.top - panelRect.top - blur;
-    const totalW = tabRect.width + blur * 2;
-    const totalH = (hdrRect.bottom - tabRect.top) + blur * 2;
-
-    bridge.style.left = ox + 'px';
-    bridge.style.top = oy + 'px';
-    bridge.style.width = totalW + 'px';
-    bridge.style.height = totalH + 'px';
-
-    const cvs = bridge.querySelector('canvas') || document.createElement('canvas');
-    if (!cvs.parentNode) bridge.appendChild(cvs);
-    const dpr = window.devicePixelRatio || 1;
-    cvs.width = totalW * dpr;
-    cvs.height = totalH * dpr;
-    cvs.style.width = totalW + 'px';
-    cvs.style.height = totalH + 'px';
-
-    const ctx = cvs.getContext('2d');
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, totalW, totalH);
-
-    const x = blur;
-    const y = blur;
-    const w = tabRect.width;
-    const totalInner = hdrRect.bottom - tabRect.top;
-    const r = 10;
-
-    ctx.save();
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-    ctx.shadowBlur = blur;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2;
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-    ctx.lineTo(x + w, y + totalInner);
-    ctx.lineTo(x, y + totalInner);
-    ctx.lineTo(x, y + r);
-    ctx.quadraticCurveTo(x, y, x + r, y);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.01)';
-    ctx.fill();
-    ctx.restore();
-}
-
-window.addEventListener('resize', _calPositionBridge);
 
 // ─── Hover fix: position:fixed для выхода за overflow ────────────────
 
