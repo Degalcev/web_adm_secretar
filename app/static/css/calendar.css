@@ -139,6 +139,7 @@
   flex-shrink: 0;
   position: relative;
   z-index: 2;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;  /* ← вернуть, только для формы box-shadow */
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
 }
 
