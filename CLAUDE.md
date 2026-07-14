@@ -108,17 +108,20 @@ deploy/
 - `@require_csrf` — декоратор CSRF проверки (POST/PUT/DELETE), совместимый с multipart
 - Rate limiter: 5 запросов/минуту на вход
 - Cookie: `admin_token` (httponly) + `csrf_token` (js-readable), domain из `COOKIE_DOMAIN`
-- Сессии в PostgreSQL, TTL 24ч, автоочистка при старте + каждые 6ч
+- Сессии в PostgreSQL, **rolling session** (TTL обновляется при каждом запросе через `update_session_expiry()`)
 - Session validation через JOIN (1 запрос вместо 2)
 - `check_auth` / `users/me` — доступны всем ролям (admin + user)
 - CRUD маршруты — через middleware (roles не проверяются на backend, только на frontend)
+- **Login по логину или MAX ID**: `get_user_by_login()` ищет сначала по `max_id` (если число), потом по `username`, потом по `name`
+- **"Запомнить меня"**: checkbox на форме логина, TTL сессии 30 дней (720ч) вместо 24ч
 
 ### Frontend auth flow
 - `checkAuth()` — ЕДИНСТВЕННЫЙ источник правды для `isAuthenticated`
 - `login()` вызывает `checkAuth()` после POST /admin/login (не ставит isAuthenticated сам)
+- `login()` отправляет `{ login, password, remember_me }` (поле text, не number)
 - `checkAuth()` → `loadCurrentUser()` → `showMain()` → `applyRoleRestrictions()` → `navigateTo()`
 - `applyRoleRestrictions()` показывает/скрывает "Администрирование" в зависимости от роли
-- `logout()` сбрасывает раскрытие меню (`.nav-group.open`)
+- `logout()` сбрасывает: SSE (`disconnectSSE()`), now-line таймер (`calStopNowLineTimer()`), `_preloaded`, `localStorage.dash_cache`, раскрытие меню, store
 
 ### Роли пользователей
 - Модель User: поле `status` = `'admin'` или `'user'`
@@ -141,7 +144,8 @@ deploy/
 ### SSE для всех таблиц
 - 4 канала PostgreSQL LISTEN/NOTIFY: `update_event`, `update_users`, `update_locations`, `update_organizers`
 - Триггеры: `trg_notify_events`, `trg_notify_users`, `trg_notify_locations`, `trg_notify_organizers`
-- SSE endpoint без авторизации (auth_required убран)
+- **SSE подключается ТОЛЬКО после успешного `checkAuth()`** (не при загрузке страницы)
+- `disconnectSSE()` — закрывает EventSource при logout
 - Frontend: `sse.js` обновляет store и перерисовывает активные страницы
 
 ### VKS Modal — Compact Flat дизайн
@@ -214,6 +218,12 @@ deploy/
 - `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
 - `calendar.css` загружается ПОСЛЕ responsive.css — стили календаря не конфликтуют с другими
 - Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal** → **calendar**
+
+### Preloader
+- `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает данные из `localStorage.dash_cache`
+- `preloadAllData()` — загрузка с сервера (`/admin/api/preload`), кэширует в localStorage
+- `_preloaded` флаг предотвращает повторную загрузку. Сбрасывается при logout
+- `initCalendar()` имеет fallback: если после `preloadAllData()` store пуст → вызывает `loadAllEvents()`
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
@@ -294,28 +304,29 @@ Events принимают `multipart/form-data`:
 - SSE: lock/unlock обновляет events → триггер → все клиенты видят замок на карточках
 
 ### Календарь VKS
-- **Файлы**: `calendar.js` (~480 строк) + `calendar.css` (~323 строки)
+- **Файлы**: `calendar.js` (~800 строк) + `calendar.css` (~500 строк)
 - **Маршрут**: `/calendar/` (SPA route в `router.js`, nav-item в sidebar, page div `#page-calendar`)
-- **Структура DOM**: `cal-container` → `cal-toolbar` + `cal-panel` (flex-column)
-  - `cal-panel` содержит: SVG shadow → `cal-day-tabs` (flex, z-index:2) → `cal-grid-area`
+- **Структура DOM**: `cal-container` → `cal-toolbar` + `cal-week-label` + `cal-panel` (flex-column)
+  - `cal-panel` содержит: SVG shadow + SVG stroke → `cal-day-tabs` (flex, z-index:2) → `cal-grid-area`
   - `cal-grid-area`: `cal-rooms-header` (заголовки колонок) + `cal-wrap` (прокручиваемая сетка)
 - **Flex chain**: `cal-container` → `cal-panel` (flex:1 + min-height:0) → `cal-wrap` (overflow-y:auto + flex:1). Без min-height:0 прокрутка не работает
 - **Overflow chain (критично)**: `body { overflow: hidden }` (base.css:311) → `.content-area { overflow: hidden }` (layout.css) → `.page#page-calendar.active { overflow: hidden; padding: 0 }` (calendar.css:2-4). **БЕЗ overflow:hidden на `.page` календарь «разваливается»** — `.cal-wrap`失去 constrained height
 - **renderCalendar(full)**: флаг `full=true` пересоздаёт весь DOM (toolbar+tabs+grid), `full=false` только обновляет вкладки и сетку. Вызывается при переключении дня, `full=true` при навигации (prev/next week, goToday)
-- **initCalendar()**: preloadAllData() → renderCalendar(true) → calStartNowLineTimer() → addEventListener('transitionend') на `cal-day-tabs`. Динамические элементы (`cal-day-tabs`, `cal-panel`, `cal-shadow-svg`) создаются внутри renderCalendar, не на уровне модуля
-- **Тень (SVG feDropShadow)**: CSS `filter: drop-shadow()` **ЗАБРОШЕН** — `body { overflow: hidden }` обрезает. SVG `feDropShadow` с `overflow: visible` рисует тень за пределами элемента
-  - SVG path с `fill` (цвет активной вкладки) + filter (feGaussianBlur, stdDeviation=5, dy=3, alpha=0.3)
-  - A-дуги: `rt=10` (скругление вкладки), `rp=12` (скругление панели), `rl` (левый угол шапки, Math.min(rp, tx-inset))
-  - `_calUpdateShadow()` — пересчёт path по `getBoundingClientRect()` вкладки и панели
-  - `_calUpdateShadowFill()` — fill цвет берётся из `getComputedStyle(activeTab).backgroundColor`
-  - `_calScheduleShadowUpdate()` — через `requestAnimationFrame`
+- **initCalendar()**: preloadAllData() с fallback на loadAllEvents() → renderCalendar(true) → calStartNowLineTimer() → addEventListener('transitionend') на `cal-day-tabs`. Динамические элементы создаются внутри renderCalendar
+- **Toolbar**: стрелки навигации + кликабельный label «Месяц Год» (picker с select'ами) + «Сегодня» + «+ Добавить». На мобайле: `+` справа, spacer скрыт
+- **Тень (SVG feDropShadow)**: CSS `filter: drop-shadow()` **ЗАБРОШЕН** — `body { overflow: hidden }` обрезает. SVG `feDropShadow` с `overflow: visible`
+  - SVG shadow path: `fill` (цвет активной вкладки) + filter (feGaussianBlur, stdDeviation=5, dy=3, alpha=0.3)
+  - **SVG stroke path**: отдельный `<path id="cal-stroke-path">` в `<svg class="cal-stroke-svg">` (z-index:10). Обводка `border-strong` вокруг всего контура. Outset координаты (+1px наружу) чтобы stroke не попадал под DOM
+  - A-дуги: `rt=10` (скругление вкладки), `rp=12` (скругление панели), `rl` (левый угол шапки)
+  - `_calUpdateShadow()` строит оба path, `_calUpdateShadowFill()` обновляет fill + stroke
   - `transitionend` listener на `cal-day-tabs` (свойство `padding`) — пересчёт после анимации
 - **Вкладки (tabs)**: `align-items: flex-end` на `.cal-day-tabs` — неактивные вкладки короче (padding:6px/8px), активная выше (padding:10px/12px). Без `flex-end` браузер растягивает все вкладки по высоте (`stretch` default)
-- **Hover**: JS `position: fixed` через `getBoundingClientRect()` — CSS-only hover expansion невозможен из-за overflow цепочки. `_calOnEvEnter`/`_calOnEvLeave`
+- **Hover**: JS `position: fixed` через `getBoundingClientRect()` — CSS-only hover expansion невозможен из-за overflow цепочки. Split-события расширяются влево. Clamp inside cal-wrap boundaries
 - **Now-line**: `setTimeout` вместо `setInterval`, DOM кэшируется (`_calNowLines[]`, `_calNowTimeLabel`), обновляется только `style.top`
 - **События**: absolute позиционение внутри relative `.cal-col`, `findOverlapGroups()` для side-by-side overlap, цвет по hall (h0-h3)
-- **Заголовки колонок**: `.cal-rooms-header` — отдельный статический flex-элемент над `.cal-wrap` (не sticky). Решает проблемы border/scroll/z-index
-- **Mobile**: `.cal-day-tabs` overflow-x: auto, `.cal-day-tab` min-width: 48px flex: none
+- **Заголовки колонок**: `.cal-rooms-header` — отдельный статический flex-элемент над `.cal-wrap` (не sticky)
+- **Mobile** (`_calIsMobile()`): компактные pill-вкладки (день недели + число), фильтр залов (чипы), одноколоночная сетка, свайп для переключения дней, `+` в тулбаре справа
+- **Навигация**: `_calSetActiveForWeek()` — при переходе на текущую неделю выбирается текущий день (не понедельник)
 
 ## Правила разработки
 1. **Деплой по веткам**: `develop` → test, `main` → prod
@@ -326,8 +337,8 @@ Events принимают `multipart/form-data`:
 6. **Язык**: все коммиты, сообщения, планы и пояснения — на русском языке
 
 ## Ссылки
-- Тест: `http://45.90.217.225/admin` (nginx → порт 8082)
-- Продакшен: `https://bot.dlab.run/admin` (nginx → порт 8080)
+- Тест: `http://45.90.217.225:8082/admin` (nginx → порт 8082)
+- Продакшен: `https://bot.dlab.run/admin` (nginx → порт 8081)
 - GitHub: `https://github.com/Degalcev/web_adm_secretar`
 
 ## Конфигурация (config.py)
