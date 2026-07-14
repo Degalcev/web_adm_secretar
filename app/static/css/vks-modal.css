@@ -667,3 +667,104 @@
 .timeline-change-remove {
     color: var(--danger);
 }
+
+/* ─── Participants ───────────────────────────────────────────────── */
+.event-participants-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.event-participant-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 0.8125rem;
+}
+
+.event-participant-remove {
+    background: none;
+    border: none;
+    color: var(--fg-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0 2px;
+    line-height: 1;
+}
+
+.event-participant-remove:hover {
+    color: var(--danger);
+}
+
+.event-participant-add {
+    position: relative;
+}
+
+.event-participant-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.event-participant-option {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    color: var(--fg);
+}
+
+.event-participant-option:hover {
+    background: var(--bg-hover);
+}
+
+/* ─── Repeat ─────────────────────────────────────────────────────── */
+.evt-repeat-options {
+    padding: 8px 0;
+}
+
+.evt-weekday-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.evt-wd-btn {
+    width: 36px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.evt-wd-btn:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+}
+
+.evt-wd-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ─── Organizer type toggle ──────────────────────────────────────── */
+#f-event-organizer-type + #f-event-organizer {
+    flex: 1;
+}

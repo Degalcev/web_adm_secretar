@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru" data-panel-theme="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Календарь VKS — Grid</title>
+<link rel="stylesheet" href="../app/static/css/base.css">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+.app{display:flex;height:100vh}
+.sidebar{width:220px;background:var(--bg-elevated);border-right:1px solid var(--border);padding:16px;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-title{font-size:.875rem;font-weight:600;color:var(--fg);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.sidebar-title svg{color:var(--accent)}
+.sidebar-label{font-size:.625rem;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.sidebar-item{padding:8px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:.8125rem;color:var(--fg-muted);margin-bottom:2px;transition:all var(--motion-fast) var(--ease-standard);display:flex;align-items:center;gap:8px}
+.sidebar-item:hover{background:var(--surface);color:var(--fg)}
+.sidebar-item.active{background:var(--accent);color:var(--bg);font-weight:500}
+.sidebar-item svg{width:16px;height:16px;flex-shrink:0}
+.sidebar-spacer{flex:1}
+.sidebar-theme{display:flex;gap:6px;flex-wrap:wrap}
+.theme-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid var(--border);transition:all var(--motion-fast);position:relative}
+.theme-dot:hover{transform:scale(1.15)}
+.theme-dot.active{border-color:var(--fg);box-shadow:0 0 0 2px var(--bg)}
+.theme-dot::after{content:attr(data-name);position:absolute;left:28px;top:50%;transform:translateY(-50%);background:var(--bg-elevated);color:var(--fg);padding:3px 8px;border-radius:4px;font-size:.625rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity 150ms;border:1px solid var(--border);z-index:10}
+.theme-dot:hover::after{opacity:1}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.toolbar-nav{display:flex;align-items:center;gap:6px}
+.toolbar-title{font-size:1rem;font-weight:600;min-width:220px;color:var(--fg)}
+.toolbar-sep{width:1px;height:24px;background:var(--border)}
+.btn{padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.75rem;cursor:pointer;transition:all var(--motion-fast) var(--ease-standard);font-family:var(--font-sans);font-weight:500}
+.btn:hover{background:var(--surface-strong);border-color:var(--border-strong)}
+.btn-accent{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.btn-accent:hover{opacity:.85}
+.btn-icon{padding:6px 8px}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-size:.6875rem;color:var(--fg-muted)}
+.filter-select{padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--fg);font-size:.75rem;font-family:var(--font-sans);cursor:pointer}
+.filter-select:hover{border-color:var(--border-strong)}
+
+.day-tabs{display:flex;gap:4px;padding:8px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-shrink:0}
+.day-tab{padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:.75rem;text-align:center;min-width:60px;background:var(--surface);border:1px solid var(--border);color:var(--fg-muted);transition:all var(--motion-fast) var(--ease-standard)}
+.day-tab:hover{background:var(--surface-strong);color:var(--fg);border-color:var(--border-strong)}
+.day-tab.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:500}
+.day-tab.today{border-color:var(--accent)}
+.day-tab .dn{font-weight:600;font-size:.8125rem;display:block}
+.day-tab .dd{font-size:.5625rem;text-transform:uppercase;opacity:.7}
+
+.content{flex:1;overflow:auto;background:var(--bg)}
+
+/* Calendar grid */
+.cal{display:flex;position:relative;min-width:700px}
+.cal-time{width:56px;flex-shrink:0;position:relative;border-right:1px solid var(--border);background:var(--bg-elevated)}
+.cal-time-label{position:absolute;right:6px;font-size:.625rem;color:var(--fg-muted);transform:translateY(-50%)}
+.cal-col{flex:1;position:relative;border-right:1px solid var(--border)}
+.cal-col:last-child{border-right:none}
+.cal-col-hdr{position:sticky;top:0;z-index:4;background:var(--surface);border-bottom:1px solid var(--border);padding:8px;font-size:.6875rem;font-weight:600;text-align:center;backdrop-filter:blur(8px)}
+.cal-col-hdr.h0{color:var(--accent)}
+.cal-col-hdr.h1{color:var(--success)}
+.cal-col-hdr.h2{color:var(--warning)}
+.cal-col-hdr.h3{color:var(--danger)}
+
+/* Hour lines */
+.hour-line{position:absolute;left:0;right:0;height:1px;background:var(--border);pointer-events:none}
+
+/* Events */
+.cal-ev{position:absolute;border-radius:var(--radius-sm);padding:4px 6px;border-left:3px solid var(--accent);background:rgba(34,211,238,0.2);cursor:pointer;transition:all var(--motion-fast) var(--ease-standard);overflow:hidden;z-index:1}
+.cal-ev:hover{box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:2;filter:brightness(1.1)}
+.cal-ev.h0{border-left-color:var(--accent);background:rgba(34,211,238,0.2)}
+.cal-ev.h1{border-left-color:var(--success);background:rgba(74,222,128,0.2)}
+.cal-ev.h2{border-left-color:var(--warning);background:rgba(251,191,36,0.2)}
+.cal-ev.h3{border-left-color:var(--danger);background:rgba(248,113,113,0.2)}
+.cal-ev .ev-type{font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.6875rem}
+.cal-ev .ev-time{color:var(--accent-ambient);font-weight:500;font-size:.625rem}
+.cal-ev .ev-org{color:var(--fg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;font-size:.5625rem}
+.cal-ev .ev-desc{color:var(--fg-subtle);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.5625rem;margin-top:1px}
+.cal-ev .ev-status{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cal-ev .ev-status.active{background:var(--warning)}
+.cal-ev .ev-status.done{background:var(--success)}
+.cal-ev .ev-status.missed{background:var(--danger)}
+.cal-ev .ev-badges{display:flex;align-items:center;gap:4px;margin-top:2px}
+.cal-ev .ev-badge{font-size:.5rem;color:var(--fg-muted);display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:3px}
+.cal-ev .ev-badge svg{width:8px;height:8px;flex-shrink:0}
+
+/* Hover expand — full info */
+.cal-ev:hover{min-width:180px;z-index:20!important;overflow:visible}
+.cal-ev:hover .ev-org,.cal-ev:hover .ev-desc,.cal-ev:hover .ev-badges{display:flex!important}
+.cal-ev:hover .ev-type{white-space:normal}
+.cal-ev:hover .ev-org{white-space:normal}
+.cal-ev:hover .ev-desc{white-space:normal}
+
+/* Split events — hide extra fields by default, show on hover */
+.cal-ev.split:not(:hover) .ev-org{display:none}
+.cal-ev.split:not(:hover) .ev-desc{display:none}
+.cal-ev.split:not(:hover) .ev-badges{display:none}
+
+/* Now line */
+.now-line{position:absolute;left:0;right:0;height:2px;background:var(--danger);z-index:10;pointer-events:none}
+.now-line::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--danger);box-shadow:0 0 8px rgba(248,113,113,0.4)}
+.now-time{position:absolute;font-size:.5625rem;color:var(--danger);font-weight:600;z-index:11;pointer-events:none;background:var(--bg-elevated);padding:1px 4px;border-radius:3px;border:1px solid rgba(248,113,113,0.3)}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
+
+@media(max-width:768px){.sidebar{display:none}.toolbar{padding:8px 12px;gap:8px}.toolbar-title{font-size:.875rem;min-width:auto}.day-tabs{padding:6px 12px;overflow-x:auto}.day-tab{min-width:48px;padding:6px 10px}.cal{min-width:500px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+    <div class="sidebar-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Календарь VKS</div>
+    <div class="sidebar-label">Навигация</div>
+    <div class="sidebar-item" onclick="navWeek(-1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>Пред. неделя</div>
+    <div class="sidebar-item active" onclick="goToday()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Текущая неделя</div>
+    <div class="sidebar-item" onclick="navWeek(1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>След. неделя</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-label">Тема</div>
+    <div class="sidebar-theme" id="theme-dots"></div>
+</div>
+<div class="main">
+<div class="toolbar">
+    <div class="toolbar-nav">
+        <button class="btn btn-icon" onclick="navWeek(-1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span class="toolbar-title" id="cal-title">6 – 12 июля 2026</span>
+        <button class="btn btn-icon" onclick="navWeek(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <button class="btn btn-accent" onclick="goToday()">Сегодня</button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <div class="filter-group"><span class="filter-label">Неделя</span><select class="filter-select" onchange="selectWeek(this.value)"><option value="0">27 (6–12 июля)</option><option value="1">28 (13–19 июля)</option><option value="2">29 (20–26 июля)</option></select></div>
+    <div class="filter-group"><span class="filter-label">Месяц</span><select class="filter-select"><option>Июнь 2026</option><option selected>Июль 2026</option><option>Август 2026</option></select></div>
+    <div class="filter-group"><span class="filter-label">Год</span><select class="filter-select"><option>2025</option><option selected>2026</option></select></div>
+</div>
+<div class="day-tabs" id="day-tabs"></div>
+<div class="content" id="content"></div>
+</div>
+</div>
+
+<script>
+const MONTHS=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const DAY_NAMES=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const HALLS=['Думский зал 309','Большой зал','Малый зал 411','Губернаторский зал'];
+const H_START=6,H_END=23,HOUR_H=60;
+const TOTAL_H=(H_END-H_START)*HOUR_H;
+
+let weekStart=getMonday(new Date()),activeDay=new Date();
+
+function getMonday(d){const r=new Date(d);const day=r.getDay();r.setDate(r.getDate()-day+(day===0?-6:1));r.setHours(0,0,0,0);return r}
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r}
+function fmt(d){return`${d.getDate()} ${MONTHS[d.getMonth()]}`}
+function dateStr(d){return d.toISOString().slice(0,10)}
+function timeToMin(t){const[h,m]=t.split(':').map(Number);return h*60+m}
+function fmtEnd(e){const s=timeToMin(e.time)+e.dur;return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+
+const allEvents=[
+{date:'2026-07-06',hall:0,time:'10:00',dur:60,type:'ВКС',name:'Правительство края',org:'',desc:'Совещание с руководством',status:'active',docs:[],url:'https://meet.example.com/gov'},
+{date:'2026-07-06',hall:2,time:'11:30',dur:90,type:'ВКС',name:'Комиссия НТО',org:'Стрыгина',desc:'Координационное совещание',status:'active',docs:['протокол.pdf']},
+{date:'2026-07-06',hall:0,time:'12:15',dur:45,type:'ВКС',name:'Видео СВО',org:'',desc:'Оперативное совещание',status:'active',docs:[]},
+{date:'2026-07-06',hall:2,time:'15:00',dur:60,type:'ВКС',name:'ВКС Мин. Туризма',org:'',desc:'Видеоконференцсвязь',status:'active',docs:['повестка.docx'],url:'https://meet.example.com/tourism'},
+{date:'2026-07-06',hall:1,time:'9:30',dur:120,type:'Совещание',name:'Профильная комиссия',org:'Сидоров',desc:'Рассмотрение вопросов',status:'active',docs:['материалы.pdf','повестка.docx']},
+{date:'2026-07-06',hall:3,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минэкономики',org:'Петров',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-06',hall:1,time:'14:15',dur:45,type:'Совещание',name:'Координационное совещание',org:'',desc:'Подготовка к заседанию',status:'active',docs:[]},
+{date:'2026-07-06',hall:3,time:'13:30',dur:60,type:'ВКС',name:'ВКС Минпрома',org:'',desc:'Видеоконференцсвязь',status:'active',docs:['доклад.pdf']},
+{date:'2026-07-07',hall:0,time:'9:00',dur:180,type:'Совещание',name:'Совещание с силовиками',org:'при Нагибине',desc:'Координация действий',status:'active',docs:['порядок.docx']},
+{date:'2026-07-07',hall:2,time:'10:00',dur:90,type:'ВКС',name:'ВКС при Мельникове',org:'Болотовская',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-07',hall:0,time:'12:00',dur:30,type:'ВКС',name:'Видео СВО',org:'',desc:'Оперативное совещание',status:'done',docs:[]},
+{date:'2026-07-07',hall:2,time:'11:00',dur:60,type:'ВКС',name:'Совет по делам инвалидов',org:'Бородина Е.Ю.',desc:'Видеоконференцсвязь',status:'active',docs:['протокол.pdf']},
+{date:'2026-07-07',hall:2,time:'10:30',dur:45,type:'Совещание',name:'Координационное совещание',org:'Козлов',desc:'Подготовка документов',status:'active',docs:[]},
+{date:'2026-07-07',hall:0,time:'17:30',dur:90,type:'Совещание',name:'Рабочее совещание депутатов',org:'Чеснокова',desc:'Обсуждение бюджета',status:'active',docs:['бюджет.pdf','проект.docx']},
+{date:'2026-07-07',hall:2,time:'14:30',dur:60,type:'ВКС',name:'Ветеринария',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-07',hall:3,time:'15:00',dur:60,type:'ВКС',name:'ВКС Минздрава',org:'',desc:'Видеоконференцсвязь',status:'active',docs:['доклад.pdf']},
+{date:'2026-07-07',hall:1,time:'9:00',dur:60,type:'Совещание',name:'Профильная комиссия',org:'Сидоров',desc:'Рассмотрение вопросов',status:'done',docs:[]},
+{date:'2026-07-07',hall:3,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минэкономики',org:'Петров',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-08',hall:0,time:'12:00',dur:30,type:'ВКС',name:'Видео СВО',org:'',desc:'Оперативное совещание',status:'active',docs:[]},
+{date:'2026-07-08',hall:0,time:'14:30',dur:60,type:'Совещание',name:'Думская фракция',org:'',desc:'Заседание фракции',status:'active',docs:['повестка.docx']},
+{date:'2026-07-08',hall:1,time:'13:00',dur:300,type:'Совещание',name:'Заседание думы',org:'',desc:'Основное заседание',status:'active',docs:['повестка.pdf','проекты.docx']},
+{date:'2026-07-08',hall:2,time:'14:30',dur:90,type:'Совещание',name:'Комитет Зак думы',org:'по вопросу алкоголя',desc:'Рассмотрение законопроекта',status:'active',docs:['законопроект.pdf']},
+{date:'2026-07-08',hall:2,time:'17:00',dur:60,type:'ВКС',name:'ВКС Минжкх',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-08',hall:2,time:'10:00',dur:120,type:'ВКС',name:'ВКС Минобразования',org:'Козлова',desc:'Видеоконференцсвязь',status:'active',docs:['презентация.pdf'],url:'https://meet.example.com/edu'},
+{date:'2026-07-08',hall:3,time:'10:15',dur:75,type:'ВКС',name:'ВКС Минкультуры',org:'Новиков',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-08',hall:3,time:'14:00',dur:60,type:'Совещание',name:'Комиссия по бюджету',org:'',desc:'Рассмотрение бюджета',status:'active',docs:['бюджет.pdf']},
+{date:'2026-07-08',hall:1,time:'10:00',dur:90,type:'Совещание',name:'Совещание по инфраструктуре',org:'Волков',desc:'Обсуждение проектов',status:'active',docs:['проект.pdf']},
+{date:'2026-07-08',hall:0,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минтруда',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-08',hall:0,time:'10:30',dur:60,type:'ВКС',name:'ВКС Минобразования (доп)',org:'Петрова',desc:'Дополнительная конференция',status:'active',docs:[]},
+{date:'2026-07-09',hall:0,time:'12:00',dur:30,type:'ВКС',name:'Видео СВО',org:'',desc:'Оперативное совещание',status:'missed',docs:[]},
+{date:'2026-07-09',hall:1,time:'11:00',dur:60,type:'ВКС',name:'ВКС минвнутрен',org:'ветераны',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-09',hall:2,time:'11:00',dur:60,type:'Совещание',name:'Правительство исп. бюджета',org:'',desc:'Исполнение бюджета',status:'active',docs:['отчёт.pdf']},
+{date:'2026-07-09',hall:2,time:'12:30',dur:60,type:'ВКС',name:'ВКС Минтранспорта',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-09',hall:3,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минпромторг',org:'Конохова Е.В.',desc:'Видеоконференцсвязь',status:'active',docs:['доклад.pdf']},
+{date:'2026-07-09',hall:3,time:'11:30',dur:30,type:'Совещание',name:'Комиссия по НТО',org:'',desc:'Совещание',status:'active',docs:[]},
+{date:'2026-07-09',hall:0,time:'15:15',dur:45,type:'ВКС',name:'ВКС Минфина',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-09',hall:1,time:'15:00',dur:60,type:'Совещание',name:'Совещание по строительству',org:'Лебедев',desc:'Обсуждение проектов',status:'active',docs:['проект.pdf','смета.xlsx']},
+{date:'2026-07-10',hall:0,time:'12:00',dur:30,type:'ВКС',name:'Видео СВО',org:'',desc:'Оперативное совещание',status:'active',docs:[]},
+{date:'2026-07-10',hall:2,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минздрава',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-10',hall:2,time:'10:30',dur:60,type:'Совещание',name:'Совещание по IT',org:'Федоров',desc:'Обсуждение IT-инфраструктуры',status:'active',docs:['план.pdf']},
+{date:'2026-07-10',hall:2,time:'14:00',dur:60,type:'ВКС',name:'ВКС Минэнергетики',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-10',hall:1,time:'9:00',dur:60,type:'Совещание',name:'Планёрка руководства',org:'',desc:'Еженедельная планёрка',status:'active',docs:[]},
+{date:'2026-07-10',hall:3,time:'11:00',dur:60,type:'ВКС',name:'ВКС Минюстиции',org:'',desc:'Видеоконференцсвязь',status:'active',docs:['доклад.pdf']},
+{date:'2026-07-11',hall:0,time:'10:00',dur:60,type:'ВКС',name:'ВКС Минобороны',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+{date:'2026-07-11',hall:2,time:'11:00',dur:60,type:'Совещание',name:'Совещание по подготовке',org:'',desc:'Подготовка к следующей неделе',status:'active',docs:[]},
+{date:'2026-07-12',hall:0,time:'10:00',dur:60,type:'ВКС',name:'ВКС Мینспорта',org:'',desc:'Видеоконференцсвязь',status:'active',docs:[]},
+];
+
+function getEventsForDate(ds){return allEvents.filter(e=>e.date===ds)}
+
+// Day tabs
+function renderDayTabs(){
+    const tabs=document.getElementById('day-tabs'),today=dateStr(new Date());
+    let html='';
+    for(let i=0;i<7;i++){
+        const d=addDays(weekStart,i),ds=dateStr(d);
+        html+=`<div class="day-tab${ds===dateStr(activeDay)?' active':''}${ds===today?' today':''}" onclick="selectDay(${i})"><span class="dn">${DAY_NAMES[i]}</span><span class="dd">${d.getDate()}</span></div>`;
+    }
+    tabs.innerHTML=html;
+}
+function selectDay(i){activeDay=addDays(weekStart,i);renderDayTabs();renderGrid()}
+
+// Navigation
+function navWeek(d){weekStart.setDate(weekStart.getDate()+d*7);activeDay=new Date(weekStart);updateTitle();renderDayTabs();renderGrid()}
+function goToday(){weekStart=getMonday(new Date());activeDay=new Date();updateTitle();renderDayTabs();renderGrid()}
+function selectWeek(v){const b=new Date(2026,6,6);b.setDate(b.getDate()+parseInt(v)*7);weekStart=getMonday(b);activeDay=new Date(weekStart);updateTitle();renderDayTabs();renderGrid()}
+function updateTitle(){const e=addDays(weekStart,6);document.getElementById('cal-title').textContent=`${fmt(weekStart)} – ${fmt(e)}`}
+
+// Themes
+const THEMES=[{id:'default',name:'Default',accent:'#22d3ee'},{id:'midnight',name:'Midnight',accent:'#60a5fa'},{id:'ember',name:'Ember',accent:'#f59e0b'},{id:'boreal',name:'Boreal',accent:'#14b8a6'},{id:'web',name:'Web',accent:'#8577f2'},{id:'xuiClassic',name:'3x-ui',accent:'#008771'},{id:'starWars',name:'Star Wars',accent:'#ffe81f'},{id:'vision',name:'Vision',accent:'#007aff'}];
+function renderThemeDots(){document.getElementById('theme-dots').innerHTML=THEMES.map(t=>`<div class="theme-dot${t.id==='default'?' active':''}" style="background:${t.accent}" data-name="${t.name}" onclick="setTheme('${t.id}')"></div>`).join('')}
+function setTheme(id){document.documentElement.setAttribute('data-panel-theme',id);document.querySelectorAll('.theme-dot').forEach(d=>d.classList.remove('active'));event.target.classList.add('active')}
+
+// Grid rendering with overlap detection
+function renderGrid(){
+    const ds=dateStr(activeDay),dayEv=getEventsForDate(ds);
+    let html='<div class="cal">';
+
+    // Time column with labels
+    html+=`<div class="cal-time" style="height:${TOTAL_H}px">`;
+    for(let h=H_START;h<H_END;h++){
+        html+=`<div class="cal-time-label" style="top:${(h-H_START)*HOUR_H}px">${String(h).padStart(2,'0')}:00</div>`;
+        html+=`<div class="hour-line" style="top:${(h-H_START)*HOUR_H}px"></div>`;
+    }
+    html+='</div>';
+
+    // Location columns
+    HALLS.forEach((hall,hi)=>{
+        const hallEv=dayEv.filter(e=>e.hall===hi).sort((a,b)=>timeToMin(a.time)-timeToMin(b.time));
+        html+=`<div class="cal-col"><div class="cal-col-hdr h${hi}">${hall}</div><div style="height:${TOTAL_H}px;position:relative">`;
+
+        // Hour lines
+        for(let h=H_START;h<H_END;h++){
+            html+=`<div class="hour-line" style="top:${(h-H_START)*HOUR_H}px"></div>`;
+        }
+
+        // Overlap groups
+        const groups=findOverlapGroups(hallEv);
+        groups.forEach(group=>{
+            const cols=group.length;
+            group.forEach((e,ci)=>{
+                const start=timeToMin(e.time),end=start+(e.dur||60);
+                const top=((start-H_START*60)/60)*HOUR_H;
+                const height=((e.dur||60)/60)*HOUR_H;
+                const w=`calc((100% - ${(cols-1)*3}px) / ${cols})`;
+                const left=ci===0?0:`calc(${ci} * (100% - ${(cols-1)*3}px) / ${cols} + ${ci*3}px)`;
+
+                const isSplit=cols>1;
+                html+=`<div class="cal-ev h${hi}${isSplit?' split':''}" style="top:${top}px;height:${height}px;left:${left};width:${w}" title="${e.type}: ${e.name}${e.org?' ('+e.org+')':''}\\n${e.desc||''}\\n${e.time}${e.dur?'–'+fmtEnd(e):''}">`;
+                html+=`<div style="display:flex;align-items:center;gap:4px"><span class="ev-status ${e.status}"></span><span class="ev-type">${e.name}</span></div>`;
+                html+=`<div class="ev-time">${e.time}${e.dur?'–'+fmtEnd(e):''}</div>`;
+                if(e.org)html+=`<div class="ev-org">${e.org}</div>`;
+                if(e.desc)html+=`<div class="ev-desc">${e.desc}</div>`;
+                html+='<div class="ev-badges">';
+                if(e.docs&&e.docs.length>0)html+=`<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${e.docs.length}</span>`;
+                if(e.url)html+='<span class="ev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>';
+                html+='</div>';
+                html+='</div>';
+            });
+        });
+
+        html+='</div></div>';
+    });
+
+    html+='</div>';
+    document.getElementById('content').innerHTML=html;
+
+    // Now line
+    const now=new Date();
+    if(dateStr(now)===ds){
+        const hm=now.getHours(),mm=now.getMinutes();
+        if(hm>=H_START&&hm<H_END){
+            const top=((hm*60+mm-H_START*60)/60)*HOUR_H+40;
+            document.querySelectorAll('.cal-col').forEach(col=>{
+                const line=document.createElement('div');
+                line.className='now-line';line.style.top=top+'px';
+                col.querySelector('div[style]').appendChild(line);
+                const lbl=document.createElement('div');
+                lbl.className='now-time';lbl.style.top=(top-10)+'px';
+                lbl.textContent=`${String(hm).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+                col.querySelector('div[style]').appendChild(lbl);
+            });
+        }
+    }
+    document.getElementById('content').scrollTop=(8-H_START)*HOUR_H;
+}
+
+function findOverlapGroups(events){
+    if(!events.length)return[];
+    const groups=[];
+    events.forEach(e=>{
+        const s=timeToMin(e.time),end=s+(e.dur||60);
+        let placed=false;
+        for(const g of groups){
+            if(g.some(ge=>{const gs=timeToMin(ge.time),ge2=gs+(ge.dur||60);return s<ge2&&end>gs})){
+                g.push(e);placed=true;break;
+            }
+        }
+        if(!placed)groups.push([e]);
+    });
+    return groups;
+}
+
+// Init
+renderThemeDots();updateTitle();renderDayTabs();renderGrid();
+setInterval(renderGrid,60000);
+</script>
+</body>
+</html>

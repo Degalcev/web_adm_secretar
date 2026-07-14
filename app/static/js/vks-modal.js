@@ -1,14 +1,20 @@
 // ─── VKS: Модалка ──────────────────────────────────────────────────────
 
 let isLockedByOther = false;
+let _modalMode = 'vks'; // 'vks' или 'events'
+let _modalParticipants = [];
 
-async function openAddEventModal() {
+async function openAddEventModal(mode = 'vks') {
     if (window._vksModalLoaded) await window._vksModalLoaded;
+    _modalMode = mode;
     isLockedByOther = false;
     editingEventId = null;
     pendingFiles = [];
     removedDocIds = [];
-    document.getElementById('event-modal-title').textContent = 'Добавить ВКС';
+    _modalParticipants = [];
+
+    const isVks = mode === 'vks';
+    document.getElementById('event-modal-title').textContent = isVks ? 'Добавить ВКС' : 'Новое мероприятие';
     document.getElementById('event-modal-actions').style.display = 'none';
     document.getElementById('f-event-completed').checked = false;
     // Скрыть элементы режима редактирования
@@ -18,27 +24,42 @@ async function openAddEventModal() {
     document.getElementById('event-modal-complete-btn').style.display = 'none';
     document.getElementById('event-modal-audit').style.display = 'none';
     document.getElementById('event-url-go').style.display = 'none';
+    // Показать/скрыть тип
+    document.getElementById('f-event-type-group').style.display = '';
+    document.getElementById('f-event-type').value = isVks ? 'ВКС' : 'Совещание';
     // Accent bar — по умолчанию
     const accent = document.getElementById('vks-modal-accent');
     accent.className = 'vks-modal-accent';
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
+    document.getElementById('f-event-duration').value = '60';
     document.getElementById('f-event-url').value = '';
     document.getElementById('f-event-desc').value = '';
     await loadEventSelects();
+    document.getElementById('f-event-organizer-type').value = 'org';
+    onOrganizerTypeChange();
     document.getElementById('f-event-organizer').value = '';
     document.getElementById('f-event-location').value = '';
     document.getElementById('f-event-docs-group').style.display = 'block';
     document.getElementById('event-doc-upload').value = '';
     refreshEventDocs();
+    // Участники
+    _renderParticipants();
+    // Повтор
+    document.getElementById('event-repeat-active').value = 'false';
+    document.getElementById('event-repeat-btn').classList.remove('done');
+    document.getElementById('event-repeat-options').style.display = 'none';
+    // Видимость URL
+    onEventTypeChange();
     document.getElementById('event-modal').classList.add('show');
 }
 
-async function openEditEventModal(id) {
+async function openEditEventModal(id, mode = 'vks') {
     if (window._vksModalLoaded) await window._vksModalLoaded;
     const e = store.allEvents.find(x => x.id === id);
     if (!e) return;
+    _modalMode = mode;
     editingEventId = id;
     pendingFiles = [];
     removedDocIds = [];
@@ -59,7 +80,11 @@ async function openEditEventModal(id) {
             showToast(`Редактирует: ${lockData.locked_by}`, 'warning');
         }
     } catch (err) { console.warn('Lock failed:', err); }
-    document.getElementById('event-modal-title').textContent = 'Редактировать ВКС';
+    document.getElementById('event-modal-title').textContent = (mode === 'events' ? 'Редактирование мероприятия' : 'Редактировать ВКС');
+    // Показать/скрыть тип
+    document.getElementById('f-event-type-group').style.display = '';
+    document.getElementById('f-event-type').value = e.type || 'ВКС';
+    onEventTypeChange();
 
     // Показать элементы режима редактирования
     document.getElementById('event-modal-delete-btn').style.display = 'inline-flex';
@@ -104,14 +129,26 @@ async function openEditEventModal(id) {
     document.getElementById('f-event-completed').checked = e.completed;
     document.getElementById('f-event-date').value = e.date || '';
     document.getElementById('f-event-time').value = e.time || '';
+    document.getElementById('f-event-duration').value = e.duration || 60;
     document.getElementById('f-event-url').value = e.url || '';
     document.getElementById('f-event-desc').value = e.description || '';
     await loadEventSelects();
+    document.getElementById('f-event-organizer-type').value = e.organizer_type || 'org';
+    onOrganizerTypeChange();
     document.getElementById('f-event-organizer').value = e.organizer_id || '';
     document.getElementById('f-event-location').value = e.location_id || '';
     document.getElementById('f-event-docs-group').style.display = 'block';
     document.getElementById('event-doc-upload').value = '';
     refreshEventDocs();
+
+    // Участники
+    _modalParticipants = (e.participants || []).map(p => ({ id: p.user_id || p.id, name: p.name }));
+    _renderParticipants();
+
+    // Повтор
+    document.getElementById('event-repeat-active').value = 'false';
+    document.getElementById('event-repeat-btn').classList.remove('done');
+    document.getElementById('event-repeat-options').style.display = 'none';
 
     // Кнопка «Перейти» — показать если есть URL
     const urlGo = document.getElementById('event-url-go');
@@ -334,12 +371,17 @@ async function saveEvent() {
     const formData = new FormData();
     formData.append('date', date);
     formData.append('time', time);
+    formData.append('duration', document.getElementById('f-event-duration').value);
     formData.append('organizer_id', organizer);
+    formData.append('organizer_type', document.getElementById('f-event-organizer-type').value);
     formData.append('location_id', location);
+    formData.append('type', document.getElementById('f-event-type').value);
     formData.append('url', document.getElementById('f-event-url').value.trim());
     formData.append('description', document.getElementById('f-event-desc').value.trim());
     formData.append('completed', document.getElementById('f-event-completed').checked ? 'true' : 'false');
+    formData.append('notification', 'true');
     formData.append('csrf_token', csrfToken);
+    formData.append('participants', JSON.stringify(_modalParticipants));
 
     if (editingEventId) {
         const existing = store.allEvents.find(x => x.id === editingEventId)?.documents || [];
@@ -376,8 +418,12 @@ async function saveEvent() {
                 try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
                 renderDashboard();
             }
+            // Refresh events page if visible
+            if (_modalMode === 'events' && typeof eventsRenderBoard === 'function') {
+                eventsRenderBoard();
+            }
             closeEventModal();
-            showToast(wasEditing ? 'ВКС обновлено' : 'ВКС добавлено', 'success');
+            showToast(wasEditing ? (_modalMode === 'events' ? 'Мероприятие обновлено' : 'ВКС обновлено') : (_modalMode === 'events' ? 'Мероприятие добавлено' : 'ВКС добавлено'), 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');
         }
@@ -508,5 +554,98 @@ function hideEventHistory() {
         container.innerHTML = '';
         const wrapper = document.querySelector('.vks-modal-body-wrapper');
         if (wrapper) wrapper.classList.remove('timeline-dimmed');
+    }
+}
+
+// ─── Unified modal: type, organizer toggle, participants, repeat ───────
+
+function onEventTypeChange() {
+    const type = document.getElementById('f-event-type').value;
+    const urlGroup = document.getElementById('f-event-url-group');
+    if (urlGroup) urlGroup.style.display = type === 'ВКС' ? '' : 'none';
+}
+
+function onOrganizerTypeChange() {
+    const orgType = document.getElementById('f-event-organizer-type').value;
+    const sel = document.getElementById('f-event-organizer');
+    if (!sel) return;
+    const currentVal = sel.value;
+    if (orgType === 'user') {
+        const users = store.allUsers || [];
+        sel.innerHTML = '<option value="">Не указан</option>' +
+            users.map(u => {
+                const name = [u.last_name, u.first_name].filter(Boolean).join(' ') || u.name || u.username || `#${u.max_id}`;
+                return `<option value="${u.id}">${esc(name)}</option>`;
+            }).join('');
+    } else {
+        const orgs = store.allOrganizers || [];
+        sel.innerHTML = '<option value="">Не указан</option>' +
+            orgs.map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
+    }
+    if (currentVal) sel.value = currentVal;
+}
+
+function _renderParticipants() {
+    const list = document.getElementById('event-participants-list');
+    if (!list) return;
+    list.innerHTML = _modalParticipants.map((p, i) =>
+        `<div class="event-participant-tag">
+            <span>${esc(p.name)}</span>
+            <button class="event-participant-remove" onclick="removeParticipant(${i})">✕</button>
+        </div>`
+    ).join('');
+}
+
+function removeParticipant(idx) {
+    _modalParticipants.splice(idx, 1);
+    _renderParticipants();
+}
+
+let _participantSearchTimer = null;
+function searchParticipants(query) {
+    clearTimeout(_participantSearchTimer);
+    const dropdown = document.getElementById('event-participant-dropdown');
+    if (!query || query.length < 2) { dropdown.style.display = 'none'; return; }
+    _participantSearchTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`/admin/api/participants/search?q=${encodeURIComponent(query)}`, { credentials: 'same-origin' });
+            if (!res.ok) return;
+            const users = await res.json();
+            const existing = new Set(_modalParticipants.map(p => p.id));
+            const filtered = users.filter(u => !existing.has(u.id));
+            if (!filtered.length) { dropdown.style.display = 'none'; return; }
+            dropdown.innerHTML = filtered.map(u => {
+                const name = [u.last_name, u.first_name].filter(Boolean).join(' ') || u.name || u.username;
+                return `<div class="event-participant-option" onclick="addParticipant('${u.id}','${esc(name)}')">${esc(name)}</div>`;
+            }).join('');
+            dropdown.style.display = 'block';
+        } catch (e) { console.warn('Search error:', e); }
+    }, 300);
+}
+
+function addParticipant(id, name) {
+    if (!_modalParticipants.some(p => p.id === id)) {
+        _modalParticipants.push({ id, name });
+        _renderParticipants();
+    }
+    document.getElementById('event-participant-search').value = '';
+    document.getElementById('event-participant-dropdown').style.display = 'none';
+}
+
+function evtToggleRepeat() {
+    const btn = document.getElementById('event-repeat-btn');
+    const options = document.getElementById('event-repeat-options');
+    const active = document.getElementById('event-repeat-active');
+    if (!btn || !options || !active) return;
+    const newState = active.value !== 'true';
+    active.value = newState ? 'true' : 'false';
+    btn.classList.toggle('done', newState);
+    options.style.display = newState ? 'block' : 'none';
+    if (newState) {
+        const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const today = days[new Date().getDay()];
+        document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.day === today);
+        });
     }
 }
