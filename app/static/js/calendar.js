@@ -80,7 +80,7 @@ function _calFmtShort(d) {
 }
 
 function _calFmtEnd(e) {
-    const s = calTimeToMin(e.time) + (e.dur || 60);
+    const s = calTimeToMin(e.time) + (e.duration || 60);
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
@@ -93,12 +93,12 @@ function _calFindOverlapGroups(events) {
     const groups = [];
     events.forEach(e => {
         const s = calTimeToMin(e.time);
-        const end = s + (e.dur || 60);
+        const end = s + (e.duration || 60);
         let placed = false;
         for (const g of groups) {
             if (g.some(ge => {
                 const gs = calTimeToMin(ge.time);
-                const ge2 = gs + (ge.dur || 60);
+                const ge2 = gs + (ge.duration || 60);
                 return s < ge2 && end > gs;
             })) {
                 g.push(e);
@@ -315,7 +315,7 @@ function _calRenderMobileGrid() {
         const cols = group.length;
         group.forEach((e, ci) => {
             const start = calTimeToMin(e.time);
-            const dur = e.dur || 60;
+            const dur = e.duration || 60;
             const top = ((start - CAL_H_START * 60) / 60) * CAL_HOUR_H;
             const height = Math.max((dur / 60) * CAL_HOUR_H - 3, 18);
             const w = `calc((100% - ${(cols - 1) * 3}px) / ${cols})`;
@@ -398,7 +398,7 @@ function _calRenderGrid() {
             const cols = group.length;
             group.forEach((e, ci) => {
                 const start = calTimeToMin(e.time);
-                const dur = e.dur || 60;
+                const dur = e.duration || 60;
                 const top = ((start - CAL_H_START * 60) / 60) * CAL_HOUR_H;
                 const height = (dur / 60) * CAL_HOUR_H;
                 const w = `calc((100% - ${(cols - 1) * 3}px) / ${cols})`;
