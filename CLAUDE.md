@@ -388,7 +388,7 @@ Events принимают `multipart/form-data`:
 - **Вкладки (tabs)**: `align-items: flex-end` на `.cal-day-tabs` — неактивные вкладки короче (padding:6px/8px), активная выше (padding:10px/12px). Без `flex-end` браузер растягивает все вкладки по высоте (`stretch` default)
 - **Hover**: JS `position: fixed` через `getBoundingClientRect()` — CSS-only hover expansion невозможен из-за overflow цепочки. Split-события расширяются влево. Clamp inside cal-wrap boundaries
 - **Now-line**: `setTimeout` вместо `setInterval`, DOM кэшируется (`_calNowLines[]`, `_calNowTimeLabel`), обновляется только `style.top`
-- **События**: absolute позиционение внутри relative `.cal-col`, `findOverlapGroups()` для side-by-side overlap, цвет по hall (h0-h3)
+- **События**: absolute позиционение внутри relative `.cal-col`, `findOverlapGroups()` для side-by-side overlap, цвет по типу (type-vks, type-meeting, type-session, type-board, type-reception)
 - **Заголовки колонок**: `.cal-rooms-header` — отдельный статический flex-элемент над `.cal-wrap` (не sticky)
 - **Mobile** (`_calIsMobile()`): компактные pill-вкладки (день недели + число), фильтр залов (чипы), одноколоночная сетка, свайп для переключения дней, `+` в тулбаре справа
 - **Навигация**: `_calSetActiveForWeek()` — при переходе на текущую неделю выбирается текущий день (не понедельник)

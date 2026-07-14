@@ -19,11 +19,6 @@ function initEventsPage(completed = false) {
 
 let _eventsQuickFilter = '';
 
-function eventsFilterQuick(type) {
-    _eventsQuickFilter = (_eventsQuickFilter === type) ? '' : type;
-    eventsRenderBoard();
-}
-
 function eventsUpdateStats() {
     const active = (store?.allEvents || []).filter(e => !e.completed && e.type !== 'ВКС');
     const now = new Date();

@@ -64,7 +64,16 @@ function _checkDayChange() {
     const today = localDateStr(new Date());
     if (today !== _currentDay) {
         _currentDay = today;
+        // Обновляем все активные страницы при смене дня
         if (typeof loadVksActive === 'function') loadVksActive();
+        if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof eventsRenderBoard === 'function') eventsRenderBoard();
+        // Обновляем календарь если он открыт
+        if (typeof renderCalendar === 'function') {
+            calWeekStart = getMonday(new Date());
+            calActiveDay = new Date();
+            renderCalendar(true);
+        }
     }
 }
 setInterval(_checkDayChange, 60000);
