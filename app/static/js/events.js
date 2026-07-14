@@ -53,24 +53,60 @@ function _eventsPopulateFilters() {
     const locSel = document.getElementById('f-events-loc');
     if (orgSel && store?.allOrganizers) {
         orgSel.innerHTML = '<option value="">Все</option>' +
-            store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
+            store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
     }
     if (locSel && store?.allLocations) {
         locSel.innerHTML = '<option value="">Все</option>' +
             store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+    }
+
+    // Populate date selects (day 1-31, month names, years)
+    const daySel = document.getElementById('f-events-day');
+    const monthSel = document.getElementById('f-events-month');
+    const yearSel = document.getElementById('f-events-year');
+    if (daySel && daySel.options.length <= 1) {
+        for (let i = 1; i <= 31; i++) daySel.innerHTML += `<option value="${i}">${i}</option>`;
+    }
+    if (monthSel && monthSel.options.length <= 1) {
+        const months = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        months.forEach((m, i) => { monthSel.innerHTML += `<option value="${i + 1}">${m}</option>`; });
+    }
+    if (yearSel && yearSel.options.length <= 1) {
+        const curYear = new Date().getFullYear();
+        for (let y = curYear; y >= curYear - 3; y--) yearSel.innerHTML += `<option value="${y}">${y}</option>`;
     }
 }
 
 function eventsFilterType(type) {
     _eventsTypeFilter = type;
     _eventsQuickFilter = '';
-    document.querySelectorAll('#events-tabs .events-tab').forEach(tab => {
-        tab.classList.toggle('active', (tab.textContent === (type || 'Все')));
-    });
     const typeSelect = document.getElementById('f-events-type');
     if (typeSelect) typeSelect.value = type || '';
+    _eventsUpdateCardActive();
     eventsRenderBoard();
     eventsUpdateStats();
+}
+
+function eventsFilterQuick(type) {
+    if (type === 'all') {
+        _eventsQuickFilter = '';
+    } else {
+        _eventsQuickFilter = (_eventsQuickFilter === type) ? '' : type;
+    }
+    _eventsUpdateCardActive();
+    eventsRenderBoard();
+}
+
+function _eventsUpdateCardActive() {
+    const cards = { all: 'stat-evt-total-card', today: 'stat-evt-today-card', soon: 'stat-evt-soon-card', missed: 'stat-evt-missed-card' };
+    Object.values(cards).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+    });
+    if (_eventsQuickFilter) {
+        const activeCard = document.getElementById(cards[_eventsQuickFilter]);
+        if (activeCard) activeCard.classList.add('active');
+    }
 }
 
 function eventsApplyFilters() {
@@ -82,11 +118,12 @@ function eventsResetFilters() {
     document.getElementById('f-events-org').value = '';
     document.getElementById('f-events-loc').value = '';
     document.getElementById('f-events-desc').value = '';
+    document.getElementById('f-events-day').value = '';
+    document.getElementById('f-events-month').value = '';
+    document.getElementById('f-events-year').value = '';
     _eventsTypeFilter = null;
     _eventsQuickFilter = '';
-    document.querySelectorAll('#events-tabs .events-tab').forEach((tab, i) => {
-        tab.classList.toggle('active', i === 0);
-    });
+    _eventsUpdateCardActive();
     eventsRenderBoard();
     eventsUpdateStats();
 }
@@ -126,6 +163,21 @@ function eventsRenderBoard() {
         } else if (_eventsQuickFilter === 'missed') {
             events = events.filter(e => !e.date || e.date < today);
         }
+    }
+
+    // Date filter (day/month/year)
+    const dayVal = document.getElementById('f-events-day')?.value || '';
+    const monthVal = document.getElementById('f-events-month')?.value || '';
+    const yearVal = document.getElementById('f-events-year')?.value || '';
+    if (dayVal || monthVal || yearVal) {
+        events = events.filter(e => {
+            if (!e.date) return false;
+            const d = new Date(e.date + 'T00:00:00');
+            if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
+            if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
+            if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
+            return true;
+        });
     }
 
     // Apply filters
