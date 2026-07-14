@@ -1,129 +1,215 @@
-// ─── Страница мероприятий ──────────────────────────────────────────
+// ─── Страница мероприятий (VKS-style) ─────────────────────────────
 
 let _eventsCompleted = false;
 let _eventsTypeFilter = null;
-let _eventsCursor = null;
-let _eventsLoading = false;
 
 const EVENT_TYPES = ['Совещание', 'Встреча', 'Заседание', 'Приём'];
 
 function initEventsPage(completed = false) {
     _eventsCompleted = completed;
     _eventsTypeFilter = null;
-    _eventsCursor = null;
-    _eventsRenderPage();
-    _eventsLoadEvents(true);
+
+    const title = document.getElementById('events-page-title');
+    if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
+
+    _eventsPopulateFilters();
+    eventsRenderBoard();
 }
 
-function _eventsRenderPage() {
-    const container = document.getElementById('events-container');
-    if (!container) return;
-
-    const title = _eventsCompleted ? 'Завершённые мероприятия' : 'Текущие мероприятия';
-    let html = `<div class="events-header"><h2>${title}</h2>`;
-    html += `<div class="events-actions">`;
-    html += `<button class="btn btn-secondary" onclick="openPrintModal()">Печать</button>`;
-    html += `<button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>`;
-    html += `</div></div>`;
-
-    html += '<div class="events-tabs">';
-    html += `<button class="events-tab ${!_eventsTypeFilter ? 'active' : ''}" onclick="_eventsFilterType(null)">Все</button>`;
-    EVENT_TYPES.forEach(t => {
-        html += `<button class="events-tab ${_eventsTypeFilter === t ? 'active' : ''}" onclick="_eventsFilterType('${t}')">${t}</button>`;
-    });
-    html += '</div>';
-
-    html += '<div class="events-list" id="events-list"></div>';
-    container.innerHTML = html;
+function _eventsPopulateFilters() {
+    const orgSel = document.getElementById('f-events-org');
+    const locSel = document.getElementById('f-events-loc');
+    if (orgSel && window.store?.allOrganizers) {
+        orgSel.innerHTML = '<option value="">Все</option>' +
+            window.store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
+    }
+    if (locSel && window.store?.allLocations) {
+        locSel.innerHTML = '<option value="">Все</option>' +
+            window.store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+    }
 }
 
-function _eventsFilterType(type) {
+function eventsFilterType(type) {
     _eventsTypeFilter = type;
-    _eventsCursor = null;
+    document.querySelectorAll('#events-tabs .events-tab').forEach(tab => {
+        tab.classList.toggle('active', (tab.textContent === (type || 'Все')));
+    });
+    eventsRenderBoard();
+}
 
-    document.querySelectorAll('.events-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.textContent === (type || 'Все'));
+function eventsApplyFilters() {
+    eventsRenderBoard();
+}
+
+function eventsResetFilters() {
+    document.getElementById('f-events-org').value = '';
+    document.getElementById('f-events-loc').value = '';
+    document.getElementById('f-events-desc').value = '';
+    eventsRenderBoard();
+}
+
+function eventsRenderBoard() {
+    const board = document.getElementById('events-board');
+    if (!board) return;
+
+    const orgVal = document.getElementById('f-events-org')?.value || '';
+    const locVal = document.getElementById('f-events-loc')?.value || '';
+    const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
+
+    let events = [...(window.store?.allEvents || [])];
+
+    // Filter by status
+    if (_eventsCompleted) {
+        events = events.filter(e => e.completed);
+    } else {
+        events = events.filter(e => !e.completed);
+    }
+
+    // Filter by type
+    if (_eventsTypeFilter) {
+        events = events.filter(e => e.type === _eventsTypeFilter);
+    }
+
+    // Apply filters
+    if (orgVal) events = events.filter(e => e.organizer_id === orgVal);
+    if (locVal) events = events.filter(e => e.location_id === locVal);
+    if (descVal) {
+        events = events.filter(e =>
+            (e.description || '').toLowerCase().includes(descVal) ||
+            (e.url || '').toLowerCase().includes(descVal)
+        );
+    }
+
+    if (!events.length) {
+        board.innerHTML = '<div class="empty-state">Нет мероприятий</div>';
+        return;
+    }
+
+    // Group by date blocks
+    const now = new Date();
+    const today = localDateStr(now);
+    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrow = localDateStr(tmr);
+    const da = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
+    const dayAfter = localDateStr(da);
+
+    const missed = [];
+    const todayEvents = [];
+    const tomorrowEvents = [];
+    const dayAfterEvents = [];
+    const soon = [];
+
+    events.forEach(e => {
+        if (!e.date || e.date < today) missed.push(e);
+        else if (e.date === today) todayEvents.push(e);
+        else if (e.date === tomorrow) tomorrowEvents.push(e);
+        else if (e.date === dayAfter) dayAfterEvents.push(e);
+        else soon.push(e);
     });
 
-    _eventsLoadEvents(true);
+    const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
+    const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
+    missed.sort(sortByDateThenTime);
+    todayEvents.sort(sortByTime);
+    tomorrowEvents.sort(sortByTime);
+    dayAfterEvents.sort(sortByTime);
+    soon.sort(sortByDateThenTime);
+
+    let html = '';
+
+    if (missed.length) html += _eventsRenderBlock('Пропущенные', missed, 'missed');
+    if (todayEvents.length) html += _eventsRenderBlock('Сегодня', todayEvents, 'today');
+    if (tomorrowEvents.length) html += _eventsRenderBlock('Завтра', tomorrowEvents, 'tomorrow');
+    if (dayAfterEvents.length) html += _eventsRenderBlock('Послезавтра', dayAfterEvents, 'day-after');
+    if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
+
+    board.innerHTML = html;
 }
 
-async function _eventsLoadEvents(reset = false) {
-    if (_eventsLoading) return;
-    _eventsLoading = true;
+function _eventsRenderBlock(title, events, type) {
+    let html = `<div class="vks-date-group vks-block-${type}">`;
+    html += `<div class="vks-date-header">`;
 
-    const list = document.getElementById('events-list');
-    if (!list) return;
+    const icons = {
+        missed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+        today: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        tomorrow: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        'day-after': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+        soon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    };
 
-    if (reset) {
-        list.innerHTML = '<div class="events-loading">Загрузка...</div>';
-        _eventsCursor = null;
-    }
+    html += icons[type] || icons.soon;
+    html += `${title} <span class="vks-date-count">${events.length}</span>`;
+    html += `</div>`;
 
-    try {
-        let url = `/admin/api/events?limit=20&status=${_eventsCompleted ? 'completed' : 'active'}`;
-        if (_eventsTypeFilter) url += `&type=${encodeURIComponent(_eventsTypeFilter)}`;
-        if (_eventsCursor) {
-            url += `&cursor_date=${_eventsCursor.date}&cursor_time=${_eventsCursor.time}`;
-        }
+    events.forEach(e => {
+        html += _eventsRenderCard(e, type);
+    });
 
-        const resp = await fetch(url);
-        const data = await resp.json();
-        const events = data.events || [];
-
-        if (reset) list.innerHTML = '';
-
-        events.forEach(e => {
-            list.insertAdjacentHTML('beforeend', _eventsRenderRow(e));
-        });
-
-        if (data.has_more) {
-            _eventsCursor = {
-                date: data.next_cursor_date,
-                time: data.next_cursor_time,
-            };
-            if (!document.getElementById('events-load-more')) {
-                list.insertAdjacentHTML('beforeend',
-                    '<div id="events-load-more" class="events-load-more" onclick="_eventsLoadEvents()">Загрузить ещё</div>'
-                );
-            }
-        } else {
-            const loadMore = document.getElementById('events-load-more');
-            if (loadMore) loadMore.remove();
-        }
-
-        if (!events.length && reset) {
-            list.innerHTML = '<div class="events-empty">Нет мероприятий</div>';
-        }
-    } catch (e) {
-        console.error('Ошибка загрузки мероприятий:', e);
-        if (reset) list.innerHTML = '<div class="events-error">Ошибка загрузки</div>';
-    } finally {
-        _eventsLoading = false;
-    }
+    html += `</div>`;
+    return html;
 }
 
-function _eventsRenderRow(e) {
+function _eventsRenderCard(e, blockType) {
+    const time = e.time || '--:--';
+    const date = e.date || '';
+    const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
+    const loc = e.location_id ? getLocationName(e.location_id) : '';
     const typeClass = _eventsGetTypeClass(e.type);
-    const dateStr = e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('ru-RU') : '';
-    const timeStr = e.time || '';
-    const durationStr = e.duration ? `${e.duration} мин` : '';
-    const participants = (e.participants || []).map(p => p.name).join(', ') || '—';
 
-    return `
-    <div class="event-row ${typeClass}" onclick="openEditEventModal('${e.id}')">
-        <div class="event-type-badge">${e.type || 'ВКС'}</div>
-        <div class="event-main">
-            <div class="event-title">${e.description || e.type || 'Мероприятие'}</div>
-            <div class="event-meta">
-                <span class="event-date">${dateStr}</span>
-                <span class="event-time">${timeStr}</span>
-                <span class="event-duration">${durationStr}</span>
-            </div>
-            <div class="event-participants">${participants}</div>
-        </div>
-        <div class="event-status">${e.completed ? '✓' : ''}</div>
-    </div>`;
+    let stripeClass = 'active';
+    if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
+    else if (e.completed) stripeClass = 'completed';
+
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
+
+    html += `<div class="vks-stripe ${stripeClass}"></div>`;
+
+    html += `<div class="vks-card-content">`;
+
+    // Time block
+    html += `<div class="vks-time-block">`;
+    html += `<div class="vks-card-time">${time}</div>`;
+    if (date) {
+        const d = new Date(date + 'T00:00:00');
+        const day = d.getDate();
+        const monthNames = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+        html += `<div class="vks-card-date">${day} ${monthNames[d.getMonth()]}</div>`;
+    }
+    html += `</div>`;
+
+    // Body
+    html += `<div class="vks-card-body">`;
+
+    // Type badge + description
+    html += `<div class="vks-card-desc">`;
+    html += `<span class="events-type-badge ${typeClass}">${esc(e.type || 'ВКС')}</span> `;
+    if (e.description) html += esc(e.description);
+    html += `</div>`;
+
+    // Meta: tags
+    html += `<div class="vks-card-meta">`;
+    if (org) html += `<span class="vks-tag org"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
+    if (loc) html += `<span class="vks-tag loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
+
+    // Duration
+    if (e.duration && e.duration !== 60) {
+        html += `<span class="vks-tag">${e.duration} мин</span>`;
+    }
+
+    // Lock indicator
+    if (e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id)) {
+        html += `<div class="vks-card-lock">
+            ${typeof LOCK_SVG !== 'undefined' ? LOCK_SVG : ''}
+            <span>${esc(e.locked_by)}</span>
+        </div>`;
+    }
+
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    html += `</div>`;
+    return html;
 }
 
 function _eventsGetTypeClass(type) {
@@ -136,6 +222,8 @@ function _eventsGetTypeClass(type) {
     };
     return map[type] || 'type-vks';
 }
+
+// ─── Modal functions ──────────────────────────────────────────────
 
 function openAddEventModal() {
     if (window._modalsLoaded) window._modalsLoaded.then(() => _eventsOpenModal(null));
@@ -186,9 +274,7 @@ function _eventsResetForm() {
 
 async function _eventsLoadEventData(eventId) {
     try {
-        const resp = await fetch(`/admin/api/events?limit=1000`);
-        const data = await resp.json();
-        const event = (data.events || []).find(e => e.id === eventId);
+        const event = (window.store?.allEvents || []).find(e => e.id === eventId);
         if (!event) return;
 
         document.getElementById('evt-id').value = event.id;
@@ -213,18 +299,14 @@ function _eventsPopulateDropdowns() {
     const locSelect = document.getElementById('evt-location');
     const orgSelect = document.getElementById('evt-organizer');
 
-    if (window.store && window.store.allLocations) {
-        locSelect.innerHTML = '<option value="">— Не выбран —</option>';
-        window.store.allLocations.forEach(l => {
-            locSelect.innerHTML += `<option value="${l.id}">${l.name}</option>`;
-        });
+    if (locSelect && window.store?.allLocations) {
+        locSelect.innerHTML = '<option value="">— Не выбран —</option>' +
+            window.store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
     }
 
-    if (window.store && window.store.allOrganizers) {
-        orgSelect.innerHTML = '<option value="">— Не выбран —</option>';
-        window.store.allOrganizers.forEach(o => {
-            orgSelect.innerHTML += `<option value="${o.id}">${o.name}</option>`;
-        });
+    if (orgSelect && window.store?.allOrganizers) {
+        orgSelect.innerHTML = '<option value="">— Не выбран —</option>' +
+            window.store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
     }
 }
 
@@ -235,7 +317,7 @@ function _eventsRenderParticipants(participants) {
     participants.forEach(p => {
         list.insertAdjacentHTML('beforeend', `
             <div class="event-participant-tag">
-                <span>${p.name}</span>
+                <span>${esc(p.name)}</span>
                 <button class="event-participant-remove" onclick="removeEventParticipant('${p.id}')">✕</button>
             </div>
         `);
@@ -270,7 +352,7 @@ async function saveEvent() {
 
         if (result.ok) {
             closeEventModal();
-            _eventsLoadEvents(true);
+            eventsRenderBoard();
             if (typeof showToast === 'function') showToast('Сохранено');
         } else {
             alert(result.error || 'Ошибка сохранения');

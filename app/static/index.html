@@ -657,9 +657,53 @@
         <div class="cal-container" id="cal-container"></div>
     </div>
 
-    <!-- ─── Events ─────────────────────────────────────────────── -->
+    <!-- ─── Events Active ─────────────────────────────────────── -->
     <div class="page" id="page-events">
-        <div class="events-container" id="events-container"></div>
+      <div class="page-header">
+        <div class="page-title">
+          <div class="page-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <h1 id="events-page-title">Текущие мероприятия</h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline" onclick="openPrintModal()">Печать</button>
+          <button class="btn btn-outline" onclick="openAddEventModal()">+ Добавить</button>
+        </div>
+      </div>
+
+      <!-- Type tabs -->
+      <div class="events-tabs" id="events-tabs">
+        <button class="events-tab active" onclick="eventsFilterType(null)">Все</button>
+        <button class="events-tab" onclick="eventsFilterType('Совещание')">Совещание</button>
+        <button class="events-tab" onclick="eventsFilterType('Встреча')">Встреча</button>
+        <button class="events-tab" onclick="eventsFilterType('Заседание')">Заседание</button>
+        <button class="events-tab" onclick="eventsFilterType('Приём')">Приём</button>
+      </div>
+
+      <div class="filter-bar collapsed">
+        <button class="filter-toggle" onclick="toggleFilter(this.parentElement)">
+          <span>Фильтры</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="filter-group">
+          <span class="filter-label">Организатор</span>
+          <select class="filter-select" id="f-events-org" onchange="eventsApplyFilters()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Локация</span>
+          <select class="filter-select" id="f-events-loc" onchange="eventsApplyFilters()"><option value="">Все</option></select>
+        </div>
+        <div class="filter-group wide">
+          <span class="filter-label">Описание</span>
+          <input class="filter-input" id="f-events-desc" placeholder="Содержит..." oninput="eventsApplyFilters()">
+        </div>
+        <div class="filter-actions">
+          <button class="filter-reset" onclick="eventsResetFilters()">Сбросить</button>
+        </div>
+      </div>
+
+      <div class="vks-board" id="events-board">
+        <div class="empty-state">Загрузка...</div>
+      </div>
     </div>
 
   </main>
