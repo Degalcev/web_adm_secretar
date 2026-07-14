@@ -30,7 +30,13 @@ function getMonday(d) {
 function initCalendar() {
     calWeekStart = getMonday(new Date());
     calActiveDay = new Date();
-    preloadAllData().then(() => {
+    preloadAllData().then(async () => {
+        // Fallback: если preload не загрузил данные — загрузить через loadAllEvents
+        if (!store.allEvents || !store.allEvents.length) {
+            if (typeof loadAllEvents === 'function') {
+                await loadAllEvents();
+            }
+        }
         renderCalendar(true);
         calStartNowLineTimer();
         document.getElementById('cal-day-tabs')?.addEventListener('transitionend', (e) => {
