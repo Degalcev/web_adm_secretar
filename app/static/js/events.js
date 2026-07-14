@@ -21,7 +21,10 @@ function _eventsRenderPage() {
 
     const title = _eventsCompleted ? 'Завершённые мероприятия' : 'Текущие мероприятия';
     let html = `<div class="events-header"><h2>${title}</h2>`;
-    html += `<button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button></div>`;
+    html += `<div class="events-actions">`;
+    html += `<button class="btn btn-secondary" onclick="openPrintModal()">Печать</button>`;
+    html += `<button class="btn btn-primary" onclick="openAddEventModal()">+ Добавить</button>`;
+    html += `</div></div>`;
 
     html += '<div class="events-tabs">';
     html += `<button class="events-tab ${!_eventsTypeFilter ? 'active' : ''}" onclick="_eventsFilterType(null)">Все</button>`;
