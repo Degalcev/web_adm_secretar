@@ -259,7 +259,7 @@ function evtCloseModal() {
 
 function _eventsResetForm() {
     document.getElementById('evt-id').value = '';
-    document.getElementById('evt-type').value = 'ВКС';
+    document.getElementById('evt-type').value = 'Совещание';
     document.getElementById('evt-date').value = '';
     document.getElementById('evt-time').value = '';
     document.getElementById('evt-duration').value = '60';
@@ -267,8 +267,9 @@ function _eventsResetForm() {
     document.getElementById('evt-organizer-type').value = 'org';
     document.getElementById('evt-organizer').value = '';
     document.getElementById('evt-description').value = '';
-    document.getElementById('evt-notification').checked = true;
-    document.getElementById('evt-completed').checked = false;
+    document.getElementById('evt-notification').value = 'true';
+    const notifBtn = document.getElementById('evt-notification-btn');
+    if (notifBtn) notifBtn.classList.add('done');
     document.getElementById('evt-participants-list').innerHTML = '';
 }
 
@@ -286,8 +287,9 @@ async function _eventsLoadEventData(eventId) {
         document.getElementById('evt-organizer-type').value = event.organizer_type || 'org';
         document.getElementById('evt-organizer').value = event.organizer_id || '';
         document.getElementById('evt-description').value = event.description || '';
-        document.getElementById('evt-notification').checked = event.notification !== false;
-        document.getElementById('evt-completed').checked = event.completed === true;
+        document.getElementById('evt-notification').value = event.notification !== false ? 'true' : 'false';
+        const notifBtn = document.getElementById('evt-notification-btn');
+        if (notifBtn) notifBtn.classList.toggle('done', event.notification !== false);
 
         _eventsRenderParticipants(event.participants || []);
     } catch (e) {
@@ -299,15 +301,34 @@ function _eventsPopulateDropdowns() {
     const locSelect = document.getElementById('evt-location');
     const orgSelect = document.getElementById('evt-organizer');
 
-    if (locSelect && window.store?.allLocations) {
-        locSelect.innerHTML = '<option value="">— Не выбран —</option>' +
-            window.store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+    const locs = window.store?.allLocations || [];
+    const orgs = window.store?.allOrganizers || [];
+
+    if (locSelect) {
+        locSelect.innerHTML = '<option value="">Не указана</option>' +
+            locs.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
     }
 
-    if (orgSelect && window.store?.allOrganizers) {
-        orgSelect.innerHTML = '<option value="">— Не выбран —</option>' +
-            window.store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
+    if (orgSelect) {
+        orgSelect.innerHTML = '<option value="">Не указан</option>' +
+            orgs.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
     }
+
+    // Update notification button state
+    const notifBtn = document.getElementById('evt-notification-btn');
+    const notifVal = document.getElementById('evt-notification');
+    if (notifBtn && notifVal) {
+        notifBtn.classList.toggle('done', notifVal.value === 'true');
+    }
+}
+
+function evtToggleNotification() {
+    const btn = document.getElementById('evt-notification-btn');
+    const val = document.getElementById('evt-notification');
+    if (!btn || !val) return;
+    const newState = val.value !== 'true';
+    val.value = newState ? 'true' : 'false';
+    btn.classList.toggle('done', newState);
 }
 
 function _eventsRenderParticipants(participants) {
@@ -341,8 +362,8 @@ async function evtSaveEvent() {
     formData.append('organizer_type', document.getElementById('evt-organizer-type').value);
     formData.append('organizer_id', document.getElementById('evt-organizer').value);
     formData.append('description', document.getElementById('evt-description').value);
-    formData.append('notification', document.getElementById('evt-notification').checked ? 'true' : 'false');
-    formData.append('completed', document.getElementById('evt-completed').checked ? 'true' : 'false');
+    formData.append('notification', document.getElementById('evt-notification').value);
+    formData.append('completed', 'false');
 
     try {
         const url = eventId ? `/admin/api/events/${eventId}` : '/admin/api/events';

@@ -1,102 +1,121 @@
-<!-- Event Modal -->
+<!-- Event Modal (VKS-style) -->
 <div class="modal-overlay" id="evt-modal-overlay" style="display:none">
-  <div class="modal-container vks-modal-flat" id="evt-modal">
+  <div class="modal modal-lg vks-modal-flat">
+    <!-- Accent bar -->
+    <div class="vks-modal-accent" id="evt-accent"></div>
+
+    <!-- Header -->
     <div class="modal-header">
-      <div class="header-left">
-        <h3 id="evt-modal-title">Новое мероприятие</h3>
+      <div class="vks-modal-header-left">
+        <h3 id="evt-modal-title" class="vks-modal-title">Новое мероприятие</h3>
       </div>
-      <div class="header-actions">
-        <button class="modal-close-btn" onclick="evtCloseModal()">✕</button>
+      <div class="modal-header-actions">
+        <button class="icon-btn" onclick="evtCloseModal()" title="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
       </div>
     </div>
-    <div class="modal-body" id="evt-modal-body">
-      <input type="hidden" id="evt-id">
 
-      <div class="form-group">
-        <label>Тип мероприятия</label>
-        <select id="evt-type" class="form-input">
-          <option value="ВКС">ВКС</option>
-          <option value="Совещание">Совещание</option>
-          <option value="Встреча">Встреча</option>
-          <option value="Заседание">Заседание</option>
-          <option value="Приём">Личный приём</option>
-        </select>
-      </div>
+    <!-- Body -->
+    <div class="vks-modal-body-wrapper">
+      <div class="modal-body">
+        <input type="hidden" id="evt-id">
 
-      <div class="form-row">
-        <div class="form-group">
-          <label>Дата</label>
-          <input type="date" id="evt-date" class="form-input">
-        </div>
-        <div class="form-group">
-          <label>Время</label>
-          <input type="time" id="evt-time" class="form-input">
-        </div>
-        <div class="form-group">
-          <label>Продолжительность</label>
-          <select id="evt-duration" class="form-input">
-            <option value="30">30 мин</option>
-            <option value="60" selected>1 час</option>
-            <option value="90">1.5 часа</option>
-            <option value="120">2 часа</option>
-            <option value="180">3 часа</option>
+        <!-- Тип мероприятия -->
+        <div class="form-separator form-group">
+          <label>Тип мероприятия</label>
+          <select id="evt-type" class="form-input">
+            <option value="Совещание">Совещание</option>
+            <option value="Встреча">Встреча</option>
+            <option value="Заседание">Заседание</option>
+            <option value="Приём">Личный приём</option>
           </select>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Зал</label>
-        <select id="evt-location" class="form-input">
-          <option value="">— Не выбран —</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Организатор</label>
-        <div class="form-row">
-          <div class="form-group" style="flex:0 0 120px">
-            <select id="evt-organizer-type" class="form-input">
-              <option value="org">Организация</option>
-              <option value="user">Сотрудник</option>
-            </select>
+        <!-- Дата и время -->
+        <div class="form-row form-separator">
+          <div class="form-group flex-2">
+            <label>Дата *</label>
+            <input type="date" id="evt-date" class="form-input" required>
           </div>
-          <div class="form-group" style="flex:1">
-            <select id="evt-organizer" class="form-input">
-              <option value="">— Не выбран —</option>
+          <div class="form-group">
+            <label>Время *</label>
+            <input type="time" id="evt-time" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label>Продолжительность</label>
+            <select id="evt-duration" class="form-input">
+              <option value="30">30 мин</option>
+              <option value="60" selected>1 час</option>
+              <option value="90">1.5 часа</option>
+              <option value="120">2 часа</option>
+              <option value="180">3 часа</option>
             </select>
           </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Описание</label>
-        <input type="text" id="evt-description" class="form-input" placeholder="Описание мероприятия">
-      </div>
-
-      <div class="form-group">
-        <label>Участники</label>
-        <div class="event-participants-list" id="evt-participants-list"></div>
-        <div class="event-participant-add">
-          <input type="text" id="evt-participant-search" class="form-input" placeholder="Поиск сотрудника...">
-          <div class="event-participant-dropdown" id="evt-participant-dropdown" style="display:none"></div>
+        <!-- Локация и Организатор -->
+        <div class="form-row form-separator">
+          <div class="form-group">
+            <label>Локация *</label>
+            <select id="evt-location" class="form-input">
+              <option value="">Не указана</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Организатор *</label>
+            <div class="form-row">
+              <div class="form-group" style="flex:0 0 110px">
+                <select id="evt-organizer-type" class="form-input">
+                  <option value="org">Организация</option>
+                  <option value="user">Сотрудник</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex:1">
+                <select id="evt-organizer" class="form-input">
+                  <option value="">Не указан</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>
-          <input type="checkbox" id="evt-notification" checked> Уведомление
-        </label>
-      </div>
+        <!-- Описание -->
+        <div class="form-separator form-group">
+          <label>Описание</label>
+          <input type="text" id="evt-description" class="form-input" placeholder="Описание мероприятия" maxlength="200">
+        </div>
 
-      <div class="form-group">
-        <label>
-          <input type="checkbox" id="evt-completed"> Завершено
-        </label>
+        <!-- Участники -->
+        <div class="form-separator form-group">
+          <label>Участники</label>
+          <div class="event-participants-list" id="evt-participants-list"></div>
+          <div class="event-participant-add">
+            <input type="text" id="evt-participant-search" class="form-input" placeholder="Поиск сотрудника...">
+            <div class="event-participant-dropdown" id="evt-participant-dropdown" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Уведомление (кнопка как в VKS) -->
+        <div class="form-separator">
+          <label>Уведомление</label>
+          <div class="vks-toggle-row">
+            <button type="button" class="pill-btn" id="evt-notification-btn" onclick="evtToggleNotification()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <span class="pill-label">Уведомление</span>
+            </button>
+          </div>
+          <input type="hidden" id="evt-notification" value="true">
+        </div>
       </div>
     </div>
+
+    <!-- Footer -->
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="evtCloseModal()">Отмена</button>
-      <button class="btn btn-primary" id="evt-save-btn" onclick="evtSaveEvent()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="evtCloseModal()">Отмена</button>
+      <div class="footer-right">
+        <button class="btn btn-primary" id="evt-save-btn" onclick="evtSaveEvent()">Сохранить</button>
+      </div>
     </div>
   </div>
 </div>
