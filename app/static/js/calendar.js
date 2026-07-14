@@ -347,7 +347,8 @@ function renderCalendar(full) {
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div id="cal-week-label"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-stroke-path" fill="none" stroke-width="1"/><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-stroke-svg" id="cal-stroke-svg" xmlns="http://www.w3.org/2000/svg"><path id="cal-stroke-path" fill="none" stroke-width="1.5"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
