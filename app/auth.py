@@ -10,7 +10,7 @@ from loguru import logger
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 
-from database.requests import get_user_by_max_id
+from database.requests import get_user_by_max_id, get_user_by_login
 from database.sending import (
     create_session as db_create_session,
     delete_session as db_delete_session,
@@ -184,27 +184,27 @@ async def admin_login(request: web.Request) -> web.Response:
 
     try:
         data = await request.json()
-        max_id = data.get('max_id')
+        login_value = data.get('login', '').strip()
         password = data.get('password')
 
-        if not max_id or not password:
-            return web.json_response({'ok': False, 'error': 'Введите MAX ID и пароль'}, status=400)
+        if not login_value or not password:
+            return web.json_response({'ok': False, 'error': 'Введите логин и пароль'}, status=400)
 
-        user = await get_user_by_max_id(int(max_id))
+        user = await get_user_by_login(login_value)
 
         if not user:
-            logger.warning('Пользователь не найден: {}', max_id)
+            logger.warning('Пользователь не найден: {}', login_value)
             return web.json_response({'ok': False, 'error': 'Пользователь не найден'}, status=404)
 
         if not user.password:
             if password != DEFAULT_ADMIN_PASSWORD:
-                logger.warning('Неверный пароль по умолчанию для администратора {}', max_id)
+                logger.warning('Неверный пароль по умолчанию для пользователя {}', login_value)
                 return web.json_response({'ok': False, 'error': 'Неверный логин или пароль'}, status=401)
         else:
             try:
                 ph.verify(user.password, password)
             except VerifyMismatchError:
-                logger.warning('Неверный пароль для администратора {}', max_id)
+                logger.warning('Неверный пароль для пользователя {}', login_value)
                 return web.json_response({'ok': False, 'error': 'Неверный логин или пароль'}, status=401)
 
         token = secrets.token_hex(32)
@@ -218,7 +218,7 @@ async def admin_login(request: web.Request) -> web.Response:
         _set_cookie(response, 'admin_token', token, httponly=True, max_age=expires_hours * 3600)
         _set_cookie(response, 'csrf_token', csrf_token, httponly=False, max_age=expires_hours * 3600)
 
-        logger.info('Пользователь {} (role={}) вошёл в панель', max_id, user.status)
+        logger.info('Пользователь {} (role={}) вошёл в панель', login_value, user.status)
         return response
 
     except Exception as e:

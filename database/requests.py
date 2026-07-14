@@ -20,6 +20,23 @@ async def get_user_by_max_id(max_id: int):
         return result
 
 
+async def get_user_by_login(login: str):
+    """Поиск пользователя по MAX ID (число) или username/name."""
+    async with async_session() as session:
+        # Попробовать как число (MAX ID)
+        if login.isdigit():
+            result = await session.scalar(select(User).where(User.max_id == int(login)))
+            if result:
+                return result
+        # Попробовать как username
+        result = await session.scalar(select(User).where(User.username == login))
+        if result:
+            return result
+        # Попробовать как name
+        result = await session.scalar(select(User).where(User.name == login))
+        return result
+
+
 async def get_organizers():
     async with async_session() as session:
         result = await session.scalars(select(Organizer))

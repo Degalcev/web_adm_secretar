@@ -71,13 +71,13 @@ async function loadCurrentUser() {
  * Вход — доверяет checkAuth() для финальной проверки.
  */
 async function login() {
-    const maxId = document.getElementById('login-max-id').value;
+    const loginValue = document.getElementById('login-max-id').value.trim();
     const password = document.getElementById('login-password').value;
     const err = document.getElementById('login-error');
     err.style.display = 'none';
 
-    if (!maxId || !password) {
-        err.textContent = 'Введите MAX ID и пароль';
+    if (!loginValue || !password) {
+        err.textContent = 'Введите логин и пароль';
         err.style.display = 'block';
         return;
     }
@@ -90,7 +90,7 @@ async function login() {
         const resp = await fetch(`${BASE_URL}/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ max_id: parseInt(maxId), password, remember_me: rememberMe })
+            body: JSON.stringify({ login: loginValue, password, remember_me: rememberMe })
         });
         const data = await resp.json();
 
