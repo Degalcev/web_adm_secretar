@@ -298,6 +298,7 @@ async function _eventsLoadEventData(eventId) {
         document.getElementById('evt-duration').value = event.duration || 60;
         document.getElementById('evt-location').value = event.location_id || '';
         document.getElementById('evt-organizer-type').value = event.organizer_type || 'org';
+        _eventsPopulateOrganizer();
         document.getElementById('evt-organizer').value = event.organizer_id || '';
         document.getElementById('evt-description').value = event.description || '';
         document.getElementById('evt-notification').value = event.notification !== false ? 'true' : 'false';
