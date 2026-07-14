@@ -63,7 +63,8 @@ async function loadAllEvents() {
     await ensureOrgsAndLocs();
     const resp = await fetch(`${BASE_URL}/admin/api/events`);
     if (resp.status === 401) { showLogin(); return; }
-    store.allEvents = await resp.json();
+    const json = await resp.json();
+    store.allEvents = Array.isArray(json) ? json : (json.events || []);
 }
 
 async function loadVksActive() {

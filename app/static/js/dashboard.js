@@ -41,7 +41,8 @@ async function loadFullData() {
 
         if (!eventsResp.ok) throw new Error(eventsResp.status);
 
-        _dashEvents = await eventsResp.json();
+        const eventsJson = await eventsResp.json();
+        _dashEvents = Array.isArray(eventsJson) ? eventsJson : (eventsJson.events || []);
         store.allEvents = _dashEvents;
 
         const locations = await locResp.json();

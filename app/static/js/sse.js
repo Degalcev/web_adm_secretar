@@ -46,7 +46,8 @@ async function _refreshEvents() {
     try {
         const resp = await fetch('/admin/api/events', { credentials: 'same-origin' });
         if (!resp.ok) return;
-        const events = await resp.json();
+        const data = await resp.json();
+        const events = Array.isArray(data) ? data : (data.events || []);
         store.allEvents = events;
         if (typeof _dashEvents !== 'undefined') _dashEvents = events;
 
