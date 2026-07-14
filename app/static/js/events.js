@@ -161,7 +161,7 @@ function _eventsRenderCard(e, blockType) {
     if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
     else if (e.completed) stripeClass = 'completed';
 
-    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="evtOpenEditModal('${e.id}')" style="cursor:pointer">`;
 
     html += `<div class="vks-stripe ${stripeClass}"></div>`;
 
@@ -225,12 +225,12 @@ function _eventsGetTypeClass(type) {
 
 // ─── Modal functions ──────────────────────────────────────────────
 
-function openAddEventModal() {
+function evtOpenAddModal() {
     if (window._modalsLoaded) window._modalsLoaded.then(() => _eventsOpenModal(null));
     else _eventsOpenModal(null);
 }
 
-function openEditEventModal(eventId) {
+function evtOpenEditModal(eventId) {
     if (window._modalsLoaded) window._modalsLoaded.then(() => _eventsOpenModal(eventId));
     else _eventsOpenModal(eventId);
 }
