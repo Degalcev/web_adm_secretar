@@ -145,12 +145,45 @@ async function openEditEventModal(id, mode = 'vks') {
     _modalParticipants = (e.participants || []).map(p => ({ id: p.user_id || p.id, name: p.name }));
     _renderParticipants();
 
-    // Повтор
-    document.getElementById('event-repeat-active').value = 'false';
-    document.getElementById('event-repeat-btn').classList.remove('done');
-    document.getElementById('event-repeat-options').style.display = 'none';
-
-    // Кнопка «Перейти» — показать если есть URL
+    // Повтор — загрузить серию если есть
+    const repeatBtn = document.getElementById('event-repeat-btn');
+    const repeatOpts = document.getElementById('event-repeat-options');
+    const repeatActive = document.getElementById('event-repeat-active');
+    if (e.series_id) {
+        try {
+            const seriesRes = await fetch(`${BASE_URL}/admin/api/events/${e.id}/series`, {
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': getCsrfToken() }
+            });
+            const seriesData = await seriesRes.json();
+            if (seriesData.series) {
+                const s = seriesData.series;
+                repeatActive.value = 'true';
+                repeatBtn.classList.add('done');
+                repeatOpts.style.display = 'block';
+                let freqVal = 'weekly';
+                if (s.freq === 'monthly') freqVal = 'monthly';
+                else if (s.interval_val === 2) freqVal = 'biweekly';
+                document.getElementById('event-repeat-freq').value = freqVal;
+                document.getElementById('event-repeat-until').value = s.until || '';
+                document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
+                    b.classList.toggle('active', (s.by_day || []).includes(b.dataset.day));
+                });
+            } else {
+                repeatActive.value = 'false';
+                repeatBtn.classList.remove('done');
+                repeatOpts.style.display = 'none';
+            }
+        } catch (err) {
+            repeatActive.value = 'false';
+            repeatBtn.classList.remove('done');
+            repeatOpts.style.display = 'none';
+        }
+    } else {
+        repeatActive.value = 'false';
+        repeatBtn.classList.remove('done');
+        repeatOpts.style.display = 'none';
+    }
     const urlGo = document.getElementById('event-url-go');
     if (e.url) {
         urlGo.href = e.url;
@@ -407,6 +440,41 @@ async function saveEvent() {
         const data = await resp.json();
         if (data.ok) {
             const wasEditing = !!editingEventId;
+            const savedEventId = data.id || editingEventId;
+
+            // Создать серию если repeat активен, удалить если деактивирован
+            const repeatActive = document.getElementById('event-repeat-active').value === 'true';
+            if (savedEventId) {
+                const existingEvent = store.allEvents.find(x => x.id === savedEventId);
+                const hadSeries = existingEvent && existingEvent.series_id;
+                if (repeatActive) {
+                    const byDay = [];
+                    document.querySelectorAll('#event-weekday-row .evt-wd-btn.active').forEach(b => byDay.push(b.dataset.day));
+                    const freqMap = { 'weekly': 'weekly', 'biweekly': 'weekly', 'monthly': 'monthly' };
+                    const intervalMap = { 'weekly': 1, 'biweekly': 2, 'monthly': 1 };
+                    const freqVal = document.getElementById('event-repeat-freq').value;
+                    try {
+                        await fetch(`${BASE_URL}/admin/api/events/${savedEventId}/series`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                            body: JSON.stringify({
+                                freq: freqMap[freqVal] || 'weekly',
+                                interval_val: intervalMap[freqVal] || 1,
+                                by_day: byDay,
+                                until: document.getElementById('event-repeat-until').value || null,
+                            })
+                        });
+                    } catch (e) { console.warn('Series create error:', e); }
+                } else if (hadSeries) {
+                    try {
+                        await fetch(`${BASE_URL}/admin/api/events/${savedEventId}/series`, {
+                            method: 'DELETE',
+                            headers: { 'X-CSRF-Token': csrfToken }
+                        });
+                    } catch (e) { console.warn('Series delete error:', e); }
+                }
+            }
+
             await loadAllEvents();
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
