@@ -240,8 +240,24 @@ async function _eventsOpenModal(eventId) {
     const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
 
-    // Ждём загрузки организаторов и локаций
-    await ensureOrgsAndLocs();
+    // Загружаем организаторы и локации
+    try {
+        await ensureOrgsAndLocs();
+    } catch (e) { /* fallback below */ }
+
+    // Fallback: если store пуст — грузим напрямую
+    if (!window.store?.allLocations?.length) {
+        try {
+            const r = await fetch('/admin/api/locations', { credentials: 'same-origin' });
+            if (r.ok) window.store.allLocations = await r.json();
+        } catch (e) {}
+    }
+    if (!window.store?.allOrganizers?.length) {
+        try {
+            const r = await fetch('/admin/api/organizers', { credentials: 'same-origin' });
+            if (r.ok) window.store.allOrganizers = await r.json();
+        } catch (e) {}
+    }
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
@@ -373,6 +389,25 @@ async function evtSaveEvent() {
     const eventId = document.getElementById('evt-id').value;
     const formData = new FormData();
     const csrfToken = getCsrfToken();
+
+    // Валидация обязательных полей
+    const date = document.getElementById('evt-date').value;
+    const time = document.getElementById('evt-time').value;
+    const location = document.getElementById('evt-location').value;
+    const organizer = document.getElementById('evt-organizer').value;
+
+    if (!date || !time) {
+        alert('Заполните дату и время');
+        return;
+    }
+    if (!location) {
+        alert('Выберите локацию');
+        return;
+    }
+    if (!organizer) {
+        alert('Выберите организатора');
+        return;
+    }
 
     formData.append('csrf_token', csrfToken);
     formData.append('type', document.getElementById('evt-type').value);
