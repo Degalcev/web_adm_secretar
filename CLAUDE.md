@@ -28,22 +28,25 @@ app/
 ├── auth.py              # Auth middleware, CSRF (multipart fallback), rate limiting, cookie domain
 ├── server.py            # Точка входа aiohttp (middleware + SPA + API + static + cleanup + version.json)
 ├── event_logger.py      # Логирование изменений VKS (сравнение состояний, запись в event_history)
-├── event_logger.py      # Логирование изменений VKS (сравнение состояний, запись в event_history)
+├── event_types.py       # Конфиг типов мероприятий: ALLOWED_TYPES (ВКС/Совещание/Встреча/Заседание/Приём)
 ├── sse_listener.py      # SSE listener (PostgreSQL LISTEN/NOTIFY → broadcast)
 ├── routes/
 │   ├── users.py         # CRUD пользователей + смена пароля + /me + /auth/check
 │   ├── organizers.py    # CRUD организаторов
 │   ├── locations.py     # CRUD локаций
 │   ├── logs.py          # Просмотр логов (panel + bot)
-│   ├── vks.py           # CRUD событий ВКС + batch документы + audit + lock/unlock + history + lock/unlock + history
+│   ├── vks.py           # CRUD событий ВКС + batch документы + audit + lock/unlock + history + series
 │   ├── documents.py     # CRUD документов (download/upload/delete)
+│   ├── participants.py  # CRUD участников мероприятий + поиск пользователей
+│   ├── print_events.py  # Печать мероприятий (GET /admin/api/events/print)
 │   ├── preload.py       # Preload API (events + organizers + locations + lock data одним запросом)
 │   └── sse.py           # SSE endpoint (/admin/api/events/stream, без auth)
 └── static/
-    ├── index.html       # SPA entry point (653 строк, ?v=__VERSION__)
+    ├── index.html       # SPA entry point (?v=__VERSION__)
     ├── favicon.svg      # Иконка
     ├── partials/
     │   ├── vks-modal.html       # VKS modal partial (Compact Flat)
+    │   ├── event-modal.html     # Мероприятия modal partial (VKS-style)
     │   ├── user-modal.html      # User modal partial
     │   ├── organizer-modal.html # Organizer modal partial
     │   └── location-modal.html  # Location modal partial
@@ -55,11 +58,12 @@ app/
     │   ├── modals.css        # Базовые стили модалок (section, header, body, footer, confirm)
     │   ├── dashboard.css     # Дашборд карточки, VKS панели
     │   ├── vks.css           # VKS страницы (цветная полоска статуса, компактные документы)
+    │   ├── events.css        # Мероприятия: тип-бейджи, модалка, participants, weekday buttons
     │   ├── logs.css          # Логи (elevated фон контейнера)
     │   ├── filters.css       # Filter-bar компонент, select фильтры
     │   ├── settings.css      # Страницы настроек/профиля
     │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
-    │   ├── vks-modal.css     # Compact Flat стили модалок + drawer overlay таймлайна (ПОСЛЕ responsive.css!)
+    │   ├── vks-modal.css     # Compact Flat стили модалок + pill-btn hover/done
     │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
@@ -69,9 +73,11 @@ app/
         ├── preloader.js      # preloadAllData()
         ├── sse.js            # SSE обработчики (4 канала: events/users/locations/organizers)
         ├── dashboard.js      # Дашборд (renderDashLocations — НЕ collides с locations.js)
-        ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line)
-        ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика
-        ├── vks-board.js      # VKS: рендеринг карточек, иконки, документы
+        ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line, expandSeries)
+        ├── events.js         # Мероприятия: VKS-style карточки, модалка, фильтры, stats, quick-filter
+        ├── print.js          # Печать мероприятий (openPrintModal, generatePrintHTML)
+        ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика, ensureOrgsAndLocs()
+        ├── vks-board.js      # VKS: рендеринг карточек (только type=ВКС), иконки, документы
         ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
@@ -81,14 +87,17 @@ app/
         ├── settings.js       # Настройки (THEMES_META + renderThemeGrid)
         ├── profile.js        # Профиль пользователя
         ├── updater.js        # Обновление версии
-        └── app.js            # Инициализация, загрузка partials, кнопка «Наверх»
+        └── app.js            # Инициализация, загрузка partials (5 модалок), кнопка «Наверх»
 
 database/
-├── models.py            # User, Organizer, Location, Session, Event (audit+lock), EventHistory, Document
-├── requests.py          # Запросы (чтение, batch, cleanup_stale_locks)
-├── sending.py           # Операции (запись, lock_event, unlock_event)
-├── migration_event_history.sql  # Таблица event_history
-└── migration_lock_fix.sql       # locked_by: Integer → String
+├── models.py            # User, Organizer, Location, Session, Event, EventHistory, EventSeries, EventSeriesException, EventParticipant, Document
+├── requests.py          # Запросы (чтение, batch, cleanup_stale_locks, participants, series, organizers_with_usage)
+├── sending.py           # Операции (запись, lock_event, unlock_event, participants, series)
+├── migration_event_history.sql      # Таблица event_history
+├── migration_lock_fix.sql           # locked_by: Integer → String
+├── migration_event_participants.sql # Участники мероприятий
+├── migration_event_series.sql       # Серии повторяющихся мероприятий + исключения
+└── migration_events_extended.sql    # events: duration, organizer_type, series_id
 
 deploy/
 ├── deploy.py            # Скрипт деплоя (test/prod), инкремент patch + rollback при ошибке
@@ -123,6 +132,12 @@ deploy/
 - `applyRoleRestrictions()` показывает/скрывает "Администрирование" в зависимости от роли
 - `logout()` сбрасывает: SSE (`disconnectSSE()`), now-line таймер (`calStopNowLineTimer()`), `_preloaded`, `localStorage.dash_cache`, раскрытие меню, store
 
+### SPA routes (два списка!)
+- `SPA_PATHS` в `server.py` (для serving index.html)
+- `spa_prefixes` в `auth.py` (для пропуска auth)
+- **ДОЛЖНЫ** содержать новый путь. Иначе: 404 или 401
+- Текущие: `/`, `/panel/`, `/admin/`, `/admin/users/`, `/admin/organizers/`, `/admin/locations/`, `/admin/logs/`, `/conferences/`, `/conferences/completed/`, `/calendar/`, `/events/`, `/events/completed/`, `/settings/`, `/settings/general/`, `/settings/profile/`
+
 ### Роли пользователей
 - Модель User: поле `status` = `'admin'` или `'user'`
 - Auth middleware не различает roles — проверяет только авторизован/не авторизован
@@ -147,6 +162,54 @@ deploy/
 - **SSE подключается ТОЛЬКО после успешного `checkAuth()`** (не при загрузке страницы)
 - `disconnectSSE()` — закрывает EventSource при logout
 - Frontend: `sse.js` обновляет store и перерисовывает активные страницы
+
+### Типы мероприятий
+- Конфиг `app/event_types.py`: `ALLOWED_TYPES` — словарь с label, color, css_class
+- 5 типов: ВКС, Совещание, Встреча, Заседание, Приём
+- Валидация при create/update через `validate_event_type()`
+- CSS цвета: `.type-vks` (accent), `.type-meeting` (success), `.type-session` (warning), `.type-board` (danger), `.type-reception` (fg-muted)
+- VKS доска фильтрует только `type === 'ВКС'` — остальные типы на странице Мероприятий
+
+### Страница Мероприятий
+- **SPA route**: `/events/` (текущие), `/events/completed/` (завершённые)
+- **Sidebar**: группа «Мероприятия» → Текущие / Завершённые
+- **VKS-style карточки**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро)
+- **Filter-bar**: Тип (select), Дата (день/месяц/год), Организатор, Локация, Описание
+- **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter и active state
+- **SSE**: обновления на `events-active`/`events-completed` страницах
+- **API**: `GET /admin/api/events?limit=10000` (preload) или cursor-based pagination
+
+### Модалка Мероприятий (events)
+- Partial: `app/static/partials/event-modal.html` (VKS-style)
+- IDs с префиксом `evt-` (не конфликтует с VKS `event-`): `evt-modal-overlay`, `evt-type`, `evt-date`, и т.д.
+- **Организатор toggle**: radio org/user → `_eventsPopulateOrganizer()` переключает между organizations и users
+- **Повтор**: pill-кнопка → частота (weekly/biweekly/monthly), до даты, дни недели
+- **Валидация**: дата, время, локация, организатор — обязательные поля
+- **CSRF**: заголовок `X-CSRF-Token` + поле `csrf_token` в FormData
+- **Dropdowns**: прямой fetch `/api/locations` + `/api/organizers` + `/api/users` с `credentials: 'same-origin'`
+- **Загрузка**: `await ensureOrgsAndLocs()` + fallback fetch + `populateDropdowns()` ДО `loadEventData()`
+
+### Конфликт имён VKS vs Мероприятия
+- VKS модалка: `openAddEventModal`, `openEditEventModal`, `closeEventModal`, `saveEvent`
+- Мероприятия модалка: `evtOpenAddModal`, `evtOpenEditModal`, `evtCloseModal`, `evtSaveEvent`
+- **Никогда не переименовывать** функции VKS — они вызываются из calendar.js, dashboard.js, vks-board.js
+- script load order: vks-modal.js (761) → events.js (770) → print.js (771)
+
+### API events — формат ответа
+- `GET /admin/api/events` возвращает `{events: [...], total, has_more, next_cursor_date, next_cursor_time}`
+- **ВСЕ** fetch-и должны извлекать `data.events || []` (не присваивать ответ напрямую)
+- `?limit=10000` — для полной загрузки (dashboard, SSE, VKS, calendar)
+- `?limit=20&cursor_date=&cursor_time=` — для пагинации (страница Мероприятий)
+- `?type=ВКС&status=active&from=&to=` — фильтры
+
+### SSE — обновление страниц
+- `_refreshEvents()` обрабатывает: `vks-active`, `vks-completed`, `events-active`, `events-completed`, `dashboard`, `calendar`
+- `ensureOrgsAndLocs()` в `vks-filters.js` загружает organizers/locations с `credentials: 'same-origin'`
+
+### Печать мероприятий
+- `GET /admin/api/events/print?type=&from=&to=` — JSON с событиями + участниками
+- Frontend: `openPrintModal()` → fetch → `window.open()` + `print()`
+- Формат: таблица с #, дата, время, длит., тип, описание, участники
 
 ### VKS Modal — Compact Flat дизайн
 - Модалка вынесена в partial: `app/static/partials/vks-modal.html`
@@ -193,10 +256,11 @@ deploy/
 - `closeConfirm()` / `confirmDelete()` — алиасы для обратной совместимости
 
 ### Store — централизованное хранилище
-- `window.store = { allEvents, allLocations, allOrganizers, allUsers }` в `utils.js`
+- `window.store` (НЕ `window.store`!) = `{ allEvents, allLocations, allOrganizers, allUsers }` в `utils.js`
 - Все load/SSE/preload функции пишут в `store.xxx`
 - CRUD модули используют `storeKey` для автоматической записи в store
 - Нет рассинхронизации между данными (ранее: `let allXxx` + `window.allXxx` — два хранилища)
+- **Важно**: `store` — глобальная переменная, доступная как `store.xxx` (не `window.store`)
 
 ### Утилиты (utils.js)
 - `store` — централизованное хранилище данных
@@ -217,7 +281,7 @@ deploy/
 - `responsive.css` загружается ПОСЛЕДНИМ базовым CSS
 - `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
 - `calendar.css` загружается ПОСЛЕ responsive.css — стили календаря не конфликтуют с другими
-- Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal** → **calendar**
+- Текущий порядок: base → layout → components → tables → modals → logs → vks → **events** → settings → filters → dashboard → responsive → **vks-modal** → **calendar**
 
 ### Preloader
 - `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает данные из `localStorage.dash_cache`
@@ -272,7 +336,8 @@ async def add_item(**kwargs) -> str:
 
 ### Multipart (события с файлами)
 Events принимают `multipart/form-data`:
-- Поля: type, date, time, organizer_id, location_id, url, description, completed, notification
+- Поля: type, date, time, duration, organizer_id, organizer_type, location_id, url, description, completed, notification, participants (JSON)
+- Валидация: type (ALLOWED_TYPES), date (обязательно), time (обязательно), location_id (обязательно), organizer_id (обязательно)
 - Файлы: field name = 'files' (множественные)
 - `keep_doc_ids` — запятые ID документов для сохранения при обновлении
 
