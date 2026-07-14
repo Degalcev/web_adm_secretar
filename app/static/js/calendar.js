@@ -583,6 +583,12 @@ function _calUpdateShadow() {
     ].join(' ');
 
     path.setAttribute('d', d);
+
+    // Обводка border-strong вокруг всего контура
+    const borderStrong = getComputedStyle(document.documentElement).getPropertyValue('--border-strong').trim();
+    path.setAttribute('stroke', borderStrong);
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('paint-order', 'stroke fill');
 }
 
 let _calShadowRO = null;
