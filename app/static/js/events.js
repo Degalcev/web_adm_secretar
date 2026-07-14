@@ -240,8 +240,8 @@ async function _eventsOpenModal(eventId) {
     const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
 
-    // Ждём загрузки данных
-    await preloadAllData();
+    // Ждём загрузки организаторов и локаций
+    await ensureOrgsAndLocs();
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
