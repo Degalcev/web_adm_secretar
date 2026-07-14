@@ -58,6 +58,9 @@ function eventsRenderBoard() {
 
     let events = [...(store?.allEvents || [])];
 
+    // Исключаем ВКС — у них своя страница
+    events = events.filter(e => e.type !== 'ВКС');
+
     // Filter by status
     if (_eventsCompleted) {
         events = events.filter(e => e.completed);
@@ -240,13 +243,15 @@ async function _eventsOpenModal(eventId) {
     const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
 
-    // Прямая загрузка локаций и организаторов (как в VKS loadEventSelects)
-    const [locRes, orgRes] = await Promise.all([
+    // Прямая загрузка данных
+    const [locRes, orgRes, userRes] = await Promise.all([
         fetch('/admin/api/locations', { credentials: 'same-origin' }).catch(() => null),
-        fetch('/admin/api/organizers', { credentials: 'same-origin' }).catch(() => null)
+        fetch('/admin/api/organizers', { credentials: 'same-origin' }).catch(() => null),
+        fetch('/admin/api/users', { credentials: 'same-origin' }).catch(() => null)
     ]);
     if (locRes && locRes.ok) store.allLocations = await locRes.json();
     if (orgRes && orgRes.ok) store.allOrganizers = await orgRes.json();
+    if (userRes && userRes.ok) store.allUsers = await userRes.json();
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
@@ -308,25 +313,41 @@ async function _eventsLoadEventData(eventId) {
 function _eventsPopulateDropdowns() {
     const locSelect = document.getElementById('evt-location');
     const orgSelect = document.getElementById('evt-organizer');
+    const orgTypeSelect = document.getElementById('evt-organizer-type');
 
     const locs = store?.allLocations || [];
-    const orgs = store?.allOrganizers || [];
 
     if (locSelect) {
         locSelect.innerHTML = '<option value="">Не указана</option>' +
             locs.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
     }
 
-    if (orgSelect) {
-        orgSelect.innerHTML = '<option value="">Не указан</option>' +
-            orgs.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
-    }
+    // Populate organizer based on type
+    _eventsPopulateOrganizer();
 
-    // Update notification button state
-    const notifBtn = document.getElementById('evt-notification-btn');
-    const notifVal = document.getElementById('evt-notification');
-    if (notifBtn && notifVal) {
-        notifBtn.classList.toggle('done', notifVal.value === 'true');
+    // Add onchange to type switcher
+    if (orgTypeSelect) {
+        orgTypeSelect.onchange = () => _eventsPopulateOrganizer();
+    }
+}
+
+function _eventsPopulateOrganizer() {
+    const orgSelect = document.getElementById('evt-organizer');
+    const orgTypeSelect = document.getElementById('evt-organizer-type');
+    if (!orgSelect || !orgTypeSelect) return;
+
+    const type = orgTypeSelect.value;
+    if (type === 'user') {
+        const users = store?.allUsers || [];
+        orgSelect.innerHTML = '<option value="">Не указан</option>' +
+            users.map(u => {
+                const name = [u.last_name, u.first_name].filter(Boolean).join(' ') || u.name || u.username || `#${u.max_id}`;
+                return `<option value="${u.id}">${esc(name)}</option>`;
+            }).join('');
+    } else {
+        const orgs = store?.allOrganizers || [];
+        orgSelect.innerHTML = '<option value="">Не указан</option>' +
+            orgs.map(o => `<option value="${o.id}">${esc(o.short_name || o.name)}</option>`).join('');
     }
 }
 
