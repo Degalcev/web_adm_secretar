@@ -67,6 +67,8 @@ function eventsFilterType(type) {
     document.querySelectorAll('#events-tabs .events-tab').forEach(tab => {
         tab.classList.toggle('active', (tab.textContent === (type || 'Все')));
     });
+    const typeSelect = document.getElementById('f-events-type');
+    if (typeSelect) typeSelect.value = type || '';
     eventsRenderBoard();
     eventsUpdateStats();
 }
@@ -76,10 +78,17 @@ function eventsApplyFilters() {
 }
 
 function eventsResetFilters() {
+    document.getElementById('f-events-type').value = '';
     document.getElementById('f-events-org').value = '';
     document.getElementById('f-events-loc').value = '';
     document.getElementById('f-events-desc').value = '';
+    _eventsTypeFilter = null;
+    _eventsQuickFilter = '';
+    document.querySelectorAll('#events-tabs .events-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === 0);
+    });
     eventsRenderBoard();
+    eventsUpdateStats();
 }
 
 function eventsRenderBoard() {

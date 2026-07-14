@@ -709,6 +709,16 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="filter-group">
+          <span class="filter-label">Тип</span>
+          <select class="filter-select" id="f-events-type" onchange="eventsFilterType(this.value || null)">
+            <option value="">Все</option>
+            <option value="Совещание">Совещание</option>
+            <option value="Встреча">Встреча</option>
+            <option value="Заседание">Заседание</option>
+            <option value="Приём">Приём</option>
+          </select>
+        </div>
+        <div class="filter-group">
           <span class="filter-label">Организатор</span>
           <select class="filter-select" id="f-events-org" onchange="eventsApplyFilters()"><option value="">Все</option></select>
         </div>
