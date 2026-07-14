@@ -56,11 +56,11 @@ Always use `loguru.logger`. Never `print()` or `logging`.
 ## CSS Load Order (order matters!)
 
 ```
-base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → vks-modal → calendar
+base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → event-modal → calendar
 ```
 
 - `responsive.css` must be last base CSS
-- `vks-modal.css` and `calendar.css` come AFTER responsive.css (higher specificity)
+- `event-modal.css` and `calendar.css` come AFTER responsive.css (higher specificity)
 - Missing/extra `}` breaks ALL subsequent rules (CSS parse error cascade)
 
 ## Key Gotchas

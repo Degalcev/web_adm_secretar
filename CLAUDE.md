@@ -45,7 +45,7 @@ app/
     ├── index.html       # SPA entry point (?v=__VERSION__)
     ├── favicon.svg      # Иконка
     ├── partials/
-    │   ├── vks-modal.html       # VKS modal partial (Compact Flat)
+    │   ├── event-modal.html       # VKS modal partial (Compact Flat)
     │   ├── event-modal.html     # Мероприятия modal partial (VKS-style)
     │   ├── user-modal.html      # User modal partial
     │   ├── organizer-modal.html # Organizer modal partial
@@ -63,7 +63,7 @@ app/
     │   ├── filters.css       # Filter-bar компонент, select фильтры
     │   ├── settings.css      # Страницы настроек/профиля
     │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
-    │   ├── vks-modal.css     # Compact Flat стили модалок + pill-btn hover/done
+    │   ├── event-modal.css     # Compact Flat стили модалок + pill-btn hover/done
     │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
@@ -78,7 +78,7 @@ app/
         ├── print.js          # Печать мероприятий (openPrintModal, generatePrintHTML)
         ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика, ensureOrgsAndLocs()
         ├── vks-board.js      # VKS: рендеринг карточек (только type=ВКС), иконки, документы
-        ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
+        ├── event-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
         ├── organizers.js     # CRUD организаторов (через createCrudModule)
@@ -193,7 +193,7 @@ deploy/
 - VKS модалка: `openAddEventModal`, `openEditEventModal`, `closeEventModal`, `saveEvent`
 - Мероприятия модалка: `evtOpenAddModal`, `evtOpenEditModal`, `evtCloseModal`, `evtSaveEvent`
 - **Никогда не переименовывать** функции VKS — они вызываются из calendar.js, dashboard.js, vks-board.js
-- script load order: vks-modal.js (761) → events.js (770) → print.js (771)
+- script load order: event-modal.js (761) → events.js (770) → print.js (771)
 
 ### API events — формат ответа
 - `GET /admin/api/events` возвращает `{events: [...], total, has_more, next_cursor_date, next_cursor_time}`
@@ -212,7 +212,7 @@ deploy/
 - Формат: таблица с #, дата, время, длит., тип, описание, участники
 
 ### VKS Modal — Compact Flat дизайн
-- Модалка вынесена в partial: `app/static/partials/vks-modal.html`
+- Модалка вынесена в partial: `app/static/partials/event-modal.html`
 - Загружается async через `app.js` → `_modalsLoaded` promise
 - Структура: accent-bar (4px градиент) → header (статус-бейдж + заголовок + icon-btn info/delete/close) → body (form-separators) → footer (btn-ghost + pill complete + btn-primary)
 - Accent bar цвет по статусу: default (accent gradient), completed (green), missed (red)
@@ -229,12 +229,12 @@ deploy/
 - **Мобильный**: `.doc-card-info` flex-row (icon + name + size), name обрезается через `text-overflow: ellipsis`
 
 ### VKS Modal — CSS архитектура
-- Все стили Compact Flat в `vks-modal.css` — отдельный файл после `responsive.css`
-- Причина: `responsive.css` содержит базовые `.form-row { flex-direction: column }` которые перезаписывают `.vks-modal-flat .form-row { flex-direction: row }`
-- `.vks-modal-flat` полностью переопределяет: `.modal-header`, `.modal-body`, `.modal-footer`, `.form-group`, `.form-group label/input/select/textarea`, `.form-separator`, `.form-row`
+- Все стили Compact Flat в `event-modal.css` — отдельный файл после `responsive.css`
+- Причина: `responsive.css` содержит базовые `.form-row { flex-direction: column }` которые перезаписывают `.event-modal-flat .form-row { flex-direction: row }`
+- `.event-modal-flat` полностью переопределяет: `.modal-header`, `.modal-body`, `.modal-footer`, `.form-group`, `.form-group label/input/select/textarea`, `.form-separator`, `.form-row`
 - Header/footer: `background: var(--bg-elevated)` — не прозрачные
-- `border: none` на `.vks-modal-flat` — убрана рамка контейнера
-- `overflow: hidden` на `.vks-modal-flat` — accent bar обрезается по border-radius
+- `border: none` на `.event-modal-flat` — убрана рамка контейнера
+- `overflow: hidden` на `.event-modal-flat` — accent bar обрезается по border-radius
 
 ### Partial загрузка модалок
 - Все модалки (VKS, User, Organizer, Location) вынесены в `app/static/partials/*.html`
@@ -279,9 +279,9 @@ deploy/
 
 ### CSS архитектура — порядок загрузки
 - `responsive.css` загружается ПОСЛЕДНИМ базовым CSS
-- `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
+- `event-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
 - `calendar.css` загружается ПОСЛЕ responsive.css — стили календаря не конфликтуют с другими
-- Текущий порядок: base → layout → components → tables → modals → logs → vks → **events** → settings → filters → dashboard → responsive → **vks-modal** → **calendar**
+- Текущий порядок: base → layout → components → tables → modals → logs → vks → **events** → settings → filters → dashboard → responsive → **event-modal** → **calendar**
 
 ### Preloader
 - `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает данные из `localStorage.dash_cache`
@@ -351,7 +351,7 @@ Events принимают `multipart/form-data`:
 - Frontend: drawer overlay таймлайн (раскрывается от правого края модалки, 3/4 ширины)
 - Drawer: `position: fixed`, JS вычисляет позицию по `getBoundingClientRect()` modal-body
 - Цвета точек по action: create (accent), update (muted), complete (success), uncomplete (warning), delete/doc_remove (danger)
-- `overflow: hidden` на `.vks-modal-flat` clip accent bar — drawer вынесен на уровень `.modal-overlay`
+- `overflow: hidden` на `.event-modal-flat` clip accent bar — drawer вынесен на уровень `.modal-overlay`
 - Dim body: `::after` pseudo-element с `backdrop-filter: blur(2px)` (затрагивает все элементы формы)
 - `padding-bottom` на scroll-контейнере не работает — используем `::after` pseudo-element
 

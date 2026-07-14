@@ -1,8 +1,8 @@
-/* ═══ VKS Modal: Compact Flat ═══════════════════════════════════════ */
+/* ═══ Event Modal: Compact Flat ════════════════════════════════════ */
 /* Все стили Compact Flat модалок. Загружается ПОСЛЕ responsive.css. */
 
 /* ─── Container ─────────────────────────────────────────────────── */
-.vks-modal-flat {
+.event-modal-flat {
   border-radius: 14px;
   overflow: hidden;
   max-width: 460px;
@@ -11,7 +11,7 @@
 }
 
 /* ─── Header ────────────────────────────────────────────────────── */
-.vks-modal-flat .modal-header {
+.event-modal-flat .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,7 +21,7 @@
   background: var(--bg-elevated);
 }
 
-.vks-modal-flat .modal-header h3 {
+.event-modal-flat .modal-header h3 {
   font-family: var(--font-heading);
   font-size: 0.9375rem;
   font-weight: 700;
@@ -30,7 +30,7 @@
 }
 
 /* ─── Body ──────────────────────────────────────────────────────── */
-.vks-modal-flat .modal-body {
+.event-modal-flat .modal-body {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -45,7 +45,7 @@
 }
 
 /* ─── Footer ────────────────────────────────────────────────────── */
-.vks-modal-flat .modal-footer {
+.event-modal-flat .modal-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -55,7 +55,7 @@
   background: var(--bg-elevated);
 }
 
-.vks-modal-flat .modal-footer .btn {
+.event-modal-flat .modal-footer .btn {
   padding: 0.375rem 0.875rem;
   font-size: 0.8125rem;
   border-radius: 8px;
@@ -77,31 +77,31 @@
   padding-bottom: 0;
 }
 
-.vks-modal-flat .form-row {
+.event-modal-flat .form-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
-.vks-modal-flat .form-row + .form-row {
+.event-modal-flat .form-row + .form-row {
   margin-top: 10px;
 }
-.vks-modal-flat .form-group {
+.event-modal-flat .form-group {
   flex: 1;
   margin-bottom: 10px;
 }
-.vks-modal-flat .form-row .form-group {
+.event-modal-flat .form-row .form-group {
   margin-bottom: 0;
 }
-.vks-modal-flat .form-group label {
+.event-modal-flat .form-group label {
   display: block;
   font-size: 0.625rem;
   font-weight: 500;
   color: var(--fg-subtle);
   margin-bottom: 3px;
 }
-.vks-modal-flat .form-group input,
-.vks-modal-flat .form-group select,
-.vks-modal-flat .form-group textarea {
+.event-modal-flat .form-group input,
+.event-modal-flat .form-group select,
+.event-modal-flat .form-group textarea {
   width: 100%;
   padding: 0.5rem 0.75rem;
   background: var(--bg);
@@ -113,12 +113,12 @@
   outline: none;
   transition: border-color var(--motion-fast) var(--ease-standard);
 }
-.vks-modal-flat .form-group input:focus,
-.vks-modal-flat .form-group select:focus,
-.vks-modal-flat .form-group textarea:focus {
+.event-modal-flat .form-group input:focus,
+.event-modal-flat .form-group select:focus,
+.event-modal-flat .form-group textarea:focus {
   border-color: var(--accent);
 }
-.vks-modal-flat .form-group select {
+.event-modal-flat .form-group select {
   padding-right: 2rem;
   background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -126,16 +126,16 @@
   -webkit-appearance: none;
   appearance: none;
 }
-.vks-modal-flat .form-group select option {
+.event-modal-flat .form-group select option {
   background: var(--bg-elevated);
 }
-.vks-modal-flat .form-group textarea {
+.event-modal-flat .form-group textarea {
   resize: vertical;
   min-height: 88px;
   line-height: 1.5;
   padding: 0.625rem 0.75rem;
 }
-.vks-modal-flat .form-hint {
+.event-modal-flat .form-hint {
   display: block;
   margin-top: 0.25rem;
   font-size: 0.625rem;
@@ -143,26 +143,26 @@
 }
 
 /* ─── Accent Bar ────────────────────────────────────────────────── */
-.vks-modal-accent {
+.event-modal-accent {
   height: 4px;
   background: linear-gradient(90deg, var(--accent), var(--accent-ambient));
   flex-shrink: 0;
 }
-.vks-modal-accent.status-completed {
+.event-modal-accent.status-completed {
   background: linear-gradient(90deg, var(--success), rgba(74,222,128,0.4));
 }
-.vks-modal-accent.status-missed {
+.event-modal-accent.status-missed {
   background: linear-gradient(90deg, var(--danger), rgba(248,113,113,0.4));
 }
 
 /* ─── Header Elements ───────────────────────────────────────────── */
-.vks-modal-header-left {
+.event-modal-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
 }
-.vks-modal-title {
+.event-modal-title {
   font-family: var(--font-heading);
   font-size: 0.9375rem;
   font-weight: 700;
@@ -215,7 +215,7 @@
 }
 
 /* ─── Status Badge ──────────────────────────────────────────────── */
-.vks-modal-flat .modal-event-status {
+.event-modal-flat .modal-event-status {
   padding: 2px 8px;
   font-size: 0.5625rem;
   font-weight: 700;
@@ -310,14 +310,14 @@
 }
 
 /* ─── Documents Scroll ──────────────────────────────────────────── */
-.vks-modal-flat .doc-card-list {
+.event-modal-flat .doc-card-list {
   max-height: 310px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   position: relative;
 }
-.vks-modal-flat .doc-card-list::-webkit-scrollbar {
+.event-modal-flat .doc-card-list::-webkit-scrollbar {
   display: none;
 }
 
@@ -400,142 +400,142 @@
 
 /* ═══ Mobile ═════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .vks-modal-flat { border-radius: 12px; }
+  .event-modal-flat { border-radius: 12px; }
 
-  .vks-modal-flat .modal-header {
+  .event-modal-flat .modal-header {
     padding: 10px 12px 8px;
     background: var(--bg-elevated);
   }
-  .vks-modal-flat .modal-header h3 { font-size: 0.8125rem; }
+  .event-modal-flat .modal-header h3 { font-size: 0.8125rem; }
 
-  .vks-modal-flat .modal-body {
+  .event-modal-flat .modal-body {
     padding: 0 12px 12px;
     margin: 0;
     background: var(--bg-elevated);
     border: none;
   }
 
-  .vks-modal-flat .modal-footer {
+  .event-modal-flat .modal-footer {
     padding: 8px 12px;
     gap: 8px;
     background: var(--bg-elevated);
     border-top: 1px solid var(--border);
   }
-  .vks-modal-flat .modal-footer .btn-ghost {
+  .event-modal-flat .modal-footer .btn-ghost {
     flex: 0 0 auto;
     padding: 0.375rem 0.875rem;
     font-size: 0.75rem;
   }
-  .vks-modal-flat .modal-footer .btn-primary {
+  .event-modal-flat .modal-footer .btn-primary {
     flex: 0 0 auto;
     padding: 0.375rem 0.875rem;
     font-size: 0.75rem;
   }
-  .vks-modal-flat .footer-right {
+  .event-modal-flat .footer-right {
     display: flex;
     gap: 6px;
     align-items: center;
   }
 
-  .vks-modal-flat .form-row {
+  .event-modal-flat .form-row {
     flex-direction: row;
     gap: 8px;
   }
-  .vks-modal-flat .form-group {
+  .event-modal-flat .form-group {
     margin-bottom: 8px;
   }
-  .vks-modal-flat .form-row .form-group {
+  .event-modal-flat .form-row .form-group {
     margin-bottom: 0;
   }
-  .vks-modal-flat .form-group textarea {
+  .event-modal-flat .form-group textarea {
     min-height: 44px;
   }
-  .vks-modal-flat .form-group input,
-  .vks-modal-flat .form-group select {
+  .event-modal-flat .form-group input,
+  .event-modal-flat .form-group select {
     padding: 0.5rem 0.625rem;
     font-size: 0.8125rem;
   }
-  .vks-modal-flat .form-separator {
+  .event-modal-flat .form-separator {
     padding: 8px 0;
   }
 
-  .vks-modal-flat .pill-btn {
+  .event-modal-flat .pill-btn {
     padding: 5px 8px;
     font-size: 0.6875rem;
   }
 
-  .vks-modal-flat .icon-btn {
+  .event-modal-flat .icon-btn {
     width: 28px;
     height: 28px;
   }
-  .vks-modal-flat .icon-btn svg {
+  .event-modal-flat .icon-btn svg {
     width: 12px;
     height: 12px;
   }
-  .vks-modal-flat .modal-header-actions {
+  .event-modal-flat .modal-header-actions {
     gap: 4px;
   }
 
-  .vks-modal-flat .modal-event-status {
+  .event-modal-flat .modal-event-status {
     padding: 2px 6px;
     font-size: 0.5rem;
   }
 
   /* Docs scroll — max 2 items visible */
-  .vks-modal-flat .doc-card-list {
+  .event-modal-flat .doc-card-list {
     max-height: 140px;
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-  .vks-modal-flat .doc-card-list::-webkit-scrollbar {
+  .event-modal-flat .doc-card-list::-webkit-scrollbar {
     display: none;
   }
 
   /* Doc card — name + size in one line */
-  .vks-modal-flat .doc-card {
+  .event-modal-flat .doc-card {
     padding: 8px 10px;
   }
-  .vks-modal-flat .doc-card-info {
+  .event-modal-flat .doc-card-info {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: 6px;
     min-width: 0;
   }
-  .vks-modal-flat .doc-card-name {
+  .event-modal-flat .doc-card-name {
     flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .vks-modal-flat .doc-card-meta {
+  .event-modal-flat .doc-card-meta {
     flex-shrink: 0;
     white-space: nowrap;
   }
 
-  .vks-modal-flat .doc-card-delete {
+  .event-modal-flat .doc-card-delete {
     width: 28px;
   }
-  .vks-modal-flat .doc-card-delete svg {
+  .event-modal-flat .doc-card-delete svg {
     width: 12px;
     height: 12px;
   }
-  .vks-modal-flat .doc-add-btn {
+  .event-modal-flat .doc-add-btn {
     padding: 6px 10px;
     font-size: 0.75rem;
   }
 }
 
 /* Modal body wrapper */
-.vks-modal-body-wrapper {
+.event-modal-body-wrapper {
     display: flex;
     flex: 1;
     position: relative;
 }
 
-.vks-modal-body-wrapper .modal-body {
+.event-modal-body-wrapper .modal-body {
     flex: 1;
     overflow-y: auto;
     min-width: 0;
@@ -560,7 +560,7 @@
 }
 
 /* Dim modal body behind drawer — overlay covers all form elements */
-.vks-modal-body-wrapper.timeline-dimmed::after {
+.event-modal-body-wrapper.timeline-dimmed::after {
     content: '';
     position: absolute;
     inset: 0;

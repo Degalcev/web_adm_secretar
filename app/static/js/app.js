@@ -5,7 +5,7 @@ window._modalsLoaded = new Promise((resolve) => {
     async function _loadModals() {
         try {
             const files = [
-                '/static/partials/vks-modal.html',
+                '/static/partials/event-modal.html',
                 '/static/partials/user-modal.html',
                 '/static/partials/organizer-modal.html',
                 '/static/partials/location-modal.html'

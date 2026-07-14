@@ -7,13 +7,13 @@ function toggleEventComplete() {
     const btn = document.getElementById('event-modal-complete-btn');
     const statusEl = document.getElementById('event-modal-status');
     const pillLabel = btn.querySelector('.pill-label');
-    const accent = document.getElementById('vks-modal-accent');
+    const accent = document.getElementById('event-modal-accent');
     if (cb.checked) {
         btn.classList.add('active');
         if (pillLabel) pillLabel.textContent = 'Завершено';
         statusEl.className = 'modal-event-status status-completed';
         statusEl.innerHTML = '<span class="status-dot"></span>Завершено';
-        accent.className = 'vks-modal-accent status-completed';
+        accent.className = 'event-modal-accent status-completed';
     } else {
         btn.classList.remove('active');
         if (pillLabel) pillLabel.textContent = 'Завершить';
@@ -22,11 +22,11 @@ function toggleEventComplete() {
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'modal-event-status status-missed';
             statusEl.innerHTML = '<span class="status-dot"></span>Пропущено';
-            accent.className = 'vks-modal-accent status-missed';
+            accent.className = 'event-modal-accent status-missed';
         } else {
             statusEl.className = 'modal-event-status status-active';
             statusEl.innerHTML = '<span class="status-dot"></span>В работе';
-            accent.className = 'vks-modal-accent';
+            accent.className = 'event-modal-accent';
         }
     }
 }

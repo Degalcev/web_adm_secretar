@@ -1,4 +1,4 @@
-// ─── VKS: Модалка ──────────────────────────────────────────────────────
+// ─── Event: Модалка (Unified VKS + Мероприятия) ───────────────────────
 
 let isLockedByOther = false;
 let _modalMode = 'vks'; // 'vks' или 'events'
@@ -28,8 +28,8 @@ async function openAddEventModal(mode = 'vks') {
     document.getElementById('f-event-type-group').style.display = '';
     document.getElementById('f-event-type').value = isVks ? 'ВКС' : 'Совещание';
     // Accent bar — по умолчанию
-    const accent = document.getElementById('vks-modal-accent');
-    accent.className = 'vks-modal-accent';
+    const accent = document.getElementById('event-modal-accent');
+    accent.className = 'event-modal-accent';
     const now = new Date();
     document.getElementById('f-event-date').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('f-event-time').value = '';
@@ -91,14 +91,14 @@ async function openEditEventModal(id, mode = 'vks') {
     document.getElementById('event-modal-complete-btn').style.display = 'inline-flex';
 
     // Accent bar — цвет по статусу
-    const accent = document.getElementById('vks-modal-accent');
+    const accent = document.getElementById('event-modal-accent');
     const today = localDateStr(new Date());
     if (e.completed) {
-        accent.className = 'vks-modal-accent status-completed';
+        accent.className = 'event-modal-accent status-completed';
     } else if (!e.date || e.date < today) {
-        accent.className = 'vks-modal-accent status-missed';
+        accent.className = 'event-modal-accent status-missed';
     } else {
-        accent.className = 'vks-modal-accent';
+        accent.className = 'event-modal-accent';
     }
 
     // Статус-бейдж
@@ -210,7 +210,7 @@ async function openEditEventModal(id, mode = 'vks') {
         lockInfo.className = 'modal-lock-info';
         lockInfo.style.display = 'none';
         lockInfo.innerHTML = `${LOCK_SVG}<span id="event-modal-lock-text"></span>`;
-        const modalBody = document.querySelector('.vks-modal-flat .modal-body');
+        const modalBody = document.querySelector('.event-modal-flat .modal-body');
         if (modalBody) modalBody.insertBefore(lockInfo, modalBody.firstChild);
         lockText = document.getElementById('event-modal-lock-text');
     }
@@ -441,7 +441,7 @@ async function loadEventHistory(eventId) {
 
     container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
     // Position drawer at right edge of modal-body, 3/4 width
-    const body = document.querySelector('.vks-modal-flat .modal-body');
+    const body = document.querySelector('.event-modal-flat .modal-body');
     if (body) {
         const rect = body.getBoundingClientRect();
         const w = Math.round(rect.width * 0.75);
@@ -453,7 +453,7 @@ async function loadEventHistory(eventId) {
     container.style.display = 'block';
     requestAnimationFrame(() => {
         container.classList.add('drawer-open');
-        const wrapper = container.closest('.vks-modal-body-wrapper') || document.querySelector('.vks-modal-body-wrapper');
+        const wrapper = container.closest('.event-modal-body-wrapper') || document.querySelector('.event-modal-body-wrapper');
         if (wrapper) wrapper.classList.add('timeline-dimmed');
     });
 
@@ -552,7 +552,7 @@ function hideEventHistory() {
         container.classList.remove('drawer-open');
         container.style.display = 'none';
         container.innerHTML = '';
-        const wrapper = document.querySelector('.vks-modal-body-wrapper');
+        const wrapper = document.querySelector('.event-modal-body-wrapper');
         if (wrapper) wrapper.classList.remove('timeline-dimmed');
     }
 }
