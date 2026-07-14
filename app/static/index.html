@@ -679,6 +679,30 @@
         <button class="events-tab" onclick="eventsFilterType('Приём')">Приём</button>
       </div>
 
+      <!-- Stats -->
+      <div class="stats-row" id="events-stats">
+        <div class="stat-card clickable" onclick="eventsFilterType(null)">
+          <div class="stat-card-icon cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+          <div class="stat-value" id="stat-evt-total">0</div>
+          <span class="stat-label">Всего</span>
+        </div>
+        <div class="stat-card clickable" onclick="eventsFilterQuick('today')">
+          <div class="stat-card-icon purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-value" id="stat-evt-today">0</div>
+          <span class="stat-label">Сегодня</span>
+        </div>
+        <div class="stat-card clickable" onclick="eventsFilterQuick('soon')">
+          <div class="stat-card-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="stat-value" id="stat-evt-soon">0</div>
+          <span class="stat-label">Скоро</span>
+        </div>
+        <div class="stat-card clickable" onclick="eventsFilterQuick('missed')">
+          <div class="stat-card-icon amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="stat-value" id="stat-evt-missed">0</div>
+          <span class="stat-label">Пропущенные</span>
+        </div>
+      </div>
+
       <div class="filter-bar collapsed">
         <button class="filter-toggle" onclick="toggleFilter(this.parentElement)">
           <span>Фильтры</span>

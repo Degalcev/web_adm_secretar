@@ -14,6 +14,38 @@ function initEventsPage(completed = false) {
 
     _eventsPopulateFilters();
     eventsRenderBoard();
+    eventsUpdateStats();
+}
+
+let _eventsQuickFilter = '';
+
+function eventsFilterQuick(type) {
+    _eventsQuickFilter = (_eventsQuickFilter === type) ? '' : type;
+    eventsRenderBoard();
+}
+
+function eventsUpdateStats() {
+    const active = (store?.allEvents || []).filter(e => !e.completed && e.type !== 'ВКС');
+    const now = new Date();
+    const today = localDateStr(now);
+
+    let total = active.length;
+    let todayCount = 0;
+    let soonCount = 0;
+    let missedCount = 0;
+
+    active.forEach(e => {
+        if (!e.date) { missedCount++; return; }
+        if (e.date < today) { missedCount++; }
+        else if (e.date === today) { todayCount++; }
+        else { soonCount++; }
+    });
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('stat-evt-total', total);
+    set('stat-evt-today', todayCount);
+    set('stat-evt-soon', soonCount);
+    set('stat-evt-missed', missedCount);
 }
 
 function _eventsPopulateFilters() {
@@ -31,10 +63,12 @@ function _eventsPopulateFilters() {
 
 function eventsFilterType(type) {
     _eventsTypeFilter = type;
+    _eventsQuickFilter = '';
     document.querySelectorAll('#events-tabs .events-tab').forEach(tab => {
         tab.classList.toggle('active', (tab.textContent === (type || 'Все')));
     });
     eventsRenderBoard();
+    eventsUpdateStats();
 }
 
 function eventsApplyFilters() {
@@ -71,6 +105,18 @@ function eventsRenderBoard() {
     // Filter by type
     if (_eventsTypeFilter) {
         events = events.filter(e => e.type === _eventsTypeFilter);
+    }
+
+    // Quick filter (today/soon/missed)
+    if (_eventsQuickFilter) {
+        const today = localDateStr(new Date());
+        if (_eventsQuickFilter === 'today') {
+            events = events.filter(e => e.date === today);
+        } else if (_eventsQuickFilter === 'soon') {
+            events = events.filter(e => e.date && e.date > today);
+        } else if (_eventsQuickFilter === 'missed') {
+            events = events.filter(e => !e.date || e.date < today);
+        }
     }
 
     // Apply filters

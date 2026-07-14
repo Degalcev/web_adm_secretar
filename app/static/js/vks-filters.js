@@ -172,7 +172,7 @@ function clearVksFilter() {
 }
 
 function updateVksStats() {
-    const active = store.allEvents.filter(e => !e.completed);
+    const active = store.allEvents.filter(e => !e.completed && e.type === 'ВКС');
     const now = new Date();
     const today = localDateStr(now);
 
