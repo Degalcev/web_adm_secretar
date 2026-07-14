@@ -181,3 +181,38 @@
 .event-participant-dropdown .dropdown-item:hover {
     background: var(--bg-elevated);
 }
+
+/* ─── Repeat Options ─────────────────────────────────────────────── */
+
+.evt-weekday-row {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.evt-wd-btn {
+    width: 36px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-elevated);
+    color: var(--fg-subtle);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.evt-wd-btn:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+}
+
+.evt-wd-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}

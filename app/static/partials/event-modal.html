@@ -20,6 +20,7 @@
     <div class="vks-modal-body-wrapper">
       <div class="modal-body">
         <input type="hidden" id="evt-id">
+        <input type="hidden" id="evt-notification" value="true">
 
         <!-- Тип мероприятия -->
         <div class="form-separator form-group">
@@ -96,17 +97,44 @@
           </div>
         </div>
 
-        <!-- Уведомление (кнопка как в VKS) -->
-        <div class="form-separator">
-          <label>Уведомление</label>
-          <div class="vks-toggle-row">
-            <button type="button" class="pill-btn" id="evt-notification-btn" onclick="evtToggleNotification()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              <span class="pill-label">Уведомление</span>
-            </button>
+        <!-- Повторять -->
+        <div class="form-separator form-group">
+          <label>Повторять</label>
+          <button type="button" class="pill-btn" id="evt-repeat-btn" onclick="evtToggleRepeat()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+            <span class="pill-label">Повторять</span>
+          </button>
+          <div class="evt-repeat-options" id="evt-repeat-options" style="display:none; margin-top:8px">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Частота</label>
+                <select id="evt-repeat-freq" class="form-input">
+                  <option value="weekly">Еженедельно</option>
+                  <option value="biweekly">Раз в 2 недели</option>
+                  <option value="monthly">Ежемесячно</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>До даты</label>
+                <input type="date" id="evt-repeat-until" class="form-input">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Дни недели</label>
+              <div class="evt-weekday-row" id="evt-weekday-row">
+                <button type="button" class="evt-wd-btn" data-day="mon" onclick="this.classList.toggle('active')">Пн</button>
+                <button type="button" class="evt-wd-btn" data-day="tue" onclick="this.classList.toggle('active')">Вт</button>
+                <button type="button" class="evt-wd-btn" data-day="wed" onclick="this.classList.toggle('active')">Ср</button>
+                <button type="button" class="evt-wd-btn" data-day="thu" onclick="this.classList.toggle('active')">Чт</button>
+                <button type="button" class="evt-wd-btn" data-day="fri" onclick="this.classList.toggle('active')">Пт</button>
+                <button type="button" class="evt-wd-btn" data-day="sat" onclick="this.classList.toggle('active')">Сб</button>
+                <button type="button" class="evt-wd-btn" data-day="sun" onclick="this.classList.toggle('active')">Вс</button>
+              </div>
+            </div>
           </div>
-          <input type="hidden" id="evt-notification" value="true">
+          <input type="hidden" id="evt-repeat-active" value="false">
         </div>
+
       </div>
     </div>
 

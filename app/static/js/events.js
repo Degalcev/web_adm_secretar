@@ -235,10 +235,13 @@ function evtOpenEditModal(eventId) {
     else _eventsOpenModal(eventId);
 }
 
-function _eventsOpenModal(eventId) {
+async function _eventsOpenModal(eventId) {
     const overlay = document.getElementById('evt-modal-overlay');
     const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
+
+    // Ждём загрузки данных
+    await preloadAllData();
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
@@ -323,12 +326,28 @@ function _eventsPopulateDropdowns() {
 }
 
 function evtToggleNotification() {
-    const btn = document.getElementById('evt-notification-btn');
-    const val = document.getElementById('evt-notification');
-    if (!btn || !val) return;
-    const newState = val.value !== 'true';
-    val.value = newState ? 'true' : 'false';
+    // Notification always on for events
+}
+
+function evtToggleRepeat() {
+    const btn = document.getElementById('evt-repeat-btn');
+    const options = document.getElementById('evt-repeat-options');
+    const active = document.getElementById('evt-repeat-active');
+    if (!btn || !options || !active) return;
+
+    const newState = active.value !== 'true';
+    active.value = newState ? 'true' : 'false';
     btn.classList.toggle('done', newState);
+    options.style.display = newState ? 'block' : 'none';
+
+    // Auto-select current day of week
+    if (newState) {
+        const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const today = days[new Date().getDay()];
+        document.querySelectorAll('#evt-weekday-row .evt-wd-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.day === today);
+        });
+    }
 }
 
 function _eventsRenderParticipants(participants) {
