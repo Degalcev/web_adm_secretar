@@ -118,3 +118,10 @@ async function _refreshUsers() {
 function initSSE() {
     connectSSE();
 }
+
+function disconnectSSE() {
+    if (_eventSource) {
+        _eventSource.close();
+        _eventSource = null;
+    }
+}

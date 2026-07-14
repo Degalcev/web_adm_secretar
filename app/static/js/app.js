@@ -70,10 +70,12 @@ setInterval(_checkDayChange, 60000);
 
 // Запуск
 initTheme();
+initPreloader();
 initRouter();
-checkAuth();
-initUpdater();
-initSSE();
+checkAuth().then(() => {
+    initUpdater();
+    initSSE();
+});
 
 // ─── Кнопка «Наверх» ─────────────────────────────────────────────
 (function () {

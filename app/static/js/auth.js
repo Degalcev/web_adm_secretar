@@ -86,10 +86,11 @@ async function login() {
     if (btn) btn.disabled = true;
 
     try {
+        const rememberMe = document.getElementById('login-remember')?.checked || false;
         const resp = await fetch(`${BASE_URL}/admin/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ max_id: parseInt(maxId), password })
+            body: JSON.stringify({ max_id: parseInt(maxId), password, remember_me: rememberMe })
         });
         const data = await resp.json();
 
@@ -127,6 +128,11 @@ async function logout() {
     if (userEl) userEl.style.display = 'none';
     // Сброс раскрытия меню
     document.querySelectorAll('.nav-group.open').forEach(g => g.classList.remove('open'));
+    // Остановка SSE, таймеров, очистка кэша
+    if (typeof disconnectSSE === 'function') disconnectSSE();
+    if (typeof calStopNowLineTimer === 'function') calStopNowLineTimer();
+    if (typeof _preloaded !== 'undefined') _preloaded = false;
+    localStorage.removeItem('dash_cache');
     showLogin();
     window.history.replaceState(null, '', '/');
 }

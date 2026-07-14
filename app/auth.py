@@ -15,6 +15,7 @@ from database.sending import (
     create_session as db_create_session,
     delete_session as db_delete_session,
     cleanup_expired_sessions,
+    update_session_expiry,
 )
 from database.models import async_session, User, Session
 from config import DEFAULT_ADMIN_PASSWORD, COOKIE_DOMAIN
@@ -105,10 +106,10 @@ async def validate_session(token: str):
         return None
 
 
-async def create_session(token: str, user_id: str, request: web.Request) -> str:
+async def create_session(token: str, user_id: str, request: web.Request, expires_hours: int = 24) -> str:
     ip = request.remote
     ua = request.headers.get('User-Agent', '')[:500]
-    return await db_create_session(token, user_id, ip_address=ip, user_agent=ua)
+    return await db_create_session(token, user_id, ip_address=ip, user_agent=ua, expires_hours=expires_hours)
 
 
 async def destroy_session(token: str):
@@ -153,6 +154,10 @@ async def auth_middleware(request: web.Request, handler):
         return web.json_response({'error': 'Не авторизован'}, status=401)
 
     request['user'] = user
+
+    # Rolling session — обновить TTL при каждом запросе
+    await update_session_expiry(token)
+
     return await handler(request)
 
 
@@ -203,13 +208,15 @@ async def admin_login(request: web.Request) -> web.Response:
                 return web.json_response({'ok': False, 'error': 'Неверный логин или пароль'}, status=401)
 
         token = secrets.token_hex(32)
-        await create_session(token, user.id, request)
+        remember_me = data.get('remember_me', False)
+        expires_hours = 720 if remember_me else 24  # 30 дней или 24 часа
+        await create_session(token, user.id, request, expires_hours=expires_hours)
 
         csrf_token = generate_csrf_token()
 
         response = web.json_response({'ok': True})
-        _set_cookie(response, 'admin_token', token, httponly=True)
-        _set_cookie(response, 'csrf_token', csrf_token, httponly=False)
+        _set_cookie(response, 'admin_token', token, httponly=True, max_age=expires_hours * 3600)
+        _set_cookie(response, 'csrf_token', csrf_token, httponly=False, max_age=expires_hours * 3600)
 
         logger.info('Пользователь {} (role={}) вошёл в панель', max_id, user.status)
         return response

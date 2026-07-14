@@ -196,6 +196,20 @@ async def cleanup_expired_sessions():
             raise
 
 
+async def update_session_expiry(token: str, hours: int = 24):
+    """Обновить TTL сессии (rolling session)."""
+    try:
+        async with async_session() as session:
+            await session.execute(
+                update(Session)
+                .where(Session.token == token)
+                .values(expires_at=datetime.utcnow() + timedelta(hours=hours))
+            )
+            await session.commit()
+    except Exception as e:
+        logger.error('Ошибка update_session_expiry: {}', repr(e))
+
+
 # ─── Events (ВКС) ─────────────────────────────────────────────────────
 
 async def add_event(**kwargs) -> str:
