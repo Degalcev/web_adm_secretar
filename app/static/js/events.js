@@ -240,24 +240,13 @@ async function _eventsOpenModal(eventId) {
     const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
 
-    // Загружаем организаторы и локации
-    try {
-        await ensureOrgsAndLocs();
-    } catch (e) { /* fallback below */ }
-
-    // Fallback: если store пуст — грузим напрямую
-    if (!window.store?.allLocations?.length) {
-        try {
-            const r = await fetch('/admin/api/locations', { credentials: 'same-origin' });
-            if (r.ok) window.store.allLocations = await r.json();
-        } catch (e) {}
-    }
-    if (!window.store?.allOrganizers?.length) {
-        try {
-            const r = await fetch('/admin/api/organizers', { credentials: 'same-origin' });
-            if (r.ok) window.store.allOrganizers = await r.json();
-        } catch (e) {}
-    }
+    // Прямая загрузка локаций и организаторов (как в VKS loadEventSelects)
+    const [locRes, orgRes] = await Promise.all([
+        fetch('/admin/api/locations', { credentials: 'same-origin' }).catch(() => null),
+        fetch('/admin/api/organizers', { credentials: 'same-origin' }).catch(() => null)
+    ]);
+    if (locRes && locRes.ok) window.store.allLocations = await locRes.json();
+    if (orgRes && orgRes.ok) window.store.allOrganizers = await orgRes.json();
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
