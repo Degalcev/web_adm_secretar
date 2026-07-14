@@ -253,15 +253,16 @@ async function _eventsOpenModal(eventId) {
     if (orgRes && orgRes.ok) store.allOrganizers = await orgRes.json();
     if (userRes && userRes.ok) store.allUsers = await userRes.json();
 
+    _eventsPopulateDropdowns();
+
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
-        _eventsLoadEventData(eventId);
+        await _eventsLoadEventData(eventId);
     } else {
         title.textContent = 'Новое мероприятие';
         _eventsResetForm();
     }
 
-    _eventsPopulateDropdowns();
     overlay.style.display = 'flex';
 }
 
