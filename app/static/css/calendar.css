@@ -235,11 +235,6 @@
   z-index: 4;
   border: 1px solid transparent;
   border-bottom: none;
-  box-shadow:
-    -3px -2px 6px rgba(0, 0, 0, 0.25),
-     3px -2px 6px rgba(0, 0, 0, 0.25),
-     0   -3px 6px rgba(0, 0, 0, 0.25);
-  clip-path: inset(-14px -14px 0 -14px);
 }
 
 .cal-day-tab.weekend { color: var(--danger); }

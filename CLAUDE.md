@@ -59,7 +59,8 @@ app/
     │   ├── filters.css       # Filter-bar компонент, select фильтры
     │   ├── settings.css      # Страницы настроек/профиля
     │   ├── responsive.css    # Медиа-запросы для всех страниц (⚠️ ПОСЛЕДНИЙ БАЗОВЫЙ)
-    │   └── vks-modal.css     # Compact Flat стили модалок + drawer overlay таймлайна (ПОСЛЕ responsive.css!)
+    │   ├── vks-modal.css     # Compact Flat стили модалок + drawer overlay таймлайна (ПОСЛЕ responsive.css!)
+    │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
         ├── auth.js           # Логин/выход/checkAuth()
@@ -68,6 +69,7 @@ app/
         ├── preloader.js      # preloadAllData()
         ├── sse.js            # SSE обработчики (4 канала: events/users/locations/organizers)
         ├── dashboard.js      # Дашборд (renderDashLocations — НЕ collides с locations.js)
+        ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line)
         ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика
         ├── vks-board.js      # VKS: рендеринг карточек, иконки, документы
         ├── vks-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
@@ -210,7 +212,8 @@ deploy/
 ### CSS архитектура — порядок загрузки
 - `responsive.css` загружается ПОСЛЕДНИМ базовым CSS
 - `vks-modal.css` загружается ПОСЛЕ responsive.css — Compact Flat стили выигрывают по specificity
-- Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal**
+- `calendar.css` загружается ПОСЛЕ responsive.css — стили календаря не конфликтуют с другими
+- Текущий порядок: base → layout → components → tables → modals → logs → vks → settings → filters → dashboard → responsive → **vks-modal** → **calendar**
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
@@ -289,6 +292,30 @@ Events принимают `multipart/form-data`:
 - Lock/unlock — отдельные эндпоинты, НЕ проходят через update_handler → в историю не попадают
 - Preload endpoint возвращает `locked_by`, `locked_by_id`, `locked_at`
 - SSE: lock/unlock обновляет events → триггер → все клиенты видят замок на карточках
+
+### Календарь VKS
+- **Файлы**: `calendar.js` (~480 строк) + `calendar.css` (~323 строки)
+- **Маршрут**: `/calendar/` (SPA route в `router.js`, nav-item в sidebar, page div `#page-calendar`)
+- **Структура DOM**: `cal-container` → `cal-toolbar` + `cal-panel` (flex-column)
+  - `cal-panel` содержит: SVG shadow → `cal-day-tabs` (flex, z-index:2) → `cal-grid-area`
+  - `cal-grid-area`: `cal-rooms-header` (заголовки колонок) + `cal-wrap` (прокручиваемая сетка)
+- **Flex chain**: `cal-container` → `cal-panel` (flex:1 + min-height:0) → `cal-wrap` (overflow-y:auto + flex:1). Без min-height:0 прокрутка не работает
+- **Overflow chain (критично)**: `body { overflow: hidden }` (base.css:311) → `.content-area { overflow: hidden }` (layout.css) → `.page#page-calendar.active { overflow: hidden; padding: 0 }` (calendar.css:2-4). **БЕЗ overflow:hidden на `.page` календарь «разваливается»** — `.cal-wrap`失去 constrained height
+- **renderCalendar(full)**: флаг `full=true` пересоздаёт весь DOM (toolbar+tabs+grid), `full=false` только обновляет вкладки и сетку. Вызывается при переключении дня, `full=true` при навигации (prev/next week, goToday)
+- **initCalendar()**: preloadAllData() → renderCalendar(true) → calStartNowLineTimer() → addEventListener('transitionend') на `cal-day-tabs`. Динамические элементы (`cal-day-tabs`, `cal-panel`, `cal-shadow-svg`) создаются внутри renderCalendar, не на уровне модуля
+- **Тень (SVG feDropShadow)**: CSS `filter: drop-shadow()` **ЗАБРОШЕН** — `body { overflow: hidden }` обрезает. SVG `feDropShadow` с `overflow: visible` рисует тень за пределами элемента
+  - SVG path с `fill` (цвет активной вкладки) + filter (feGaussianBlur, stdDeviation=5, dy=3, alpha=0.3)
+  - A-дуги: `rt=10` (скругление вкладки), `rp=12` (скругление панели), `rl` (левый угол шапки, Math.min(rp, tx-inset))
+  - `_calUpdateShadow()` — пересчёт path по `getBoundingClientRect()` вкладки и панели
+  - `_calUpdateShadowFill()` — fill цвет берётся из `getComputedStyle(activeTab).backgroundColor`
+  - `_calScheduleShadowUpdate()` — через `requestAnimationFrame`
+  - `transitionend` listener на `cal-day-tabs` (свойство `padding`) — пересчёт после анимации
+- **Вкладки (tabs)**: `align-items: flex-end` на `.cal-day-tabs` — неактивные вкладки короче (padding:6px/8px), активная выше (padding:10px/12px). Без `flex-end` браузер растягивает все вкладки по высоте (`stretch` default)
+- **Hover**: JS `position: fixed` через `getBoundingClientRect()` — CSS-only hover expansion невозможен из-за overflow цепочки. `_calOnEvEnter`/`_calOnEvLeave`
+- **Now-line**: `setTimeout` вместо `setInterval`, DOM кэшируется (`_calNowLines[]`, `_calNowTimeLabel`), обновляется только `style.top`
+- **События**: absolute позиционение внутри relative `.cal-col`, `findOverlapGroups()` для side-by-side overlap, цвет по hall (h0-h3)
+- **Заголовки колонок**: `.cal-rooms-header` — отдельный статический flex-элемент над `.cal-wrap` (не sticky). Решает проблемы border/scroll/z-index
+- **Mobile**: `.cal-day-tabs` overflow-x: auto, `.cal-day-tab` min-width: 48px flex: none
 
 ## Правила разработки
 1. **Деплой по веткам**: `develop` → test, `main` → prod
