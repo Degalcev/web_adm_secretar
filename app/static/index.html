@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="/static/css/responsive.css?v=__VERSION__">
 <link rel="stylesheet" href="/static/css/vks-modal.css?v=__VERSION__">
 <link rel="stylesheet" href="/static/css/calendar.css?v=__VERSION__">
+<link rel="stylesheet" href="/static/css/events.css?v=__VERSION__">
 <script src="https://st.max.ru/js/max-web-app.js"></script>
 </head>
 <body>
@@ -97,6 +98,18 @@
         <div class="nav-group-items">
           <a class="nav-item" data-page="vks-active" data-href="/conferences/">Текущие</a>
           <a class="nav-item" data-page="vks-completed" data-href="/conferences/completed/">Завершённые</a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-group-header" onclick="toggleGroup(this)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Мероприятия
+          <svg class="arrow" width="16" height="16"><use href="#icon-chevron"/></svg>
+        </div>
+        <div class="nav-group-items">
+          <a class="nav-item" data-page="events-active" data-href="/events/">Текущие</a>
+          <a class="nav-item" data-page="events-completed" data-href="/events/completed/">Завершённые</a>
         </div>
       </div>
 
@@ -644,6 +657,11 @@
         <div class="cal-container" id="cal-container"></div>
     </div>
 
+    <!-- ─── Events ─────────────────────────────────────────────── -->
+    <div class="page" id="page-events">
+        <div class="events-container" id="events-container"></div>
+    </div>
+
   </main>
   </div>
 </div>
@@ -705,6 +723,7 @@
 <script src="/static/js/sse.js?v=__VERSION__"></script>
 <script src="/static/js/updater.js?v=__VERSION__"></script>
 <script src="/static/js/calendar.js?v=__VERSION__"></script>
+<script src="/static/js/events.js?v=__VERSION__"></script>
 <script src="/static/js/app.js?v=__VERSION__"></script>
 </body>
 </html>

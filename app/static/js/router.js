@@ -11,6 +11,8 @@ const ROUTES = {
     '/conferences/':            { page: 'vks-active',     title: 'Текущие ВКС' },
     '/conferences/completed/':  { page: 'vks-completed',  title: 'Завершённые ВКС' },
     '/calendar/':               { page: 'calendar',       title: 'Календарь' },
+    '/events/':                 { page: 'events-active',   title: 'Текущие мероприятия' },
+    '/events/completed/':       { page: 'events-completed', title: 'Завершённые мероприятия' },
     '/settings/general/':       { page: 'settings',       title: 'Настройки' },
     '/settings/profile/':       { page: 'profile',        title: 'Пользователь' },
 };

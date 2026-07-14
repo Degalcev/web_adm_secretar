@@ -354,6 +354,19 @@
 .cal-ev.split:not(:hover) .ev-desc { display: none; }
 .cal-ev.split:not(:hover) .ev-badges { display: none; }
 
+/* ─── Event Type Colors ─────────────────────────────────────────────── */
+.cal-ev.type-vks { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.cal-ev.type-meeting { border-left-color: var(--success); background: color-mix(in srgb, var(--success) 20%, transparent); }
+.cal-ev.type-session { border-left-color: var(--warning); background: color-mix(in srgb, var(--warning) 20%, transparent); }
+.cal-ev.type-board { border-left-color: var(--danger); background: color-mix(in srgb, var(--danger) 20%, transparent); }
+.cal-ev.type-reception { border-left-color: var(--fg-muted); background: color-mix(in srgb, var(--fg-muted) 20%, transparent); }
+
+.cal-ev:hover.type-vks { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 55%, var(--bg)); }
+.cal-ev:hover.type-meeting { border-color: var(--success); background: color-mix(in srgb, var(--success) 55%, var(--bg)); }
+.cal-ev:hover.type-session { border-color: var(--warning); background: color-mix(in srgb, var(--warning) 55%, var(--bg)); }
+.cal-ev:hover.type-board { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 55%, var(--bg)); }
+.cal-ev:hover.type-reception { border-color: var(--fg-muted); background: color-mix(in srgb, var(--fg-muted) 55%, var(--bg)); }
+
 /* ─── Now Line ─────────────────────────────────────────────────────── */
 .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 10; pointer-events: none; }
 

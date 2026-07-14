@@ -4,23 +4,52 @@ from datetime import date, datetime, timedelta, time
 
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
-from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id
-from database.sending import add_event, update_event, delete_event, add_document, delete_document, lock_event, unlock_event
+from app.event_types import validate_event_type
+from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id, get_event_participants, get_event_series, get_series_exceptions
+from database.sending import add_event, update_event, delete_event, add_document, delete_document, lock_event, unlock_event, add_event_participants, replace_event_participants, create_event_series, delete_event_series, add_series_exception
 
 
 async def get_events_handler(request: web.Request) -> web.Response:
     try:
         status = request.query.get('status', '').strip()
+        completed = None
         if status == 'completed':
-            events = await get_events(completed=True)
+            completed = True
         elif status == 'active':
-            events = await get_events(completed=False)
-        else:
-            events = await get_events()
+            completed = False
+
+        event_type = request.query.get('type', '').strip() or None
+        participant_id = request.query.get('participant_id', '').strip() or None
+        location_id = request.query.get('location_id', '').strip() or None
+        organizer_id = request.query.get('organizer_id', '').strip() or None
+        date_from_str = request.query.get('from', '').strip()
+        date_to_str = request.query.get('to', '').strip()
+        date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else None
+        date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else None
+
+        cursor_date_str = request.query.get('cursor_date', '').strip()
+        cursor_time_str = request.query.get('cursor_time', '').strip()
+        cursor_date = datetime.strptime(cursor_date_str, '%Y-%m-%d').date() if cursor_date_str else None
+        cursor_time = datetime.strptime(cursor_time_str, '%H:%M').time() if cursor_time_str else None
+
+        limit = int(request.query.get('limit', '20'))
+
+        events, total, has_more = await get_events(
+            completed=completed,
+            event_type=event_type,
+            participant_id=participant_id,
+            location_id=location_id,
+            organizer_id=organizer_id,
+            date_from=date_from,
+            date_to=date_to,
+            cursor_date=cursor_date,
+            cursor_time=cursor_time,
+            limit=limit,
+        )
 
         data = []
         event_ids = [e.id for e in events]
-        docs_map = await get_documents_by_event_ids(event_ids)
+        docs_map = await get_documents_by_event_ids(event_ids) if event_ids else {}
 
         # Resolve user names (audit + lock) in batch
         audit_user_ids = set()
@@ -47,18 +76,25 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 if lu:
                     locked_by_name = lu
 
+            # Load participants for each event
+            participants = await get_event_participants(e.id)
+
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
                 'date': e.date.isoformat() if e.date else None,
                 'time': e.time.strftime('%H:%M') if e.time else None,
+                'duration': e.duration or 60,
                 'organizer_id': e.organizer_id,
+                'organizer_type': e.organizer_type or 'org',
                 'location_id': e.location_id,
                 'url': e.url or '',
                 'description': e.description or '',
                 'completed': e.completed,
                 'notification': e.notification,
                 'documents': docs_map.get(e.id, []),
+                'participants': participants,
+                'series_id': e.series_id,
                 'last_changed_by': changed_by_name,
                 'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
                 'last_change_action': e.last_change_action or '',
@@ -66,8 +102,18 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'locked_by_id': locked_by_id,
                 'locked_at': e.locked_at.isoformat() if e.locked_at else None,
             })
-        logger.debug('Загружено {} событий', len(data))
-        return web.json_response(data)
+        logger.debug('Загружено {} событий (total: {})', len(data), total)
+
+        next_cursor_date = events[-1].date.isoformat() if events and has_more else None
+        next_cursor_time = events[-1].time.strftime('%H:%M') if events and has_more and events[-1].time else None
+
+        return web.json_response({
+            'events': data,
+            'total': total,
+            'has_more': has_more,
+            'next_cursor_date': next_cursor_date,
+            'next_cursor_time': next_cursor_time,
+        })
     except Exception as e:
         logger.error('Ошибка получения событий: {}', repr(e))
         return web.json_response([], status=500)
@@ -112,8 +158,12 @@ async def create_event_handler(request: web.Request) -> web.Response:
                 'last_change_action': 'create',
             }
 
+        event_type = fields.get('type', 'ВКС')
+        if not validate_event_type(event_type):
+            return web.json_response({'ok': False, 'error': f'Неизвестный тип мероприятия: {event_type}'}, status=400)
+
         event_id = await add_event(
-            type=fields.get('type', 'ВКС'),
+            type=event_type,
             date=datetime.strptime(fields['date'], '%Y-%m-%d').date() if fields.get('date') else None,
             time=datetime.strptime(fields['time'], '%H:%M').time() if fields.get('time') else None,
             organizer_id=fields.get('organizer_id'),
@@ -122,9 +172,22 @@ async def create_event_handler(request: web.Request) -> web.Response:
             description=fields.get('description', ''),
             completed=fields.get('completed', 'false') == 'true',
             notification=fields.get('notification', 'true') == 'true',
+            duration=int(fields.get('duration', 60)),
+            organizer_type=fields.get('organizer_type', 'org'),
+            series_id=fields.get('series_id'),
             **audit_data,
         )
         logger.info('Событие создано: {}', event_id)
+
+        participants_json = fields.get('participants')
+        if participants_json:
+            try:
+                import json
+                participants = json.loads(participants_json)
+                if participants:
+                    await add_event_participants(event_id, participants)
+            except Exception as e:
+                logger.error('Ошибка добавления участников: {}', repr(e))
 
         for f in files:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
@@ -158,6 +221,16 @@ async def update_event_handler(request: web.Request) -> web.Response:
                 else:
                     update_data[field] = fields[field]
 
+        if 'type' in update_data and not validate_event_type(update_data['type']):
+            return web.json_response({'ok': False, 'error': f'Неизвестный тип мероприятия: {update_data["type"]}'}, status=400)
+
+        if 'duration' in fields:
+            update_data['duration'] = int(fields['duration'])
+        if 'organizer_type' in fields:
+            update_data['organizer_type'] = fields['organizer_type']
+        if 'series_id' in fields:
+            update_data['series_id'] = fields['series_id'] or None
+
         user = request.get('user')
         if user:
             update_data['last_changed_by'] = user.id
@@ -180,6 +253,15 @@ async def update_event_handler(request: web.Request) -> web.Response:
         for f in files:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
             logger.info('Документ {} добавлен в событие {}', f['name'], event_id)
+
+        participants_json = fields.get('participants')
+        if participants_json is not None:
+            try:
+                import json
+                participants = json.loads(participants_json)
+                await replace_event_participants(event_id, participants)
+            except Exception as e:
+                logger.error('Ошибка замены участников: {}', repr(e))
 
         new_state = await capture_event_state(event_id)
         action = 'update'
@@ -226,7 +308,8 @@ async def delete_event_handler(request: web.Request) -> web.Response:
 
 async def dashboard_stats(request: web.Request) -> web.Response:
     try:
-        events = await get_events()
+        events_result = await get_events(limit=10000)
+        events = events_result[0]
         today = date.today()
         tomorrow = today + timedelta(days=1)
 
@@ -316,6 +399,103 @@ async def unlock_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
+# ─── Event Series ────────────────────────────────────────────────────
+
+async def get_series_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        event = await get_event_by_id(event_id)
+        if not event or not event.series_id:
+            return web.json_response({'series': None, 'exceptions': []})
+
+        series = await get_event_series(event.series_id)
+        if not series:
+            return web.json_response({'series': None, 'exceptions': []})
+
+        exceptions = await get_series_exceptions(series.id)
+        return web.json_response({
+            'series': {
+                'id': series.id,
+                'freq': series.freq,
+                'interval_val': series.interval_val,
+                'by_day': series.by_day or [],
+                'until': series.until.isoformat() if series.until else None,
+            },
+            'exceptions': [
+                {
+                    'id': exc.id,
+                    'original_date': exc.original_date.isoformat(),
+                    'event_id': exc.event_id,
+                    'action': exc.action,
+                    'new_date': exc.new_date.isoformat() if exc.new_date else None,
+                }
+                for exc in exceptions
+            ],
+        })
+    except Exception as e:
+        logger.error('Ошибка получения серии: {}', repr(e))
+        return web.json_response({'series': None, 'exceptions': []}, status=500)
+
+
+@require_csrf
+async def create_series_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        data = await request.json()
+
+        series_id = await create_event_series(
+            freq=data.get('freq', 'weekly'),
+            interval_val=data.get('interval_val', 1),
+            by_day=data.get('by_day', []),
+            until=datetime.strptime(data['until'], '%Y-%m-%d').date() if data.get('until') else None,
+        )
+
+        await update_event(event_id=event_id, series_id=series_id)
+        return web.json_response({'ok': True, 'series_id': series_id})
+    except Exception as e:
+        logger.error('Ошибка создания серии: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@require_csrf
+async def delete_series_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        event = await get_event_by_id(event_id)
+        if not event or not event.series_id:
+            return web.json_response({'ok': False, 'error': 'Серия не найдена'}, status=404)
+
+        await update_event(event_id=event_id, series_id=None)
+        await delete_event_series(event.series_id)
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка удаления серии: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
+@require_csrf
+async def add_exception_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        data = await request.json()
+
+        event = await get_event_by_id(event_id)
+        if not event or not event.series_id:
+            return web.json_response({'ok': False, 'error': 'Серия не найдена'}, status=404)
+
+        exc_id = await add_series_exception(
+            series_id=event.series_id,
+            original_date=datetime.strptime(data['original_date'], '%Y-%m-%d').date(),
+            event_id=data.get('event_id'),
+            action=data.get('action', 'skip'),
+            new_date=datetime.strptime(data['new_date'], '%Y-%m-%d').date() if data.get('new_date') else None,
+        )
+        return web.json_response({'ok': True, 'exception_id': exc_id})
+    except Exception as e:
+        logger.error('Ошибка добавления исключения: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events', get_events_handler)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
@@ -325,3 +505,7 @@ def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events/{event_id}/history', get_event_history_handler)
     app.router.add_put('/admin/api/events/{id}/lock', lock_event_handler)
     app.router.add_put('/admin/api/events/{id}/unlock', unlock_event_handler)
+    app.router.add_get('/admin/api/events/{id}/series', get_series_handler)
+    app.router.add_post('/admin/api/events/{id}/series', create_series_handler)
+    app.router.add_delete('/admin/api/events/{id}/series', delete_series_handler)
+    app.router.add_post('/admin/api/events/{id}/series/exception', add_exception_handler)

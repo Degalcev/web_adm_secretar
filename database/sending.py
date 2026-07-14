@@ -6,7 +6,7 @@ from loguru import logger
 from sqlalchemy import select, update
 from sqlalchemy import delete as sql_delete
 
-from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory
+from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory, EventParticipant, EventSeries, EventSeriesException
 from config import DOCUMENTS_DIR
 
 
@@ -368,3 +368,128 @@ async def add_event_history(
         logger.debug('event_history: event={} action={}', event_id, action)
     except Exception as e:
         logger.error('Ошибка записи event_history: {}', repr(e))
+
+
+# ─── Event Participants ─────────────────────────────────────────────
+
+async def add_event_participants(event_id: str, participants: list[dict]) -> list[str]:
+    """Batch insert участников. participants = [{user_id, role}]"""
+    ids = []
+    async with async_session() as session:
+        try:
+            for p in participants:
+                new_id = str(uuid.uuid4())
+                ep = EventParticipant(
+                    id=new_id,
+                    event_id=event_id,
+                    user_id=p['user_id'],
+                    role=p.get('role', 'участник'),
+                )
+                session.add(ep)
+                ids.append(new_id)
+            await session.commit()
+            logger.info('Добавлено {} участников для event {}', len(ids), event_id)
+            return ids
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления участников: {}', repr(e))
+            raise
+
+
+async def remove_event_participant(participant_id: str):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(EventParticipant).where(EventParticipant.id == participant_id)
+            )
+            await session.commit()
+            logger.info('Участник {} удалён', participant_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления участника {}: {}', participant_id, repr(e))
+            raise
+
+
+async def replace_event_participants(event_id: str, participants: list[dict]) -> list[str]:
+    """Полная замена участников мероприятия."""
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(EventParticipant).where(EventParticipant.event_id == event_id)
+            )
+            ids = []
+            for p in participants:
+                new_id = str(uuid.uuid4())
+                ep = EventParticipant(
+                    id=new_id,
+                    event_id=event_id,
+                    user_id=p['user_id'],
+                    role=p.get('role', 'участник'),
+                )
+                session.add(ep)
+                ids.append(new_id)
+            await session.commit()
+            logger.info('Заменено {} участников для event {}', len(ids), event_id)
+            return ids
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка замены участников: {}', repr(e))
+            raise
+
+
+# ─── Event Series ────────────────────────────────────────────────────
+
+async def create_event_series(freq: str, interval_val: int, by_day: list, until=None) -> str:
+    new_id = str(uuid.uuid4())
+    series = EventSeries(
+        id=new_id,
+        freq=freq,
+        interval_val=interval_val,
+        by_day=by_day,
+        until=until,
+    )
+    async with async_session() as session:
+        try:
+            session.add(series)
+            await session.commit()
+            logger.info('Серия создана: {}', new_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка создания серии: {}', repr(e))
+            raise
+
+
+async def delete_event_series(series_id: str):
+    async with async_session() as session:
+        try:
+            await session.execute(sql_delete(EventSeriesException).where(EventSeriesException.series_id == series_id))
+            await session.execute(sql_delete(EventSeries).where(EventSeries.id == series_id))
+            await session.commit()
+            logger.info('Серия {} удалена', series_id)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления серии {}: {}', series_id, repr(e))
+            raise
+
+
+async def add_series_exception(series_id: str, original_date, event_id: str = None, action: str = 'skip', new_date=None) -> str:
+    new_id = str(uuid.uuid4())
+    exc = EventSeriesException(
+        id=new_id,
+        series_id=series_id,
+        original_date=original_date,
+        event_id=event_id,
+        action=action,
+        new_date=new_date,
+    )
+    async with async_session() as session:
+        try:
+            session.add(exc)
+            await session.commit()
+            logger.info('Исключение серии добавлено: {}', new_id)
+            return new_id
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка добавления исключения: {}', repr(e))
+            raise

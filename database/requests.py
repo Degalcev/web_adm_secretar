@@ -1,8 +1,8 @@
-from datetime import datetime, date
+from datetime import datetime, date, time
 from loguru import logger
 from sqlalchemy import select, update, and_
 
-from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory
+from database.models import async_session, User, Organizer, Location, Session, Event, Document, EventHistory, EventParticipant, EventSeries, EventSeriesException
 
 
 async def get_user(user_max_id=None):
@@ -48,6 +48,34 @@ async def get_organizer_by_id(organizer_id: str):
         return await session.scalar(select(Organizer).where(Organizer.id == organizer_id))
 
 
+async def get_organizers_with_usage():
+    from sqlalchemy import func
+    async with async_session() as session:
+        result = await session.execute(
+            select(
+                Organizer.id,
+                Organizer.name,
+                Organizer.base_url,
+                Organizer.short_name,
+                func.count(Event.id).label('usage_count'),
+            )
+            .outerjoin(Event, Organizer.id == Event.organizer_id)
+            .group_by(Organizer.id)
+            .order_by(func.count(Event.id).desc())
+        )
+        rows = result.all()
+        return [
+            {
+                'id': row.id,
+                'name': row.name or '',
+                'base_url': row.base_url or '',
+                'short_name': row.short_name or '',
+                'usage_count': row.usage_count,
+            }
+            for row in rows
+        ]
+
+
 async def get_locations():
     async with async_session() as session:
         result = await session.scalars(select(Location))
@@ -78,14 +106,68 @@ async def get_user_by_id(user_id: str):
 
 # ─── Events (ВКС) ─────────────────────────────────────────────────────
 
-async def get_events(completed: bool = None):
+async def get_events(
+    completed: bool = None,
+    event_type: str = None,
+    participant_id: str = None,
+    location_id: str = None,
+    organizer_id: str = None,
+    date_from: date = None,
+    date_to: date = None,
+    cursor_date: date = None,
+    cursor_time: time = None,
+    limit: int = 20,
+):
+    from sqlalchemy import func, literal_column
     async with async_session() as session:
         query = select(Event)
+        count_query = select(func.count(Event.id))
+
         if completed is not None:
             query = query.where(Event.completed == completed)
+            count_query = count_query.where(Event.completed == completed)
+        if event_type:
+            query = query.where(Event.type == event_type)
+            count_query = count_query.where(Event.type == event_type)
+        if location_id:
+            query = query.where(Event.location_id == location_id)
+            count_query = count_query.where(Event.location_id == location_id)
+        if organizer_id:
+            query = query.where(Event.organizer_id == organizer_id)
+            count_query = count_query.where(Event.organizer_id == organizer_id)
+        if date_from:
+            query = query.where(Event.date >= date_from)
+            count_query = count_query.where(Event.date >= date_from)
+        if date_to:
+            query = query.where(Event.date <= date_to)
+            count_query = count_query.where(Event.date <= date_to)
+        if participant_id:
+            query = query.join(EventParticipant, Event.id == EventParticipant.event_id)
+            query = query.where(EventParticipant.user_id == participant_id)
+            count_query = count_query.join(EventParticipant, Event.id == EventParticipant.event_id)
+            count_query = count_query.where(EventParticipant.user_id == participant_id)
+
+        # Cursor-based pagination
+        if cursor_date is not None and cursor_time is not None:
+            from sqlalchemy import or_, and_
+            query = query.where(
+                or_(
+                    Event.date > cursor_date,
+                    and_(Event.date == cursor_date, Event.time > cursor_time),
+                )
+            )
+
+        total = (await session.execute(count_query)).scalar() or 0
+
         query = query.order_by(Event.date.desc(), Event.time.desc())
+        query = query.limit(limit + 1)
         result = await session.scalars(query)
-        return list(result)
+        rows = list(result)
+        has_more = len(rows) > limit
+        if has_more:
+            rows = rows[:limit]
+
+        return rows, total, has_more
 
 
 async def get_events_by_date_range(start_date: date, end_date: date):
@@ -190,3 +272,83 @@ async def get_event_history_by_event_id(event_id: str) -> list[dict]:
                 'changes': row.changes,
             })
         return history
+
+
+# ─── Event Participants ─────────────────────────────────────────────
+
+async def get_event_participants(event_id: str) -> list[dict]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(
+                EventParticipant.id,
+                EventParticipant.user_id,
+                EventParticipant.role,
+                User.name,
+                User.username,
+                User.last_name,
+                User.first_name,
+                User.patronymic,
+            )
+            .join(User, EventParticipant.user_id == User.id, isouter=True)
+            .where(EventParticipant.event_id == event_id)
+        )
+        rows = result.all()
+        participants = []
+        for row in rows:
+            user_parts = [row.last_name or '', row.first_name or '', row.patronymic or '']
+            user_name = ' '.join(p for p in user_parts if p).strip() or row.name or row.username or ''
+            participants.append({
+                'id': row.id,
+                'user_id': row.user_id,
+                'name': user_name,
+                'role': row.role,
+            })
+        return participants
+
+
+async def search_users_for_participants(query: str, limit: int = 10) -> list[dict]:
+    async with async_session() as session:
+        q = select(User.id, User.name, User.username, User.max_id)
+        if query:
+            q = q.where(
+                User.name.ilike(f'%{query}%') |
+                User.username.ilike(f'%{query}%') |
+                User.last_name.ilike(f'%{query}%')
+            )
+        q = q.limit(limit)
+        result = await session.execute(q)
+        rows = result.all()
+        return [
+            {
+                'id': row.id,
+                'name': row.name,
+                'username': row.username,
+                'max_id': row.max_id,
+            }
+            for row in rows
+        ]
+
+
+# ─── Event Series ────────────────────────────────────────────────────
+
+async def get_event_series(series_id: str):
+    async with async_session() as session:
+        return await session.scalar(select(EventSeries).where(EventSeries.id == series_id))
+
+
+async def get_series_exceptions(series_id: str) -> list:
+    async with async_session() as session:
+        result = await session.scalars(
+            select(EventSeriesException).where(EventSeriesException.series_id == series_id)
+        )
+        return list(result)
+
+
+async def get_exception_for_series_date(series_id: str, original_date: date):
+    async with async_session() as session:
+        return await session.scalar(
+            select(EventSeriesException).where(
+                EventSeriesException.series_id == series_id,
+                EventSeriesException.original_date == original_date,
+            )
+        )

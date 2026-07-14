@@ -6,9 +6,10 @@ from database.requests import get_events, get_organizers, get_locations, get_doc
 
 async def preload_data(request: web.Request) -> web.Response:
     try:
-        events, orgs, locs = await get_events(), await get_organizers(), await get_locations()
+        events_result, orgs, locs = await get_events(limit=10000), await get_organizers(), await get_locations()
+        events = events_result[0]
         event_ids = [e.id for e in events]
-        docs_map = await get_documents_by_event_ids(event_ids)
+        docs_map = await get_documents_by_event_ids(event_ids) if event_ids else {}
 
         # Resolve lock users
         lock_user_ids = set()
@@ -28,10 +29,13 @@ async def preload_data(request: web.Request) -> web.Response:
                     'id': e.id, 'type': e.type or 'ВКС',
                     'date': e.date.isoformat() if e.date else None,
                     'time': e.time.strftime('%H:%M') if e.time else None,
-                    'organizer_id': e.organizer_id, 'location_id': e.location_id,
+                    'duration': e.duration or 60,
+                    'organizer_id': e.organizer_id, 'organizer_type': e.organizer_type or 'org',
+                    'location_id': e.location_id,
                     'url': e.url or '', 'description': e.description or '',
                     'completed': e.completed, 'notification': e.notification,
                     'documents': docs_map.get(e.id, []),
+                    'series_id': e.series_id,
                     'locked_by': lock_users.get(e.locked_by),
                     'locked_by_id': e.locked_by,
                     'locked_at': e.locked_at.isoformat() if e.locked_at else None,

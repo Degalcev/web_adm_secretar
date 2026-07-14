@@ -146,6 +146,9 @@ class Event(Base):
     last_changed_by    = mapped_column(String(), nullable=True)
     last_changed_at    = mapped_column(DateTime, nullable=True)
     last_change_action = mapped_column(String(), nullable=True)
+    duration           = mapped_column(Integer(), default=60)
+    organizer_type     = mapped_column(String(10), default='org')
+    series_id          = mapped_column(String(), ForeignKey('event_series.id', ondelete='SET NULL'), nullable=True)
 
     __table_args__ = (
         Index('idx_event_date', 'date'),
@@ -169,6 +172,48 @@ class EventHistory(Base):
     __table_args__ = (
         Index('idx_event_history_event_id', 'event_id'),
         Index('idx_event_history_timestamp', 'timestamp'),
+    )
+
+
+class EventSeries(Base):
+    __tablename__ = 'event_series'
+
+    id          = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    freq        = mapped_column(String(20), nullable=False, default='weekly')
+    interval_val = mapped_column(Integer(), nullable=False, default=1)
+    by_day      = mapped_column(JSONB, nullable=True)
+    until       = mapped_column(Date(), nullable=True)
+    created_at  = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class EventSeriesException(Base):
+    __tablename__ = 'event_series_exceptions'
+
+    id            = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    series_id     = mapped_column(String(), ForeignKey('event_series.id', ondelete='CASCADE'), nullable=False)
+    original_date = mapped_column(Date(), nullable=False)
+    event_id      = mapped_column(String(), ForeignKey('events.id', ondelete='SET NULL'), nullable=True)
+    action        = mapped_column(String(20), nullable=False, default='skip')
+    new_date      = mapped_column(Date(), nullable=True)
+    created_at    = mapped_column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_event_series_exceptions_series_id', 'series_id'),
+    )
+
+
+class EventParticipant(Base):
+    __tablename__ = 'event_participants'
+
+    id         = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id   = mapped_column(String(), ForeignKey('events.id', ondelete='CASCADE'), nullable=False)
+    user_id    = mapped_column(String(), ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    role       = mapped_column(String(50), default='участник')
+    created_at = mapped_column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        Index('idx_event_participants_event_id', 'event_id'),
+        Index('idx_event_participants_user_id', 'user_id'),
     )
 
 

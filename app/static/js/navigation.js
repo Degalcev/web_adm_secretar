@@ -70,6 +70,8 @@ function switchPage(page) {
     if (page === 'logs') loadLogDates();
     if (page === 'vks-active') loadVksActive();
     if (page === 'vks-completed') loadVksCompleted();
+    if (page === 'events-active') initEventsPage(false);
+    if (page === 'events-completed') initEventsPage(true);
     if (page === 'settings') initTheme();
     if (page === 'calendar') initCalendar();
 }

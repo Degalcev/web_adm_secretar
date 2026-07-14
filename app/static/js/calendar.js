@@ -100,6 +100,90 @@ function _calFindOverlapGroups(events) {
     return groups;
 }
 
+// ─── Series expansion ───────────────────────────────────────────────
+
+function expandSeries(events, dateFrom, dateTo) {
+    const expanded = [];
+    const seriesMap = {};
+
+    events.forEach(e => {
+        if (e.series_id) {
+            if (!seriesMap[e.series_id]) seriesMap[e.series_id] = [];
+            seriesMap[e.series_id].push(e);
+        } else {
+            expanded.push(e);
+        }
+    });
+
+    Object.keys(seriesMap).forEach(seriesId => {
+        const seriesEvents = seriesMap[seriesId];
+        const baseEvent = seriesEvents[0];
+        if (!baseEvent || !baseEvent.series) return;
+
+        const series = baseEvent.series;
+        const exceptions = new Map();
+        (baseEvent.series_exceptions || []).forEach(exc => {
+            exceptions.set(exc.original_date, exc);
+        });
+
+        const baseDate = new Date(baseEvent.date + 'T00:00:00');
+        const until = series.until ? new Date(series.until + 'T00:00:00') : new Date(dateTo);
+        const interval = series.interval_val || 1;
+        const byDay = series.by_day || [];
+
+        const dayMap = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+
+        let current = new Date(baseDate);
+        while (current <= until && current <= new Date(dateTo)) {
+            const dateStr = current.toISOString().split('T')[0];
+
+            if (current >= new Date(dateFrom) && current <= until) {
+                const dayOfWeek = current.getDay();
+                const dayName = Object.keys(dayMap).find(k => dayMap[k] === dayOfWeek);
+
+                if (series.freq === 'weekly' && byDay.length > 0) {
+                    if (byDay.includes(dayName)) {
+                        const exc = exceptions.get(dateStr);
+                        if (exc && exc.action === 'skip') {
+                            current.setDate(current.getDate() + 1);
+                            continue;
+                        }
+                        expanded.push({
+                            ...baseEvent,
+                            date: dateStr,
+                            series_id: seriesId,
+                            is_exception: !!exc,
+                        });
+                    }
+                } else {
+                    const exc = exceptions.get(dateStr);
+                    if (exc && exc.action === 'skip') {
+                        current.setDate(current.getDate() + interval * 7);
+                        continue;
+                    }
+                    expanded.push({
+                        ...baseEvent,
+                        date: dateStr,
+                        series_id: seriesId,
+                        is_exception: !!exc,
+                    });
+                }
+            }
+
+            if (series.freq === 'weekly') {
+                current.setDate(current.getDate() + 1);
+                if (current.getDay() === 1) current.setDate(current.getDate() + (interval - 1) * 7);
+            } else if (series.freq === 'monthly') {
+                current.setMonth(current.getMonth() + interval);
+            } else {
+                current.setDate(current.getDate() + interval);
+            }
+        }
+    });
+
+    return expanded;
+}
+
 // ─── Рендер: Toolbar ───────────────────────────────────────────────
 
 function _calRenderToolbar() {
