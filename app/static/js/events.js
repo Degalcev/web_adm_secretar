@@ -372,7 +372,9 @@ function removeEventParticipant(pid) {
 async function evtSaveEvent() {
     const eventId = document.getElementById('evt-id').value;
     const formData = new FormData();
+    const csrfToken = getCsrfToken();
 
+    formData.append('csrf_token', csrfToken);
     formData.append('type', document.getElementById('evt-type').value);
     formData.append('date', document.getElementById('evt-date').value);
     formData.append('time', document.getElementById('evt-time').value);
@@ -387,7 +389,11 @@ async function evtSaveEvent() {
     try {
         const url = eventId ? `/admin/api/events/${eventId}` : '/admin/api/events';
         const method = eventId ? 'PUT' : 'POST';
-        const resp = await fetch(url, { method, body: formData });
+        const resp = await fetch(url, {
+            method,
+            headers: { 'X-CSRF-Token': csrfToken },
+            body: formData
+        });
         const result = await resp.json();
 
         if (result.ok) {

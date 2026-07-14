@@ -47,13 +47,13 @@ function matchDateFilter(eventDate, filter) {
 async function ensureOrgsAndLocs() {
     if (!store.allOrganizers || !store.allOrganizers.length) {
         try {
-            const resp = await fetch(`${BASE_URL}/admin/api/organizers`);
+            const resp = await fetch(`${BASE_URL}/admin/api/organizers`, { credentials: 'same-origin' });
             if (resp.ok) store.allOrganizers = await resp.json();
         } catch (e) { store.allOrganizers = []; }
     }
     if (!store.allLocations || !store.allLocations.length) {
         try {
-            const resp = await fetch(`${BASE_URL}/admin/api/locations`);
+            const resp = await fetch(`${BASE_URL}/admin/api/locations`, { credentials: 'same-origin' });
             if (resp.ok) store.allLocations = await resp.json();
         } catch (e) { store.allLocations = []; }
     }
