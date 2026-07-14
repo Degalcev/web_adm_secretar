@@ -252,7 +252,7 @@ function _eventsOpenModal(eventId) {
     overlay.style.display = 'flex';
 }
 
-function closeEventModal() {
+function evtCloseModal() {
     const overlay = document.getElementById('evt-modal-overlay');
     if (overlay) overlay.style.display = 'none';
 }
@@ -329,7 +329,7 @@ function removeEventParticipant(pid) {
     if (tag) tag.parentElement.remove();
 }
 
-async function saveEvent() {
+async function evtSaveEvent() {
     const eventId = document.getElementById('evt-id').value;
     const formData = new FormData();
 
