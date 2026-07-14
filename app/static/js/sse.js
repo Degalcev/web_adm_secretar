@@ -57,6 +57,8 @@ async function _refreshEvents() {
             updateVksStats();
         } else if (page === 'vks-completed') {
             renderVksBoard('vks-board-completed', 'completed');
+        } else if (page === 'events-active' || page === 'events-completed') {
+            eventsRenderBoard();
         } else if (page === 'dashboard') {
             renderDashboard();
         } else if (page === 'calendar') {
