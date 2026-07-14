@@ -43,7 +43,8 @@ function switchPage(page) {
 
     // Показать нужную страницу
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const pageEl = document.getElementById(`page-${page}`);
+    const pageId = page.startsWith('events-') ? 'page-events' : `page-${page}`;
+    const pageEl = document.getElementById(pageId);
     if (pageEl) pageEl.classList.add('active');
 
     // Обновить видимость кнопки «Наверх»

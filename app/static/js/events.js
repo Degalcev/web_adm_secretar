@@ -148,8 +148,8 @@ function openEditEventModal(eventId) {
 }
 
 function _eventsOpenModal(eventId) {
-    const overlay = document.getElementById('event-modal-overlay');
-    const title = document.getElementById('event-modal-title');
+    const overlay = document.getElementById('evt-modal-overlay');
+    const title = document.getElementById('evt-modal-title');
     if (!overlay) return;
 
     if (eventId) {
@@ -165,23 +165,23 @@ function _eventsOpenModal(eventId) {
 }
 
 function closeEventModal() {
-    const overlay = document.getElementById('event-modal-overlay');
+    const overlay = document.getElementById('evt-modal-overlay');
     if (overlay) overlay.style.display = 'none';
 }
 
 function _eventsResetForm() {
-    document.getElementById('event-id').value = '';
-    document.getElementById('event-type').value = 'ВКС';
-    document.getElementById('event-date').value = '';
-    document.getElementById('event-time').value = '';
-    document.getElementById('event-duration').value = '60';
-    document.getElementById('event-location').value = '';
-    document.getElementById('event-organizer-type').value = 'org';
-    document.getElementById('event-organizer').value = '';
-    document.getElementById('event-description').value = '';
-    document.getElementById('event-notification').checked = true;
-    document.getElementById('event-completed').checked = false;
-    document.getElementById('event-participants-list').innerHTML = '';
+    document.getElementById('evt-id').value = '';
+    document.getElementById('evt-type').value = 'ВКС';
+    document.getElementById('evt-date').value = '';
+    document.getElementById('evt-time').value = '';
+    document.getElementById('evt-duration').value = '60';
+    document.getElementById('evt-location').value = '';
+    document.getElementById('evt-organizer-type').value = 'org';
+    document.getElementById('evt-organizer').value = '';
+    document.getElementById('evt-description').value = '';
+    document.getElementById('evt-notification').checked = true;
+    document.getElementById('evt-completed').checked = false;
+    document.getElementById('evt-participants-list').innerHTML = '';
 }
 
 async function _eventsLoadEventData(eventId) {
@@ -191,17 +191,17 @@ async function _eventsLoadEventData(eventId) {
         const event = (data.events || []).find(e => e.id === eventId);
         if (!event) return;
 
-        document.getElementById('event-id').value = event.id;
-        document.getElementById('event-type').value = event.type || 'ВКС';
-        document.getElementById('event-date').value = event.date || '';
-        document.getElementById('event-time').value = event.time || '';
-        document.getElementById('event-duration').value = event.duration || 60;
-        document.getElementById('event-location').value = event.location_id || '';
-        document.getElementById('event-organizer-type').value = event.organizer_type || 'org';
-        document.getElementById('event-organizer').value = event.organizer_id || '';
-        document.getElementById('event-description').value = event.description || '';
-        document.getElementById('event-notification').checked = event.notification !== false;
-        document.getElementById('event-completed').checked = event.completed === true;
+        document.getElementById('evt-id').value = event.id;
+        document.getElementById('evt-type').value = event.type || 'ВКС';
+        document.getElementById('evt-date').value = event.date || '';
+        document.getElementById('evt-time').value = event.time || '';
+        document.getElementById('evt-duration').value = event.duration || 60;
+        document.getElementById('evt-location').value = event.location_id || '';
+        document.getElementById('evt-organizer-type').value = event.organizer_type || 'org';
+        document.getElementById('evt-organizer').value = event.organizer_id || '';
+        document.getElementById('evt-description').value = event.description || '';
+        document.getElementById('evt-notification').checked = event.notification !== false;
+        document.getElementById('evt-completed').checked = event.completed === true;
 
         _eventsRenderParticipants(event.participants || []);
     } catch (e) {
@@ -210,8 +210,8 @@ async function _eventsLoadEventData(eventId) {
 }
 
 function _eventsPopulateDropdowns() {
-    const locSelect = document.getElementById('event-location');
-    const orgSelect = document.getElementById('event-organizer');
+    const locSelect = document.getElementById('evt-location');
+    const orgSelect = document.getElementById('evt-organizer');
 
     if (window.store && window.store.allLocations) {
         locSelect.innerHTML = '<option value="">— Не выбран —</option>';
@@ -229,7 +229,7 @@ function _eventsPopulateDropdowns() {
 }
 
 function _eventsRenderParticipants(participants) {
-    const list = document.getElementById('event-participants-list');
+    const list = document.getElementById('evt-participants-list');
     if (!list) return;
     list.innerHTML = '';
     participants.forEach(p => {
@@ -248,19 +248,19 @@ function removeEventParticipant(pid) {
 }
 
 async function saveEvent() {
-    const eventId = document.getElementById('event-id').value;
+    const eventId = document.getElementById('evt-id').value;
     const formData = new FormData();
 
-    formData.append('type', document.getElementById('event-type').value);
-    formData.append('date', document.getElementById('event-date').value);
-    formData.append('time', document.getElementById('event-time').value);
-    formData.append('duration', document.getElementById('event-duration').value);
-    formData.append('location_id', document.getElementById('event-location').value);
-    formData.append('organizer_type', document.getElementById('event-organizer-type').value);
-    formData.append('organizer_id', document.getElementById('event-organizer').value);
-    formData.append('description', document.getElementById('event-description').value);
-    formData.append('notification', document.getElementById('event-notification').checked ? 'true' : 'false');
-    formData.append('completed', document.getElementById('event-completed').checked ? 'true' : 'false');
+    formData.append('type', document.getElementById('evt-type').value);
+    formData.append('date', document.getElementById('evt-date').value);
+    formData.append('time', document.getElementById('evt-time').value);
+    formData.append('duration', document.getElementById('evt-duration').value);
+    formData.append('location_id', document.getElementById('evt-location').value);
+    formData.append('organizer_type', document.getElementById('evt-organizer-type').value);
+    formData.append('organizer_id', document.getElementById('evt-organizer').value);
+    formData.append('description', document.getElementById('evt-description').value);
+    formData.append('notification', document.getElementById('evt-notification').checked ? 'true' : 'false');
+    formData.append('completed', document.getElementById('evt-completed').checked ? 'true' : 'false');
 
     try {
         const url = eventId ? `/admin/api/events/${eventId}` : '/admin/api/events';
