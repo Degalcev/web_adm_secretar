@@ -19,13 +19,13 @@ function initEventsPage(completed = false) {
 function _eventsPopulateFilters() {
     const orgSel = document.getElementById('f-events-org');
     const locSel = document.getElementById('f-events-loc');
-    if (orgSel && window.store?.allOrganizers) {
+    if (orgSel && store?.allOrganizers) {
         orgSel.innerHTML = '<option value="">Все</option>' +
-            window.store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
+            store.allOrganizers.map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join('');
     }
-    if (locSel && window.store?.allLocations) {
+    if (locSel && store?.allLocations) {
         locSel.innerHTML = '<option value="">Все</option>' +
-            window.store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
+            store.allLocations.map(l => `<option value="${l.id}">${esc(l.name)}</option>`).join('');
     }
 }
 
@@ -56,7 +56,7 @@ function eventsRenderBoard() {
     const locVal = document.getElementById('f-events-loc')?.value || '';
     const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
 
-    let events = [...(window.store?.allEvents || [])];
+    let events = [...(store?.allEvents || [])];
 
     // Filter by status
     if (_eventsCompleted) {
@@ -245,8 +245,8 @@ async function _eventsOpenModal(eventId) {
         fetch('/admin/api/locations', { credentials: 'same-origin' }).catch(() => null),
         fetch('/admin/api/organizers', { credentials: 'same-origin' }).catch(() => null)
     ]);
-    if (locRes && locRes.ok) window.store.allLocations = await locRes.json();
-    if (orgRes && orgRes.ok) window.store.allOrganizers = await orgRes.json();
+    if (locRes && locRes.ok) store.allLocations = await locRes.json();
+    if (orgRes && orgRes.ok) store.allOrganizers = await orgRes.json();
 
     if (eventId) {
         title.textContent = 'Редактирование мероприятия';
@@ -283,7 +283,7 @@ function _eventsResetForm() {
 
 async function _eventsLoadEventData(eventId) {
     try {
-        const event = (window.store?.allEvents || []).find(e => e.id === eventId);
+        const event = (store?.allEvents || []).find(e => e.id === eventId);
         if (!event) return;
 
         document.getElementById('evt-id').value = event.id;
@@ -309,8 +309,8 @@ function _eventsPopulateDropdowns() {
     const locSelect = document.getElementById('evt-location');
     const orgSelect = document.getElementById('evt-organizer');
 
-    const locs = window.store?.allLocations || [];
-    const orgs = window.store?.allOrganizers || [];
+    const locs = store?.allLocations || [];
+    const orgs = store?.allOrganizers || [];
 
     if (locSelect) {
         locSelect.innerHTML = '<option value="">Не указана</option>' +
