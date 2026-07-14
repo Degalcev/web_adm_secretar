@@ -30,6 +30,9 @@ function applyTheme(id) {
 
     // Сохранить в localStorage
     localStorage.setItem('vks-theme', id);
+
+    // Обновить обводку календаря (border-strong меняется с темой)
+    if (typeof _calScheduleShadowUpdate === 'function') _calScheduleShadowUpdate();
 }
 
 function initTheme() {

@@ -347,7 +347,7 @@ function renderCalendar(full) {
         let html = '<div class="cal-toolbar" id="cal-toolbar"></div>';
         html += '<div id="cal-week-label"></div>';
         html += '<div class="cal-panel" id="cal-panel">';
-        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
+        html += '<svg class="cal-shadow-svg" id="cal-shadow-svg" xmlns="http://www.w3.org/2000/svg"><defs><filter id="tabShadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur"/><feOffset in="blur" dx="0" dy="3" result="offsetBlur"/><feColorMatrix in="offsetBlur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0" result="shadow"/><feMerge><feMergeNode in="shadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path id="cal-stroke-path" fill="none" stroke-width="1"/><path id="cal-shadow-path" filter="url(#tabShadow)"/></svg>';
         html += '<div class="cal-day-tabs" id="cal-day-tabs"></div>';
         html += '<div id="cal-grid-area"></div></div>';
         container.innerHTML = html;
@@ -546,6 +546,7 @@ function _calUpdateShadow() {
     const activeTab = document.querySelector('.cal-day-tab.active');
     const panel = document.getElementById('cal-panel');
     const path = document.getElementById('cal-shadow-path');
+    const strokePath = document.getElementById('cal-stroke-path');
     if (!activeTab || !panel || !path) return;
 
     const tabRect = activeTab.getBoundingClientRect();
@@ -583,6 +584,39 @@ function _calUpdateShadow() {
     ].join(' ');
 
     path.setAttribute('d', d);
+    _calUpdateShadowFill();
+
+    // Внешний path (только обводка) — расширен на 1px наружу
+    if (strokePath) {
+        const o = 1;
+        const txo = tx - o, tyo = ty - o, two = tw + o * 2, tho = th + o;
+        const pwo = pw + o, pho = ph + o;
+        const rlo = Math.max(0, Math.min(rp, txo));
+
+        const ds = [
+            `M ${txo + rt} ${tyo}`,
+            `L ${txo + two - rt} ${tyo}`,
+            `A ${rt} ${rt} 0 0 1 ${txo + two} ${tyo + rt}`,
+            `L ${txo + two} ${tyo + tho}`,
+            `L ${pwo - rp} ${tyo + tho}`,
+            `A ${rp} ${rp} 0 0 1 ${pwo} ${tyo + tho + rp}`,
+            `L ${pwo} ${pho - rp}`,
+            `A ${rp} ${rp} 0 0 1 ${pwo - rp} ${pho}`,
+            `L ${rp} ${pho}`,
+            `A ${rp} ${rp} 0 0 1 ${0} ${pho - rp}`,
+            `L ${0} ${tyo + tho + rlo}`,
+            `A ${rlo} ${rlo} 0 0 1 ${rlo} ${tyo + tho}`,
+            `L ${txo} ${tyo + tho}`,
+            `L ${txo} ${tyo + rt}`,
+            `A ${rt} ${rt} 0 0 1 ${txo + rt} ${tyo}`,
+            'Z'
+        ].join(' ');
+        strokePath.setAttribute('d', ds);
+
+        const borderStrong = getComputedStyle(document.documentElement)
+            .getPropertyValue('--border-strong').trim();
+        strokePath.setAttribute('stroke', borderStrong);
+    }
 }
 
 let _calShadowRO = null;
@@ -590,8 +624,14 @@ let _calShadowRO = null;
 function _calUpdateShadowFill() {
     const activeTabEl = document.querySelector('.cal-day-tab.active');
     const shadowPath = document.getElementById('cal-shadow-path');
+    const strokePath = document.getElementById('cal-stroke-path');
     if (activeTabEl && shadowPath) {
         shadowPath.setAttribute('fill', getComputedStyle(activeTabEl).backgroundColor);
+    }
+    if (strokePath) {
+        const borderStrong = getComputedStyle(document.documentElement)
+            .getPropertyValue('--border-strong').trim();
+        strokePath.setAttribute('stroke', borderStrong);
     }
 }
 
