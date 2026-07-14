@@ -44,7 +44,7 @@ function debounceRefreshEvents() {
 
 async function _refreshEvents() {
     try {
-        const resp = await fetch('/admin/api/events', { credentials: 'same-origin' });
+        const resp = await fetch('/admin/api/events?limit=10000', { credentials: 'same-origin' });
         if (!resp.ok) return;
         const data = await resp.json();
         const events = Array.isArray(data) ? data : (data.events || []);

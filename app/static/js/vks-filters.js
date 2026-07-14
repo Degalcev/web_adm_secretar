@@ -61,7 +61,7 @@ async function ensureOrgsAndLocs() {
 
 async function loadAllEvents() {
     await ensureOrgsAndLocs();
-    const resp = await fetch(`${BASE_URL}/admin/api/events`);
+    const resp = await fetch(`${BASE_URL}/admin/api/events?limit=10000`);
     if (resp.status === 401) { showLogin(); return; }
     const json = await resp.json();
     store.allEvents = Array.isArray(json) ? json : (json.events || []);
