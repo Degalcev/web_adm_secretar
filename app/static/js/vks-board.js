@@ -12,6 +12,9 @@ function renderVksBoard(boardId, filter) {
 
     let events = [...store.allEvents];
 
+    // Только ВКС — остальные типы на своих страницах
+    events = events.filter(e => e.type === 'ВКС');
+
     if (filter === 'active') {
         events = events.filter(e => !e.completed);
     } else if (filter === 'completed') {
