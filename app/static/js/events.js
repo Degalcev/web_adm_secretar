@@ -351,7 +351,7 @@ async function evtSaveEvent() {
         const result = await resp.json();
 
         if (result.ok) {
-            closeEventModal();
+            evtCloseModal();
             eventsRenderBoard();
             if (typeof showToast === 'function') showToast('Сохранено');
         } else {
