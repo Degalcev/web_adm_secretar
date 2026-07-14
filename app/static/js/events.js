@@ -546,9 +546,10 @@ async function evtSaveEvent() {
         const result = await resp.json();
 
         if (result.ok) {
+            if (typeof loadAllEvents === 'function') await loadAllEvents();
             evtCloseModal();
             eventsRenderBoard();
-            if (typeof showToast === 'function') showToast('Сохранено');
+            if (typeof showToast === 'function') showToast('Сохранено', 'success');
         } else {
             alert(result.error || 'Ошибка сохранения');
         }
