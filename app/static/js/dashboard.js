@@ -34,7 +34,7 @@ function setupDashboardClicks() {
 async function loadFullData() {
     try {
         const [eventsResp, locResp, orgResp] = await Promise.all([
-            fetch(`/admin/api/events?limit=${EVENTS_LIMIT}`, { credentials: 'same-origin' }),
+            fetch(`/admin/api/events?limit=10000`, { credentials: 'same-origin' }),
             fetch('/admin/api/locations', { credentials: 'same-origin' }),
             fetch('/admin/api/organizers', { credentials: 'same-origin' })
         ]);

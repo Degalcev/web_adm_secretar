@@ -12,6 +12,16 @@ function _findScrollParent(el) {
     return document.scrollingElement || document.documentElement;
 }
 
+function getOrganizerName(id) {
+    const o = (store.allOrganizers || []).find(x => x.id === id);
+    return o ? o.short_name || o.name : '';
+}
+
+function getLocationName(id) {
+    const l = (store.allLocations || []).find(x => x.id === id);
+    return l ? l.name : '';
+}
+
 function esc(str) {
     return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }

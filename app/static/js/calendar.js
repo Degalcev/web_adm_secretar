@@ -94,7 +94,7 @@ async function _calLoadRange(from, to) {
     if (_calLoadingRange) return store.allEvents || [];
     _calLoadingRange = true;
     try {
-        const resp = await fetch(`/admin/api/events?limit=${EVENTS_LIMIT}&from=${from}&to=${to}`, { credentials: 'same-origin' });
+        const resp = await fetch(`/admin/api/events?limit=10000&from=${from}&to=${to}`, { credentials: 'same-origin' });
         if (!resp.ok) return store.allEvents || [];
         const data = await resp.json();
         const events = Array.isArray(data) ? data : (data.events || []);

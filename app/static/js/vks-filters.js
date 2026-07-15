@@ -1,5 +1,6 @@
 // ─── VKS: Фильтры и загрузка данных ──────────────────────────────────
 
+const _LOAD_ALL_LIMIT = 10000; // fallback для calendar/dashboard
 let editingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
@@ -61,7 +62,7 @@ async function ensureOrgsAndLocs() {
 
 async function loadAllEvents() {
     await ensureOrgsAndLocs();
-    const resp = await fetch(`${BASE_URL}/admin/api/events?limit=${EVENTS_LIMIT}`);
+    const resp = await fetch(`${BASE_URL}/admin/api/events?limit=${_LOAD_ALL_LIMIT}`);
     if (resp.status === 401) { showLogin(); return; }
     const json = await resp.json();
     store.allEvents = Array.isArray(json) ? json : (json.events || []);

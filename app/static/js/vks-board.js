@@ -111,8 +111,8 @@ async function _vksLoadMore(boardId, filter) {
         console.error('_vksLoadMore error:', e);
     }
     p.loading = false;
-    const sentinel = document.getElementById(boardId)?.querySelector('.scroll-sentinel');
-    if (sentinel) sentinel.innerHTML = '';
+    const s = document.getElementById(boardId)?.querySelector('.scroll-sentinel');
+    if (s) s.innerHTML = '';
 }
 
 function _vksRenderBoard(boardId, filter) {
@@ -254,16 +254,6 @@ function renderDocChip(d) {
 function toggleVksDocs(btn) {
     const card = btn.closest('.vks-card');
     if (card) card.classList.toggle('docs-expanded');
-}
-
-function getOrganizerName(id) {
-    const o = (store.allOrganizers || []).find(x => x.id === id);
-    return o ? o.short_name || o.name : '';
-}
-
-function getLocationName(id) {
-    const l = (store.allLocations || []).find(x => x.id === id);
-    return l ? l.name : '';
 }
 
 function getDocIcon(ext) {
