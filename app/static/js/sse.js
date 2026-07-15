@@ -47,11 +47,11 @@ function _refreshEvents() {
     const page = currentPage || '';
 
     if (page === 'vks-active') {
-        renderVksBoard('vks-board-active', 'active');
+        _sseUpdateAndRender('vks-board-active', 'active');
     } else if (page === 'vks-completed') {
-        renderVksBoard('vks-board-completed', 'completed');
+        _sseUpdateAndRender('vks-board-completed', 'completed');
     } else if (page === 'events-active' || page === 'events-completed') {
-        _eventsResetAndLoad();
+        eventsRenderBoard();
     } else if (page === 'dashboard') {
         renderDashboard();
     } else if (page === 'calendar') {
@@ -59,6 +59,86 @@ function _refreshEvents() {
         _calLoadingRange = false;
         renderCalendar(false);
     }
+}
+
+async function _sseUpdateAndRender(boardId, filter) {
+    // 1. Загрузить свежие данные одной страницы (~5ms)
+    // 2. Обновить кэш p.events
+    // 3. Перерисовать из кэша мгновенно
+    const p = _vksPagination[boardId];
+    if (!p) return;
+
+    try {
+        const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(p.events.length || 50) });
+        const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
+        const orgVal = document.getElementById(`${prefix}-org`)?.value;
+        const locVal = document.getElementById(`${prefix}-loc`)?.value;
+        const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
+        if (orgVal) params.set('organizer_id', orgVal);
+        if (locVal) params.set('location_id', locVal);
+        if (searchVal) params.set('search', searchVal);
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        p.events = data.events || [];
+        p.hasMore = !!data.has_more;
+        p.cursorDate = data.next_cursor_date || null;
+        p.cursorTime = data.next_cursor_time || null;
+        p.cursorId = data.next_cursor_id || null;
+    } catch (e) {}
+
+    // 4. Перерисовать из обновлённого кэша
+    _sseRerenderFromCache(boardId, filter);
+}
+
+function _sseRerenderFromCache(boardId, filter) {
+    // Рендер из уже загруженных данных — без fetch, мгновенно
+    const board = document.getElementById(boardId);
+    const p = _vksPagination[boardId];
+    if (!board || !p) return;
+
+    const events = p.events;
+    const now = new Date();
+    const today = localDateStr(now);
+    const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+    const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
+
+    let filtered = events;
+    if (filter === 'active') filtered = events.filter(e => !e.completed);
+    else if (filter === 'completed') filtered = events.filter(e => e.completed);
+
+    const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
+    filtered.forEach(e => {
+        if (!e.date || e.date < today) missed.push(e);
+        else if (e.date === today) todayE.push(e);
+        else if (e.date === tomorrow) tomorrowE.push(e);
+        else if (e.date === dayAfter) dayAfterE.push(e);
+        else soon.push(e);
+    });
+
+    let html = '';
+    if (!filtered.length) {
+        html = '<div class="empty-state">Нет мероприятий</div>';
+    } else {
+        if (missed.length) html += renderVksBlock('Пропущенные', missed, 'missed');
+        if (todayE.length) html += renderVksBlock('Сегодня', todayE, 'today');
+        if (tomorrowE.length) html += renderVksBlock('Завтра', tomorrowE, 'tomorrow');
+        if (dayAfterE.length) html += renderVksBlock('Послезавтра', dayAfterE, 'day-after');
+        if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
+    }
+
+    let sentinel = board.querySelector('.scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        sentinel.style.height = '1px';
+    }
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    while (board.firstChild) board.removeChild(board.firstChild);
+    while (temp.firstChild) board.appendChild(temp.firstChild);
+    board.appendChild(sentinel);
 }
 
 async function _refreshLocations() {
