@@ -26,18 +26,7 @@ function handleSSEEvent(data) {
 
     if (table === 'events') {
         if (data.task_id) {
-            // DELETE — убрать карточку
-            if (data.action === 'DELETE') {
-                const card = document.querySelector(`[data-event-id="${data.task_id}"]`);
-                if (card) {
-                    const group = card.closest('.vks-date-group');
-                    card.remove();
-                    // Убрать пустую группу
-                    if (group && !group.querySelector('.vks-card')) group.remove();
-                }
-                return;
-            }
-            _sseUpdateCard(data.task_id, data);
+            _sseProcessEvent(data.task_id, data.action);
         } else {
             debounceRefreshEvents();
         }
@@ -50,13 +39,24 @@ function handleSSEEvent(data) {
     }
 }
 
-async function _sseUpdateCard(eventId, sseData) {
-    const modal = document.getElementById('event-modal');
-    if (modal && modal.classList.contains('show')) return;
+async function _sseProcessEvent(eventId, action) {
+    const page = currentPage || '';
 
-    const card = document.querySelector(`[data-event-id="${eventId}"]`);
-    if (!card) return;
+    // DELETE — убрать из данных и перерисовать
+    if (action === 'DELETE') {
+        if (page === 'vks-active' || page === 'vks-completed') {
+            const boardId = page === 'vks-active' ? 'vks-board-active' : 'vks-board-completed';
+            const p = _vksPagination[boardId];
+            if (p) p.events = p.events.filter(e => e.id !== eventId);
+            _sseRerenderBoard();
+        } else if (page === 'events-active' || page === 'events-completed') {
+            _eventsPagination.events = _eventsPagination.events.filter(e => e.id !== eventId);
+            eventsRenderBoard();
+        }
+        return;
+    }
 
+    // INSERT/UPDATE — загрузить событие и обновить данные в пагинации
     try {
         const resp = await fetch(`/admin/api/events/${eventId}/single`, { credentials: 'same-origin' });
         if (!resp.ok) return;
@@ -64,41 +64,87 @@ async function _sseUpdateCard(eventId, sseData) {
         if (!result.ok || !result.event) return;
         const e = result.event;
 
-        // Обновить данные в пагинации
-        const page = currentPage || '';
         if (page === 'vks-active' || page === 'vks-completed') {
             const boardId = page === 'vks-active' ? 'vks-board-active' : 'vks-board-completed';
             const p = _vksPagination[boardId];
-            if (p) {
-                const idx = p.events.findIndex(ev => ev.id === eventId);
-                if (idx >= 0) p.events[idx] = e;
+            if (!p) return;
+            const idx = p.events.findIndex(ev => ev.id === eventId);
+            if (idx >= 0) {
+                p.events[idx] = e; // UPDATE
+            } else {
+                p.events.push(e); // INSERT
             }
+            // Перерисовать из обновлённых данных (перегруппировка по датам)
+            _sseRerenderBoard();
         } else if (page === 'events-active' || page === 'events-completed') {
             const idx = _eventsPagination.events.findIndex(ev => ev.id === eventId);
-            if (idx >= 0) _eventsPagination.events[idx] = e;
-        }
-
-        // Определить blockType по родительской группе
-        const group = card.closest('.vks-date-group');
-        let blockType = 'soon';
-        if (group) {
-            if (group.classList.contains('vks-block-missed')) blockType = 'missed';
-            else if (group.classList.contains('vks-block-today')) blockType = 'today';
-            else if (group.classList.contains('vks-block-tomorrow')) blockType = 'tomorrow';
-            else if (group.classList.contains('vks-block-day-after')) blockType = 'day-after';
-        }
-
-        // Сгенерировать HTML новой карточки и заменить
-        const isVks = page.startsWith('vks');
-        const temp = document.createElement('div');
-        temp.innerHTML = isVks ? renderVksCard(e, blockType) : _eventsRenderCard(e, blockType);
-        const newCard = temp.firstElementChild;
-        if (newCard) {
-            card.replaceWith(newCard);
+            if (idx >= 0) {
+                _eventsPagination.events[idx] = e;
+            } else {
+                _eventsPagination.events.push(e);
+            }
+            eventsRenderBoard();
+        } else if (page === 'dashboard') {
+            renderDashboard();
         }
     } catch (err) {
-        console.error('SSE card update error:', err);
+        console.error('SSE process error:', err);
     }
+}
+
+function _sseRerenderBoard() {
+    // Перерисовать доску из p.events без сброса пагинации и скролла
+    const page = currentPage || '';
+    if (page === 'vks-active') {
+        const board = document.getElementById('vks-board-active');
+        const p = _vksPagination['vks-board-active'];
+        if (board && p) _softRenderBoard(board, p.events, 'active');
+    } else if (page === 'vks-completed') {
+        const board = document.getElementById('vks-board-completed');
+        const p = _vksPagination['vks-board-completed'];
+        if (board && p) _softRenderBoard(board, p.events, 'completed');
+    }
+}
+
+function _softRenderBoard(board, events, filter) {
+    // Тот же алгоритм группировки что в _vksRenderBoard, но без сброса sentinel/скролла
+    const now = new Date();
+    const today = localDateStr(now);
+    const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+    const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
+
+    const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
+    events.forEach(e => {
+        if (!e.date || e.date < today) missed.push(e);
+        else if (e.date === today) todayEvents.push(e);
+        else if (e.date === tomorrow) tomorrowEvents.push(e);
+        else if (e.date === dayAfter) dayAfterEvents.push(e);
+        else soon.push(e);
+    });
+
+    let html = '';
+    if (!events.length) {
+        html = '<div class="empty-state">Нет мероприятий</div>';
+    } else {
+        if (missed.length)       html += renderVksBlock('Пропущенные', missed, 'missed');
+        if (todayEvents.length)  html += renderVksBlock('Сегодня', todayEvents, 'today');
+        if (tomorrowEvents.length) html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
+        if (dayAfterEvents.length) html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
+        if (soon.length)         html += renderVksBlock('Скоро', soon, 'soon');
+    }
+
+    // Сохраняем sentinel, заменяем содержимое
+    let sentinel = board.querySelector('.scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        sentinel.style.height = '1px';
+    }
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    while (board.firstChild) board.removeChild(board.firstChild);
+    while (temp.firstChild) board.appendChild(temp.firstChild);
+    board.appendChild(sentinel);
 }
 
 function debounceRefreshEvents() {
