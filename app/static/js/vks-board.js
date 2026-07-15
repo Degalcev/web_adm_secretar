@@ -1,6 +1,6 @@
 // ─── VKS: Рендеринг карточек ─────────────────────────────────────────
 
-const _vksPagination = {}; // { boardId: { events, cursorDate, cursorTime, hasMore, loading } }
+const _vksPagination = {}; // { boardId: { events, cursorDate, cursorTime, hasMore, loading, total } }
 const VKS_PAGE_SIZE = 50;
 
 function renderVksBoard(boardId, filter) {
@@ -12,15 +12,16 @@ function renderVksBoard(boardId, filter) {
 
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    // Use scroll listener on page container instead of IntersectionObserver
-    const pageEl = board.closest('.page') || board.parentElement;
-    if (pageEl && pageEl._vksScrollHandler) pageEl.removeEventListener('scroll', pageEl._vksScrollHandler);
-    pageEl._vksScrollHandler = () => {
-        if (pageEl.scrollTop + pageEl.clientHeight >= pageEl.scrollHeight - 300) {
+    // Use document-level scroll listener for reliability
+    const handlerKey = '_vksScroll_' + boardId;
+    if (document[handlerKey]) document.removeEventListener('scroll', document[handlerKey]);
+    document[handlerKey] = () => {
+        const scrollEl = document.scrollingElement || document.documentElement;
+        if (scrollEl.scrollTop + window.innerHeight >= scrollEl.scrollHeight - 300) {
             _vksLoadMore(boardId, filter);
         }
     };
-    if (pageEl) pageEl.addEventListener('scroll', pageEl._vksScrollHandler);
+    document.addEventListener('scroll', document[handlerKey]);
 
     _vksLoadMore(boardId, filter);
 }
@@ -51,6 +52,7 @@ async function _vksLoadMore(boardId, filter) {
         p.cursorDate = data.next_cursor_date;
         p.cursorTime = data.next_cursor_time;
         p.hasMore = data.has_more;
+        if (data.total !== undefined) p.total = data.total;
 
         _vksRenderBoard(boardId, filter);
         updateVksStats();

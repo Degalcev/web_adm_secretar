@@ -4,7 +4,7 @@ let _eventsCompleted = false;
 let _eventsTypeFilter = null;
 
 const EVENT_TYPES = ['Совещание', 'Встреча', 'Заседание', 'Приём'];
-const _eventsPagination = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
+const _eventsPagination = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false, total: 0 };
 const EVENTS_PAGE_SIZE = 50;
 
 function initEventsPage(completed = false) {
@@ -29,14 +29,15 @@ function _eventsResetAndLoad() {
     if (!board) return;
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    const pageEl = board.closest('.page') || board.parentElement;
-    if (pageEl && pageEl._eventsScrollHandler) pageEl.removeEventListener('scroll', pageEl._eventsScrollHandler);
-    pageEl._eventsScrollHandler = () => {
-        if (pageEl.scrollTop + pageEl.clientHeight >= pageEl.scrollHeight - 300) {
+    // Use document-level scroll listener
+    if (document._eventsScrollHandler) document.removeEventListener('scroll', document._eventsScrollHandler);
+    document._eventsScrollHandler = () => {
+        const scrollEl = document.scrollingElement || document.documentElement;
+        if (scrollEl.scrollTop + window.innerHeight >= scrollEl.scrollHeight - 300) {
             _eventsLoadMore();
         }
     };
-    if (pageEl) pageEl.addEventListener('scroll', pageEl._eventsScrollHandler);
+    document.addEventListener('scroll', document._eventsScrollHandler);
 
     _eventsLoadMore();
 }
@@ -67,6 +68,7 @@ async function _eventsLoadMore() {
         p.cursorDate = data.next_cursor_date;
         p.cursorTime = data.next_cursor_time;
         p.hasMore = data.has_more;
+        if (data.total !== undefined) p.total = data.total;
 
         eventsRenderBoard();
         eventsUpdateStats();
@@ -79,12 +81,11 @@ async function _eventsLoadMore() {
 let _eventsQuickFilter = '';
 
 function eventsUpdateStats() {
-    // Use all loaded events from pagination for stats
+    const totalFromApi = _eventsPagination.total || 0;
     const all = _eventsPagination.events.filter(e => e.type !== 'ВКС');
     const now = new Date();
     const today = localDateStr(now);
 
-    let total = all.length;
     let todayCount = 0;
     let soonCount = 0;
     let missedCount = 0;
@@ -97,7 +98,7 @@ function eventsUpdateStats() {
     });
 
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('stat-evt-total', total);
+    set('stat-evt-total', totalFromApi);
     set('stat-evt-today', todayCount);
     set('stat-evt-soon', soonCount);
     set('stat-evt-missed', missedCount);
