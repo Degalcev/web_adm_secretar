@@ -59,7 +59,8 @@ async function loadVksActive() {
     const cached = _vksCacheGet('stats_active');
     if (cached) _vksRenderStats(cached);
     const board = document.getElementById('vks-board-active');
-    if (board) renderVksBoard('vks-board-active', 'active');
+    // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
+    if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-active', 'active');
 
     // Apply pending filter from dashboard
     if (_pendingVksFilter) {
@@ -196,7 +197,8 @@ async function loadVksCompleted() {
     const cached = _vksCacheGet('stats_completed');
     if (cached) _vksRenderStats(cached);
     const board = document.getElementById('vks-board-completed');
-    if (board) renderVksBoard('vks-board-completed', 'completed');
+    // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
+    if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-completed', 'completed');
 }
 
 function filterVksListActive() {
