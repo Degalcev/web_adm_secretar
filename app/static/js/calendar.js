@@ -150,17 +150,19 @@ function expandSeries(events, dateFrom, dateTo) {
 
         const dayMap = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0,
                          'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+        const shortDays = { 'monday':'mon', 'tuesday':'tue', 'wednesday':'wed', 'thursday':'thu', 'friday':'fri', 'saturday':'sat', 'sunday':'sun' };
+        const normByDay = byDay.map(d => shortDays[d] || d);
 
         let current = new Date(baseDate);
-        while (current <= until && current <= new Date(dateTo)) {
-            const dateStr = current.toISOString().split('T')[0];
+        while (current <= until && current <= new Date(dateTo + 'T23:59:59')) {
+            const dateStr = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}-${String(current.getDate()).padStart(2,'0')}`;
 
-            if (current >= new Date(dateFrom) && current <= until) {
+            if (current >= new Date(dateFrom + 'T00:00:00') && current <= until) {
                 const dayOfWeek = current.getDay();
                 const dayName = Object.keys(dayMap).find(k => dayMap[k] === dayOfWeek);
 
-                if (series.freq === 'weekly' && byDay.length > 0) {
-                    if (byDay.includes(dayName)) {
+                if (series.freq === 'weekly' && normByDay.length > 0) {
+                    if (normByDay.includes(dayName)) {
                         const exc = exceptions.get(dateStr);
                         if (exc && exc.action === 'skip') {
                             current.setDate(current.getDate() + 1);
