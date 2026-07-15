@@ -764,6 +764,118 @@
     border-color: var(--accent);
 }
 
+/* ─── Repeat: type buttons ──────────────────────────────────────── */
+.evt-repeat-type-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.evt-repeat-type-btn {
+    flex: 1;
+    padding: 6px 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg-muted);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.evt-repeat-type-btn:hover {
+    border-color: var(--accent);
+    color: var(--fg);
+}
+
+.evt-repeat-type-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+/* ─── Repeat: panels & options ──────────────────────────────────── */
+.evt-repeat-panel {
+    margin-bottom: 10px;
+}
+
+.evt-repeat-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+    font-size: 0.8125rem;
+    color: var(--fg);
+    cursor: pointer;
+}
+
+.evt-repeat-option input[type="radio"] {
+    accent-color: var(--accent);
+}
+
+.evt-repeat-inline {
+    font-size: 0.8125rem;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0;
+}
+
+.evt-repeat-num-input {
+    width: 50px;
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 0.8125rem;
+    text-align: center;
+}
+
+.evt-repeat-num-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.evt-repeat-num-input:disabled {
+    opacity: 0.4;
+}
+
+.evt-repeat-day-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.evt-repeat-until-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.evt-repeat-until-row label {
+    font-size: 0.8125rem;
+    color: var(--fg-muted);
+    white-space: nowrap;
+}
+
+.evt-repeat-until-row .form-input {
+    flex: 1;
+}
+
 /* ─── Organizer type toggle ──────────────────────────────────────── */
 #f-event-organizer-type + #f-event-organizer {
     flex: 1;

@@ -47,9 +47,14 @@ async function openAddEventModal(mode = 'vks') {
     // Участники
     _renderParticipants();
     // Повтор
-    document.getElementById('event-repeat-active').value = 'false';
-    document.getElementById('event-repeat-btn').classList.remove('done');
-    document.getElementById('event-repeat-options').style.display = 'none';
+    _setRepeatUI(null);
+    switchRepeatType('daily');
+    document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked = true;
+    document.getElementById('repeat-daily-interval').value = '1';
+    document.getElementById('repeat-daily-interval').disabled = false;
+    document.getElementById('repeat-weekly-interval').value = '1';
+    document.getElementById('repeat-monthly-interval').value = '1';
+    document.getElementById('repeat-monthly-day').textContent = '—';
     // Видимость URL
     onEventTypeChange();
     document.getElementById('event-modal').classList.add('show');
@@ -146,9 +151,6 @@ async function openEditEventModal(id, mode = 'vks') {
     _renderParticipants();
 
     // Повтор — загрузить серию если есть
-    const repeatBtn = document.getElementById('event-repeat-btn');
-    const repeatOpts = document.getElementById('event-repeat-options');
-    const repeatActive = document.getElementById('event-repeat-active');
     if (e.series_id) {
         try {
             const seriesRes = await fetch(`${BASE_URL}/admin/api/events/${e.id}/series`, {
@@ -156,33 +158,12 @@ async function openEditEventModal(id, mode = 'vks') {
                 headers: { 'X-CSRF-Token': getCsrfToken() }
             });
             const seriesData = await seriesRes.json();
-            if (seriesData.series) {
-                const s = seriesData.series;
-                repeatActive.value = 'true';
-                repeatBtn.classList.add('done');
-                repeatOpts.style.display = 'block';
-                let freqVal = 'weekly';
-                if (s.freq === 'monthly') freqVal = 'monthly';
-                else if (s.interval_val === 2) freqVal = 'biweekly';
-                document.getElementById('event-repeat-freq').value = freqVal;
-                document.getElementById('event-repeat-until').value = s.until || '';
-                document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
-                    b.classList.toggle('active', (s.by_day || []).includes(b.dataset.day));
-                });
-            } else {
-                repeatActive.value = 'false';
-                repeatBtn.classList.remove('done');
-                repeatOpts.style.display = 'none';
-            }
+            _setRepeatUI(seriesData.series);
         } catch (err) {
-            repeatActive.value = 'false';
-            repeatBtn.classList.remove('done');
-            repeatOpts.style.display = 'none';
+            _setRepeatUI(null);
         }
     } else {
-        repeatActive.value = 'false';
-        repeatBtn.classList.remove('done');
-        repeatOpts.style.display = 'none';
+        _setRepeatUI(null);
     }
     const urlGo = document.getElementById('event-url-go');
     if (e.url) {
@@ -443,26 +424,16 @@ async function saveEvent() {
             const savedEventId = data.id || editingEventId;
 
             // Создать серию если repeat активен, удалить если деактивирован
-            const repeatActive = document.getElementById('event-repeat-active').value === 'true';
             if (savedEventId) {
                 const existingEvent = store.allEvents.find(x => x.id === savedEventId);
                 const hadSeries = existingEvent && existingEvent.series_id;
-                if (repeatActive) {
-                    const byDay = [];
-                    document.querySelectorAll('#event-weekday-row .evt-wd-btn.active').forEach(b => byDay.push(b.dataset.day));
-                    const freqMap = { 'weekly': 'weekly', 'biweekly': 'weekly', 'monthly': 'monthly' };
-                    const intervalMap = { 'weekly': 1, 'biweekly': 2, 'monthly': 1 };
-                    const freqVal = document.getElementById('event-repeat-freq').value;
+                const repeatData = _getRepeatData();
+                if (repeatData) {
                     try {
                         await fetch(`${BASE_URL}/admin/api/events/${savedEventId}/series`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-                            body: JSON.stringify({
-                                freq: freqMap[freqVal] || 'weekly',
-                                interval_val: intervalMap[freqVal] || 1,
-                                by_day: byDay,
-                                until: document.getElementById('event-repeat-until').value || null,
-                            })
+                            body: JSON.stringify(repeatData)
                         });
                     } catch (e) { console.warn('Series create error:', e); }
                 } else if (hadSeries) {
@@ -710,10 +681,97 @@ function evtToggleRepeat() {
     btn.classList.toggle('done', newState);
     options.style.display = newState ? 'block' : 'none';
     if (newState) {
+        // Установить текущий день недели по умолчанию
         const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
         const today = days[new Date().getDay()];
         document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
             b.classList.toggle('active', b.dataset.day === today);
         });
+        // Установить число месяца из даты мероприятия
+        const dateVal = document.getElementById('f-event-date').value;
+        if (dateVal) {
+            const day = parseInt(dateVal.split('-')[2], 10);
+            document.getElementById('repeat-monthly-day').textContent = day;
+        }
+    }
+}
+
+function switchRepeatType(type) {
+    document.getElementById('event-repeat-type').value = type;
+    document.querySelectorAll('.evt-repeat-type-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === type);
+    });
+    document.getElementById('repeat-panel-daily').style.display = type === 'daily' ? '' : 'none';
+    document.getElementById('repeat-panel-weekly').style.display = type === 'weekly' ? '' : 'none';
+    document.getElementById('repeat-panel-monthly').style.display = type === 'monthly' ? '' : 'none';
+}
+
+function onRepeatDailyModeChange() {
+    const mode = document.querySelector('input[name="repeat-daily-mode"]:checked').value;
+    document.getElementById('repeat-daily-interval').disabled = mode !== 'interval';
+}
+
+function _getRepeatData() {
+    const active = document.getElementById('event-repeat-active').value === 'true';
+    if (!active) return null;
+    const type = document.getElementById('event-repeat-type').value;
+    const until = document.getElementById('event-repeat-until').value || null;
+    if (type === 'daily') {
+        const mode = document.querySelector('input[name="repeat-daily-mode"]:checked').value;
+        if (mode === 'workdays') {
+            return { freq: 'weekly', interval_val: 1, by_day: ['mon', 'tue', 'wed', 'thu', 'fri'], until };
+        } else {
+            const interval = parseInt(document.getElementById('repeat-daily-interval').value, 10) || 1;
+            return { freq: 'daily', interval_val: interval, by_day: [], until };
+        }
+    } else if (type === 'weekly') {
+        const interval = parseInt(document.getElementById('repeat-weekly-interval').value, 10) || 1;
+        const byDay = [];
+        document.querySelectorAll('#event-weekday-row .evt-wd-btn.active').forEach(b => byDay.push(b.dataset.day));
+        return { freq: 'weekly', interval_val: interval, by_day: byDay, until };
+    } else if (type === 'monthly') {
+        const interval = parseInt(document.getElementById('repeat-monthly-interval').value, 10) || 1;
+        return { freq: 'monthly', interval_val: interval, by_day: [], until };
+    }
+    return null;
+}
+
+function _setRepeatUI(seriesData) {
+    if (!seriesData) {
+        document.getElementById('event-repeat-active').value = 'false';
+        document.getElementById('event-repeat-btn').classList.remove('done');
+        document.getElementById('event-repeat-options').style.display = 'none';
+        return;
+    }
+    document.getElementById('event-repeat-active').value = 'true';
+    document.getElementById('event-repeat-btn').classList.add('done');
+    document.getElementById('event-repeat-options').style.display = 'block';
+    document.getElementById('event-repeat-until').value = seriesData.until || '';
+
+    const freq = seriesData.freq;
+    const interval = seriesData.interval_val || 1;
+    const byDay = seriesData.by_day || [];
+
+    if (freq === 'daily') {
+        switchRepeatType('daily');
+        document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked = true;
+        document.getElementById('repeat-daily-interval').value = interval;
+        document.getElementById('repeat-daily-interval').disabled = false;
+    } else if (freq === 'weekly') {
+        if (byDay.length === 5 && ['mon','tue','wed','thu','fri'].every(d => byDay.includes(d)) && interval === 1) {
+            // Каждый рабочий день
+            switchRepeatType('daily');
+            document.querySelector('input[name="repeat-daily-mode"][value="workdays"]').checked = true;
+            document.getElementById('repeat-daily-interval').disabled = true;
+        } else {
+            switchRepeatType('weekly');
+            document.getElementById('repeat-weekly-interval').value = interval;
+            document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
+                b.classList.toggle('active', byDay.includes(b.dataset.day));
+            });
+        }
+    } else if (freq === 'monthly') {
+        switchRepeatType('monthly');
+        document.getElementById('repeat-monthly-interval').value = interval;
     }
 }
