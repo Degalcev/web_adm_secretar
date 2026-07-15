@@ -47,15 +47,8 @@ function switchPage(page) {
     const pageEl = document.getElementById(pageId);
     if (pageEl) pageEl.classList.add('active');
 
-    // Очистить доски при переключении — убрать старые данные
-    if (page === 'vks-active') {
-        const board = document.getElementById('vks-board-active');
-        if (board) board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
-    }
-    if (page === 'vks-completed') {
-        const board = document.getElementById('vks-board-completed');
-        if (board) board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
-    }
+    // VKS доски НЕ очищаем — renderVksBoard() рендерит из localStorage кэша мгновенно
+    // Только Events — _eventsHardReset() сам очищает board
     if (page === 'events-active' || page === 'events-completed') {
         const board = document.getElementById('events-board');
         if (board) board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
