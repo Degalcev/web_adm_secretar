@@ -1,8 +1,67 @@
 // ─── VKS: Рендеринг карточек ─────────────────────────────────────────
 
+const _vksPagination = {}; // { boardId: { events, cursorDate, cursorTime, hasMore, loading } }
+const VKS_PAGE_SIZE = 50;
+
 function renderVksBoard(boardId, filter) {
     const board = document.getElementById(boardId);
     if (!board) return;
+
+    // Reset pagination
+    _vksPagination[boardId] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
+
+    board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+    const sentinel = board.querySelector('.scroll-sentinel');
+
+    // Setup IntersectionObserver
+    if (board._scrollObserver) board._scrollObserver.disconnect();
+    board._scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) _vksLoadMore(boardId, filter);
+    }, { rootMargin: '200px' });
+    if (sentinel) board._scrollObserver.observe(sentinel);
+
+    _vksLoadMore(boardId, filter);
+}
+
+async function _vksLoadMore(boardId, filter) {
+    const p = _vksPagination[boardId];
+    if (!p || p.loading || !p.hasMore) return;
+    p.loading = true;
+
+    const board = document.getElementById(boardId);
+    const sentinel = board?.querySelector('.scroll-sentinel');
+    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка...</div>';
+
+    try {
+        const params = new URLSearchParams();
+        params.set('limit', VKS_PAGE_SIZE);
+        params.set('status', filter);
+        params.set('type', 'ВКС');
+        if (p.cursorDate) params.set('cursor_date', p.cursorDate);
+        if (p.cursorTime) params.set('cursor_time', p.cursorTime);
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) { p.loading = false; return; }
+        const data = await resp.json();
+        const newEvents = data.events || [];
+
+        p.events.push(...newEvents);
+        p.cursorDate = data.next_cursor_date;
+        p.cursorTime = data.next_cursor_time;
+        p.hasMore = data.has_more;
+
+        _vksRenderBoard(boardId, filter);
+    } catch (e) {
+        console.error('_vksLoadMore error:', e);
+    }
+    p.loading = false;
+}
+
+function _vksRenderBoard(boardId, filter) {
+    const board = document.getElementById(boardId);
+    if (!board) return;
+    const p = _vksPagination[boardId];
+    if (!p) return;
 
     const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
     const dateFilter = getDateFilter(prefix);
@@ -10,16 +69,7 @@ function renderVksBoard(boardId, filter) {
     const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
     const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
 
-    let events = [...store.allEvents];
-
-    // Только ВКС — остальные типы на своих страницах
-    events = events.filter(e => e.type === 'ВКС');
-
-    if (filter === 'active') {
-        events = events.filter(e => !e.completed);
-    } else if (filter === 'completed') {
-        events = events.filter(e => e.completed);
-    }
+    let events = [...p.events];
 
     if (dateFilter.day || dateFilter.month || dateFilter.year) {
         events = events.filter(e => matchDateFilter(e.date, dateFilter));
@@ -43,14 +93,8 @@ function renderVksBoard(boardId, filter) {
         } else if (_quickFilter === 'missed') {
             events = events.filter(e => !e.date || e.date < today);
         } else if (_quickFilter === 'active') {
-            // Only non-missed, non-completed events
             events = events.filter(e => e.date && e.date >= today);
         }
-    }
-
-    if (!events.length) {
-        board.innerHTML = '<div class="empty-state">Нет событий</div>';
-        return;
     }
 
     const now = new Date();
@@ -60,30 +104,17 @@ function renderVksBoard(boardId, filter) {
     const da = new Date(now.getFullYear(), now.getMonth(), now.getDate()+2);
     const dayAfter = `${da.getFullYear()}-${String(da.getMonth()+1).padStart(2,'0')}-${String(da.getDate()).padStart(2,'0')}`;
 
-    // Разделяем на блоки
-    const missed = [];      // Пропущенные (прошедшие, не завершённые)
-    const todayEvents = []; // Сегодня
-    const tomorrowEvents = []; // Завтра
-    const dayAfterEvents = []; // Послезавтра
-    const soon = [];        // Остальные будущие
+    const missed = []; const todayEvents = []; const tomorrowEvents = [];
+    const dayAfterEvents = []; const soon = [];
 
     events.forEach(e => {
-        if (!e.date) {
-            missed.push(e);
-        } else if (e.date < today) {
-            missed.push(e);
-        } else if (e.date === today) {
-            todayEvents.push(e);
-        } else if (e.date === tomorrow) {
-            tomorrowEvents.push(e);
-        } else if (e.date === dayAfter) {
-            dayAfterEvents.push(e);
-        } else {
-            soon.push(e);
-        }
+        if (!e.date || e.date < today) missed.push(e);
+        else if (e.date === today) todayEvents.push(e);
+        else if (e.date === tomorrow) tomorrowEvents.push(e);
+        else if (e.date === dayAfter) dayAfterEvents.push(e);
+        else soon.push(e);
     });
 
-    // Сортируем внутри каждого блока по времени
     const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
     const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
     missed.sort(sortByDateThenTime);
@@ -93,19 +124,29 @@ function renderVksBoard(boardId, filter) {
     soon.sort(sortByDateThenTime);
 
     let html = '';
+    if (missed.length) html += renderVksBlock('Пропущенные', missed, 'missed');
+    if (todayEvents.length) html += renderVksBlock('Сегодня', todayEvents, 'today');
+    if (tomorrowEvents.length) html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
+    if (dayAfterEvents.length) html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
+    if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
 
-    // Блок "Пропущенные"
-    if (missed.length) {
-        html += renderVksBlock('Пропущенные', missed, 'missed');
-    }
+    // Keep sentinel at the end
+    const sentinel = board.querySelector('.scroll-sentinel') || document.createElement('div');
+    sentinel.className = 'scroll-sentinel';
+    sentinel.style.height = '1px';
+    if (!sentinel.parentNode) board.appendChild(sentinel);
+    board.innerHTML = html;
+    board.appendChild(sentinel);
 
-    // Блок "Сегодня"
-    if (todayEvents.length) {
-        html += renderVksBlock('Сегодня', todayEvents, 'today');
-    }
+    // Re-setup observer
+    if (board._scrollObserver) board._scrollObserver.disconnect();
+    board._scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) _vksLoadMore(boardId, filter);
+    }, { rootMargin: '200px' });
+    board._scrollObserver.observe(sentinel);
+}
 
-    // Блок "Завтра"
-    if (tomorrowEvents.length) {
+function _vksLoadMore
         html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
     }
 
@@ -119,7 +160,6 @@ function renderVksBoard(boardId, filter) {
         html += renderVksBlock('Скоро', soon, 'soon');
     }
 
-    board.innerHTML = html;
 }
 
 function renderVksBlock(title, events, type) {

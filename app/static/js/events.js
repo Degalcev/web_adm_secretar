@@ -4,6 +4,8 @@ let _eventsCompleted = false;
 let _eventsTypeFilter = null;
 
 const EVENT_TYPES = ['Совещание', 'Встреча', 'Заседание', 'Приём'];
+const _eventsPagination = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
+const EVENTS_PAGE_SIZE = 50;
 
 function initEventsPage(completed = false) {
     _eventsCompleted = completed;
@@ -13,23 +15,79 @@ function initEventsPage(completed = false) {
     if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
 
     _eventsPopulateFilters();
-    eventsRenderBoard();
+    _eventsResetAndLoad();
     eventsUpdateStats();
+}
+
+function _eventsResetAndLoad() {
+    _eventsPagination.events = [];
+    _eventsPagination.cursorDate = null;
+    _eventsPagination.cursorTime = null;
+    _eventsPagination.hasMore = true;
+    _eventsPagination.loading = false;
+
+    const board = document.getElementById('events-board');
+    if (!board) return;
+    board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+
+    if (board._scrollObserver) board._scrollObserver.disconnect();
+    board._scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) _eventsLoadMore();
+    }, { rootMargin: '200px' });
+    const sentinel = board.querySelector('.scroll-sentinel');
+    if (sentinel) board._scrollObserver.observe(sentinel);
+
+    _eventsLoadMore();
+}
+
+async function _eventsLoadMore() {
+    const p = _eventsPagination;
+    if (p.loading || !p.hasMore) return;
+    p.loading = true;
+
+    const board = document.getElementById('events-board');
+    const sentinel = board?.querySelector('.scroll-sentinel');
+    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка...</div>';
+
+    try {
+        const params = new URLSearchParams();
+        params.set('limit', EVENTS_PAGE_SIZE);
+        params.set('status', _eventsCompleted ? 'completed' : 'active');
+        if (p.cursorDate) params.set('cursor_date', p.cursorDate);
+        if (p.cursorTime) params.set('cursor_time', p.cursorTime);
+        if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) { p.loading = false; return; }
+        const data = await resp.json();
+        const newEvents = (data.events || []).filter(e => e.type !== 'ВКС');
+
+        p.events.push(...newEvents);
+        p.cursorDate = data.next_cursor_date;
+        p.cursorTime = data.next_cursor_time;
+        p.hasMore = data.has_more;
+
+        eventsRenderBoard();
+    } catch (e) {
+        console.error('_eventsLoadMore error:', e);
+    }
+    p.loading = false;
 }
 
 let _eventsQuickFilter = '';
 
 function eventsUpdateStats() {
-    const active = (store?.allEvents || []).filter(e => !e.completed && e.type !== 'ВКС');
+    // Use all loaded events from pagination for stats
+    const all = _eventsPagination.events.filter(e => e.type !== 'ВКС');
     const now = new Date();
     const today = localDateStr(now);
 
-    let total = active.length;
+    let total = all.length;
     let todayCount = 0;
     let soonCount = 0;
     let missedCount = 0;
 
-    active.forEach(e => {
+    all.forEach(e => {
         if (!e.date) { missedCount++; return; }
         if (e.date < today) { missedCount++; }
         else if (e.date === today) { todayCount++; }
@@ -78,7 +136,7 @@ function eventsFilterType(type) {
     const typeSelect = document.getElementById('f-events-type');
     if (typeSelect) typeSelect.value = type || '';
     _eventsUpdateCardActive();
-    eventsRenderBoard();
+    _eventsResetAndLoad();
     eventsUpdateStats();
 }
 
@@ -119,7 +177,7 @@ function eventsResetFilters() {
     _eventsTypeFilter = null;
     _eventsQuickFilter = '';
     _eventsUpdateCardActive();
-    eventsRenderBoard();
+    _eventsResetAndLoad();
     eventsUpdateStats();
 }
 
@@ -132,22 +190,7 @@ function eventsRenderBoard() {
     const locVal = document.getElementById('f-events-loc')?.value || '';
     const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
 
-    let events = [...(store?.allEvents || [])];
-
-    // Исключаем ВКС — у них своя страница
-    events = events.filter(e => e.type !== 'ВКС');
-
-    // Filter by status
-    if (_eventsCompleted) {
-        events = events.filter(e => e.completed);
-    } else {
-        events = events.filter(e => !e.completed);
-    }
-
-    // Filter by type
-    if (_eventsTypeFilter) {
-        events = events.filter(e => e.type === _eventsTypeFilter);
-    }
+    let events = [..._eventsPagination.events];
 
     // Quick filter (today/soon/missed)
     if (_eventsQuickFilter) {

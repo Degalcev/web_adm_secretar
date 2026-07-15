@@ -53,12 +53,14 @@ async function _refreshEvents() {
 
         const page = currentPage || '';
         if (page === 'vks-active') {
+            _vksPagination['vks-board-active'] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
             renderVksBoard('vks-board-active', 'active');
             updateVksStats();
         } else if (page === 'vks-completed') {
+            _vksPagination['vks-board-completed'] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
             renderVksBoard('vks-board-completed', 'completed');
         } else if (page === 'events-active' || page === 'events-completed') {
-            eventsRenderBoard();
+            _eventsResetAndLoad();
         } else if (page === 'dashboard') {
             renderDashboard();
         } else if (page === 'calendar') {

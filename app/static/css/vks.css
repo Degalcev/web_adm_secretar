@@ -848,3 +848,8 @@
         font-size: 0.6875rem;
     }
 }
+
+/* ─── Scroll Sentinel (infinite scroll) ─────────────────────────── */
+.scroll-sentinel {
+    height: 1px;
+}
