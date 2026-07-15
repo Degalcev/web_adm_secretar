@@ -146,22 +146,6 @@ function _vksRenderBoard(boardId, filter) {
     board._scrollObserver.observe(sentinel);
 }
 
-function _vksLoadMore
-        html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
-    }
-
-    // Блок "Послезавтра"
-    if (dayAfterEvents.length) {
-        html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
-    }
-
-    // Блок "Скоро"
-    if (soon.length) {
-        html += renderVksBlock('Скоро', soon, 'soon');
-    }
-
-}
-
 function renderVksBlock(title, events, type) {
     let html = `<div class="vks-date-group vks-block-${type}">`;
     html += `<div class="vks-date-header">`;
