@@ -116,14 +116,21 @@ function _sseRerenderBoard() {
 }
 
 function _softRenderBoard(board, events, filter) {
-    // Тот же алгоритм группировки что в _vksRenderBoard, но без сброса sentinel/скролла
     const now = new Date();
     const today = localDateStr(now);
     const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
     const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
 
+    // Фильтрация по completed для страниц active/completed
+    let filtered = events;
+    if (filter === 'active') {
+        filtered = events.filter(e => !e.completed);
+    } else if (filter === 'completed') {
+        filtered = events.filter(e => e.completed);
+    }
+
     const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
-    events.forEach(e => {
+    filtered.forEach(e => {
         if (!e.date || e.date < today) missed.push(e);
         else if (e.date === today) todayEvents.push(e);
         else if (e.date === tomorrow) tomorrowEvents.push(e);
