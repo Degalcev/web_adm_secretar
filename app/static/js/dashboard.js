@@ -7,12 +7,31 @@ let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 
-function initDashboard() {
-    // Данные уже в памяти из preloader
-    renderDashboard();
+let _dashTotal = 0;
+let _dashActive = 0;
+let _dashCompleted = 0;
+let _dashMissed = 0;
+let _dashTodayEvents = [];
+let _dashSoonEvents = [];
+
+async function initDashboard() {
     setupDashboardClicks();
-    // Фоновое обновление
-    preloadAllData().then(() => renderDashboard());
+    try {
+        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error(resp.status);
+        const data = await resp.json();
+        _dashTotal = data.total || 0;
+        _dashActive = data.active || 0;
+        _dashCompleted = data.completed || 0;
+        _dashMissed = data.missed || 0;
+        _dashTodayEvents = data.today || [];
+        _dashSoonEvents = data.soon || [];
+    } catch (e) {
+        console.error('Dashboard load error:', e);
+        _dashTotal = 0; _dashActive = 0; _dashCompleted = 0; _dashMissed = 0;
+        _dashTodayEvents = []; _dashSoonEvents = [];
+    }
+    renderDashboard();
 }
 
 function setupDashboardClicks() {
@@ -107,75 +126,16 @@ function locName(id) { return _dashLocations[id] || '—'; }
 function orgName(id) { return _dashOrganizers[id] || '—'; }
 
 function renderDashboard() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const total = _dashEvents.length;
-    const completed = _dashEvents.filter(e => e.completed).length;
-    const active = _dashEvents.filter(e => !e.completed && new Date(e.date + 'T' + (e.time || '23:59')) >= today).length;
-    const missed = _dashEvents.filter(e => !e.completed && new Date(e.date + 'T' + (e.time || '23:59')) < today).length;
-
-    document.getElementById('dash-total').textContent = total;
-    document.getElementById('dash-active').textContent = active;
-    document.getElementById('dash-completed').textContent = completed;
-    document.getElementById('dash-missed').textContent = missed;
-
-    renderToday();
-    renderSoon();
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('dash-total', _dashTotal);
+    set('dash-active', _dashActive);
+    set('dash-completed', _dashCompleted);
+    set('dash-missed', _dashMissed);
+    renderTodayFromData(_dashTodayEvents);
+    renderSoonFromData(_dashSoonEvents);
     renderDashLocations();
     drawChart();
     setupChartToggle();
-}
-
-function renderToday() {
-    const el = document.getElementById('dash-today');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-
-    const events = _dashEvents
-        .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
-        .filter(e => e._date >= today && e._date < tomorrow)
-        .sort((a, b) => a._date - b._date);
-
-    if (events.length === 0) {
-        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет мероприятий на сегодня</div>';
-        el.classList.remove('has-scroll');
-        return;
-    }
-
-    const items = events.slice(0, 8).map(e => renderUpcomingItem(e)).join('');
-    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
-    checkUpcomingScroll(el);
-}
-
-function renderSoon() {
-    const el = document.getElementById('dash-soon');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-
-    const events = _dashEvents
-        .map(e => ({ ...e, _date: new Date(e.date + 'T' + (e.time || '23:59')) }))
-        .filter(e => e._date >= tomorrow)
-        .sort((a, b) => a._date - b._date);
-
-    if (events.length === 0) {
-        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет ближайших мероприятий</div>';
-        el.classList.remove('has-scroll');
-        return;
-    }
-
-    const items = events.slice(0, 8).map(e => {
-        const d = e._date;
-        return renderUpcomingItem(e, {
-            showDate: true,
-            dateStr: `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`
-        });
-    }).join('');
-
-    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
-    checkUpcomingScroll(el);
 }
 
 function checkUpcomingScroll(el) {
@@ -223,48 +183,56 @@ let _locPeriod = 'all';
 let _locYear = new Date().getFullYear();
 
 function renderDashLocations() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    fetch('/admin/api/events?limit=500', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            const events = data.events || [];
+            _dashEvents = events;
 
-    const locToday = {};
-    const locTotal = {};
-    _dashEvents.forEach(e => {
-        const id = e.location_id || 'unknown';
-        const d = new Date(e.date + 'T' + (e.time || '23:59'));
-        // Today count
-        if (d >= today && d < tomorrow) {
-            locToday[id] = (locToday[id] || 0) + 1;
-        }
-        // Total count based on period
-        let include = false;
-        if (_locPeriod === 'all') {
-            include = true;
-        } else if (_locPeriod === 'year') {
-            include = new Date(e.date).getFullYear() === _locYear;
-        } else if (_locPeriod === 'month') {
-            const ed = new Date(e.date);
-            include = ed.getFullYear() === _locYear && ed.getMonth() === _dashMonth;
-        }
-        if (include) {
-            locTotal[id] = (locTotal[id] || 0) + 1;
-        }
-    });
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
-    const allIds = [...new Set([...Object.keys(locToday), ...Object.keys(locTotal)])];
-    const todayEntries = allIds
-        .map(id => ({ name: locName(id), id, count: locToday[id] || 0 }))
-        .filter(e => e.count > 0)
-        .sort((a, b) => b.count - a.count);
-    const totalEntries = allIds
-        .map(id => ({ name: locName(id), id, count: locTotal[id] || 0 }))
-        .filter(e => e.count > 0)
-        .sort((a, b) => b.count - a.count);
+            const locToday = {};
+            const locTotal = {};
+            events.forEach(e => {
+                const id = e.location_id || 'unknown';
+                const d = new Date(e.date + 'T' + (e.time || '23:59'));
+                // Today count
+                if (d >= today && d < tomorrow) {
+                    locToday[id] = (locToday[id] || 0) + 1;
+                }
+                // Total count based on period
+                let include = false;
+                if (_locPeriod === 'all') {
+                    include = true;
+                } else if (_locPeriod === 'year') {
+                    include = new Date(e.date).getFullYear() === _locYear;
+                } else if (_locPeriod === 'month') {
+                    const ed = new Date(e.date);
+                    include = ed.getFullYear() === _locYear && ed.getMonth() === _dashMonth;
+                }
+                if (include) {
+                    locTotal[id] = (locTotal[id] || 0) + 1;
+                }
+            });
 
-    renderBarList('dash-loc-today', todayEntries, 'accent');
-    renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
-    setupLocToggle();
-    updateLocYearLabel();
+            const allIds = [...new Set([...Object.keys(locToday), ...Object.keys(locTotal)])];
+            const todayEntries = allIds
+                .map(id => ({ name: locName(id), id, count: locToday[id] || 0 }))
+                .filter(e => e.count > 0)
+                .sort((a, b) => b.count - a.count);
+            const totalEntries = allIds
+                .map(id => ({ name: locName(id), id, count: locTotal[id] || 0 }))
+                .filter(e => e.count > 0)
+                .sort((a, b) => b.count - a.count);
+
+            renderBarList('dash-loc-today', todayEntries, 'accent');
+            renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
+            setupLocToggle();
+            updateLocYearLabel();
+        })
+        .catch(e => console.error('Dash locations load error:', e));
 }
 
 function setupLocToggle() {
@@ -380,6 +348,16 @@ function dashYearNav(dir) {
 }
 
 function drawChart() {
+    fetch('/admin/api/events?limit=500', { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+            _dashEvents = data.events || [];
+            _renderChart();
+        })
+        .catch(e => console.error('Chart data load error:', e));
+}
+
+function _renderChart() {
     const el = document.getElementById('dash-chart');
     const now = new Date();
     let labels = [];
