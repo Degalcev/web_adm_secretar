@@ -7,9 +7,13 @@ function renderVksBoard(boardId, filter) {
     const board = document.getElementById(boardId);
     if (!board) return;
 
+    // Восстановить из кэша (мгновенно)
+    const cacheKey = `vks_board_${filter}`;
+    const cached = _vksCacheGet(cacheKey);
+
     // Сброс состояния пагинации
     _vksPagination[boardId] = {
-        events: [],
+        events: cached || [],
         cursorDate: null,
         cursorTime: null,
         cursorId: null,
@@ -17,7 +21,12 @@ function renderVksBoard(boardId, filter) {
         loading: false,
     };
 
-    board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+    // Рендер из кэша мгновенно
+    if (cached && cached.length) {
+        _sseRerenderFromCache(boardId, filter);
+    } else {
+        board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+    }
 
     // Подвешиваем scroll-триггер
     const scrollEl = _findScrollParent(board);
@@ -32,7 +41,21 @@ function renderVksBoard(boardId, filter) {
         scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
     }
 
+    // Фоновый fetch — обновить данные
     _vksLoadMore(boardId, filter);
+}
+
+function _vksCacheGet(key) {
+    try {
+        const raw = localStorage.getItem('vks_cache_' + key);
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+}
+
+function _vksCacheSet(key, events) {
+    try {
+        localStorage.setItem('vks_cache_' + key, JSON.stringify(events));
+    } catch (e) {}
 }
 
 async function _vksLoadMore(boardId, filter) {
@@ -106,6 +129,7 @@ async function _vksLoadMore(boardId, filter) {
         p.hasMore    = !!data.has_more;
 
         _vksRenderBoard(boardId, filter);
+        _vksCacheSet(`${filter}`, p.events);
         updateVksStats();
     } catch (e) {
         console.error('_vksLoadMore error:', e);
