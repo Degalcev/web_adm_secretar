@@ -93,6 +93,7 @@ async function _sseProcessEvent(eventId, action) {
             }
             _eventsPagination.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             eventsRenderBoard();
+            eventsUpdateStats();
         } else if (page === 'dashboard') {
             renderDashboard();
         }
@@ -102,16 +103,17 @@ async function _sseProcessEvent(eventId, action) {
 }
 
 function _sseRerenderBoard() {
-    // Перерисовать доску из p.events без сброса пагинации и скролла
     const page = currentPage || '';
     if (page === 'vks-active') {
         const board = document.getElementById('vks-board-active');
         const p = _vksPagination['vks-board-active'];
         if (board && p) _softRenderBoard(board, p.events, 'active');
+        updateVksStats();
     } else if (page === 'vks-completed') {
         const board = document.getElementById('vks-board-completed');
         const p = _vksPagination['vks-board-completed'];
         if (board && p) _softRenderBoard(board, p.events, 'completed');
+        updateVksStats();
     }
 }
 
