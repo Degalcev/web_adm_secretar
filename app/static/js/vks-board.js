@@ -21,15 +21,15 @@ function renderVksBoard(boardId, filter) {
         loading: false,
     };
 
-    // Рендер из кэша мгновенно
+    // Рендер из кэша мгновенно — обновление только через SSE
     if (cached && cached.length) {
         _sseRerenderFromCache(boardId, filter);
-        return; // Данные актуальны — обновятся через SSE
+        return;
     }
 
+    // Первый запуск (кэш пуст) — загрузка с сервера
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    // Подвешиваем scroll-триггер
     const scrollEl = _findScrollParent(board);
     if (scrollEl) {
         const handlerKey = '_vksScroll_' + boardId;
