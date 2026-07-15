@@ -25,8 +25,18 @@ function handleSSEEvent(data) {
     if (!table) return;
 
     if (table === 'events') {
-        // Если есть ID события — обновляем только одну карточку
         if (data.task_id) {
+            // DELETE — убрать карточку
+            if (data.action === 'DELETE') {
+                const card = document.querySelector(`[data-event-id="${data.task_id}"]`);
+                if (card) {
+                    const group = card.closest('.vks-date-group');
+                    card.remove();
+                    // Убрать пустую группу
+                    if (group && !group.querySelector('.vks-card')) group.remove();
+                }
+                return;
+            }
             _sseUpdateCard(data.task_id, data);
         } else {
             debounceRefreshEvents();
@@ -41,15 +51,12 @@ function handleSSEEvent(data) {
 }
 
 async function _sseUpdateCard(eventId, sseData) {
-    // Пропускаем если модалка открыта
     const modal = document.getElementById('event-modal');
     if (modal && modal.classList.contains('show')) return;
 
-    // Попробовать найти карточку по data-id
     const card = document.querySelector(`[data-event-id="${eventId}"]`);
-    if (!card) return; // Карточка не на экране — ничего не делаем
+    if (!card) return;
 
-    // Загрузить актуальные данные события
     try {
         const resp = await fetch(`/admin/api/events/${eventId}/single`, { credentials: 'same-origin' });
         if (!resp.ok) return;
@@ -71,14 +78,26 @@ async function _sseUpdateCard(eventId, sseData) {
             if (idx >= 0) _eventsPagination.events[idx] = e;
         }
 
-        // Перерисовать доску (обновит все карточки, но без сброса скролла)
-        if (page === 'vks-active') renderVksBoard('vks-board-active', 'active');
-        else if (page === 'vks-completed') renderVksBoard('vks-board-completed', 'completed');
-        else if (page === 'events-active' || page === 'events-completed') eventsRenderBoard();
-        else if (page === 'dashboard') renderDashboard();
+        // Определить blockType по родительской группе
+        const group = card.closest('.vks-date-group');
+        let blockType = 'soon';
+        if (group) {
+            if (group.classList.contains('vks-block-missed')) blockType = 'missed';
+            else if (group.classList.contains('vks-block-today')) blockType = 'today';
+            else if (group.classList.contains('vks-block-tomorrow')) blockType = 'tomorrow';
+            else if (group.classList.contains('vks-block-day-after')) blockType = 'day-after';
+        }
+
+        // Сгенерировать HTML новой карточки и заменить
+        const isVks = page.startsWith('vks');
+        const temp = document.createElement('div');
+        temp.innerHTML = isVks ? renderVksCard(e, blockType) : _eventsRenderCard(e, blockType);
+        const newCard = temp.firstElementChild;
+        if (newCard) {
+            card.replaceWith(newCard);
+        }
     } catch (err) {
-        // Fallback — полная перерисовка
-        debounceRefreshEvents();
+        console.error('SSE card update error:', err);
     }
 }
 
