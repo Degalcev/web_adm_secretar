@@ -51,9 +51,10 @@ function _refreshEvents() {
     } else if (page === 'vks-completed') {
         _sseUpdateAndRender('vks-board-completed', 'completed');
     } else if (page === 'events-active' || page === 'events-completed') {
-        eventsRenderBoard();
+        _eventsInvalidateCache();
+        _eventsHardReset();
     } else if (page === 'dashboard') {
-        renderDashboard();
+        refreshDashboard();
     } else if (page === 'calendar') {
         _calEventsCache = {};
         _calLoadingRange = false;

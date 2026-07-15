@@ -7,6 +7,37 @@ const EVENT_TYPES = ['Совещание', 'Встреча', 'Заседание
 const _eventsPagination = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false, total: 0 };
 const EVENTS_PAGE_SIZE = 50;
 
+const _eventsCache = {
+    active: { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 },
+    completed: { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 },
+};
+const EVENTS_CACHE_TTL = 5 * 60 * 1000;
+
+function _eventsGetCache() {
+    return _eventsCompleted ? _eventsCache.completed : _eventsCache.active;
+}
+
+function _eventsIsCacheValid() {
+    const c = _eventsGetCache();
+    return c.events.length > 0 && (Date.now() - c.ts) < EVENTS_CACHE_TTL;
+}
+
+function _eventsWriteCache(data, append = false) {
+    const c = _eventsGetCache();
+    if (append) c.events.push(...(data.events || []));
+    else c.events = data.events || [];
+    c.cursorDate = data.next_cursor_date || null;
+    c.cursorTime = data.next_cursor_time || null;
+    c.cursorId = data.next_cursor_id || null;
+    c.hasMore = !!data.has_more;
+    c.ts = Date.now();
+}
+
+function _eventsInvalidateCache() {
+    const key = _eventsCompleted ? 'completed' : 'active';
+    _eventsCache[key] = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 };
+}
+
 function initEventsPage(completed = false) {
     _eventsCompleted = completed;
     _eventsTypeFilter = null;
@@ -15,35 +46,38 @@ function initEventsPage(completed = false) {
     if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
 
     _eventsPopulateFilters();
-    _eventsResetAndLoad();
+    if (_eventsIsCacheValid()) {
+        eventsRenderBoard();
+        eventsUpdateStats();
+        return;
+    }
+    _eventsHardReset();
 }
 
 function _eventsResetAndLoad() {
+    _eventsHardReset();
+}
+
+function _eventsHardReset() {
+    _eventsInvalidateCache();
     _eventsPagination.events = [];
     _eventsPagination.cursorDate = null;
     _eventsPagination.cursorTime = null;
     _eventsPagination.hasMore = true;
     _eventsPagination.loading = false;
-    // Сброс stats мгновенно
-    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
-    set('stat-evt-total'); set('stat-evt-today'); set('stat-evt-soon'); set('stat-evt-missed');
 
     const board = document.getElementById('events-board');
     if (!board) return;
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    // Find actual scrollable parent
     const scrollEl = _findScrollParent(board);
     if (scrollEl) {
         if (scrollEl._eventsScrollHandler) scrollEl.removeEventListener('scroll', scrollEl._eventsScrollHandler);
         scrollEl._eventsScrollHandler = () => {
-            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) {
-                _eventsLoadMore();
-            }
+            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) _eventsLoadMore();
         };
         scrollEl.addEventListener('scroll', scrollEl._eventsScrollHandler);
     }
-
     _eventsLoadMore();
 }
 
@@ -104,6 +138,8 @@ async function _eventsLoadMore() {
         p.cursorTime = data.next_cursor_time || null;
         p.cursorId = data.next_cursor_id || null;
         p.hasMore = !!data.has_more;
+
+        _eventsWriteCache(data, true);
 
         eventsRenderBoard();
         eventsUpdateStats();
@@ -221,7 +257,8 @@ function eventsRenderBoard() {
     const locVal = document.getElementById('f-events-loc')?.value || '';
     const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
 
-    let events = [..._eventsPagination.events];
+    const cache = _eventsGetCache();
+    let events = [...cache.events];
 
     // Quick filter (today/soon/missed)
     if (_eventsQuickFilter) {
