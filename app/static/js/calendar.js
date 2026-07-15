@@ -361,7 +361,8 @@ function calMobSelectRoom(id) {
         calUpdateNowLine();
         _calInitMobileSwipe();
         const wrap = document.getElementById('cal-mob-scroll');
-        if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+        const scrollHour = new Date().getHours();
+        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
     }
 }
 
@@ -476,7 +477,8 @@ function renderCalendar(full) {
             calUpdateNowLine();
             _calInitMobileSwipe();
             const wrap = document.getElementById('cal-mob-scroll');
-            if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+            const scrollHour = new Date().getHours();
+        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
         } else {
             document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
             document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
@@ -484,7 +486,8 @@ function renderCalendar(full) {
             _calInitHoverFix();
             _calScheduleShadowUpdate();
             const wrap = document.getElementById('cal-wrap');
-            if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+            const scrollHour = new Date().getHours();
+        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
         }
 
         if (!_calShadowRO) {
@@ -506,7 +509,8 @@ function renderCalendar(full) {
                 calUpdateNowLine();
                 _calInitMobileSwipe();
                 const wrap = document.getElementById('cal-mob-scroll');
-                if (wrap) wrap.scrollTop = (8 - CAL_H_START) * CAL_HOUR_H;
+                const scrollHour = new Date().getHours();
+        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
             }
         } else {
             if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
