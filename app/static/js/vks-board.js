@@ -17,7 +17,7 @@ function renderVksBoard(boardId, filter) {
         cursorDate: null,
         cursorTime: null,
         cursorId: null,
-        hasMore: true,
+        hasMore: !cached || cached.length === 0,
         loading: false,
     };
 
@@ -46,15 +46,20 @@ function renderVksBoard(boardId, filter) {
 }
 
 function _vksCacheGet(key) {
+    const TTL = 5 * 60 * 1000;
     try {
         const raw = localStorage.getItem('vks_cache_' + key);
-        return raw ? JSON.parse(raw) : null;
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed; // обратная совместимость
+        if (Date.now() - parsed.ts > TTL) return null;
+        return parsed.events;
     } catch (e) { return null; }
 }
 
 function _vksCacheSet(key, events) {
     try {
-        localStorage.setItem('vks_cache_' + key, JSON.stringify(events));
+        localStorage.setItem('vks_cache_' + key, JSON.stringify({ events, ts: Date.now() }));
     } catch (e) {}
 }
 
