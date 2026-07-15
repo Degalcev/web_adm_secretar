@@ -85,7 +85,13 @@ function _calFmtEnd(e) {
 }
 
 function _calGetEventsForDate(ds) {
-    return (store.allEvents || []).filter(e => e.date === ds);
+    // Expand series for the visible week range
+    const weekEnd = new Date(calWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const dateFrom = localDateStr(calWeekStart);
+    const dateTo = localDateStr(weekEnd);
+    const expanded = expandSeries(store.allEvents || [], dateFrom, dateTo);
+    return expanded.filter(e => e.date === ds);
 }
 
 function _calFindOverlapGroups(events) {
@@ -142,7 +148,8 @@ function expandSeries(events, dateFrom, dateTo) {
         const interval = series.interval_val || 1;
         const byDay = series.by_day || [];
 
-        const dayMap = { 'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+        const dayMap = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0,
+                         'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
 
         let current = new Date(baseDate);
         while (current <= until && current <= new Date(dateTo)) {

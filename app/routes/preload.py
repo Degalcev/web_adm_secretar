@@ -1,7 +1,7 @@
 from aiohttp import web
 from loguru import logger
 
-from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids, get_user_by_id
+from database.requests import get_events, get_organizers, get_locations, get_documents_by_event_ids, get_user_by_id, get_event_series
 
 
 async def preload_data(request: web.Request) -> web.Response:
@@ -23,6 +23,17 @@ async def preload_data(request: web.Request) -> web.Response:
                 parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
                 lock_users[uid] = ' '.join(p for p in parts if p).strip() or u.name or str(u.max_id)
 
+        # Load series for events that have series_id
+        series_ids = set(e.series_id for e in events if e.series_id)
+        series_map = {}
+        for sid in series_ids:
+            s = await get_event_series(sid)
+            if s:
+                series_map[sid] = {
+                    'freq': s.freq, 'interval_val': s.interval_val,
+                    'by_day': s.by_day or [], 'until': s.until.isoformat() if s.until else None,
+                }
+
         return web.json_response({
             'events': [
                 {
@@ -36,6 +47,7 @@ async def preload_data(request: web.Request) -> web.Response:
                     'completed': e.completed, 'notification': e.notification,
                     'documents': docs_map.get(e.id, []),
                     'series_id': e.series_id,
+                    'series': series_map.get(e.series_id),
                     'locked_by': lock_users.get(e.locked_by),
                     'locked_by_id': e.locked_by,
                     'locked_at': e.locked_at.isoformat() if e.locked_at else None,

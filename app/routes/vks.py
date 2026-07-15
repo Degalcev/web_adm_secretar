@@ -51,6 +51,17 @@ async def get_events_handler(request: web.Request) -> web.Response:
         event_ids = [e.id for e in events]
         docs_map = await get_documents_by_event_ids(event_ids) if event_ids else {}
 
+        # Load series for events that have series_id
+        series_ids = set(e.series_id for e in events if e.series_id)
+        series_map = {}
+        for sid in series_ids:
+            s = await get_event_series(sid)
+            if s:
+                series_map[sid] = {
+                    'freq': s.freq, 'interval_val': s.interval_val,
+                    'by_day': s.by_day or [], 'until': s.until.isoformat() if s.until else None,
+                }
+
         # Resolve user names (audit + lock) in batch
         audit_user_ids = set()
         for e in events:
@@ -95,6 +106,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'documents': docs_map.get(e.id, []),
                 'participants': participants,
                 'series_id': e.series_id,
+                'series': series_map.get(e.series_id),
                 'last_changed_by': changed_by_name,
                 'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
                 'last_change_action': e.last_change_action or '',

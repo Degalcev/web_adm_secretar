@@ -920,3 +920,13 @@
     padding: 10px 18px 14px;
     border-top: 1px solid var(--border);
 }
+
+.btn-danger-text {
+    color: var(--danger) !important;
+    background: none !important;
+    border: none !important;
+}
+
+.btn-danger-text:hover {
+    opacity: 0.7;
+}

@@ -667,6 +667,10 @@ function addParticipant(id, name) {
 function openRepeatModal() {
     const overlay = document.getElementById('repeat-modal-overlay');
     if (!overlay) return;
+    // Показать/скрыть кнопку удаления
+    const deleteBtn = document.getElementById('repeat-delete-btn');
+    const hasSeries = editingEventId && store.allEvents.find(x => x.id === editingEventId)?.series_id;
+    if (deleteBtn) deleteBtn.style.display = hasSeries ? '' : 'none';
     // Восстановить текущее состояние
     const active = document.getElementById('event-repeat-active').value === 'true';
     if (active) {
@@ -695,6 +699,23 @@ function openRepeatModal() {
 function closeRepeatModal() {
     const overlay = document.getElementById('repeat-modal-overlay');
     if (overlay) overlay.style.display = 'none';
+}
+
+function deleteRepeatModal() {
+    if (!editingEventId) return;
+    const csrfToken = getCsrfToken();
+    fetch(`${BASE_URL}/admin/api/events/${editingEventId}/series`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': csrfToken }
+    }).then(r => r.json()).then(data => {
+        if (data.ok) {
+            _setRepeatUI(null);
+            closeRepeatModal();
+            showToast('Повтор удалён', 'success');
+        } else {
+            showToast(data.error || 'Ошибка', 'error');
+        }
+    }).catch(() => showToast('Ошибка сети', 'error'));
 }
 
 function saveRepeatModal() {
