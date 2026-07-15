@@ -45,6 +45,9 @@ function matchDateFilter(eventDate, filter) {
 }
 
 async function loadVksActive() {
+    // Сбросить stats мгновенно — показать прочерки до загрузки
+    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
+    set('stat-vks-total'); set('stat-vks-today'); set('stat-vks-soon'); set('stat-vks-missed');
     populateDateSelects('f-vks-active');
     populateVksFilters();
     updateVksStats();
@@ -184,6 +187,8 @@ function filterVksByQuick(type) {
 }
 
 async function loadVksCompleted() {
+    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
+    set('stat-vks-total'); set('stat-vks-today'); set('stat-vks-soon'); set('stat-vks-missed');
     populateDateSelects('f-vks-completed');
     populateVksFilters();
     updateVksStats();

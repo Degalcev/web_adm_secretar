@@ -85,17 +85,34 @@ function _calGetRangeKey(from, to) { return `${from}_${to}`; }
 async function _calLoadRange(from, to) {
     const key = _calGetRangeKey(from, to);
     if (_calEventsCache[key]) return _calEventsCache[key];
-    if (_calLoadingRange) return store.allEvents || [];
+    if (_calLoadingRange) return [];
     _calLoadingRange = true;
     try {
-        const resp = await fetch(`/admin/api/events?limit=10000&from=${from}&to=${to}`, { credentials: 'same-origin' });
-        if (!resp.ok) return store.allEvents || [];
-        const data = await resp.json();
-        const events = Array.isArray(data) ? data : (data.events || []);
-        _calEventsCache[key] = events;
-        return events;
+        // Загружаем все события в диапазоне через cursor-based пагинацию
+        const allEvents = [];
+        let cursorDate = null, cursorTime = null, cursorId = null;
+        let hasMore = true;
+        while (hasMore) {
+            const params = new URLSearchParams({ limit: '200', from, to });
+            if (cursorDate) params.set('cursor_date', cursorDate);
+            if (cursorTime) params.set('cursor_time', cursorTime);
+            if (cursorId) params.set('cursor_id', cursorId);
+            const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+            if (!resp.ok) break;
+            const data = await resp.json();
+            const events = Array.isArray(data) ? data : (data.events || []);
+            allEvents.push(...events);
+            hasMore = !!data.has_more;
+            cursorDate = data.next_cursor_date || null;
+            cursorTime = data.next_cursor_time || null;
+            cursorId = data.next_cursor_id || null;
+            if (!hasMore || allEvents.length >= 2000) break; // safety limit
+        }
+        _calEventsCache[key] = allEvents;
+        return allEvents;
     } catch (e) {
-        return store.allEvents || [];
+        console.error('_calLoadRange error:', e);
+        return [];
     } finally {
         _calLoadingRange = false;
     }
@@ -106,8 +123,7 @@ function _calGetEventsForDate(ds) {
     weekEnd.setDate(weekEnd.getDate() + 6);
     const dateFrom = localDateStr(calWeekStart);
     const dateTo = localDateStr(weekEnd);
-    // Use cached range events, fallback to store.allEvents
-    const rangeEvents = _calEventsCache[_calGetRangeKey(dateFrom, dateTo)] || store.allEvents || [];
+    const rangeEvents = _calEventsCache[_calGetRangeKey(dateFrom, dateTo)] || [];
     const expanded = expandSeries(rangeEvents, dateFrom, dateTo);
     return expanded.filter(e => e.date === ds);
 }
