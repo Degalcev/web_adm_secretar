@@ -150,6 +150,14 @@ async def get_event_handler(request: web.Request) -> web.Response:
         docs = await get_documents_by_event_id(event_id)
         participants = await get_event_participants(event_id)
 
+        # Resolve lock user name
+        locked_by_name = None
+        if e.locked_by:
+            lock_user = await get_user_by_id(e.locked_by)
+            if lock_user:
+                name_parts = [lock_user.last_name or '', lock_user.first_name or '', lock_user.patronymic or '']
+                locked_by_name = ' '.join(p for p in name_parts if p).strip() or lock_user.name or lock_user.username or str(lock_user.max_id)
+
         series = None
         if e.series_id:
             s = await get_event_series(e.series_id)
@@ -179,6 +187,8 @@ async def get_event_handler(request: web.Request) -> web.Response:
                 'participants': participants,
                 'series_id': e.series_id,
                 'series': series,
+                'locked_by': locked_by_name,
+                'locked_by_id': e.locked_by,
             }
         })
     except Exception as e:
