@@ -103,11 +103,17 @@ async function _sseUpdateAndRender(boardId, filter) {
     _sseRerenderFromCache(boardId, filter);
 }
 
+let _sseLastHash = {};
+
 function _sseRerenderFromCache(boardId, filter) {
-    // Рендер из уже загруженных данных — без fetch, мгновенно
     const board = document.getElementById(boardId);
     const p = _vksPagination[boardId];
     if (!board || !p) return;
+
+    // Проверить изменились ли данные — пропустить рендер если нет
+    const hash = p.events.map(e => e.id + (e.completed ? '1' : '0')).join(',');
+    if (_sseLastHash[boardId] === hash) return;
+    _sseLastHash[boardId] = hash;
 
     const events = p.events;
     const now = new Date();
