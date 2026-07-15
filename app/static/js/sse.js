@@ -95,11 +95,8 @@ async function _sseUpdateAndRender(boardId, filter) {
 
         if (statsResp.ok) {
             const stats = await statsResp.json();
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-            set('stat-vks-total', stats.total || 0);
-            set('stat-vks-today', stats.today || 0);
-            set('stat-vks-soon', stats.soon || 0);
-            set('stat-vks-missed', stats.missed || 0);
+            _vksRenderStats(stats);
+            _vksCacheSet(`stats_${filter}`, stats);
         }
     } catch (e) {}
 

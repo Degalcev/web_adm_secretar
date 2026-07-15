@@ -3,6 +3,14 @@
 let editingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
+
+function _vksRenderStats(stats) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('stat-vks-total', stats.total || 0);
+    set('stat-vks-today', stats.today || 0);
+    set('stat-vks-soon', stats.soon || 0);
+    set('stat-vks-missed', stats.missed || 0);
+}
 let _pendingVksFilter = null;
 
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -45,12 +53,11 @@ function matchDateFilter(eventDate, filter) {
 }
 
 async function loadVksActive() {
-    // Сбросить stats мгновенно — показать прочерки до загрузки
-    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
-    set('stat-vks-total'); set('stat-vks-today'); set('stat-vks-soon'); set('stat-vks-missed');
     populateDateSelects('f-vks-active');
     populateVksFilters();
-    updateVksStats();
+    // Stats из кэша мгновенно
+    const cached = _vksCacheGet('stats_active');
+    if (cached) _vksRenderStats(cached);
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
 
@@ -155,11 +162,8 @@ async function updateVksStats() {
         const resp = await fetch(`/admin/api/events/stats?status=${status}&type=ВКС`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const stats = await resp.json();
-        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        set('stat-vks-total', stats.total || 0);
-        set('stat-vks-today', stats.today || 0);
-        set('stat-vks-soon', stats.soon || 0);
-        set('stat-vks-missed', stats.missed || 0);
+        _vksRenderStats(stats);
+        _vksCacheSet(`stats_${status}`, stats);
     } catch (e) {}
 }
 
@@ -187,11 +191,10 @@ function filterVksByQuick(type) {
 }
 
 async function loadVksCompleted() {
-    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
-    set('stat-vks-total'); set('stat-vks-today'); set('stat-vks-soon'); set('stat-vks-missed');
     populateDateSelects('f-vks-completed');
     populateVksFilters();
-    updateVksStats();
+    const cached = _vksCacheGet('stats_completed');
+    if (cached) _vksRenderStats(cached);
     const board = document.getElementById('vks-board-completed');
     if (board) renderVksBoard('vks-board-completed', 'completed');
 }
