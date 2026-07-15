@@ -96,6 +96,7 @@ async def get_user_by_id(user_id: str):
 async def get_events(
     completed: bool = None,
     event_type: str = None,
+    exclude_type: str = None,
     participant_id: str = None,
     location_id: str = None,
     organizer_id: str = None,
@@ -125,6 +126,8 @@ async def get_events(
             query = query.where(Event.completed == completed)
         if event_type:
             query = query.where(Event.type == event_type)
+        if exclude_type:
+            query = query.where(Event.type != exclude_type)
         if location_id:
             query = query.where(Event.location_id == location_id)
         if organizer_id:

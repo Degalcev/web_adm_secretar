@@ -46,6 +46,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
         events, has_more = await get_events(
             completed=completed,
             event_type=request.query.get('type', '').strip() or None,
+            exclude_type=request.query.get('exclude_type', '').strip() or None,
             participant_id=request.query.get('participant_id', '').strip() or None,
             location_id=request.query.get('location_id', '').strip() or None,
             organizer_id=request.query.get('organizer_id', '').strip() or None,
