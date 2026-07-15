@@ -35,12 +35,12 @@ app/
 │   ├── organizers.py    # CRUD организаторов
 │   ├── locations.py     # CRUD локаций
 │   ├── logs.py          # Просмотр логов (panel + bot)
-│   ├── vks.py           # CRUD событий ВКС + batch документы + audit + lock/unlock + history + series
+│   ├── vks.py           # CRUD событий + batch документы + audit + lock/unlock + history + series + /single + /stats + /dashboard + /dashboard/chart
 │   ├── documents.py     # CRUD документов (download/upload/delete)
 │   ├── participants.py  # CRUD участников мероприятий + поиск пользователей
 │   ├── print_events.py  # Печать мероприятий (GET /admin/api/events/print)
-│   ├── preload.py       # Preload API (events + organizers + locations + lock data одним запросом)
-│   └── sse.py           # SSE endpoint (/admin/api/events/stream, без auth)
+│   ├── preload.py       # Preload API (organizers + locations одним запросом)
+│   └── sse.py           # SSE endpoint (/admin/api/events/stream)
 └── static/
     ├── index.html       # SPA entry point (?v=__VERSION__)
     ├── favicon.svg      # Иконка
@@ -66,19 +66,19 @@ app/
     │   ├── event-modal.css     # Compact Flat стили модалок + pill-btn hover/done
     │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
-        ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), MONTHS_*
-        ├── auth.js           # Логин/выход/checkAuth()
+        ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), getOrganizerName(), getLocationName(), getDocCardMeta(), _findScrollParent()
+        ├── auth.js           # Логин/выход/checkAuth() + очистка кэшей при logout
         ├── router.js         # SPA роутинг (handleAuthState)
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
-        ├── preloader.js      # preloadAllData()
-        ├── sse.js            # SSE обработчики (4 канала: events/users/locations/organizers)
-        ├── dashboard.js      # Дашборд (renderDashLocations — НЕ collides с locations.js)
+        ├── preloader.js      # preloadAllData() — ТОЛЬКО locations + organizers
+        ├── sse.js            # SSE обработчики + debounce + fetch events+stats параллельно
+        ├── dashboard.js      # Дашборд —单一 fetch /api/dashboard, _dashCache
         ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line, expandSeries)
-        ├── events.js         # Мероприятия: VKS-style карточки, модалка, фильтры, stats, quick-filter
+        ├── events.js         # Мероприятия: VKS-style карточки, _eventsCache, stats, server filters
         ├── print.js          # Печать мероприятий (openPrintModal, generatePrintHTML)
-        ├── vks-filters.js    # VKS: фильтры, загрузка данных, статистика, ensureOrgsAndLocs()
-        ├── vks-board.js      # VKS: рендеринг карточек (только type=ВКС), иконки, документы
-        ├── event-modal.js      # VKS: модалка (открытие/сохранение/документы/history/lock)
+        ├── vks-filters.js    # VKS: фильтры, stats из кэша, _vksRenderStats()
+        ├── vks-board.js      # VKS: рендеринг карточек, localStorage кэш с TTL, _vksCacheGet/Set
+        ├── event-modal.js    # Модалка (загрузка через /api/events/{id}/single, _currentEvent)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
         ├── organizers.js     # CRUD организаторов (через createCrudModule)
@@ -86,7 +86,7 @@ app/
         ├── logs.js           # Просмотр логов
         ├── settings.js       # Настройки (THEMES_META + renderThemeGrid)
         ├── profile.js        # Профиль пользователя
-        ├── updater.js        # Обновление версии
+        ├── updater.js        # Обновление версии (auto-reload при смене version.json)
         └── app.js            # Инициализация, загрузка partials (5 модалок), кнопка «Наверх»
 
 database/
@@ -177,17 +177,34 @@ deploy/
 - **Filter-bar**: Тип (select), Дата (день/месяц/год), Организатор, Локация, Описание
 - **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter и active state
 - **SSE**: обновления на `events-active`/`events-completed` страницах
-- **API**: `GET /admin/api/events?limit=10000` (preload) или cursor-based pagination
+- **API**: `GET /admin/api/events?status=active&exclude_type=ВКС&limit=50` — серверная фильтрация + пагинация
+- **Кэш**: in-memory `_eventsCache` с TTL 5 минут, инвалидация через SSE
 
-### Модалка Мероприятий (events)
-- Partial: `app/static/partials/event-modal.html` (VKS-style)
-- IDs с префиксом `evt-` (не конфликтует с VKS `event-`): `evt-modal-overlay`, `evt-type`, `evt-date`, и т.д.
-- **Организатор toggle**: radio org/user → `_eventsPopulateOrganizer()` переключает между organizations и users
-- **Повтор**: pill-кнопка → частота (weekly/biweekly/monthly), до даты, дни недели
-- **Валидация**: дата, время, локация, организатор — обязательные поля
-- **CSRF**: заголовок `X-CSRF-Token` + поле `csrf_token` в FormData
-- **Dropdowns**: прямой fetch `/api/locations` + `/api/organizers` + `/api/users` с `credentials: 'same-origin'`
-- **Загрузка**: `await ensureOrgsAndLocs()` + fallback fetch + `populateDropdowns()` ДО `loadEventData()`
+### Модалка VKS/Мероприятий — загрузка данных
+- `openEditEventModal(id)` загружает событие через `GET /api/events/{id}/single` (не из `store.allEvents`)
+- `loadEventSelects()` загружает organizers/locations из `store` (preloader), с fallback на прямой fetch
+- `_currentEvent` — текущее загруженное событие (используется в save, lock, series)
+
+### Страница VKS (ВКС)
+- **SPA route**: `/conferences/` (активные), `/conferences/completed/` (завершённые)
+- **Sidebar**: группа «ВКС» → Текущие / Завершённые
+- **VKS-style карточки**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро)
+- **Filter-bar**: Дата (день/месяц/год), Организатор, Локация, Описание
+- **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter
+- **API**: `GET /admin/api/events?status=active&type=ВКС&limit=50` — серверная фильтрация + пагинация
+- **Кэш**: `localStorage` с TTL 5 минут. Ключи: `vks_cache_active`, `vks_cache_completed`
+- **Переключение страниц**: рендер из кэша мгновенно, без fetch
+
+### Архитектура загрузки данных
+```
+Страница          | Первый вход      | SSE update        | Повторный вход (< 5 мин)
+──────────────────┼──────────────────┼───────────────────┼──────────────────────────
+VKS-доска         | 1 fetch          | 1 fetch + stats   | localStorage кэш
+Мероприятия       | 1 fetch          | invalidate+fetch  | in-memory кэш
+Dashboard         | 1 fetch          | 1 fetch单一 endpoint| in-memory кэш
+Календарь         | 1 fetch          | invalidate+fetch  | кэш
+Справочники       | кэш              | fetch             | кэш
+```
 
 ### Конфликт имён VKS vs Мероприятия
 - VKS модалка: `openAddEventModal`, `openEditEventModal`, `closeEventModal`, `saveEvent`
@@ -195,16 +212,31 @@ deploy/
 - **Никогда не переименовывать** функции VKS — они вызываются из calendar.js, dashboard.js, vks-board.js
 - script load order: event-modal.js (761) → events.js (770) → print.js (771)
 
-### API events — формат ответа
-- `GET /admin/api/events` возвращает `{events: [...], total, has_more, next_cursor_date, next_cursor_time}`
-- **ВСЕ** fetch-и должны извлекать `data.events || []` (не присваивать ответ напрямую)
-- `?limit=10000` — для полной загрузки (dashboard, SSE, VKS, calendar)
-- `?limit=20&cursor_date=&cursor_time=` — для пагинации (страница Мероприятий)
-- `?type=ВКС&status=active&from=&to=` — фильтры
+### API events — серверная пагинация + кэш
+- `GET /admin/api/events` возвращает `{events: [...], has_more, next_cursor_date, next_cursor_time, next_cursor_id}`
+- **Cursor-based пагинация**: `?cursor_date=&cursor_time=&cursor_id=` для детерминированного порядка
+- **Серверные фильтры**: `?status=active/completed`, `?type=ВКС`, `?exclude_type=ВКС`, `?organizer_id=`, `?location_id=`, `?search=`, `?from=&to=`
+- **Одно событие**: `GET /admin/api/events/{id}/single` — для SSE и модалки
+- **Stats**: `GET /admin/api/events/stats?status=active&type=ВКС` — COUNT запросы (O(1))
+- **Dashboard**: `GET /admin/api/dashboard` — агрегаты + today/soon + locations + chart
+- **Dashboard chart**: `GET /admin/api/dashboard/chart?period=month&year=&month=` — для month/all
+- Backend лимит: `min(limit, 200)` — макс 200 событий за запрос
+
+### Кэширование (Stale-While-Revalidate)
+- **VKS доска**: `localStorage` с TTL 5 минут. Ключи: `vks_cache_active`, `vks_cache_completed`, `vks_cache_stats_active`, `vks_cache_stats_completed`
+- **Мероприятия**: in-memory `_eventsCache` с TTL 5 минут. Ключи: `active`, `completed`
+- **Dashboard**: in-memory `_dashCache`. Единый fetch `/api/dashboard`
+- **Справочники**: `localStorage['dash_cache']` — locations + organizers
+- **Logout**: очистка всех кэшей (localStorage + in-memory)
+- **SSE**: fetch events+stats параллельно (`Promise.all`), обновляет кэши
 
 ### SSE — обновление страниц
 - `_refreshEvents()` обрабатывает: `vks-active`, `vks-completed`, `events-active`, `events-completed`, `dashboard`, `calendar`
-- `ensureOrgsAndLocs()` в `vks-filters.js` загружает organizers/locations с `credentials: 'same-origin'`
+- **VKS**: `_sseUpdateAndRender()` — fetch events+stats параллельно → update cache → `_sseRerenderFromCache()` с hash check (пропуск если данные не изменились)
+- **Events**: `_eventsInvalidateCache()` + `_eventsHardReset()` — сброс + полная перезагрузка
+- **Dashboard**: `refreshDashboard()` —单一 fetch `/api/dashboard`
+- **Calendar**: `_calEventsCache = {}` + `renderCalendar(false)`
+- **Lock/unlock**: SSE пропускается при открытой модалке (`event-modal.show`), refresh при закрытии через `setTimeout(_refreshEvents, 500)`
 
 ### Печать мероприятий
 - `GET /admin/api/events/print?type=&from=&to=` — JSON с событиями + участниками
@@ -263,12 +295,15 @@ deploy/
 - **Важно**: `store` — глобальная переменная, доступная как `store.xxx` (не `window.store`)
 
 ### Утилиты (utils.js)
-- `store` — централизованное хранилище данных
+- `store` — централизованное хранилище данных (allLocations, allOrganizers, allUsers)
 - `getCsrfToken()` — CSRF из cookie
 - `localDateStr(d)` — формат `YYYY-MM-DD`
 - `MONTHS_FULL/SHORT/GENITIVE` — массивы месяцев
 - `ConfirmManager` — управление confirm-overlay
 - `createCrudModule(config)` — CRUD-абстракция
+- `getOrganizerName(id)` / `getLocationName(id)` — поиск по store
+- `getDocCardMeta(ext)` — `{cls, label}` для иконок документов
+- `_findScrollParent(el)` — поиск scroll-контейнера через CSS overflow
 
 ### Mobile оптимизация
 - Гамбургер-меню для навигации (<768px)
@@ -284,10 +319,15 @@ deploy/
 - Текущий порядок: base → layout → components → tables → modals → logs → vks → **events** → settings → filters → dashboard → responsive → **event-modal** → **calendar**
 
 ### Preloader
-- `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает данные из `localStorage.dash_cache`
-- `preloadAllData()` — загрузка с сервера (`/admin/api/preload`), кэширует в localStorage
+- `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает справочники из `localStorage.dash_cache`
+- `preloadAllData()` — загружает ТОЛЬКО locations + organizers (`/admin/api/preload`), кэширует в localStorage
 - `_preloaded` флаг предотвращает повторную загрузку. Сбрасывается при logout
-- `initCalendar()` имеет fallback: если после `preloadAllData()` store пуст → вызывает `loadAllEvents()`
+- **`store.allEvents` УБРАН** — каждая страница сама запрашивает данные через серверную пагинацию
+
+### Store — централизованное хранилище
+- `store` — глобальная переменная = `{ allLocations, allOrganizers, allUsers }` в `utils.js`
+- **`store.allEvents` удалён** — данные загружаются постранично через `/api/events`
+- CRUD модули используют `storeKey` для автоматической записи в store
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
@@ -297,6 +337,8 @@ deploy/
 - `event.stopPropagation()` — кнопки delete НЕ должны открывать edit modal
 - `overflow: clip` на таблицах — красивые углы без создания nested scroll context
 - Hidden form inputs при замене UI (checkbox→button): `<input>`必须 сохраняться для FormData
+- `getDocCardMeta(ext)` — возвращает `{cls, label}` для иконок документов (в utils.js)
+- `getOrganizerName(id)`, `getLocationName(id)` — в utils.js (НЕ в vks-board.js)
 
 ### Версионирование
 - `index.html` содержит `?v=__VERSION__` (плейсхолдер)
