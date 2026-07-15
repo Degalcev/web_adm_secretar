@@ -25,11 +25,7 @@ function handleSSEEvent(data) {
     if (!table) return;
 
     if (table === 'events') {
-        if (data.task_id) {
-            _sseProcessEvent(data.task_id, data.action);
-        } else {
-            debounceRefreshEvents();
-        }
+        debounceRefreshEvents();
     } else if (table === 'locations') {
         _refreshLocations();
     } else if (table === 'organizers') {
@@ -39,164 +35,30 @@ function handleSSEEvent(data) {
     }
 }
 
-async function _sseProcessEvent(eventId, action) {
-    const page = currentPage || '';
-
-    // Календарь — просто сбросить кэш и перерисовать (без fetch)
-    if (page === 'calendar') {
-        _calEventsCache = {};
-        _calLoadingRange = false;
-        renderCalendar(false);
-        return;
-    }
-
-    // DELETE — убрать из данных и перерисовать
-    if (action === 'DELETE') {
-        if (page === 'vks-active' || page === 'vks-completed') {
-            const boardId = page === 'vks-active' ? 'vks-board-active' : 'vks-board-completed';
-            const p = _vksPagination[boardId];
-            if (p) p.events = p.events.filter(e => e.id !== eventId);
-            _sseRerenderBoard();
-        } else if (page === 'events-active' || page === 'events-completed') {
-            _eventsPagination.events = _eventsPagination.events.filter(e => e.id !== eventId);
-            eventsRenderBoard();
-        }
-        return;
-    }
-
-    // INSERT/UPDATE — загрузить событие и обновить данные в пагинации
-    try {
-        const resp = await fetch(`/admin/api/events/${eventId}/single`, { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        const result = await resp.json();
-        if (!result.ok || !result.event) return;
-        const e = result.event;
-
-        if (page === 'vks-active' || page === 'vks-completed') {
-            const boardId = page === 'vks-active' ? 'vks-board-active' : 'vks-board-completed';
-            const p = _vksPagination[boardId];
-            if (!p) return;
-            const idx = p.events.findIndex(ev => ev.id === eventId);
-            if (idx >= 0) {
-                p.events[idx] = e;
-            } else if (action === 'INSERT') {
-                p.events.push(e);
-            }
-            p.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
-            _sseRerenderBoard();
-        } else if (page === 'events-active' || page === 'events-completed') {
-            const idx = _eventsPagination.events.findIndex(ev => ev.id === eventId);
-            if (idx >= 0) {
-                _eventsPagination.events[idx] = e;
-            } else if (action === 'INSERT') {
-                _eventsPagination.events.push(e);
-            }
-            _eventsPagination.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
-            eventsRenderBoard();
-            eventsUpdateStats();
-        } else if (page === 'dashboard') {
-            renderDashboard();
-        }
-    } catch (err) {
-        console.error('SSE process error:', err);
-    }
-}
-
-function _sseRerenderBoard() {
-    const page = currentPage || '';
-    if (page === 'vks-active') {
-        const board = document.getElementById('vks-board-active');
-        const p = _vksPagination['vks-board-active'];
-        if (board && p) _softRenderBoard(board, p.events, 'active');
-        updateVksStats();
-    } else if (page === 'vks-completed') {
-        const board = document.getElementById('vks-board-completed');
-        const p = _vksPagination['vks-board-completed'];
-        if (board && p) _softRenderBoard(board, p.events, 'completed');
-        updateVksStats();
-    }
-}
-
-function _softRenderBoard(board, events, filter) {
-    const now = new Date();
-    const today = localDateStr(now);
-    const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-    const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
-
-    // Фильтрация по completed для страниц active/completed
-    let filtered = events;
-    if (filter === 'active') {
-        filtered = events.filter(e => !e.completed);
-    } else if (filter === 'completed') {
-        filtered = events.filter(e => e.completed);
-    }
-
-    const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
-    filtered.forEach(e => {
-        if (!e.date || e.date < today) missed.push(e);
-        else if (e.date === today) todayEvents.push(e);
-        else if (e.date === tomorrow) tomorrowEvents.push(e);
-        else if (e.date === dayAfter) dayAfterEvents.push(e);
-        else soon.push(e);
-    });
-
-    let html = '';
-    if (!events.length) {
-        html = '<div class="empty-state">Нет мероприятий</div>';
-    } else {
-        if (missed.length)       html += renderVksBlock('Пропущенные', missed, 'missed');
-        if (todayEvents.length)  html += renderVksBlock('Сегодня', todayEvents, 'today');
-        if (tomorrowEvents.length) html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
-        if (dayAfterEvents.length) html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
-        if (soon.length)         html += renderVksBlock('Скоро', soon, 'soon');
-    }
-
-    // Сохраняем sentinel, заменяем содержимое
-    let sentinel = board.querySelector('.scroll-sentinel');
-    if (!sentinel) {
-        sentinel = document.createElement('div');
-        sentinel.className = 'scroll-sentinel';
-        sentinel.style.height = '1px';
-    }
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    while (board.firstChild) board.removeChild(board.firstChild);
-    while (temp.firstChild) board.appendChild(temp.firstChild);
-    board.appendChild(sentinel);
-}
-
 function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
-    _sseDebounceTimer = setTimeout(_refreshEvents, 300);
+    _sseDebounceTimer = setTimeout(_refreshEvents, 200);
 }
 
 function _refreshEvents() {
-    // Пропускаем обновление если модалка открыта — lock/unlock триггерит SSE
-    const modal = document.getElementById('event-modal');
-    if (modal && modal.classList.contains('show')) return;
-
     const page = currentPage || '';
 
     if (page === 'vks-active') {
-        _sseSoftRefreshBoard('vks-board-active', 'active');
+        renderVksBoard('vks-board-active', 'active');
         updateVksStats();
     } else if (page === 'vks-completed') {
-        _sseSoftRefreshBoard('vks-board-completed', 'completed');
+        renderVksBoard('vks-board-completed', 'completed');
+        updateVksStats();
     } else if (page === 'events-active' || page === 'events-completed') {
         _eventsResetAndLoad();
+        eventsUpdateStats();
     } else if (page === 'dashboard') {
         renderDashboard();
     } else if (page === 'calendar') {
-        if (typeof _calEventsCache !== 'undefined') _calEventsCache = {};
+        _calEventsCache = {};
+        _calLoadingRange = false;
         renderCalendar(false);
     }
-}
-
-async function _sseSoftRefreshBoard(boardId, filter) {
-    // Перезагружаем данные текущего вида и перерисовываем доску
-    // Пагинация сбрасывается, но renderVksBoard это делает сам
-    const board = document.getElementById(boardId);
-    if (board) renderVksBoard(boardId, filter);
 }
 
 async function _refreshLocations() {
@@ -209,7 +71,6 @@ async function _refreshLocations() {
             _dashLocations = {};
             locs.forEach(l => { _dashLocations[l.id] = l.name; });
         }
-        // Обновить кэш справочников
         _saveRefCache();
 
         if ((currentPage || '') === 'locations') {
