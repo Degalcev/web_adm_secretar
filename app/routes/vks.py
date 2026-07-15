@@ -2,9 +2,12 @@ from aiohttp import web
 from loguru import logger
 from datetime import date, datetime, timedelta, time
 
+from sqlalchemy import select, func, extract
+
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
 from app.event_types import validate_event_type
+from database.models import async_session, Event
 from database.requests import (
     get_events, count_events, get_event_counts_by_date,
     get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids,
@@ -420,6 +423,47 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             for e in soon_events_raw
         ]
 
+        # Локации и графики
+        async with async_session() as session:
+            # Локации сегодня
+            loc_today_q = await session.execute(
+                select(Event.location_id, func.count(Event.id))
+                .where(Event.date == today, Event.completed == False)
+                .group_by(Event.location_id)
+            )
+            locations_today = {str(row[0]): row[1] for row in loc_today_q if row[0]}
+
+            # Локации все active
+            loc_total_q = await session.execute(
+                select(Event.location_id, func.count(Event.id))
+                .where(Event.completed == False)
+                .group_by(Event.location_id)
+            )
+            locations_total = {str(row[0]): row[1] for row in loc_total_q if row[0]}
+
+            # График — неделя
+            monday = today - timedelta(days=today.weekday())
+            sunday = monday + timedelta(days=6)
+            week_q = await session.execute(
+                select(Event.date, func.count(Event.id))
+                .where(Event.date >= monday, Event.date <= sunday)
+                .group_by(Event.date)
+            )
+            week_by_date = {row[0]: row[1] for row in week_q}
+            chart_week = [week_by_date.get(monday + timedelta(days=i), 0) for i in range(7)]
+
+            # График — год по месяцам
+            year_q = await session.execute(
+                select(
+                    extract('month', Event.date).label('month'),
+                    func.count(Event.id)
+                )
+                .where(extract('year', Event.date) == today.year)
+                .group_by(extract('month', Event.date))
+            )
+            year_by_month = {int(row[0]): row[1] for row in year_q}
+            chart_year = [year_by_month.get(m, 0) for m in range(1, 13)]
+
         return web.json_response({
             'total': counts['total'],
             'completed': await count_events(completed=True),
@@ -427,10 +471,47 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             'missed': counts['missed'],
             'today': today_events,
             'soon': soon_events,
+            'locations_today': locations_today,
+            'locations_total': locations_total,
+            'chart_week': chart_week,
+            'chart_year': chart_year,
         })
     except Exception as e:
         logger.error('Dashboard stats error: {}', repr(e))
         return web.json_response({'error': str(e)}, status=500)
+
+
+async def dashboard_chart(request: web.Request) -> web.Response:
+    period = request.query.get('period', 'month')
+    year = int(request.query.get('year', date.today().year))
+    month = int(request.query.get('month', date.today().month))
+    today = date.today()
+
+    async with async_session() as session:
+        if period == 'month':
+            import calendar as cal
+            q = await session.execute(
+                select(Event.date, func.count(Event.id))
+                .where(extract('year', Event.date) == year, extract('month', Event.date) == month)
+                .group_by(Event.date)
+            )
+            by_date = {row[0].day: row[1] for row in q}
+            days_in_month = cal.monthrange(year, month)[1]
+            counts = [by_date.get(d, 0) for d in range(1, days_in_month + 1)]
+            labels = [str(d) for d in range(1, days_in_month + 1)]
+        elif period == 'all':
+            q = await session.execute(
+                select(extract('year', Event.date).label('y'), func.count(Event.id))
+                .group_by(extract('year', Event.date))
+                .order_by(extract('year', Event.date))
+            )
+            rows = list(q)
+            labels = [str(int(r[0])) for r in rows]
+            counts = [r[1] for r in rows]
+        else:
+            return web.json_response({'labels': [], 'counts': []})
+
+    return web.json_response({'labels': labels, 'counts': counts})
 
 
 async def get_event_history_handler(request: web.Request) -> web.Response:
@@ -587,6 +668,7 @@ def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events/stats', get_events_stats)
     app.router.add_get('/admin/api/events/{id}/single', get_event_handler)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
+    app.router.add_get('/admin/api/dashboard/chart', dashboard_chart)
     app.router.add_post('/admin/api/events', create_event_handler)
     app.router.add_put('/admin/api/events/{id}', update_event_handler)
     app.router.add_delete('/admin/api/events/{id}', delete_event_handler)
