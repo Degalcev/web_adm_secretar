@@ -139,6 +139,53 @@ async def get_events_handler(request: web.Request) -> web.Response:
         return web.json_response({'events': [], 'has_more': False}, status=500)
 
 
+async def get_event_handler(request: web.Request) -> web.Response:
+    """Получить одно событие по ID."""
+    try:
+        event_id = request.match_info['id']
+        e = await get_event_by_id(event_id)
+        if not e:
+            return web.json_response({'ok': False, 'error': 'Not found'}, status=404)
+
+        docs = await get_documents_by_event_id(event_id)
+        participants = await get_event_participants(event_id)
+
+        series = None
+        if e.series_id:
+            s = await get_event_series(e.series_id)
+            if s:
+                series = {
+                    'freq': s.freq, 'interval_val': s.interval_val,
+                    'by_day': s.by_day or [],
+                    'until': s.until.isoformat() if s.until else None,
+                }
+
+        return web.json_response({
+            'ok': True,
+            'event': {
+                'id': e.id,
+                'type': e.type or 'ВКС',
+                'date': e.date.isoformat() if e.date else None,
+                'time': e.time.strftime('%H:%M') if e.time else None,
+                'duration': e.duration or 60,
+                'organizer_id': e.organizer_id,
+                'organizer_type': e.organizer_type or 'org',
+                'location_id': e.location_id,
+                'url': e.url or '',
+                'description': e.description or '',
+                'completed': e.completed,
+                'notification': e.notification,
+                'documents': docs,
+                'participants': participants,
+                'series_id': e.series_id,
+                'series': series,
+            }
+        })
+    except Exception as e:
+        logger.error('Ошибка получения события: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 async def _parse_event_from_multipart(request: web.Request) -> dict:
     reader = await request.multipart()
     fields = {}
@@ -528,6 +575,7 @@ async def get_events_stats(request: web.Request) -> web.Response:
 def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events', get_events_handler)
     app.router.add_get('/admin/api/events/stats', get_events_stats)
+    app.router.add_get('/admin/api/events/{id}/single', get_event_handler)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
     app.router.add_post('/admin/api/events', create_event_handler)
     app.router.add_put('/admin/api/events/{id}', update_event_handler)

@@ -3,6 +3,7 @@
 let isLockedByOther = false;
 let _modalMode = 'vks'; // 'vks' или 'events'
 let _modalParticipants = [];
+let _currentEvent = null; // текущее загруженное событие
 
 async function openAddEventModal(mode = 'vks') {
     if (window._vksModalLoaded) await window._vksModalLoaded;
@@ -55,8 +56,15 @@ async function openAddEventModal(mode = 'vks') {
 
 async function openEditEventModal(id, mode = 'vks') {
     if (window._vksModalLoaded) await window._vksModalLoaded;
-    const e = store.allEvents.find(x => x.id === id);
-    if (!e) return;
+    // Загружаем событие с сервера вместо store.allEvents
+    let e;
+    try {
+        const resp = await fetch(`/admin/api/events/${id}/single`, { credentials: 'same-origin' });
+        const data = await resp.json();
+        if (!data.ok || !data.event) return;
+        e = data.event;
+    } catch (err) { console.error('Failed to load event:', err); return; }
+    _currentEvent = e;
     _modalMode = mode;
     editingEventId = id;
     pendingFiles = [];
@@ -246,13 +254,14 @@ function closeEventModal() {
     document.getElementById('event-url-go').style.display = 'none';
     pendingFiles = [];
     removedDocIds = [];
+    _currentEvent = null;
 }
 
 function refreshEventDocs() {
     const docsContainer = document.getElementById('f-event-docs');
 
     const existing = (editingEventId)
-        ? (store.allEvents.find(x => x.id === editingEventId)?.documents || [])
+        ? (_currentEvent?.documents || [])
             .filter(d => !removedDocIds.includes(d.id))
         : [];
 
@@ -391,7 +400,7 @@ async function saveEvent() {
     formData.append('participants', JSON.stringify(_modalParticipants));
 
     if (editingEventId) {
-        const existing = store.allEvents.find(x => x.id === editingEventId)?.documents || [];
+        const existing = _currentEvent?.documents || [];
         const keepIds = existing.filter(d => !removedDocIds.includes(d.id)).map(d => d.id);
         formData.append('keep_doc_ids', keepIds.join(','));
     }
@@ -418,7 +427,7 @@ async function saveEvent() {
 
             // Создать серию если repeat активен, удалить если деактивирован
             if (savedEventId) {
-                const existingEvent = store.allEvents.find(x => x.id === savedEventId);
+                const existingEvent = _currentEvent;
                 const hadSeries = existingEvent && existingEvent.series_id;
                 const repeatData = _getRepeatData();
                 if (repeatData) {
@@ -665,7 +674,7 @@ function openRepeatModal() {
     if (!overlay) return;
     // Показать/скрыть кнопку удаления
     const deleteBtn = document.getElementById('repeat-delete-btn');
-    const hasSeries = editingEventId && store.allEvents.find(x => x.id === editingEventId)?.series_id;
+    const hasSeries = editingEventId && _currentEvent?.series_id;
     if (deleteBtn) deleteBtn.style.display = hasSeries ? '' : 'none';
     // Восстановить текущее состояние
     const active = document.getElementById('event-repeat-active').value === 'true';

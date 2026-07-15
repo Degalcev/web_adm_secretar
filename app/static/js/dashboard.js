@@ -50,44 +50,6 @@ function setupDashboardClicks() {
     });
 }
 
-async function loadFullData() {
-    try {
-        const [eventsResp, locResp, orgResp] = await Promise.all([
-            fetch(`/admin/api/events?limit=10000`, { credentials: 'same-origin' }),
-            fetch('/admin/api/locations', { credentials: 'same-origin' }),
-            fetch('/admin/api/organizers', { credentials: 'same-origin' })
-        ]);
-
-        if (!eventsResp.ok) throw new Error(eventsResp.status);
-
-        const eventsJson = await eventsResp.json();
-        _dashEvents = Array.isArray(eventsJson) ? eventsJson : (eventsJson.events || []);
-        store.allEvents = _dashEvents;
-
-        const locations = await locResp.json();
-        _dashLocations = {};
-        locations.forEach(l => { _dashLocations[l.id] = l.name; });
-            store.allLocations = locations;
-
-        const organizers = await orgResp.json();
-        _dashOrganizers = {};
-        organizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
-            store.allOrganizers = organizers;
-
-        try {
-            localStorage.setItem('dash_cache', JSON.stringify({
-                events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers
-            }));
-        } catch (e) {}
-
-        renderDashLocations();
-        drawChart();
-        setupChartToggle();
-    } catch (e) {
-        console.error('Full data load error:', e);
-    }
-}
-
 function renderTodayFromData(events) {
     const el = document.getElementById('dash-today');
     if (!el) return;
@@ -460,10 +422,8 @@ function _renderChart() {
 }
 
 function dashConfirmCompleteEvent(id, checked) {
-    const e = store.allEvents.find(x => x.id === id);
-    const desc = e ? (e.description || 'без описания') : '';
     const action = checked ? 'завершить' : 'снять завершение с';
-    document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
+    document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`;
     document.getElementById('confirm-actions').innerHTML = `
         <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
         <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>

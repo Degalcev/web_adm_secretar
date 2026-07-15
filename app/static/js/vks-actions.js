@@ -17,7 +17,7 @@ function toggleEventComplete() {
     } else {
         btn.classList.remove('active');
         if (pillLabel) pillLabel.textContent = 'Завершить';
-        const e = store.allEvents.find(x => x.id === editingEventId);
+        const e = _currentEvent;
         const today = localDateStr(new Date());
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'modal-event-status status-missed';
@@ -33,17 +33,15 @@ function toggleEventComplete() {
 
 function confirmDeleteFromModal() {
     if (!editingEventId) return;
-    const e = store.allEvents.find(x => x.id === editingEventId);
+    const e = _currentEvent;
     const desc = e ? (e.description || 'без описания') : '';
     ConfirmManager.open('event', editingEventId, desc, deleteEvent);
 }
 
 function confirmCompleteEvent(id, checked) {
     try {
-        const e = store.allEvents.find(x => x.id === id);
-        const desc = e ? (e.description || 'без описания') : '';
         const action = checked ? 'завершить' : 'снять завершение с';
-        document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} ВКС «${desc}»?`;
+        document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`;
         document.getElementById('confirm-actions').innerHTML = `
             <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
             <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
