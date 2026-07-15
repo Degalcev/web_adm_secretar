@@ -41,20 +41,14 @@ function debounceRefreshEvents() {
 }
 
 function _refreshEvents() {
-    // Пропускаем если модалка открыта — lock/unlock/generate SSE
     const modal = document.getElementById('event-modal');
     if (modal && modal.classList.contains('show')) return;
 
     const page = currentPage || '';
 
-    if (page === 'vks-active') {
-        renderVksBoard('vks-board-active', 'active');
-        updateVksStats();
-    } else if (page === 'vks-completed') {
-        renderVksBoard('vks-board-completed', 'completed');
+    if (page === 'vks-active' || page === 'vks-completed') {
         updateVksStats();
     } else if (page === 'events-active' || page === 'events-completed') {
-        _eventsResetAndLoad();
         eventsUpdateStats();
     } else if (page === 'dashboard') {
         renderDashboard();
@@ -63,6 +57,7 @@ function _refreshEvents() {
         _calLoadingRange = false;
         renderCalendar(false);
     }
+}
 }
 
 async function _refreshLocations() {
