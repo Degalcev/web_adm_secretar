@@ -12,16 +12,18 @@ function renderVksBoard(boardId, filter) {
 
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    // Use document-level scroll listener for reliability
-    const handlerKey = '_vksScroll_' + boardId;
-    if (document[handlerKey]) document.removeEventListener('scroll', document[handlerKey]);
-    document[handlerKey] = () => {
-        const scrollEl = document.scrollingElement || document.documentElement;
-        if (scrollEl.scrollTop + window.innerHeight >= scrollEl.scrollHeight - 300) {
-            _vksLoadMore(boardId, filter);
-        }
-    };
-    document.addEventListener('scroll', document[handlerKey]);
+    // Find the actual scrollable parent
+    const scrollEl = _findScrollParent(board);
+    if (scrollEl) {
+        const handlerKey = '_vksScroll_' + boardId;
+        if (scrollEl[handlerKey]) scrollEl.removeEventListener('scroll', scrollEl[handlerKey]);
+        scrollEl[handlerKey] = () => {
+            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) {
+                _vksLoadMore(boardId, filter);
+            }
+        };
+        scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
+    }
 
     _vksLoadMore(boardId, filter);
 }

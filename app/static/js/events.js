@@ -29,79 +29,37 @@ function _eventsResetAndLoad() {
     if (!board) return;
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    // Use document-level scroll listener
-    if (document._eventsScrollHandler) document.removeEventListener('scroll', document._eventsScrollHandler);
-    document._eventsScrollHandler = () => {
-        const scrollEl = document.scrollingElement || document.documentElement;
-        if (scrollEl.scrollTop + window.innerHeight >= scrollEl.scrollHeight - 300) {
-            _eventsLoadMore();
-        }
-    };
-    document.addEventListener('scroll', document._eventsScrollHandler);
+    // Find actual scrollable parent
+    const scrollEl = _findScrollParent(board);
+    if (scrollEl) {
+        if (scrollEl._eventsScrollHandler) scrollEl.removeEventListener('scroll', scrollEl._eventsScrollHandler);
+        scrollEl._eventsScrollHandler = () => {
+            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) {
+                _eventsLoadMore();
+            }
+        };
+        scrollEl.addEventListener('scroll', scrollEl._eventsScrollHandler);
+    }
 
     _eventsLoadMore();
 }
 
-async function _eventsLoadMore() {
-    const p = _eventsPagination;
-    if (p.loading || !p.hasMore) return;
-    p.loading = true;
-
-    const board = document.getElementById('events-board');
-    const sentinel = board?.querySelector('.scroll-sentinel');
-    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка...</div>';
-
-    try {
-        const params = new URLSearchParams();
-        params.set('limit', EVENTS_PAGE_SIZE);
-        params.set('status', _eventsCompleted ? 'completed' : 'active');
-        if (p.cursorDate) params.set('cursor_date', p.cursorDate);
-        if (p.cursorTime) params.set('cursor_time', p.cursorTime);
-        if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
-
-        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        const newEvents = (data.events || []).filter(e => e.type !== 'ВКС');
-
-        p.events.push(...newEvents);
-        p.cursorDate = data.next_cursor_date;
-        p.cursorTime = data.next_cursor_time;
-        p.hasMore = data.has_more;
-        if (data.total !== undefined) p.total = data.total;
-
-        eventsRenderBoard();
-        eventsUpdateStats();
-    } catch (e) {
-        console.error('_eventsLoadMore error:', e);
-    }
-    p.loading = false;
-}
-
 let _eventsQuickFilter = '';
 
-function eventsUpdateStats() {
-    const totalFromApi = _eventsPagination.total || 0;
-    const all = _eventsPagination.events.filter(e => e.type !== 'ВКС');
-    const now = new Date();
-    const today = localDateStr(now);
-
-    let todayCount = 0;
-    let soonCount = 0;
-    let missedCount = 0;
-
-    all.forEach(e => {
-        if (!e.date) { missedCount++; return; }
-        if (e.date < today) { missedCount++; }
-        else if (e.date === today) { todayCount++; }
-        else { soonCount++; }
-    });
-
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('stat-evt-total', totalFromApi);
-    set('stat-evt-today', todayCount);
-    set('stat-evt-soon', soonCount);
-    set('stat-evt-missed', missedCount);
+async function eventsUpdateStats() {
+    try {
+        const status = _eventsCompleted ? 'completed' : 'active';
+        const params = new URLSearchParams({ status });
+        if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
+        const resp = await fetch(`/admin/api/events/stats?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const stats = await resp.json();
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('stat-evt-total', stats.total || 0);
+        set('stat-evt-today', stats.today || 0);
+        set('stat-evt-soon', stats.soon || 0);
+        set('stat-evt-missed', stats.missed || 0);
+    } catch (e) {}
 }
 
 function _eventsPopulateFilters() {

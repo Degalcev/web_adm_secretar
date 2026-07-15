@@ -508,8 +508,54 @@ async def add_exception_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
+async def get_events_stats(request: web.Request) -> web.Response:
+    """Возвращает точные счётчики из БД: total, today, soon, missed для active/completed."""
+    try:
+        status = request.query.get('status', 'active')
+        event_type = request.query.get('type', '').strip()
+        today = date.today()
+
+        kwargs = {'limit': 100000}
+        if status == 'completed':
+            kwargs['completed'] = True
+        else:
+            kwargs['completed'] = False
+        if event_type:
+            kwargs['event_type'] = event_type
+
+        events, total, _ = await get_events(**kwargs)
+
+        today_count = 0
+        soon_count = 0
+        missed_count = 0
+        for e in events:
+            if e.type == 'ВКС':
+                continue
+            if not e.date:
+                missed_count += 1
+            elif e.date < today:
+                missed_count += 1
+            elif e.date == today:
+                today_count += 1
+            else:
+                soon_count += 1
+
+        non_vks_total = total - sum(1 for e in events if e.type == 'ВКС')
+
+        return web.json_response({
+            'total': non_vks_total,
+            'today': today_count,
+            'soon': soon_count,
+            'missed': missed_count,
+        })
+    except Exception as e:
+        logger.error('Ошибка stats: {}', repr(e))
+        return web.json_response({'total': 0, 'today': 0, 'soon': 0, 'missed': 0})
+
+
 def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events', get_events_handler)
+    app.router.add_get('/admin/api/events/stats', get_events_stats)
     app.router.add_get('/admin/api/dashboard', dashboard_stats)
     app.router.add_post('/admin/api/events', create_event_handler)
     app.router.add_put('/admin/api/events/{id}', update_event_handler)

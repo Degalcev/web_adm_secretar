@@ -170,36 +170,19 @@ function clearVksFilter() {
     renderVksBoard('vks-board-active', 'active');
 }
 
-function updateVksStats() {
-    const pActive = _vksPagination['vks-board-active'];
-    const pCompleted = _vksPagination['vks-board-completed'];
-
-    // Total from API (all matching events in DB)
-    const isCompleted = (currentPage || '').includes('completed');
-    const totalFromApi = isCompleted ? (pCompleted?.total || 0) : (pActive?.total || 0);
-
-    // Sub-counters from loaded data
-    const allVks = [...(pActive?.events || []), ...(pCompleted?.events || [])];
-    const now = new Date();
-    const today = localDateStr(now);
-
-    const stats = isCompleted
-        ? allVks.filter(e => e.completed)
-        : allVks.filter(e => !e.completed);
-
-    let todayCount = 0, soonCount = 0, missedCount = 0;
-    stats.forEach(e => {
-        if (!e.date) { missedCount++; return; }
-        if (e.date < today) { missedCount++; }
-        else if (e.date === today) { todayCount++; }
-        else { soonCount++; }
-    });
-
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('stat-vks-total', totalFromApi);
-    set('stat-vks-today', todayCount);
-    set('stat-vks-soon', soonCount);
-    set('stat-vks-missed', missedCount);
+async function updateVksStats() {
+    try {
+        const isCompleted = (currentPage || '').includes('completed');
+        const status = isCompleted ? 'completed' : 'active';
+        const resp = await fetch(`/admin/api/events/stats?status=${status}&type=ВКС`, { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const stats = await resp.json();
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set('stat-vks-total', stats.total || 0);
+        set('stat-vks-today', stats.today || 0);
+        set('stat-vks-soon', stats.soon || 0);
+        set('stat-vks-missed', stats.missed || 0);
+    } catch (e) {}
 }
 
 let _quickFilter = '';

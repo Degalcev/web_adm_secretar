@@ -2,6 +2,18 @@
 
 const EVENTS_LIMIT = 10000;
 
+function _findScrollParent(el) {
+    let node = el.parentElement;
+    while (node) {
+        const style = getComputedStyle(node);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            return node;
+        }
+        node = node.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+}
+
 function esc(str) {
     return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }
