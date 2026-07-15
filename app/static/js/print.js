@@ -4,7 +4,7 @@ async function openPrintModal() {
     const overlay = document.getElementById('event-modal-overlay');
     if (!overlay) return;
 
-    let url = '/admin/api/events/print?limit=10000';
+    let url = `/admin/api/events/print?limit=${EVENTS_LIMIT}`;
     const type = _eventsTypeFilter;
     if (type) url += `&type=${encodeURIComponent(type)}`;
 

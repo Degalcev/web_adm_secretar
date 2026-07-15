@@ -124,6 +124,7 @@ function eventsResetFilters() {
 }
 
 function eventsRenderBoard() {
+    try {
     const board = document.getElementById('events-board');
     if (!board) return;
 
@@ -229,6 +230,11 @@ function eventsRenderBoard() {
     if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
 
     board.innerHTML = html;
+    } catch (e) {
+        console.error('eventsRenderBoard error:', e);
+        const board = document.getElementById('events-board');
+        if (board) board.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+    }
 }
 
 function _eventsRenderBlock(title, events, type) {

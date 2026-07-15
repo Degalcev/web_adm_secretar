@@ -1,5 +1,7 @@
 // ─── Утилиты ─────────────────────────────────────────────────────────
 
+const EVENTS_LIMIT = 10000;
+
 function esc(str) {
     return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
 }

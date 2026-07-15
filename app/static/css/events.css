@@ -1,36 +1,5 @@
 /* ─── Events Page ─────────────────────────────────────────────────── */
 
-.events-tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    padding: 0 24px;
-}
-
-.events-tab {
-    padding: 6px 14px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg-elevated);
-    color: var(--fg-subtle);
-    font-size: 0.8125rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.events-tab:hover {
-    border-color: var(--accent);
-    color: var(--fg);
-}
-
-.events-tab.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-}
-
 /* ─── Type Badge (in card) ──────────────────────────────────────── */
 
 .events-type-badge {

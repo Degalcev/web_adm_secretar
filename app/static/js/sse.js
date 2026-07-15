@@ -39,12 +39,12 @@ function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
     _sseDebounceTimer = setTimeout(() => {
         _refreshEvents();
-    }, 300);
+    }, 200);
 }
 
 async function _refreshEvents() {
     try {
-        const resp = await fetch('/admin/api/events?limit=10000', { credentials: 'same-origin' });
+        const resp = await fetch(`/admin/api/events?limit=${EVENTS_LIMIT}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const data = await resp.json();
         const events = Array.isArray(data) ? data : (data.events || []);
@@ -62,6 +62,7 @@ async function _refreshEvents() {
         } else if (page === 'dashboard') {
             renderDashboard();
         } else if (page === 'calendar') {
+            _calEventsCache = {}; // сброс кэша при SSE обновлении
             renderCalendar(false);
         }
     } catch (e) {}

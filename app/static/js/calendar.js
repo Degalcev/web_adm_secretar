@@ -29,6 +29,8 @@ function _calGetTypeClass(type) {
 function _calIsMobile() { return window.innerWidth <= 768; }
 
 let _calMobileRoomFilter = null; // null = все аудитории
+let _calEventsCache = {}; // { 'YYYY-MM-DD_YYYY-MM-DD': events[] }
+let _calLoadingRange = false;
 
 function getMonday(d) {
     const r = new Date(d);
@@ -84,13 +86,35 @@ function _calFmtEnd(e) {
     return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
 
+function _calGetRangeKey(from, to) { return `${from}_${to}`; }
+
+async function _calLoadRange(from, to) {
+    const key = _calGetRangeKey(from, to);
+    if (_calEventsCache[key]) return _calEventsCache[key];
+    if (_calLoadingRange) return store.allEvents || [];
+    _calLoadingRange = true;
+    try {
+        const resp = await fetch(`/admin/api/events?limit=${EVENTS_LIMIT}&from=${from}&to=${to}`, { credentials: 'same-origin' });
+        if (!resp.ok) return store.allEvents || [];
+        const data = await resp.json();
+        const events = Array.isArray(data) ? data : (data.events || []);
+        _calEventsCache[key] = events;
+        return events;
+    } catch (e) {
+        return store.allEvents || [];
+    } finally {
+        _calLoadingRange = false;
+    }
+}
+
 function _calGetEventsForDate(ds) {
-    // Expand series for the visible week range
     const weekEnd = new Date(calWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
     const dateFrom = localDateStr(calWeekStart);
     const dateTo = localDateStr(weekEnd);
-    const expanded = expandSeries(store.allEvents || [], dateFrom, dateTo);
+    // Use cached range events, fallback to store.allEvents
+    const rangeEvents = _calEventsCache[_calGetRangeKey(dateFrom, dateTo)] || store.allEvents || [];
+    const expanded = expandSeries(rangeEvents, dateFrom, dateTo);
     return expanded.filter(e => e.date === ds);
 }
 
@@ -397,9 +421,11 @@ function _calRenderGrid() {
     const dayEvents = _calGetEventsForDate(ds);
 
     locations.forEach((loc, li) => {
-        const locEvents = dayEvents
+        const allLocEvents = dayEvents
             .filter(e => e.location_id === loc.id)
             .sort((a, b) => calTimeToMin(a.time) - calTimeToMin(b.time));
+        const locEvents = allLocEvents.slice(0, 50);
+        const overflow = allLocEvents.length - 50;
 
         html += `<div class="cal-col"><div style="height:${CAL_TOTAL_H}px;position:relative">`;
 
@@ -440,6 +466,10 @@ function _calRenderGrid() {
             });
         });
 
+        if (overflow > 0) {
+            html += `<div style="position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:0.6875rem;color:var(--fg-muted);background:var(--bg-elevated);border-radius:4px;padding:2px">+${overflow} ещё</div>`;
+        }
+
         html += '</div></div>';
     });
 
@@ -449,9 +479,16 @@ function _calRenderGrid() {
 
 // ─── Рендер: Main ──────────────────────────────────────────────────
 
-function renderCalendar(full) {
+async function renderCalendar(full) {
     const container = document.getElementById('cal-container');
     if (!container) return;
+
+    // Load range events for visible week ± 2 weeks
+    const rangeStart = new Date(calWeekStart);
+    rangeStart.setDate(rangeStart.getDate() - 14);
+    const rangeEnd = new Date(calWeekStart);
+    rangeEnd.setDate(rangeEnd.getDate() + 20);
+    await _calLoadRange(localDateStr(rangeStart), localDateStr(rangeEnd));
 
     if (full) {
         _calNowLines = [];
