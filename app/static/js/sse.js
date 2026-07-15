@@ -62,33 +62,46 @@ function _refreshEvents() {
 }
 
 async function _sseUpdateAndRender(boardId, filter) {
-    // 1. Загрузить свежие данные одной страницы (~5ms)
-    // 2. Обновить кэш p.events
-    // 3. Перерисовать из кэша мгновенно
     const p = _vksPagination[boardId];
     if (!p) return;
 
-    try {
-        const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(p.events.length || 50) });
-        const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
-        const orgVal = document.getElementById(`${prefix}-org`)?.value;
-        const locVal = document.getElementById(`${prefix}-loc`)?.value;
-        const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
-        if (orgVal) params.set('organizer_id', orgVal);
-        if (locVal) params.set('location_id', locVal);
-        if (searchVal) params.set('search', searchVal);
+    // Загрузить события И stats параллельно
+    const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
+    const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(p.events.length || 50) });
+    const orgVal = document.getElementById(`${prefix}-org`)?.value;
+    const locVal = document.getElementById(`${prefix}-loc`)?.value;
+    const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
+    if (orgVal) params.set('organizer_id', orgVal);
+    if (locVal) params.set('location_id', locVal);
+    if (searchVal) params.set('search', searchVal);
 
-        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        p.events = data.events || [];
-        p.hasMore = !!data.has_more;
-        p.cursorDate = data.next_cursor_date || null;
-        p.cursorTime = data.next_cursor_time || null;
-        p.cursorId = data.next_cursor_id || null;
+    const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
+
+    try {
+        const [eventsResp, statsResp] = await Promise.all([
+            fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
+            fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
+        ]);
+
+        if (eventsResp.ok) {
+            const data = await eventsResp.json();
+            p.events = data.events || [];
+            p.hasMore = !!data.has_more;
+            p.cursorDate = data.next_cursor_date || null;
+            p.cursorTime = data.next_cursor_time || null;
+            p.cursorId = data.next_cursor_id || null;
+        }
+
+        if (statsResp.ok) {
+            const stats = await statsResp.json();
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            set('stat-vks-total', stats.total || 0);
+            set('stat-vks-today', stats.today || 0);
+            set('stat-vks-soon', stats.soon || 0);
+            set('stat-vks-missed', stats.missed || 0);
+        }
     } catch (e) {}
 
-    // 4. Перерисовать из обновлённого кэша
     _sseRerenderFromCache(boardId, filter);
 }
 
