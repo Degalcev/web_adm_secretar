@@ -32,6 +32,25 @@ function formatSize(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+function getDocCardMeta(ext) {
+    const map = {
+        pdf: { cls: 'pdf', label: 'PDF' },
+        doc: { cls: 'doc', label: 'DOC' },
+        docx: { cls: 'doc', label: 'DOC' },
+        xls: { cls: 'xls', label: 'XLS' },
+        xlsx: { cls: 'xls', label: 'XLS' },
+        ppt: { cls: 'ppt', label: 'PPT' },
+        pptx: { cls: 'ppt', label: 'PPT' },
+        txt: { cls: 'txt', label: 'TXT' },
+        zip: { cls: 'zip', label: 'ZIP' },
+        rar: { cls: 'zip', label: 'RAR' },
+        jpg: { cls: 'img', label: 'JPG' },
+        jpeg: { cls: 'img', label: 'JPG' },
+        png: { cls: 'img', label: 'PNG' },
+    };
+    return map[ext] || { cls: 'default', label: ext.toUpperCase() || 'FILE' };
+}
+
 function colorize(text) {
     return text
         .replace(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/g, '<span class="log-timestamp">$1</span>')
