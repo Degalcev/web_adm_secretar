@@ -24,6 +24,9 @@ function _eventsResetAndLoad() {
     _eventsPagination.cursorTime = null;
     _eventsPagination.hasMore = true;
     _eventsPagination.loading = false;
+    // Сброс stats мгновенно
+    const set = (id) => { const el = document.getElementById(id); if (el) el.textContent = '…'; };
+    set('stat-evt-total'); set('stat-evt-today'); set('stat-evt-soon'); set('stat-evt-missed');
 
     const board = document.getElementById('events-board');
     if (!board) return;
