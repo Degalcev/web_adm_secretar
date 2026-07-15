@@ -70,13 +70,12 @@ async function _sseProcessEvent(eventId, action) {
             if (!p) return;
             const idx = p.events.findIndex(ev => ev.id === eventId);
             if (idx >= 0) {
-                p.events[idx] = e; // UPDATE существующего
+                p.events[idx] = e;
             } else if (data.action === 'INSERT') {
-                // Новое событие — добавить и отсортировать
                 p.events.push(e);
-                p.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             }
-            // UPDATE без findIndex — событие не на текущей странице, игнорируем
+            // Пересортировать после любого изменения
+            p.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             _sseRerenderBoard();
         } else if (page === 'events-active' || page === 'events-completed') {
             const idx = _eventsPagination.events.findIndex(ev => ev.id === eventId);
@@ -84,8 +83,8 @@ async function _sseProcessEvent(eventId, action) {
                 _eventsPagination.events[idx] = e;
             } else if (data.action === 'INSERT') {
                 _eventsPagination.events.push(e);
-                _eventsPagination.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             }
+            _eventsPagination.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             eventsRenderBoard();
         } else if (page === 'dashboard') {
             renderDashboard();
