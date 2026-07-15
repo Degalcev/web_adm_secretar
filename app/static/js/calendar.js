@@ -144,7 +144,7 @@ function expandSeries(events, dateFrom, dateTo) {
         });
 
         const baseDate = new Date(baseEvent.date + 'T00:00:00');
-        const until = series.until ? new Date(series.until + 'T00:00:00') : new Date(dateTo);
+        const until = series.until ? new Date(series.until + 'T00:00:00') : new Date(dateTo + 'T23:59:59');
         const interval = series.interval_val || 1;
         const byDay = series.by_day || [];
 
@@ -154,7 +154,8 @@ function expandSeries(events, dateFrom, dateTo) {
         const normByDay = byDay.map(d => shortDays[d] || d);
 
         let current = new Date(baseDate);
-        while (current <= until && current <= new Date(dateTo + 'T23:59:59')) {
+        const dateToFull = new Date(dateTo + 'T23:59:59');
+        while (current <= until && current <= dateToFull) {
             const dateStr = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}-${String(current.getDate()).padStart(2,'0')}`;
 
             if (current >= new Date(dateFrom + 'T00:00:00') && current <= until) {
