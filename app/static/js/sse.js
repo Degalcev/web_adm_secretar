@@ -48,13 +48,10 @@ function _refreshEvents() {
 
     if (page === 'vks-active') {
         renderVksBoard('vks-board-active', 'active');
-        updateVksStats();
     } else if (page === 'vks-completed') {
         renderVksBoard('vks-board-completed', 'completed');
-        updateVksStats();
     } else if (page === 'events-active' || page === 'events-completed') {
         _eventsResetAndLoad();
-        eventsUpdateStats();
     } else if (page === 'dashboard') {
         renderDashboard();
     } else if (page === 'calendar') {
