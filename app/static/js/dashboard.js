@@ -7,30 +7,36 @@ let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 
-let _dashTotal = 0;
-let _dashActive = 0;
-let _dashCompleted = 0;
-let _dashMissed = 0;
-let _dashTodayEvents = [];
-let _dashSoonEvents = [];
+let _dashCache = null;
 
 async function initDashboard() {
     setupDashboardClicks();
+    if (_dashCache) {
+        renderDashboard();
+        _dashRefreshInBackground();
+        return;
+    }
+    await _dashFetch();
+    renderDashboard();
+}
+
+async function _dashFetch() {
     try {
         const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (!resp.ok) throw new Error(resp.status);
-        const data = await resp.json();
-        _dashTotal = data.total || 0;
-        _dashActive = data.active || 0;
-        _dashCompleted = data.completed || 0;
-        _dashMissed = data.missed || 0;
-        _dashTodayEvents = data.today || [];
-        _dashSoonEvents = data.soon || [];
+        if (!resp.ok) return;
+        _dashCache = await resp.json();
     } catch (e) {
-        console.error('Dashboard load error:', e);
-        _dashTotal = 0; _dashActive = 0; _dashCompleted = 0; _dashMissed = 0;
-        _dashTodayEvents = []; _dashSoonEvents = [];
+        console.error('Dashboard fetch error:', e);
     }
+}
+
+async function _dashRefreshInBackground() {
+    await _dashFetch();
+    renderDashboard();
+}
+
+async function refreshDashboard() {
+    await _dashFetch();
     renderDashboard();
 }
 
@@ -88,14 +94,16 @@ function locName(id) { return _dashLocations[id] || '—'; }
 function orgName(id) { return _dashOrganizers[id] || '—'; }
 
 function renderDashboard() {
+    if (!_dashCache) return;
+    const data = _dashCache;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('dash-total', _dashTotal);
-    set('dash-active', _dashActive);
-    set('dash-completed', _dashCompleted);
-    set('dash-missed', _dashMissed);
-    renderTodayFromData(_dashTodayEvents);
-    renderSoonFromData(_dashSoonEvents);
-    renderDashLocations();
+    set('dash-total', data.total);
+    set('dash-active', data.active);
+    set('dash-completed', data.completed);
+    set('dash-missed', data.missed);
+    renderTodayFromData(data.today || []);
+    renderSoonFromData(data.soon || []);
+    _renderDashLocationsFromCache(data);
     drawChart();
     setupChartToggle();
 }
@@ -145,56 +153,25 @@ let _locPeriod = 'all';
 let _locYear = new Date().getFullYear();
 
 function renderDashLocations() {
-    fetch('/admin/api/events?limit=500', { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => {
-            const events = data.events || [];
-            _dashEvents = events;
+    _renderDashLocationsFromCache(_dashCache);
+}
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
-
-            const locToday = {};
-            const locTotal = {};
-            events.forEach(e => {
-                const id = e.location_id || 'unknown';
-                const d = new Date(e.date + 'T' + (e.time || '23:59'));
-                // Today count
-                if (d >= today && d < tomorrow) {
-                    locToday[id] = (locToday[id] || 0) + 1;
-                }
-                // Total count based on period
-                let include = false;
-                if (_locPeriod === 'all') {
-                    include = true;
-                } else if (_locPeriod === 'year') {
-                    include = new Date(e.date).getFullYear() === _locYear;
-                } else if (_locPeriod === 'month') {
-                    const ed = new Date(e.date);
-                    include = ed.getFullYear() === _locYear && ed.getMonth() === _dashMonth;
-                }
-                if (include) {
-                    locTotal[id] = (locTotal[id] || 0) + 1;
-                }
-            });
-
-            const allIds = [...new Set([...Object.keys(locToday), ...Object.keys(locTotal)])];
-            const todayEntries = allIds
-                .map(id => ({ name: locName(id), id, count: locToday[id] || 0 }))
-                .filter(e => e.count > 0)
-                .sort((a, b) => b.count - a.count);
-            const totalEntries = allIds
-                .map(id => ({ name: locName(id), id, count: locTotal[id] || 0 }))
-                .filter(e => e.count > 0)
-                .sort((a, b) => b.count - a.count);
-
-            renderBarList('dash-loc-today', todayEntries, 'accent');
-            renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
-            setupLocToggle();
-            updateLocYearLabel();
-        })
-        .catch(e => console.error('Dash locations load error:', e));
+function _renderDashLocationsFromCache(data) {
+    if (!data) return;
+    const locs = data.locations_total || {};
+    const locsToday = data.locations_today || {};
+    const allIds = new Set([...Object.keys(locs), ...Object.keys(locsToday)]);
+    const todayEntries = [...allIds]
+        .map(id => ({ name: getLocationName(id), id, count: locsToday[id] || 0 }))
+        .filter(e => e.count > 0)
+        .sort((a, b) => b.count - a.count);
+    const totalEntries = [...allIds]
+        .map(id => ({ name: getLocationName(id), id, count: locs[id] || 0 }))
+        .filter(e => e.count > 0)
+        .sort((a, b) => b.count - a.count);
+    renderBarList('dash-loc-today', todayEntries, 'accent');
+    renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
+    setupLocToggle();
 }
 
 function setupLocToggle() {
@@ -310,115 +287,82 @@ function dashYearNav(dir) {
 }
 
 function drawChart() {
-    fetch('/admin/api/events?limit=500', { credentials: 'same-origin' })
-        .then(r => r.json())
-        .then(data => {
-            _dashEvents = data.events || [];
-            _renderChart();
-        })
-        .catch(e => console.error('Chart data load error:', e));
-}
-
-function _renderChart() {
+    if (!_dashCache) return;
     const el = document.getElementById('dash-chart');
-    const now = new Date();
-    let labels = [];
-    let counts = [];
-
+    let labels = [], counts = [];
     const monthLabel = document.getElementById('dash-chart-month-label');
     const monthPrev = document.getElementById('dash-month-prev');
     const monthNext = document.getElementById('dash-month-next');
     const yearLabel = document.getElementById('dash-chart-year-label');
     const yearPrev = document.getElementById('dash-year-prev');
     const yearNext = document.getElementById('dash-year-next');
-
     const showMonthNav = _dashPeriod === 'month';
     if (monthLabel) monthLabel.style.display = showMonthNav ? 'inline' : 'none';
     if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
     if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
-    // Year navigation: visible for 'month' and 'year', hidden for 'week' and 'all'
     const showYearNav = _dashPeriod === 'month' || _dashPeriod === 'year';
     if (yearLabel) yearLabel.style.display = showYearNav ? 'inline' : 'none';
     if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
     if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
-
     if (_dashPeriod === 'week') {
         const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
         labels = dayNames;
-        counts = new Array(7).fill(0);
-        const dayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - dayIdx);
-        startOfWeek.setHours(0, 0, 0, 0);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 7);
-
-        _dashEvents.forEach(e => {
-            if (!e.date) return;
-            const d = new Date(e.date);
-            if (d >= startOfWeek && d < endOfWeek) {
-                let idx = d.getDay() === 0 ? 6 : d.getDay() - 1;
-                counts[idx]++;
-            }
-        });
-    } else if (_dashPeriod === 'month') {
-        const daysInMonth = new Date(_dashYear, _dashMonth + 1, 0).getDate();
-        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-        labels = [];
-        counts = new Array(daysInMonth).fill(0);
-        for (let i = 1; i <= daysInMonth; i++) labels.push(String(i));
-
-        _dashEvents.forEach(e => {
-            if (!e.date) return;
-            const d = new Date(e.date);
-            if (d.getFullYear() === _dashYear && d.getMonth() === _dashMonth) {
-                counts[d.getDate() - 1]++;
-            }
-        });
-        if (monthLabel) monthLabel.textContent = monthNames[_dashMonth];
+        counts = _dashCache.chart_week || new Array(7).fill(0);
     } else if (_dashPeriod === 'year') {
-        const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+        const monthNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
         labels = monthNames;
-        counts = new Array(12).fill(0);
-
-        _dashEvents.forEach(e => {
-            if (!e.date) return;
-            const d = new Date(e.date);
-            if (d.getFullYear() === _dashYear) {
-                counts[d.getMonth()]++;
-            }
-        });
+        counts = _dashCache.chart_year || new Array(12).fill(0);
+    } else if (_dashPeriod === 'month') {
+        _drawChartMonth();
+        return;
     } else if (_dashPeriod === 'all') {
-        const yearSet = new Set();
-        _dashEvents.forEach(e => { if (e.date) yearSet.add(new Date(e.date).getFullYear()); });
-        const years = [...yearSet].sort((a, b) => a - b);
-        if (years.length === 0) {
-            const curYear = now.getFullYear();
-            for (let y = curYear - 4; y <= curYear; y++) years.push(y);
-        }
-        labels = years.map(String);
-        counts = years.map(y => _dashEvents.filter(e => e.date && new Date(e.date).getFullYear() === y).length);
+        _drawChartAll();
+        return;
     }
-
-    if (yearLabel && yearLabel.style.display !== 'none') {
-        yearLabel.textContent = _dashYear;
-    }
-
+    if (yearLabel && yearLabel.style.display !== 'none') yearLabel.textContent = _dashYear;
     const max = Math.max(...counts, 1);
+    el.innerHTML = `<div class="dash-chart-bars">${counts.map((c, i) => `
+        <div class="dash-chart-col">
+            <div class="dash-chart-count">${c || ''}</div>
+            <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
+            <div class="dash-chart-label">${labels[i]}</div>
+        </div>`).join('')}
+    </div>`;
+}
 
-    el.innerHTML = `
-        <div class="dash-chart-bars">
-            ${counts.map((c, i) => `
-                <div class="dash-chart-col">
-                    <div class="dash-chart-count">${c || ''}</div>
-                    <div class="dash-chart-bar-wrap">
-                        <div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div>
-                     </div>
-                    <div class="dash-chart-label">${labels[i]}</div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+async function _drawChartMonth() {
+    const el = document.getElementById('dash-chart');
+    const monthLabel = document.getElementById('dash-chart-month-label');
+    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    if (monthLabel) { monthLabel.style.display = 'inline'; monthLabel.textContent = monthNames[_dashMonth]; }
+    try {
+        const resp = await fetch(`/admin/api/dashboard/chart?period=month&year=${_dashYear}&month=${_dashMonth + 1}`, { credentials: 'same-origin' });
+        const data = await resp.json();
+        const max = Math.max(...data.counts, 1);
+        el.innerHTML = `<div class="dash-chart-bars">${data.counts.map((c, i) => `
+            <div class="dash-chart-col">
+                <div class="dash-chart-count">${c || ''}</div>
+                <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
+                <div class="dash-chart-label">${data.labels[i]}</div>
+            </div>`).join('')}
+        </div>`;
+    } catch (e) { el.innerHTML = '<div class="dash-empty">Ошибка загрузки</div>'; }
+}
+
+async function _drawChartAll() {
+    const el = document.getElementById('dash-chart');
+    try {
+        const resp = await fetch(`/admin/api/dashboard/chart?period=all`, { credentials: 'same-origin' });
+        const data = await resp.json();
+        const max = Math.max(...data.counts, 1);
+        el.innerHTML = `<div class="dash-chart-bars">${data.counts.map((c, i) => `
+            <div class="dash-chart-col">
+                <div class="dash-chart-count">${c || ''}</div>
+                <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
+                <div class="dash-chart-label">${data.labels[i]}</div>
+            </div>`).join('')}
+        </div>`;
+    } catch (e) { el.innerHTML = '<div class="dash-empty">Ошибка загрузки</div>'; }
 }
 
 function dashConfirmCompleteEvent(id, checked) {
@@ -478,7 +422,7 @@ async function dashCompleteEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            renderDashboard();
+            refreshDashboard();
             showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
         }
     } catch (e) {
