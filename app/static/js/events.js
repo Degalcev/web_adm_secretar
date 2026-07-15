@@ -54,7 +54,11 @@ async function _eventsLoadMore() {
     if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка…</div>';
 
     try {
-        const params = new URLSearchParams({ status: _eventsCompleted ? 'completed' : 'active', limit: EVENTS_PAGE_SIZE });
+        const params = new URLSearchParams({
+            status: _eventsCompleted ? 'completed' : 'active',
+            limit: EVENTS_PAGE_SIZE,
+            exclude_type: 'ВКС',
+        });
         if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
 
         // Server-side filters from UI
@@ -92,7 +96,7 @@ async function _eventsLoadMore() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
 
-        p.events.push(...(data.events || []).filter(e => e.type !== 'ВКС'));
+        p.events.push(...(data.events || []));
         p.cursorDate = data.next_cursor_date || null;
         p.cursorTime = data.next_cursor_time || null;
         p.cursorId = data.next_cursor_id || null;
