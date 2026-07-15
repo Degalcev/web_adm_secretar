@@ -1,0 +1,64 @@
+<!-- ─── Repeat Settings Modal ──────────────────────────────────────── -->
+<div class="modal-overlay repeat-modal-overlay" id="repeat-modal-overlay" style="display:none" onclick="if(event.target===this)closeRepeatModal()">
+  <div class="modal repeat-modal">
+    <div class="repeat-modal-header">
+      <h3>Настройка повтора</h3>
+      <button class="icon-btn" onclick="closeRepeatModal()" title="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="repeat-modal-body">
+      <!-- Переключатель типа -->
+      <div class="evt-repeat-type-row">
+        <button type="button" class="evt-repeat-type-btn active" data-type="daily" onclick="switchRepeatType('daily')">День</button>
+        <button type="button" class="evt-repeat-type-btn" data-type="weekly" onclick="switchRepeatType('weekly')">Неделя</button>
+        <button type="button" class="evt-repeat-type-btn" data-type="monthly" onclick="switchRepeatType('monthly')">Месяц</button>
+      </div>
+
+      <!-- День -->
+      <div class="evt-repeat-panel" id="repeat-panel-daily">
+        <label class="evt-repeat-option">
+          <input type="radio" name="repeat-daily-mode" value="interval" checked onchange="onRepeatDailyModeChange()">
+          Каждый <input type="number" id="repeat-daily-interval" class="evt-repeat-num-input" value="1" min="1" max="365"> день(дней)
+        </label>
+        <label class="evt-repeat-option">
+          <input type="radio" name="repeat-daily-mode" value="workdays" onchange="onRepeatDailyModeChange()">
+          Каждый рабочий день (Пн–Пт)
+        </label>
+      </div>
+
+      <!-- Неделя -->
+      <div class="evt-repeat-panel" id="repeat-panel-weekly" style="display:none">
+        <div class="evt-repeat-inline">
+          Каждую <input type="number" id="repeat-weekly-interval" class="evt-repeat-num-input" value="1" min="1" max="52"> неделю
+        </div>
+        <div class="evt-weekday-row" id="repeat-weekday-row">
+          <button type="button" class="evt-wd-btn" data-day="mon" onclick="this.classList.toggle('active')">Пн</button>
+          <button type="button" class="evt-wd-btn" data-day="tue" onclick="this.classList.toggle('active')">Вт</button>
+          <button type="button" class="evt-wd-btn" data-day="wed" onclick="this.classList.toggle('active')">Ср</button>
+          <button type="button" class="evt-wd-btn" data-day="thu" onclick="this.classList.toggle('active')">Чт</button>
+          <button type="button" class="evt-wd-btn" data-day="fri" onclick="this.classList.toggle('active')">Пт</button>
+          <button type="button" class="evt-wd-btn" data-day="sat" onclick="this.classList.toggle('active')">Сб</button>
+          <button type="button" class="evt-wd-btn" data-day="sun" onclick="this.classList.toggle('active')">Вс</button>
+        </div>
+      </div>
+
+      <!-- Месяц -->
+      <div class="evt-repeat-panel" id="repeat-panel-monthly" style="display:none">
+        <div class="evt-repeat-inline">
+          Каждого <input type="number" id="repeat-monthly-interval" class="evt-repeat-num-input" value="1" min="1" max="12"> месяца, числа <span id="repeat-monthly-day" class="evt-repeat-day-badge">—</span>
+        </div>
+      </div>
+
+      <!-- До даты -->
+      <div class="evt-repeat-until-row">
+        <label>До даты</label>
+        <input type="date" id="event-repeat-until" class="form-input">
+      </div>
+    </div>
+    <div class="repeat-modal-footer">
+      <button class="btn btn-ghost" onclick="closeRepeatModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="saveRepeatModal()">Применить</button>
+    </div>
+  </div>
+</div>

@@ -48,13 +48,6 @@ async function openAddEventModal(mode = 'vks') {
     _renderParticipants();
     // Повтор
     _setRepeatUI(null);
-    switchRepeatType('daily');
-    document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked = true;
-    document.getElementById('repeat-daily-interval').value = '1';
-    document.getElementById('repeat-daily-interval').disabled = false;
-    document.getElementById('repeat-weekly-interval').value = '1';
-    document.getElementById('repeat-monthly-interval').value = '1';
-    document.getElementById('repeat-monthly-day').textContent = '—';
     // Видимость URL
     onEventTypeChange();
     document.getElementById('event-modal').classList.add('show');
@@ -671,29 +664,77 @@ function addParticipant(id, name) {
     document.getElementById('event-participant-dropdown').style.display = 'none';
 }
 
-function evtToggleRepeat() {
-    const btn = document.getElementById('event-repeat-btn');
-    const options = document.getElementById('event-repeat-options');
-    const active = document.getElementById('event-repeat-active');
-    if (!btn || !options || !active) return;
-    const newState = active.value !== 'true';
-    active.value = newState ? 'true' : 'false';
-    btn.classList.toggle('done', newState);
-    options.style.display = newState ? 'block' : 'none';
-    if (newState) {
-        // Установить текущий день недели по умолчанию
-        const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-        const today = days[new Date().getDay()];
-        document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
-            b.classList.toggle('active', b.dataset.day === today);
-        });
-        // Установить число месяца из даты мероприятия
-        const dateVal = document.getElementById('f-event-date').value;
-        if (dateVal) {
-            const day = parseInt(dateVal.split('-')[2], 10);
-            document.getElementById('repeat-monthly-day').textContent = day;
-        }
+function openRepeatModal() {
+    const overlay = document.getElementById('repeat-modal-overlay');
+    if (!overlay) return;
+    // Восстановить текущее состояние
+    const active = document.getElementById('event-repeat-active').value === 'true';
+    if (active) {
+        const type = document.getElementById('event-repeat-type').value;
+        const until = document.getElementById('event-repeat-until-val')?.value || '';
+        document.getElementById('event-repeat-until').value = until;
+        switchRepeatType(type);
+    } else {
+        switchRepeatType('daily');
+        document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked = true;
+        document.getElementById('repeat-daily-interval').value = '1';
+        document.getElementById('repeat-daily-interval').disabled = false;
+        document.getElementById('repeat-weekly-interval').value = '1';
+        document.querySelectorAll('#repeat-weekday-row .evt-wd-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('repeat-monthly-interval').value = '1';
+        document.getElementById('event-repeat-until').value = '';
     }
+    // Установить число месяца
+    const dateVal = document.getElementById('f-event-date').value;
+    if (dateVal) {
+        document.getElementById('repeat-monthly-day').textContent = parseInt(dateVal.split('-')[2], 10);
+    }
+    overlay.style.display = 'flex';
+}
+
+function closeRepeatModal() {
+    const overlay = document.getElementById('repeat-modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+function saveRepeatModal() {
+    // Собрать данные из модалки
+    const type = document.getElementById('event-repeat-type').value;
+    const hasRepeat = true;
+    // Сохранить в скрытые поля основной формы
+    document.getElementById('event-repeat-active').value = 'true';
+    document.getElementById('event-repeat-type').value = type;
+    // Создать/обновить скрытое поле для until
+    let untilField = document.getElementById('event-repeat-until-val');
+    if (!untilField) {
+        untilField = document.createElement('input');
+        untilField.type = 'hidden';
+        untilField.id = 'event-repeat-until-val';
+        document.getElementById('event-repeat-active').parentNode.appendChild(untilField);
+    }
+    untilField.value = document.getElementById('event-repeat-until').value;
+    // Обновить pill кнопку
+    const btn = document.getElementById('event-repeat-btn');
+    const label = document.getElementById('event-repeat-label');
+    btn.classList.add('done');
+    const typeLabels = { daily: 'Ежедневно', weekly: 'Еженедельно', monthly: 'Ежемесячно' };
+    let desc = typeLabels[type] || '';
+    if (type === 'daily') {
+        const mode = document.querySelector('input[name="repeat-daily-mode"]:checked')?.value;
+        if (mode === 'workdays') desc = 'Рабочие дни';
+        else desc = `Каждый ${document.getElementById('repeat-daily-interval').value} дн.`;
+    } else if (type === 'weekly') {
+        const interval = document.getElementById('repeat-weekly-interval').value;
+        const days = [];
+        document.querySelectorAll('#repeat-weekday-row .evt-wd-btn.active').forEach(b => days.push(b.dataset.day));
+        desc = `Каждую ${interval} нед. (${days.join(', ')})`;
+    } else if (type === 'monthly') {
+        const interval = document.getElementById('repeat-monthly-interval').value;
+        const day = document.getElementById('repeat-monthly-day').textContent;
+        desc = `Каждые ${interval} мес., ${day} числа`;
+    }
+    if (label) label.textContent = desc;
+    closeRepeatModal();
 }
 
 function switchRepeatType(type) {
@@ -715,63 +756,72 @@ function _getRepeatData() {
     const active = document.getElementById('event-repeat-active').value === 'true';
     if (!active) return null;
     const type = document.getElementById('event-repeat-type').value;
-    const until = document.getElementById('event-repeat-until').value || null;
+    const untilField = document.getElementById('event-repeat-until-val');
+    const until = untilField ? untilField.value || null : null;
     if (type === 'daily') {
-        const mode = document.querySelector('input[name="repeat-daily-mode"]:checked').value;
-        if (mode === 'workdays') {
+        const mode = document.querySelector('input[name="repeat-daily-mode"]:checked');
+        if (mode && mode.value === 'workdays') {
             return { freq: 'weekly', interval_val: 1, by_day: ['mon', 'tue', 'wed', 'thu', 'fri'], until };
         } else {
-            const interval = parseInt(document.getElementById('repeat-daily-interval').value, 10) || 1;
+            const interval = parseInt(document.getElementById('repeat-daily-interval')?.value, 10) || 1;
             return { freq: 'daily', interval_val: interval, by_day: [], until };
         }
     } else if (type === 'weekly') {
-        const interval = parseInt(document.getElementById('repeat-weekly-interval').value, 10) || 1;
+        const interval = parseInt(document.getElementById('repeat-weekly-interval')?.value, 10) || 1;
         const byDay = [];
-        document.querySelectorAll('#event-weekday-row .evt-wd-btn.active').forEach(b => byDay.push(b.dataset.day));
+        document.querySelectorAll('#repeat-weekday-row .evt-wd-btn.active').forEach(b => byDay.push(b.dataset.day));
         return { freq: 'weekly', interval_val: interval, by_day: byDay, until };
     } else if (type === 'monthly') {
-        const interval = parseInt(document.getElementById('repeat-monthly-interval').value, 10) || 1;
+        const interval = parseInt(document.getElementById('repeat-monthly-interval')?.value, 10) || 1;
         return { freq: 'monthly', interval_val: interval, by_day: [], until };
     }
     return null;
 }
 
 function _setRepeatUI(seriesData) {
+    const btn = document.getElementById('event-repeat-btn');
+    const label = document.getElementById('event-repeat-label');
     if (!seriesData) {
         document.getElementById('event-repeat-active').value = 'false';
-        document.getElementById('event-repeat-btn').classList.remove('done');
-        document.getElementById('event-repeat-options').style.display = 'none';
+        document.getElementById('event-repeat-type').value = 'daily';
+        btn.classList.remove('done');
+        if (label) label.textContent = 'Повторять';
         return;
     }
     document.getElementById('event-repeat-active').value = 'true';
-    document.getElementById('event-repeat-btn').classList.add('done');
-    document.getElementById('event-repeat-options').style.display = 'block';
-    document.getElementById('event-repeat-until').value = seriesData.until || '';
+    btn.classList.add('done');
 
     const freq = seriesData.freq;
     const interval = seriesData.interval_val || 1;
     const byDay = seriesData.by_day || [];
+    const until = seriesData.until || '';
+
+    // Сохранить until в скрытое поле
+    let untilField = document.getElementById('event-repeat-until-val');
+    if (!untilField) {
+        untilField = document.createElement('input');
+        untilField.type = 'hidden';
+        untilField.id = 'event-repeat-until-val';
+        document.getElementById('event-repeat-active').parentNode.appendChild(untilField);
+    }
+    untilField.value = until;
 
     if (freq === 'daily') {
-        switchRepeatType('daily');
-        document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked = true;
-        document.getElementById('repeat-daily-interval').value = interval;
-        document.getElementById('repeat-daily-interval').disabled = false;
+        document.getElementById('event-repeat-type').value = 'daily';
+        let desc = `Каждый ${interval} дн.`;
+        if (label) label.textContent = desc;
     } else if (freq === 'weekly') {
         if (byDay.length === 5 && ['mon','tue','wed','thu','fri'].every(d => byDay.includes(d)) && interval === 1) {
-            // Каждый рабочий день
-            switchRepeatType('daily');
-            document.querySelector('input[name="repeat-daily-mode"][value="workdays"]').checked = true;
-            document.getElementById('repeat-daily-interval').disabled = true;
+            document.getElementById('event-repeat-type').value = 'daily';
+            if (label) label.textContent = 'Рабочие дни';
         } else {
-            switchRepeatType('weekly');
-            document.getElementById('repeat-weekly-interval').value = interval;
-            document.querySelectorAll('#event-weekday-row .evt-wd-btn').forEach(b => {
-                b.classList.toggle('active', byDay.includes(b.dataset.day));
-            });
+            document.getElementById('event-repeat-type').value = 'weekly';
+            const dayNames = { mon:'Пн', tue:'Вт', wed:'Ср', thu:'Чт', fri:'Пт', sat:'Сб', sun:'Вс' };
+            const names = byDay.map(d => dayNames[d] || d);
+            if (label) label.textContent = `Каждую ${interval} нед. (${names.join(', ')})`;
         }
     } else if (freq === 'monthly') {
-        switchRepeatType('monthly');
-        document.getElementById('repeat-monthly-interval').value = interval;
+        document.getElementById('event-repeat-type').value = 'monthly';
+        if (label) label.textContent = `Каждые ${interval} мес.`;
     }
 }

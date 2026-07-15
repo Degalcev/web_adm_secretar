@@ -122,59 +122,10 @@
         <!-- Повторять -->
         <div class="form-separator form-group">
           <label>Повторять</label>
-          <button type="button" class="pill-btn" id="event-repeat-btn" onclick="evtToggleRepeat()">
+          <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-            <span class="pill-label">Повторять</span>
+            <span class="pill-label" id="event-repeat-label">Повторять</span>
           </button>
-          <div class="evt-repeat-options" id="event-repeat-options" style="display:none; margin-top:8px">
-            <!-- Переключатель типа -->
-            <div class="evt-repeat-type-row">
-              <button type="button" class="evt-repeat-type-btn active" data-type="daily" onclick="switchRepeatType('daily')">День</button>
-              <button type="button" class="evt-repeat-type-btn" data-type="weekly" onclick="switchRepeatType('weekly')">Неделя</button>
-              <button type="button" class="evt-repeat-type-btn" data-type="monthly" onclick="switchRepeatType('monthly')">Месяц</button>
-            </div>
-
-            <!-- День: интервал + рабочие дни -->
-            <div class="evt-repeat-panel" id="repeat-panel-daily">
-              <label class="evt-repeat-option">
-                <input type="radio" name="repeat-daily-mode" value="interval" checked onchange="onRepeatDailyModeChange()">
-                Каждый <input type="number" id="repeat-daily-interval" class="evt-repeat-num-input" value="1" min="1" max="365"> день(дней)
-              </label>
-              <label class="evt-repeat-option">
-                <input type="radio" name="repeat-daily-mode" value="workdays" onchange="onRepeatDailyModeChange()">
-                Каждый рабочий день (Пн–Пт)
-              </label>
-            </div>
-
-            <!-- Неделя: интервал + кнопки дней -->
-            <div class="evt-repeat-panel" id="repeat-panel-weekly" style="display:none">
-              <div class="evt-repeat-inline">
-                Каждую <input type="number" id="repeat-weekly-interval" class="evt-repeat-num-input" value="1" min="1" max="52"> неделю
-              </div>
-              <div class="evt-weekday-row" id="event-weekday-row">
-                <button type="button" class="evt-wd-btn" data-day="mon" onclick="this.classList.toggle('active')">Пн</button>
-                <button type="button" class="evt-wd-btn" data-day="tue" onclick="this.classList.toggle('active')">Вт</button>
-                <button type="button" class="evt-wd-btn" data-day="wed" onclick="this.classList.toggle('active')">Ср</button>
-                <button type="button" class="evt-wd-btn" data-day="thu" onclick="this.classList.toggle('active')">Чт</button>
-                <button type="button" class="evt-wd-btn" data-day="fri" onclick="this.classList.toggle('active')">Пт</button>
-                <button type="button" class="evt-wd-btn" data-day="sat" onclick="this.classList.toggle('active')">Сб</button>
-                <button type="button" class="evt-wd-btn" data-day="sun" onclick="this.classList.toggle('active')">Вс</button>
-              </div>
-            </div>
-
-            <!-- Месяц: число + интервал -->
-            <div class="evt-repeat-panel" id="repeat-panel-monthly" style="display:none">
-              <div class="evt-repeat-inline">
-                Каждого <input type="number" id="repeat-monthly-interval" class="evt-repeat-num-input" value="1" min="1" max="12"> месяца, числа <span id="repeat-monthly-day" class="evt-repeat-day-badge">—</span>
-              </div>
-            </div>
-
-            <!-- До даты -->
-            <div class="evt-repeat-until-row">
-              <label>До даты</label>
-              <input type="date" id="event-repeat-until" class="form-input">
-            </div>
-          </div>
           <input type="hidden" id="event-repeat-active" value="false">
           <input type="hidden" id="event-repeat-type" value="daily">
         </div>
