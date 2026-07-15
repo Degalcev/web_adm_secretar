@@ -46,14 +46,10 @@ function _refreshEvents() {
 
     const page = currentPage || '';
 
-    if (page === 'vks-active') {
-        renderVksBoard('vks-board-active', 'active');
+    if (page === 'vks-active' || page === 'vks-completed') {
         updateVksStats();
-    } else if (page === 'vks-completed') {
-        renderVksBoard('vks-board-completed', 'completed');
-        updateVksStats();
+        _sseUpdateLockIcons();
     } else if (page === 'events-active' || page === 'events-completed') {
-        _eventsResetAndLoad();
         eventsUpdateStats();
     } else if (page === 'dashboard') {
         renderDashboard();
@@ -61,6 +57,35 @@ function _refreshEvents() {
         _calEventsCache = {};
         _calLoadingRange = false;
         renderCalendar(false);
+    }
+}
+
+async function _sseUpdateLockIcons() {
+    // Обновить иконки замков на видимых карточках без перерисовки доски
+    const cards = document.querySelectorAll('.vks-card[data-event-id]');
+    for (const card of cards) {
+        const eventId = card.getAttribute('data-event-id');
+        try {
+            const resp = await fetch(`/admin/api/events/${eventId}/single`, { credentials: 'same-origin' });
+            if (!resp.ok) continue;
+            const result = await resp.json();
+            if (!result.ok || !result.event) continue;
+            const e = result.event;
+            const lockEl = card.querySelector('.vks-card-lock');
+            if (e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id)) {
+                if (!lockEl) {
+                    const meta = card.querySelector('.vks-card-meta');
+                    if (meta) {
+                        const div = document.createElement('div');
+                        div.className = 'vks-card-lock';
+                        div.innerHTML = `${typeof LOCK_SVG !== 'undefined' ? LOCK_SVG : ''}<span>${esc(e.locked_by)}</span>`;
+                        meta.appendChild(div);
+                    }
+                }
+            } else if (lockEl) {
+                lockEl.remove();
+            }
+        } catch (err) {}
     }
 }
 
