@@ -63,7 +63,6 @@ function _refreshEvents() {
         renderCalendar(false);
     }
 }
-}
 
 async function _refreshLocations() {
     try {
