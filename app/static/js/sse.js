@@ -88,6 +88,23 @@ async function _sseProcessEvent(eventId, action) {
             eventsRenderBoard();
         } else if (page === 'dashboard') {
             renderDashboard();
+        } else if (page === 'calendar') {
+            // Обновить событие во всех диапазонах кэша
+            for (const key of Object.keys(_calEventsCache)) {
+                const arr = _calEventsCache[key];
+                const idx = arr.findIndex(ev => ev.id === eventId);
+                if (idx >= 0) {
+                    if (data.action === 'DELETE') {
+                        arr.splice(idx, 1);
+                    } else {
+                        arr[idx] = e;
+                    }
+                } else if (data.action === 'INSERT') {
+                    arr.push(e);
+                    arr.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
+                }
+            }
+            renderCalendar(false);
         }
     } catch (err) {
         console.error('SSE process error:', err);
