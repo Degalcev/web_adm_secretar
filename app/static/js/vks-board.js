@@ -24,9 +24,10 @@ function renderVksBoard(boardId, filter) {
     // Рендер из кэша мгновенно
     if (cached && cached.length) {
         _sseRerenderFromCache(boardId, filter);
-    } else {
-        board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+        return; // Данные актуальны — обновятся через SSE
     }
+
+    board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
     // Подвешиваем scroll-триггер
     const scrollEl = _findScrollParent(board);
@@ -41,7 +42,6 @@ function renderVksBoard(boardId, filter) {
         scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
     }
 
-    // Фоновый fetch — обновить данные
     _vksLoadMore(boardId, filter);
 }
 
