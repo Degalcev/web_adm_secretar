@@ -5,7 +5,7 @@ import logging
 from loguru import logger
 from sqlalchemy import (BigInteger, String, Integer, ForeignKey, Time, Date,
                         Boolean, LargeBinary, DateTime, Index)
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import relationship, mapped_column, DeclarativeBase
 
@@ -181,7 +181,7 @@ class EventSeries(Base):
     id          = mapped_column(String(), primary_key=True, default=lambda: str(uuid.uuid4()))
     freq        = mapped_column(String(20), nullable=False, default='weekly')
     interval_val = mapped_column(Integer(), nullable=False, default=1)
-    by_day      = mapped_column(JSONB, nullable=True)
+    by_day      = mapped_column(ARRAY(String), nullable=True)
     until       = mapped_column(Date(), nullable=True)
     created_at  = mapped_column(DateTime, default=datetime.utcnow)
 
