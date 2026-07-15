@@ -361,8 +361,7 @@ function calMobSelectRoom(id) {
         calUpdateNowLine();
         _calInitMobileSwipe();
         const wrap = document.getElementById('cal-mob-scroll');
-        const scrollHour = new Date().getHours();
-        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
+                if (wrap) wrap.scrollTop = 0;
     }
 }
 
@@ -477,8 +476,7 @@ function renderCalendar(full) {
             calUpdateNowLine();
             _calInitMobileSwipe();
             const wrap = document.getElementById('cal-mob-scroll');
-            const scrollHour = new Date().getHours();
-        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
+                    if (wrap) wrap.scrollTop = 0;
         } else {
             document.getElementById('cal-day-tabs').innerHTML = _calRenderTabs();
             document.getElementById('cal-grid-area').innerHTML = _calRenderGrid();
@@ -486,8 +484,7 @@ function renderCalendar(full) {
             _calInitHoverFix();
             _calScheduleShadowUpdate();
             const wrap = document.getElementById('cal-wrap');
-            const scrollHour = new Date().getHours();
-        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
+                    if (wrap) wrap.scrollTop = 0;
         }
 
         if (!_calShadowRO) {
@@ -509,8 +506,7 @@ function renderCalendar(full) {
                 calUpdateNowLine();
                 _calInitMobileSwipe();
                 const wrap = document.getElementById('cal-mob-scroll');
-                const scrollHour = new Date().getHours();
-        if (wrap) wrap.scrollTop = Math.max(0, (scrollHour - CAL_H_START)) * CAL_HOUR_H;
+                        if (wrap) wrap.scrollTop = 0;
             }
         } else {
             if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
