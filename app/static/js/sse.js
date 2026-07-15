@@ -42,6 +42,14 @@ function handleSSEEvent(data) {
 async function _sseProcessEvent(eventId, action) {
     const page = currentPage || '';
 
+    // Календарь — просто сбросить кэш и перерисовать (без fetch)
+    if (page === 'calendar') {
+        _calEventsCache = {};
+        _calLoadingRange = false;
+        renderCalendar(false);
+        return;
+    }
+
     // DELETE — убрать из данных и перерисовать
     if (action === 'DELETE') {
         if (page === 'vks-active' || page === 'vks-completed') {
@@ -71,26 +79,22 @@ async function _sseProcessEvent(eventId, action) {
             const idx = p.events.findIndex(ev => ev.id === eventId);
             if (idx >= 0) {
                 p.events[idx] = e;
-            } else if (data.action === 'INSERT') {
+            } else if (action === 'INSERT') {
                 p.events.push(e);
             }
-            // Пересортировать после любого изменения
             p.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             _sseRerenderBoard();
         } else if (page === 'events-active' || page === 'events-completed') {
             const idx = _eventsPagination.events.findIndex(ev => ev.id === eventId);
             if (idx >= 0) {
                 _eventsPagination.events[idx] = e;
-            } else if (data.action === 'INSERT') {
+            } else if (action === 'INSERT') {
                 _eventsPagination.events.push(e);
             }
             _eventsPagination.events.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || ''));
             eventsRenderBoard();
         } else if (page === 'dashboard') {
             renderDashboard();
-        } else if (page === 'calendar') {
-            _calEventsCache = {};
-            renderCalendar(false);
         }
     } catch (err) {
         console.error('SSE process error:', err);
