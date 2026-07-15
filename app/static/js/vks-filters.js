@@ -1,6 +1,5 @@
 // ─── VKS: Фильтры и загрузка данных ──────────────────────────────────
 
-const _LOAD_ALL_LIMIT = 10000; // fallback для calendar/dashboard
 let editingEventId = null;
 let pendingFiles = [];
 let removedDocIds = [];
@@ -45,35 +44,10 @@ function matchDateFilter(eventDate, filter) {
     return true;
 }
 
-async function ensureOrgsAndLocs() {
-    if (!store.allOrganizers || !store.allOrganizers.length) {
-        try {
-            const resp = await fetch(`${BASE_URL}/admin/api/organizers`, { credentials: 'same-origin' });
-            if (resp.ok) store.allOrganizers = await resp.json();
-        } catch (e) { store.allOrganizers = []; }
-    }
-    if (!store.allLocations || !store.allLocations.length) {
-        try {
-            const resp = await fetch(`${BASE_URL}/admin/api/locations`, { credentials: 'same-origin' });
-            if (resp.ok) store.allLocations = await resp.json();
-        } catch (e) { store.allLocations = []; }
-    }
-}
-
-async function loadAllEvents() {
-    await ensureOrgsAndLocs();
-    const resp = await fetch(`${BASE_URL}/admin/api/events?limit=${_LOAD_ALL_LIMIT}`);
-    if (resp.status === 401) { showLogin(); return; }
-    const json = await resp.json();
-    store.allEvents = Array.isArray(json) ? json : (json.events || []);
-}
-
 async function loadVksActive() {
-    if (!store.allEvents.length) {
-        await loadAllEvents();
-    }
     populateDateSelects('f-vks-active');
     populateVksFilters();
+    updateVksStats();
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
 
@@ -210,11 +184,9 @@ function filterVksByQuick(type) {
 }
 
 async function loadVksCompleted() {
-    if (!store.allEvents.length) {
-        await loadAllEvents();
-    }
     populateDateSelects('f-vks-completed');
     populateVksFilters();
+    updateVksStats();
     const board = document.getElementById('vks-board-completed');
     if (board) renderVksBoard('vks-board-completed', 'completed');
 }
