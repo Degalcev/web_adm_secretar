@@ -73,7 +73,6 @@ async function loadVksActive() {
     }
     populateDateSelects('f-vks-active');
     populateVksFilters();
-    updateVksStats();
     const board = document.getElementById('vks-board-active');
     if (board) renderVksBoard('vks-board-active', 'active');
 

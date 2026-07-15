@@ -16,7 +16,6 @@ function initEventsPage(completed = false) {
 
     _eventsPopulateFilters();
     _eventsResetAndLoad();
-    eventsUpdateStats();
 }
 
 function _eventsResetAndLoad() {
@@ -60,7 +59,7 @@ async function _eventsLoadMore() {
         if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
 
         const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
-        if (!resp.ok) { p.loading = false; return; }
+        if (!resp.ok) return;
         const data = await resp.json();
         const newEvents = (data.events || []).filter(e => e.type !== 'ВКС');
 
@@ -70,6 +69,7 @@ async function _eventsLoadMore() {
         p.hasMore = data.has_more;
 
         eventsRenderBoard();
+        eventsUpdateStats();
     } catch (e) {
         console.error('_eventsLoadMore error:', e);
     }
@@ -274,14 +274,17 @@ function eventsRenderBoard() {
     if (dayAfterEvents.length) html += _eventsRenderBlock('Послезавтра', dayAfterEvents, 'day-after');
     if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
 
-    board.innerHTML = html;
-    // Re-add sentinel for infinite scroll
+    // Preserve sentinel — don't use innerHTML
     let sentinel = board.querySelector('.scroll-sentinel');
     if (!sentinel) {
         sentinel = document.createElement('div');
         sentinel.className = 'scroll-sentinel';
         sentinel.style.height = '1px';
     }
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    while (board.firstChild) board.removeChild(board.firstChild);
+    while (temp.firstChild) board.appendChild(temp.firstChild);
     board.appendChild(sentinel);
     } catch (e) {
         console.error('eventsRenderBoard error:', e);

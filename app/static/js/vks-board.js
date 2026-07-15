@@ -43,7 +43,7 @@ async function _vksLoadMore(boardId, filter) {
         if (p.cursorTime) params.set('cursor_time', p.cursorTime);
 
         const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
-        if (!resp.ok) { p.loading = false; return; }
+        if (!resp.ok) return;
         const data = await resp.json();
         const newEvents = data.events || [];
 
@@ -53,6 +53,7 @@ async function _vksLoadMore(boardId, filter) {
         p.hasMore = data.has_more;
 
         _vksRenderBoard(boardId, filter);
+        updateVksStats();
     } catch (e) {
         console.error('_vksLoadMore error:', e);
     }
@@ -132,14 +133,18 @@ function _vksRenderBoard(boardId, filter) {
     if (dayAfterEvents.length) html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
     if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
 
-    // Keep sentinel at the end
+    // Keep sentinel — don't destroy it
     let sentinel = board.querySelector('.scroll-sentinel');
     if (!sentinel) {
         sentinel = document.createElement('div');
         sentinel.className = 'scroll-sentinel';
         sentinel.style.height = '1px';
     }
-    board.innerHTML = html;
+    // Use replaceChildren to preserve sentinel
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    while (board.firstChild) board.removeChild(board.firstChild);
+    while (temp.firstChild) board.appendChild(temp.firstChild);
     board.appendChild(sentinel);
 }
 
