@@ -11,14 +11,16 @@ function renderVksBoard(boardId, filter) {
     _vksPagination[boardId] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
 
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
-    const sentinel = board.querySelector('.scroll-sentinel');
 
-    // Setup IntersectionObserver
-    if (board._scrollObserver) board._scrollObserver.disconnect();
-    board._scrollObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) _vksLoadMore(boardId, filter);
-    }, { rootMargin: '200px' });
-    if (sentinel) board._scrollObserver.observe(sentinel);
+    // Use scroll listener on page container instead of IntersectionObserver
+    const pageEl = board.closest('.page') || board.parentElement;
+    if (pageEl && pageEl._vksScrollHandler) pageEl.removeEventListener('scroll', pageEl._vksScrollHandler);
+    pageEl._vksScrollHandler = () => {
+        if (pageEl.scrollTop + pageEl.clientHeight >= pageEl.scrollHeight - 300) {
+            _vksLoadMore(boardId, filter);
+        }
+    };
+    if (pageEl) pageEl.addEventListener('scroll', pageEl._vksScrollHandler);
 
     _vksLoadMore(boardId, filter);
 }
@@ -131,19 +133,14 @@ function _vksRenderBoard(boardId, filter) {
     if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
 
     // Keep sentinel at the end
-    const sentinel = board.querySelector('.scroll-sentinel') || document.createElement('div');
-    sentinel.className = 'scroll-sentinel';
-    sentinel.style.height = '1px';
-    if (!sentinel.parentNode) board.appendChild(sentinel);
+    let sentinel = board.querySelector('.scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        sentinel.style.height = '1px';
+    }
     board.innerHTML = html;
     board.appendChild(sentinel);
-
-    // Re-setup observer
-    if (board._scrollObserver) board._scrollObserver.disconnect();
-    board._scrollObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) _vksLoadMore(boardId, filter);
-    }, { rootMargin: '200px' });
-    board._scrollObserver.observe(sentinel);
 }
 
 function renderVksBlock(title, events, type) {

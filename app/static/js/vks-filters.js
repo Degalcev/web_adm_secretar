@@ -172,16 +172,22 @@ function clearVksFilter() {
 }
 
 function updateVksStats() {
-    const active = store.allEvents.filter(e => !e.completed && e.type === 'ВКС');
+    // Use pagination data from both boards
+    const pActive = _vksPagination['vks-board-active'];
+    const pCompleted = _vksPagination['vks-board-completed'];
+    const allVks = [...(pActive?.events || []), ...(pCompleted?.events || [])];
     const now = new Date();
     const today = localDateStr(now);
 
-    let total = active.length;
-    let todayCount = 0;
-    let soonCount = 0;
-    let missedCount = 0;
+    const active = allVks.filter(e => !e.completed);
+    const completed = allVks.filter(e => e.completed);
 
-    active.forEach(e => {
+    let total = 0, todayCount = 0, soonCount = 0, missedCount = 0;
+
+    // Stats reflect which page is active
+    const stats = (currentPage || '').includes('completed') ? completed : active;
+    total = stats.length;
+    stats.forEach(e => {
         if (!e.date) { missedCount++; return; }
         if (e.date < today) { missedCount++; }
         else if (e.date === today) { todayCount++; }

@@ -30,12 +30,14 @@ function _eventsResetAndLoad() {
     if (!board) return;
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    if (board._scrollObserver) board._scrollObserver.disconnect();
-    board._scrollObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) _eventsLoadMore();
-    }, { rootMargin: '200px' });
-    const sentinel = board.querySelector('.scroll-sentinel');
-    if (sentinel) board._scrollObserver.observe(sentinel);
+    const pageEl = board.closest('.page') || board.parentElement;
+    if (pageEl && pageEl._eventsScrollHandler) pageEl.removeEventListener('scroll', pageEl._eventsScrollHandler);
+    pageEl._eventsScrollHandler = () => {
+        if (pageEl.scrollTop + pageEl.clientHeight >= pageEl.scrollHeight - 300) {
+            _eventsLoadMore();
+        }
+    };
+    if (pageEl) pageEl.addEventListener('scroll', pageEl._eventsScrollHandler);
 
     _eventsLoadMore();
 }
@@ -273,6 +275,14 @@ function eventsRenderBoard() {
     if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
 
     board.innerHTML = html;
+    // Re-add sentinel for infinite scroll
+    let sentinel = board.querySelector('.scroll-sentinel');
+    if (!sentinel) {
+        sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        sentinel.style.height = '1px';
+    }
+    board.appendChild(sentinel);
     } catch (e) {
         console.error('eventsRenderBoard error:', e);
         const board = document.getElementById('events-board');
