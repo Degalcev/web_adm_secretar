@@ -41,29 +41,28 @@ function debounceRefreshEvents() {
 }
 
 function _refreshEvents() {
-    // Инвалидируем текущий вид — каждая страница сама знает как перезагрузиться.
-    // Мы не тащим весь массив событий, а просто сбрасываем то, что сейчас на экране.
+    // Пропускаем обновление если модалка открыта — lock/unlock триггерит SSE
+    const modal = document.getElementById('event-modal');
+    if (modal && modal.classList.contains('show')) return;
+
     const page = currentPage || '';
 
     if (page === 'vks-active') {
-        // Сброс пагинации → первая страница заново с текущими фильтрами
-        _vksPagination['vks-board-active'] = null;
-        renderVksBoard('vks-board-active', 'active');
+        const board = document.getElementById('vks-board-active');
+        if (board) renderVksBoard('vks-board-active', 'active');
         updateVksStats();
 
     } else if (page === 'vks-completed') {
-        _vksPagination['vks-board-completed'] = null;
-        renderVksBoard('vks-board-completed', 'completed');
+        const board = document.getElementById('vks-board-completed');
+        if (board) renderVksBoard('vks-board-completed', 'completed');
 
     } else if (page === 'events-active' || page === 'events-completed') {
         _eventsResetAndLoad();
 
     } else if (page === 'dashboard') {
-        // Dashboard использует /api/dashboard — свой маленький запрос
         renderDashboard();
 
     } else if (page === 'calendar') {
-        // Сбрасываем кэш недель — следующий рендер перезапросит текущую
         if (typeof _calEventsCache !== 'undefined') _calEventsCache = {};
         renderCalendar(false);
     }
