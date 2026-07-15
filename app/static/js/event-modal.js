@@ -351,7 +351,16 @@ async function downloadDoc(docId, fileName) {
 }
 
 async function loadEventSelects() {
-    await ensureOrgsAndLocs();
+    // Справочники уже загружены preloader.js (store.allOrganizers, store.allLocations)
+    // Если пустые — загрузить напрямую
+    if (!store.allOrganizers?.length || !store.allLocations?.length) {
+        const [orgResp, locResp] = await Promise.all([
+            fetch('/admin/api/organizers', { credentials: 'same-origin' }),
+            fetch('/admin/api/locations', { credentials: 'same-origin' })
+        ]);
+        if (orgResp.ok) store.allOrganizers = await orgResp.json();
+        if (locResp.ok) store.allLocations = await locResp.json();
+    }
 
     const orgSelect = document.getElementById('f-event-organizer');
     const locSelect = document.getElementById('f-event-location');
