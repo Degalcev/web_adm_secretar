@@ -189,7 +189,7 @@ function renderVksCard(e, blockType) {
     if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
     else if (e.completed) stripeClass = 'completed';
 
-    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" data-event-id="${e.id}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
     html += `<div class="vks-stripe ${stripeClass}"></div>`;
     html += `<div class="vks-card-content">`;
 

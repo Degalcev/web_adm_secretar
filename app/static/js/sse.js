@@ -25,13 +25,60 @@ function handleSSEEvent(data) {
     if (!table) return;
 
     if (table === 'events') {
-        debounceRefreshEvents();
+        // Если есть ID события — обновляем только одну карточку
+        if (data.task_id) {
+            _sseUpdateCard(data.task_id, data);
+        } else {
+            debounceRefreshEvents();
+        }
     } else if (table === 'locations') {
         _refreshLocations();
     } else if (table === 'organizers') {
         _refreshOrganizers();
     } else if (table === 'users') {
         _refreshUsers();
+    }
+}
+
+async function _sseUpdateCard(eventId, sseData) {
+    // Пропускаем если модалка открыта
+    const modal = document.getElementById('event-modal');
+    if (modal && modal.classList.contains('show')) return;
+
+    // Попробовать найти карточку по data-id
+    const card = document.querySelector(`[data-event-id="${eventId}"]`);
+    if (!card) return; // Карточка не на экране — ничего не делаем
+
+    // Загрузить актуальные данные события
+    try {
+        const resp = await fetch(`/admin/api/events/${eventId}/single`, { credentials: 'same-origin' });
+        if (!resp.ok) return;
+        const result = await resp.json();
+        if (!result.ok || !result.event) return;
+        const e = result.event;
+
+        // Обновить данные в пагинации
+        const page = currentPage || '';
+        if (page === 'vks-active' || page === 'vks-completed') {
+            const boardId = page === 'vks-active' ? 'vks-board-active' : 'vks-board-completed';
+            const p = _vksPagination[boardId];
+            if (p) {
+                const idx = p.events.findIndex(ev => ev.id === eventId);
+                if (idx >= 0) p.events[idx] = e;
+            }
+        } else if (page === 'events-active' || page === 'events-completed') {
+            const idx = _eventsPagination.events.findIndex(ev => ev.id === eventId);
+            if (idx >= 0) _eventsPagination.events[idx] = e;
+        }
+
+        // Перерисовать доску (обновит все карточки, но без сброса скролла)
+        if (page === 'vks-active') renderVksBoard('vks-board-active', 'active');
+        else if (page === 'vks-completed') renderVksBoard('vks-board-completed', 'completed');
+        else if (page === 'events-active' || page === 'events-completed') eventsRenderBoard();
+        else if (page === 'dashboard') renderDashboard();
+    } catch (err) {
+        // Fallback — полная перерисовка
+        debounceRefreshEvents();
     }
 }
 
@@ -48,24 +95,25 @@ function _refreshEvents() {
     const page = currentPage || '';
 
     if (page === 'vks-active') {
-        const board = document.getElementById('vks-board-active');
-        if (board) renderVksBoard('vks-board-active', 'active');
+        _sseSoftRefreshBoard('vks-board-active', 'active');
         updateVksStats();
-
     } else if (page === 'vks-completed') {
-        const board = document.getElementById('vks-board-completed');
-        if (board) renderVksBoard('vks-board-completed', 'completed');
-
+        _sseSoftRefreshBoard('vks-board-completed', 'completed');
     } else if (page === 'events-active' || page === 'events-completed') {
         _eventsResetAndLoad();
-
     } else if (page === 'dashboard') {
         renderDashboard();
-
     } else if (page === 'calendar') {
         if (typeof _calEventsCache !== 'undefined') _calEventsCache = {};
         renderCalendar(false);
     }
+}
+
+async function _sseSoftRefreshBoard(boardId, filter) {
+    // Перезагружаем данные текущего вида и перерисовываем доску
+    // Пагинация сбрасывается, но renderVksBoard это делает сам
+    const board = document.getElementById(boardId);
+    if (board) renderVksBoard(boardId, filter);
 }
 
 async function _refreshLocations() {

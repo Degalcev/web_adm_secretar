@@ -357,7 +357,7 @@ function _eventsRenderCard(e, blockType) {
     if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
     else if (e.completed) stripeClass = 'completed';
 
-    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" onclick="evtOpenEditModal('${e.id}')" style="cursor:pointer">`;
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" data-event-id="${e.id}" onclick="evtOpenEditModal('${e.id}')" style="cursor:pointer">`;
 
     html += `<div class="vks-stripe ${stripeClass}"></div>`;
 
