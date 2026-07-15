@@ -255,6 +255,8 @@ function closeEventModal() {
     pendingFiles = [];
     removedDocIds = [];
     _currentEvent = null;
+    // Обновить доску после закрытия модалки (unlock + SSE с задержкой)
+    setTimeout(_refreshEvents, 500);
 }
 
 function refreshEventDocs() {

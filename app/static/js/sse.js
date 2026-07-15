@@ -41,6 +41,10 @@ function debounceRefreshEvents() {
 }
 
 function _refreshEvents() {
+    // Пропускаем если модалка открыта — lock/unlock/generate SSE
+    const modal = document.getElementById('event-modal');
+    if (modal && modal.classList.contains('show')) return;
+
     const page = currentPage || '';
 
     if (page === 'vks-active') {
