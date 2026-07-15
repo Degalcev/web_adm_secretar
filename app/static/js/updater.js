@@ -22,14 +22,7 @@ async function checkVersion() {
         }
 
         if (_currentVersion && data.version !== _currentVersion) {
-            // Показать уведомление вместо автоперезагрузки
-            const badge = document.getElementById('env-badge');
-            if (badge) {
-                badge.textContent = 'NEW';
-                badge.style.display = 'inline-block';
-                badge.style.background = 'var(--warning)';
-            }
-            _currentVersion = data.version;
+            window.location.reload();
         }
         _currentVersion = data.version;
     } catch (e) {}

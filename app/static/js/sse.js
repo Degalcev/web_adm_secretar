@@ -46,9 +46,14 @@ function _refreshEvents() {
 
     const page = currentPage || '';
 
-    if (page === 'vks-active' || page === 'vks-completed') {
+    if (page === 'vks-active') {
+        renderVksBoard('vks-board-active', 'active');
+        updateVksStats();
+    } else if (page === 'vks-completed') {
+        renderVksBoard('vks-board-completed', 'completed');
         updateVksStats();
     } else if (page === 'events-active' || page === 'events-completed') {
+        _eventsResetAndLoad();
         eventsUpdateStats();
     } else if (page === 'dashboard') {
         renderDashboard();
