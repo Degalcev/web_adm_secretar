@@ -5,8 +5,31 @@ from datetime import date, datetime, timedelta, time
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
 from app.event_types import validate_event_type
-from database.requests import get_events, get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids, get_user_by_id, get_event_participants, get_event_series, get_series_exceptions
-from database.sending import add_event, update_event, delete_event, add_document, delete_document, lock_event, unlock_event, add_event_participants, replace_event_participants, create_event_series, delete_event_series, add_series_exception
+from database.requests import (
+    get_events, count_events, get_event_counts_by_date,
+    get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids,
+    get_user_by_id, get_event_participants, get_event_series,
+    get_series_exceptions,
+)
+from database.sending import (
+    add_event, update_event, delete_event, add_document, delete_document,
+    lock_event, unlock_event, add_event_participants, replace_event_participants,
+    create_event_series, delete_event_series, add_series_exception,
+)
+
+
+def _parse_date(s: str):
+    try:
+        return datetime.strptime(s.strip(), '%Y-%m-%d').date() if s and s.strip() else None
+    except ValueError:
+        return None
+
+
+def _parse_time(s: str):
+    try:
+        return datetime.strptime(s.strip(), '%H:%M').time() if s and s.strip() else None
+    except ValueError:
+        return None
 
 
 async def get_events_handler(request: web.Request) -> web.Response:
@@ -18,40 +41,26 @@ async def get_events_handler(request: web.Request) -> web.Response:
         elif status == 'active':
             completed = False
 
-        event_type = request.query.get('type', '').strip() or None
-        participant_id = request.query.get('participant_id', '').strip() or None
-        location_id = request.query.get('location_id', '').strip() or None
-        organizer_id = request.query.get('organizer_id', '').strip() or None
-        date_from_str = request.query.get('from', '').strip()
-        date_to_str = request.query.get('to', '').strip()
-        date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else None
-        date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else None
+        limit = min(int(request.query.get('limit', '50')), 200)
 
-        cursor_date_str = request.query.get('cursor_date', '').strip()
-        cursor_time_str = request.query.get('cursor_time', '').strip()
-        cursor_date = datetime.strptime(cursor_date_str, '%Y-%m-%d').date() if cursor_date_str else None
-        cursor_time = datetime.strptime(cursor_time_str, '%H:%M').time() if cursor_time_str else None
-
-        limit = int(request.query.get('limit', '20'))
-
-        events, total, has_more = await get_events(
+        events, has_more = await get_events(
             completed=completed,
-            event_type=event_type,
-            participant_id=participant_id,
-            location_id=location_id,
-            organizer_id=organizer_id,
-            date_from=date_from,
-            date_to=date_to,
-            cursor_date=cursor_date,
-            cursor_time=cursor_time,
+            event_type=request.query.get('type', '').strip() or None,
+            participant_id=request.query.get('participant_id', '').strip() or None,
+            location_id=request.query.get('location_id', '').strip() or None,
+            organizer_id=request.query.get('organizer_id', '').strip() or None,
+            date_from=_parse_date(request.query.get('from', '')),
+            date_to=_parse_date(request.query.get('to', '')),
+            search=request.query.get('search', '').strip() or None,
+            cursor_date=_parse_date(request.query.get('cursor_date', '')),
+            cursor_time=_parse_time(request.query.get('cursor_time', '')),
+            cursor_id=request.query.get('cursor_id', '').strip() or None,
             limit=limit,
         )
 
-        data = []
         event_ids = [e.id for e in events]
         docs_map = await get_documents_by_event_ids(event_ids) if event_ids else {}
 
-        # Load series for events that have series_id
         series_ids = set(e.series_id for e in events if e.series_id)
         series_map = {}
         for sid in series_ids:
@@ -59,10 +68,11 @@ async def get_events_handler(request: web.Request) -> web.Response:
             if s:
                 series_map[sid] = {
                     'freq': s.freq, 'interval_val': s.interval_val,
-                    'by_day': s.by_day or [], 'until': s.until.isoformat() if s.until else None,
+                    'by_day': s.by_day or [],
+                    'until': s.until.isoformat() if s.until else None,
                 }
 
-        # Resolve user names (audit + lock) in batch
+        # Batch-resolve user names
         audit_user_ids = set()
         for e in events:
             if e.last_changed_by:
@@ -76,20 +86,9 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 name_parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
                 audit_users[uid] = ' '.join(p for p in name_parts if p).strip() or u.name or u.username or str(u.max_id)
 
+        data = []
         for e in events:
-            changed_by_name = audit_users.get(e.last_changed_by, '') if e.last_changed_by else ''
-
-            # Resolve lock user from batch-resolved dict
-            locked_by_name = None
-            locked_by_id = e.locked_by
-            if e.locked_by:
-                lu = audit_users.get(e.locked_by)
-                if lu:
-                    locked_by_name = lu
-
-            # Load participants for each event
             participants = await get_event_participants(e.id)
-
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -107,41 +106,46 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'participants': participants,
                 'series_id': e.series_id,
                 'series': series_map.get(e.series_id),
-                'last_changed_by': changed_by_name,
+                'last_changed_by': audit_users.get(e.last_changed_by, '') if e.last_changed_by else '',
                 'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
                 'last_change_action': e.last_change_action or '',
-                'locked_by': locked_by_name,
-                'locked_by_id': locked_by_id,
+                'locked_by': audit_users.get(e.locked_by) if e.locked_by else None,
+                'locked_by_id': e.locked_by,
                 'locked_at': e.locked_at.isoformat() if e.locked_at else None,
             })
-        logger.debug('Загружено {} событий (total: {})', len(data), total)
 
-        next_cursor_date = events[-1].date.isoformat() if events and has_more else None
-        next_cursor_time = events[-1].time.strftime('%H:%M') if events and has_more and events[-1].time else None
+        # Cursor для следующей страницы
+        next_cursor_date = None
+        next_cursor_time = None
+        next_cursor_id = None
+        if has_more and events:
+            last = events[-1]
+            next_cursor_date = last.date.isoformat() if last.date else None
+            next_cursor_time = last.time.strftime('%H:%M') if last.time else None
+            next_cursor_id = last.id
+
+        logger.debug('Загружено {} событий (has_more: {})', len(data), has_more)
 
         return web.json_response({
             'events': data,
-            'total': total,
             'has_more': has_more,
             'next_cursor_date': next_cursor_date,
             'next_cursor_time': next_cursor_time,
+            'next_cursor_id': next_cursor_id,
         })
     except Exception as e:
         logger.error('Ошибка получения событий: {}', repr(e))
-        return web.json_response([], status=500)
+        return web.json_response({'events': [], 'has_more': False}, status=500)
 
 
 async def _parse_event_from_multipart(request: web.Request) -> dict:
-    """Парсит multipart форму: поля события + файлы."""
     reader = await request.multipart()
     fields = {}
     files = []
-
     while True:
         part = await reader.next()
         if part is None:
             break
-
         if part.name == 'files':
             filename = part.filename
             content = await part.read()
@@ -150,7 +154,6 @@ async def _parse_event_from_multipart(request: web.Request) -> dict:
         else:
             value = (await part.read()).decode('utf-8')
             fields[part.name] = value
-
     return {'fields': fields, 'files': files}
 
 
@@ -198,15 +201,14 @@ async def create_event_handler(request: web.Request) -> web.Response:
                 participants = json.loads(participants_json)
                 if participants:
                     await add_event_participants(event_id, participants)
-            except Exception as e:
-                logger.error('Ошибка добавления участников: {}', repr(e))
+            except Exception as ex:
+                logger.error('Ошибка добавления участников: {}', repr(ex))
 
         for f in files:
             await add_document(event_id=event_id, name=f['name'], size=f['size'], content=f['content'])
             logger.info('Документ {} привязан к событию {}', f['name'], event_id)
 
         await log_event_change(event_id, str(user.id) if user else None, 'create')
-
         return web.json_response({'ok': True, 'id': event_id})
     except Exception as e:
         logger.error('Ошибка создания события: {}', repr(e))
@@ -232,10 +234,8 @@ async def update_event_handler(request: web.Request) -> web.Response:
                     update_data[field] = fields[field] == 'true'
                 else:
                     update_data[field] = fields[field]
-
         if 'type' in update_data and not validate_event_type(update_data['type']):
             return web.json_response({'ok': False, 'error': f'Неизвестный тип мероприятия: {update_data["type"]}'}, status=400)
-
         if 'duration' in fields:
             update_data['duration'] = int(fields['duration'])
         if 'organizer_type' in fields:
@@ -272,8 +272,8 @@ async def update_event_handler(request: web.Request) -> web.Response:
                 import json
                 participants = json.loads(participants_json)
                 await replace_event_participants(event_id, participants)
-            except Exception as e:
-                logger.error('Ошибка замены участников: {}', repr(e))
+            except Exception as ex:
+                logger.error('Ошибка замены участников: {}', repr(ex))
 
         new_state = await capture_event_state(event_id)
         action = 'update'
@@ -284,13 +284,11 @@ async def update_event_handler(request: web.Request) -> web.Response:
         removed_docs = [{'name': d['name'], 'id': d['id']} for d in existing_docs_before if d['id'] not in keep_list]
         added_docs = [{'name': f['name'], 'size': f['size']} for f in files]
         doc_changes = {'added': added_docs, 'removed': removed_docs} if (removed_docs or added_docs) else None
-
         changes = _compare_states(old_state, new_state)
         if action == 'update' and doc_changes and doc_changes.get('removed') and not changes:
             action = 'doc_remove'
 
         await log_event_change(event_id, str(user.id) if user else None, action, old_state, new_state, doc_changes)
-
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка обновления события: {}', repr(e))
@@ -306,7 +304,6 @@ async def delete_event_handler(request: web.Request) -> web.Response:
         if user:
             logger.info('Event {} deleted by user {} ({})', event_id, user.id, user.max_id)
         await log_event_change(event_id, str(user.id) if user else None, 'delete', old_state)
-        # Сначала удаляем документы события
         docs = await get_documents_by_event_id(event_id)
         for doc in docs:
             await delete_document(doc['id'])
@@ -319,57 +316,59 @@ async def delete_event_handler(request: web.Request) -> web.Response:
 
 
 async def dashboard_stats(request: web.Request) -> web.Response:
+    """
+    Dashboard: агрегаты + up to 8 событий на сегодня и скоро.
+    Не загружает весь массив событий — использует get_event_counts_by_date
+    и отдельные маленькие выборки.
+    """
     try:
-        events_result = await get_events(limit=10000)
-        events = events_result[0]
         today = date.today()
+        counts = await get_event_counts_by_date(completed=False)
+
+        # Today events (лимит 8)
+        today_events_raw, _ = await get_events(
+            completed=False, date_from=today, date_to=today, limit=8
+        )
+        today_event_ids = [e.id for e in today_events_raw]
+        today_docs = await get_documents_by_event_ids(today_event_ids) if today_event_ids else {}
+        today_events = [
+            {
+                'id': e.id, 'date': e.date.isoformat(),
+                'time': e.time.strftime('%H:%M') if e.time else None,
+                'description': e.description or '',
+                'organizer_id': e.organizer_id, 'location_id': e.location_id,
+                'url': e.url or '', 'completed': e.completed,
+                'documents': today_docs.get(e.id, []),
+            }
+            for e in today_events_raw
+        ]
+
+        # Soon events (лимит 8, начиная с завтра)
         tomorrow = today + timedelta(days=1)
-
-        total = len(events)
-        completed = sum(1 for e in events if e.completed)
-        active = sum(1 for e in events if not e.completed and e.date and e.date >= today)
-        missed = sum(1 for e in events if not e.completed and e.date and e.date < today)
-
-        # Today events (up to 8)
-        today_events = []
-        for e in events:
-            if e.completed or not e.date:
-                continue
-            ev_date = e.date
-            ev_time = e.time or time(23, 59)
-            dt = datetime.combine(ev_date, ev_time)
-            if ev_date == today:
-                today_events.append({
-                    'id': e.id, 'date': e.date.isoformat(),
-                    'time': e.time.strftime('%H:%M') if e.time else None,
-                    'description': e.description or '',
-                    'organizer_id': e.organizer_id, 'location_id': e.location_id,
-                    'url': e.url or '', 'completed': e.completed,
-                    'documents': await get_documents_by_event_id(e.id)
-                })
-        today_events.sort(key=lambda x: x['time'] or '23:59')
-        today_events = today_events[:8]
-
-        # Soon events (up to 8)
-        soon_events = []
-        for e in events:
-            if e.completed or not e.date:
-                continue
-            if e.date > today:
-                soon_events.append({
-                    'id': e.id, 'date': e.date.isoformat(),
-                    'time': e.time.strftime('%H:%M') if e.time else None,
-                    'description': e.description or '',
-                    'organizer_id': e.organizer_id, 'location_id': e.location_id,
-                    'url': e.url or '', 'completed': e.completed,
-                    'documents': await get_documents_by_event_id(e.id)
-                })
-        soon_events.sort(key=lambda x: (x['date'], x['time'] or '23:59'))
-        soon_events = soon_events[:8]
+        soon_events_raw, _ = await get_events(
+            completed=False, date_from=tomorrow, limit=8
+        )
+        soon_event_ids = [e.id for e in soon_events_raw]
+        soon_docs = await get_documents_by_event_ids(soon_event_ids) if soon_event_ids else {}
+        soon_events = [
+            {
+                'id': e.id, 'date': e.date.isoformat(),
+                'time': e.time.strftime('%H:%M') if e.time else None,
+                'description': e.description or '',
+                'organizer_id': e.organizer_id, 'location_id': e.location_id,
+                'url': e.url or '', 'completed': e.completed,
+                'documents': soon_docs.get(e.id, []),
+            }
+            for e in soon_events_raw
+        ]
 
         return web.json_response({
-            'total': total, 'completed': completed, 'active': active, 'missed': missed,
-            'today': today_events, 'soon': soon_events
+            'total': counts['total'],
+            'completed': await count_events(completed=True),
+            'active': counts['total'] - counts['missed'],
+            'missed': counts['missed'],
+            'today': today_events,
+            'soon': soon_events,
         })
     except Exception as e:
         logger.error('Dashboard stats error: {}', repr(e))
@@ -419,26 +418,20 @@ async def get_series_handler(request: web.Request) -> web.Response:
         event = await get_event_by_id(event_id)
         if not event or not event.series_id:
             return web.json_response({'series': None, 'exceptions': []})
-
         series = await get_event_series(event.series_id)
         if not series:
             return web.json_response({'series': None, 'exceptions': []})
-
         exceptions = await get_series_exceptions(series.id)
         return web.json_response({
             'series': {
-                'id': series.id,
-                'freq': series.freq,
-                'interval_val': series.interval_val,
+                'id': series.id, 'freq': series.freq, 'interval_val': series.interval_val,
                 'by_day': series.by_day or [],
                 'until': series.until.isoformat() if series.until else None,
             },
             'exceptions': [
                 {
-                    'id': exc.id,
-                    'original_date': exc.original_date.isoformat(),
-                    'event_id': exc.event_id,
-                    'action': exc.action,
+                    'id': exc.id, 'original_date': exc.original_date.isoformat(),
+                    'event_id': exc.event_id, 'action': exc.action,
                     'new_date': exc.new_date.isoformat() if exc.new_date else None,
                 }
                 for exc in exceptions
@@ -454,14 +447,12 @@ async def create_series_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
         data = await request.json()
-
         series_id = await create_event_series(
             freq=data.get('freq', 'weekly'),
             interval_val=data.get('interval_val', 1),
             by_day=data.get('by_day', []),
             until=datetime.strptime(data['until'], '%Y-%m-%d').date() if data.get('until') else None,
         )
-
         await update_event(event_id=event_id, series_id=series_id)
         return web.json_response({'ok': True, 'series_id': series_id})
     except Exception as e:
@@ -476,7 +467,6 @@ async def delete_series_handler(request: web.Request) -> web.Response:
         event = await get_event_by_id(event_id)
         if not event or not event.series_id:
             return web.json_response({'ok': False, 'error': 'Серия не найдена'}, status=404)
-
         await update_event(event_id=event_id, series_id=None)
         await delete_event_series(event.series_id)
         return web.json_response({'ok': True})
@@ -490,11 +480,9 @@ async def add_exception_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
         data = await request.json()
-
         event = await get_event_by_id(event_id)
         if not event or not event.series_id:
             return web.json_response({'ok': False, 'error': 'Серия не найдена'}, status=404)
-
         exc_id = await add_series_exception(
             series_id=event.series_id,
             original_date=datetime.strptime(data['original_date'], '%Y-%m-%d').date(),
@@ -509,41 +497,24 @@ async def add_exception_handler(request: web.Request) -> web.Response:
 
 
 async def get_events_stats(request: web.Request) -> web.Response:
-    """Возвращает точные счётчики из БД: total, today, soon, missed для active/completed."""
+    """Счётчики из БД агрегатными запросами — без загрузки строк событий."""
     try:
         status = request.query.get('status', 'active')
-        event_type = request.query.get('type', '').strip()
+        event_type = request.query.get('type', '').strip() or None
         today = date.today()
 
-        kwargs = {'limit': 100000}
-        if status == 'completed':
-            kwargs['completed'] = True
-        else:
-            kwargs['completed'] = False
-        if event_type:
-            kwargs['event_type'] = event_type
+        completed = True if status == 'completed' else False
 
-        events, total, _ = await get_events(**kwargs)
-
-        today_count = 0
-        soon_count = 0
-        missed_count = 0
-        for e in events:
-            if e.type == 'ВКС':
-                continue
-            if not e.date:
-                missed_count += 1
-            elif e.date < today:
-                missed_count += 1
-            elif e.date == today:
-                today_count += 1
-            else:
-                soon_count += 1
-
-        non_vks_total = total - sum(1 for e in events if e.type == 'ВКС')
+        total = await count_events(completed=completed, event_type=event_type)
+        today_count = await count_events(completed=completed, event_type=event_type,
+                                         date_from=today, date_to=today)
+        soon_count = await count_events(completed=completed, event_type=event_type,
+                                        date_from=today + timedelta(days=1))
+        missed_count = await count_events(completed=completed, event_type=event_type,
+                                          date_to=today - timedelta(days=1))
 
         return web.json_response({
-            'total': non_vks_total,
+            'total': total,
             'today': today_count,
             'soon': soon_count,
             'missed': missed_count,

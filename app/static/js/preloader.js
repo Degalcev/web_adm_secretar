@@ -1,4 +1,8 @@
-// ─── Preloader: предзагрузка всех данных при старте ──────────────────
+// ─── Preloader: предзагрузка справочников при старте ─────────────────
+//
+// События больше не грузятся здесь — каждая страница сама запрашивает
+// нужный срез через /admin/api/events с серверной фильтрацией/пагинацией.
+// store.allEvents убран намеренно.
 
 let _preloaded = false;
 
@@ -7,13 +11,18 @@ function restoreFromCache() {
     if (!cached) return false;
     try {
         const c = JSON.parse(cached);
-        if (c.events) store.allEvents = c.events;
-        if (typeof _dashEvents !== 'undefined') _dashEvents = c.events || [];
-        if (typeof _dashLocations !== 'undefined') _dashLocations = c.locations || {};
-        if (typeof _dashOrganizers !== 'undefined') _dashOrganizers = c.organizers || {};
-        store.allLocations = c.locations_raw || [];
-        store.allOrganizers = c.organizers_raw || [];
-        return true;
+        store.allLocations = c.locations || [];
+        store.allOrganizers = c.organizers || [];
+        // Обратная совместимость со старым кэшем
+        if (typeof _dashLocations !== 'undefined') {
+            _dashLocations = {};
+            store.allLocations.forEach(l => { _dashLocations[l.id] = l.name; });
+        }
+        if (typeof _dashOrganizers !== 'undefined') {
+            _dashOrganizers = {};
+            store.allOrganizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
+        }
+        return store.allLocations.length > 0 || store.allOrganizers.length > 0;
     } catch (e) { return false; }
 }
 
@@ -24,26 +33,25 @@ async function preloadAllData() {
         if (!resp.ok) return;
         const data = await resp.json();
 
-        store.allEvents = data.events || [];
-        if (typeof _dashEvents !== 'undefined') _dashEvents = data.events || [];
-        if (typeof _dashLocations !== 'undefined') {
-            _dashLocations = {};
-            (data.locations || []).forEach(l => { _dashLocations[l.id] = l.name; });
-        }
-        if (typeof _dashOrganizers !== 'undefined') {
-            _dashOrganizers = {};
-            (data.organizers || []).forEach(o => { _dashOrganizers[o.id] = o.name; });
-        }
         store.allLocations = data.locations || [];
         store.allOrganizers = data.organizers || [];
 
-        localStorage.setItem('dash_cache', JSON.stringify({
-            events: data.events || [],
-            locations: _dashLocations || {},
-            organizers: _dashOrganizers || {},
-            locations_raw: data.locations || [],
-            organizers_raw: data.organizers || [],
-        }));
+        if (typeof _dashLocations !== 'undefined') {
+            _dashLocations = {};
+            store.allLocations.forEach(l => { _dashLocations[l.id] = l.name; });
+        }
+        if (typeof _dashOrganizers !== 'undefined') {
+            _dashOrganizers = {};
+            store.allOrganizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
+        }
+
+        // Кэшируем только справочники — они небольшие и редко меняются
+        try {
+            localStorage.setItem('dash_cache', JSON.stringify({
+                locations: store.allLocations,
+                organizers: store.allOrganizers,
+            }));
+        } catch (e) { /* квота превышена — игнорируем */ }
 
         _preloaded = true;
     } catch (e) {
@@ -52,6 +60,6 @@ async function preloadAllData() {
 }
 
 function initPreloader() {
-    restoreFromCache();
-    preloadAllData();
+    restoreFromCache();   // сразу показываем из кэша
+    preloadAllData();     // затем обновляем с сервера в фоне
 }

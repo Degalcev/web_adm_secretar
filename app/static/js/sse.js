@@ -37,37 +37,36 @@ function handleSSEEvent(data) {
 
 function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
-    _sseDebounceTimer = setTimeout(() => {
-        _refreshEvents();
-    }, 200);
+    _sseDebounceTimer = setTimeout(_refreshEvents, 300);
 }
 
-async function _refreshEvents() {
-    try {
-        const resp = await fetch(`/admin/api/events?limit=${EVENTS_LIMIT}`, { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        const events = Array.isArray(data) ? data : (data.events || []);
-        store.allEvents = events;
-        if (typeof _dashEvents !== 'undefined') _dashEvents = events;
+function _refreshEvents() {
+    // Инвалидируем текущий вид — каждая страница сама знает как перезагрузиться.
+    // Мы не тащим весь массив событий, а просто сбрасываем то, что сейчас на экране.
+    const page = currentPage || '';
 
-        const page = currentPage || '';
-        if (page === 'vks-active') {
-            _vksPagination['vks-board-active'] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
-            renderVksBoard('vks-board-active', 'active');
-            updateVksStats();
-        } else if (page === 'vks-completed') {
-            _vksPagination['vks-board-completed'] = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false };
-            renderVksBoard('vks-board-completed', 'completed');
-        } else if (page === 'events-active' || page === 'events-completed') {
-            _eventsResetAndLoad();
-        } else if (page === 'dashboard') {
-            renderDashboard();
-        } else if (page === 'calendar') {
-            _calEventsCache = {}; // сброс кэша при SSE обновлении
-            renderCalendar(false);
-        }
-    } catch (e) {}
+    if (page === 'vks-active') {
+        // Сброс пагинации → первая страница заново с текущими фильтрами
+        _vksPagination['vks-board-active'] = null;
+        renderVksBoard('vks-board-active', 'active');
+        updateVksStats();
+
+    } else if (page === 'vks-completed') {
+        _vksPagination['vks-board-completed'] = null;
+        renderVksBoard('vks-board-completed', 'completed');
+
+    } else if (page === 'events-active' || page === 'events-completed') {
+        _eventsResetAndLoad();
+
+    } else if (page === 'dashboard') {
+        // Dashboard использует /api/dashboard — свой маленький запрос
+        renderDashboard();
+
+    } else if (page === 'calendar') {
+        // Сбрасываем кэш недель — следующий рендер перезапросит текущую
+        if (typeof _calEventsCache !== 'undefined') _calEventsCache = {};
+        renderCalendar(false);
+    }
 }
 
 async function _refreshLocations() {
@@ -80,6 +79,9 @@ async function _refreshLocations() {
             _dashLocations = {};
             locs.forEach(l => { _dashLocations[l.id] = l.name; });
         }
+        // Обновить кэш справочников
+        _saveRefCache();
+
         if ((currentPage || '') === 'locations') {
             renderLocations(store.allLocations);
             document.getElementById('stat-total-loc').textContent = store.allLocations.length;
@@ -99,6 +101,8 @@ async function _refreshOrganizers() {
             _dashOrganizers = {};
             orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
         }
+        _saveRefCache();
+
         if ((currentPage || '') === 'organizers') {
             renderOrganizers(store.allOrganizers);
             document.getElementById('stat-total-org').textContent = store.allOrganizers.length;
@@ -121,13 +125,16 @@ async function _refreshUsers() {
     } catch (e) {}
 }
 
-function initSSE() {
-    connectSSE();
+function _saveRefCache() {
+    try {
+        localStorage.setItem('dash_cache', JSON.stringify({
+            locations: store.allLocations,
+            organizers: store.allOrganizers,
+        }));
+    } catch (e) {}
 }
 
+function initSSE() { connectSSE(); }
 function disconnectSSE() {
-    if (_eventSource) {
-        _eventSource.close();
-        _eventSource = null;
-    }
+    if (_eventSource) { _eventSource.close(); _eventSource = null; }
 }

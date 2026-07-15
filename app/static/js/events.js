@@ -44,6 +44,69 @@ function _eventsResetAndLoad() {
     _eventsLoadMore();
 }
 
+async function _eventsLoadMore() {
+    const p = _eventsPagination;
+    if (p.loading || !p.hasMore) return;
+    p.loading = true;
+
+    const board = document.getElementById('events-board');
+    const sentinel = board?.querySelector('.scroll-sentinel');
+    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка…</div>';
+
+    try {
+        const params = new URLSearchParams({ status: _eventsCompleted ? 'completed' : 'active', limit: EVENTS_PAGE_SIZE });
+        if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
+
+        // Server-side filters from UI
+        const orgVal = document.getElementById('f-events-org')?.value;
+        const locVal = document.getElementById('f-events-loc')?.value;
+        const searchVal = document.getElementById('f-events-desc')?.value?.trim();
+        if (orgVal) params.set('organizer_id', orgVal);
+        if (locVal) params.set('location_id', locVal);
+        if (searchVal) params.set('search', searchVal);
+
+        // Date filter
+        const dayVal = document.getElementById('f-events-day')?.value;
+        const monthVal = document.getElementById('f-events-month')?.value;
+        const yearVal = document.getElementById('f-events-year')?.value;
+        if (yearVal || monthVal || dayVal) {
+            const y = yearVal || new Date().getFullYear();
+            const m = monthVal ? String(monthVal).padStart(2, '0') : '01';
+            if (dayVal) {
+                params.set('from', `${y}-${m}-${String(dayVal).padStart(2, '0')}`);
+                params.set('to', `${y}-${m}-${String(dayVal).padStart(2, '0')}`);
+            } else {
+                const mEnd = monthVal ? String(monthVal).padStart(2, '0') : '12';
+                const lastDay = new Date(y, monthVal ? Number(monthVal) : 12, 0).getDate();
+                params.set('from', `${y}-${m}-01`);
+                params.set('to', `${y}-${mEnd}-${lastDay}`);
+            }
+        }
+
+        // Cursor
+        if (p.cursorDate) params.set('cursor_date', p.cursorDate);
+        if (p.cursorTime) params.set('cursor_time', p.cursorTime);
+        if (p.cursorId) params.set('cursor_id', p.cursorId);
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        p.events.push(...(data.events || []).filter(e => e.type !== 'ВКС'));
+        p.cursorDate = data.next_cursor_date || null;
+        p.cursorTime = data.next_cursor_time || null;
+        p.cursorId = data.next_cursor_id || null;
+        p.hasMore = !!data.has_more;
+
+        eventsRenderBoard();
+        eventsUpdateStats();
+    } catch (e) {
+        console.error('_eventsLoadMore error:', e);
+    }
+    p.loading = false;
+    if (sentinel) sentinel.innerHTML = '';
+}
+
 let _eventsQuickFilter = '';
 
 async function eventsUpdateStats() {
@@ -124,7 +187,7 @@ function _eventsUpdateCardActive() {
 }
 
 function eventsApplyFilters() {
-    eventsRenderBoard();
+    _eventsResetAndLoad();
 }
 
 function eventsResetFilters() {

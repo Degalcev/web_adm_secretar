@@ -1,7 +1,5 @@
 // ─── Утилиты ─────────────────────────────────────────────────────────
 
-const EVENTS_LIMIT = 10000;
-
 function _findScrollParent(el) {
     let node = el.parentElement;
     while (node) {
