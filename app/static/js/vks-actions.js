@@ -104,12 +104,9 @@ async function completeEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
-            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...store.allEvents];
-                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+            if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }
             showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
@@ -132,12 +129,9 @@ async function deleteEvent(id) {
         });
         const data = await resp.json();
         if (data.ok) {
-            await loadAllEvents();
             renderVksBoard('vks-board-active', 'active');
             renderVksBoard('vks-board-completed', 'completed');
-            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...store.allEvents];
-                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+            if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }
             ConfirmManager.close();

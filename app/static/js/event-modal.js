@@ -439,15 +439,11 @@ async function saveEvent() {
                 }
             }
 
-            await loadAllEvents();
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
             if (activeBoard) renderVksBoard('vks-board-active', 'active');
             if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
-            // Refresh dashboard if visible
-            if (typeof _dashEvents !== 'undefined' && document.getElementById('page-dashboard')?.classList.contains('active')) {
-                _dashEvents = [...store.allEvents];
-                try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
+            if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }
             // Refresh events page if visible

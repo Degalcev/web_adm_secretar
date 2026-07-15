@@ -540,9 +540,6 @@ async function dashCompleteEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            await loadAllEvents();
-            _dashEvents = [...store.allEvents];
-            try { localStorage.setItem('dash_cache', JSON.stringify({ events: _dashEvents, locations: _dashLocations, organizers: _dashOrganizers })); } catch(e) {}
             renderDashboard();
             showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
         }
