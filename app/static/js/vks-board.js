@@ -3,7 +3,7 @@
 const _vksPagination = {};
 const VKS_PAGE_SIZE = 50;
 
-function renderVksBoard(boardId, filter) {
+function renderVksBoard(boardId, filter, force) {
     const board = document.getElementById(boardId);
     if (!board) return;
 
@@ -21,7 +21,7 @@ function renderVksBoard(boardId, filter) {
     };
 
     if (events.length) {
-        _sseRerenderFromCache(boardId, filter);
+        _sseRerenderFromCache(boardId, filter, force);
         return;
     }
 

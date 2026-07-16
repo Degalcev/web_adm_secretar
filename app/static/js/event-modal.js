@@ -461,8 +461,8 @@ async function saveEvent() {
 
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
-            if (activeBoard) renderVksBoard('vks-board-active', 'active');
-            if (completedBoard) renderVksBoard('vks-board-completed', 'completed');
+            if (activeBoard) renderVksBoard('vks-board-active', 'active', true);
+            if (completedBoard) renderVksBoard('vks-board-completed', 'completed', true);
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }

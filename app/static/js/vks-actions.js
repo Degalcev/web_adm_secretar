@@ -102,8 +102,8 @@ async function completeEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            renderVksBoard('vks-board-active', 'active');
-            renderVksBoard('vks-board-completed', 'completed');
+            renderVksBoard('vks-board-active', 'active', true);
+            renderVksBoard('vks-board-completed', 'completed', true);
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }
@@ -127,8 +127,8 @@ async function deleteEvent(id) {
         });
         const data = await resp.json();
         if (data.ok) {
-            renderVksBoard('vks-board-active', 'active');
-            renderVksBoard('vks-board-completed', 'completed');
+            renderVksBoard('vks-board-active', 'active', true);
+            renderVksBoard('vks-board-completed', 'completed', true);
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }

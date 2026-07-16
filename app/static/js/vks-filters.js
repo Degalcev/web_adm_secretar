@@ -103,7 +103,7 @@ async function loadVksActive() {
                 const locSel = document.getElementById('f-vks-active-loc');
                 if (locSel) locSel.value = locId;
             }
-            renderVksBoard('vks-board-active', 'active');
+            renderVksBoard('vks-board-active', 'active', true);
             showFilterBanner(f);
         };
         setTimeout(() => tryApply(15), 300);
@@ -152,7 +152,7 @@ function clearVksFilter() {
     document.getElementById('f-vks-active-loc').value = '';
     document.getElementById('f-vks-active-desc').value = '';
     document.querySelectorAll('#vks-active-stats .stat-card').forEach(c => c.classList.remove('active'));
-    renderVksBoard('vks-board-active', 'active');
+    renderVksBoard('vks-board-active', 'active', true);
 }
 
 async function updateVksStats() {
@@ -192,7 +192,7 @@ function filterVksByQuick(type) {
         const cards = document.querySelectorAll('#vks-active-stats .stat-card');
         if (cards[idx]) cards[idx].classList.add('active');
     }
-    renderVksBoard('vks-board-active', 'active');
+    renderVksBoard('vks-board-active', 'active', true);
 }
 
 async function loadVksCompleted() {
@@ -206,11 +206,11 @@ async function loadVksCompleted() {
 }
 
 function filterVksListActive() {
-    renderVksBoard('vks-board-active', 'active');
+    renderVksBoard('vks-board-active', 'active', true);
 }
 
 function filterVksListCompleted() {
-    renderVksBoard('vks-board-completed', 'completed');
+    renderVksBoard('vks-board-completed', 'completed', true);
 }
 
 function resetVksActiveFilters() {
