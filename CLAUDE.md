@@ -74,12 +74,12 @@ app/
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
         ├── preloader.js      # preloadAllData() — locations + organizers, restoreFromCache() из localStorage
         ├── sse.js            # SSE: sseRefreshPage() единая функция обновления + debounce + hash check
-        ├── dashboard.js      # Дашборд — cacheGet('dashboard'), locName/orgName из cacheGet
-        ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line, expandSeries)
-        ├── events.js         # Мероприятия: cacheGet/set, Текущие полная загрузка, Завершённые пагинация
+        ├── dashboard.js      # Дашборд — pageInit, fetch + cacheSet
+        ├── calendar.js       # Календарь — pageInit, _calLoadRange, renderCalendar
+        ├── events.js         # Мероприятия — pageInit, _eventsFetch (Текущие limit=10000, Завершённые limit=50)
         ├── print.js          # Печать мероприятий (openPrintModal, generatePrintHTML)
-        ├── vks-filters.js    # VKS: фильтры, stats из cacheGet, _vksRenderStats()
-        ├── vks-board.js      # VKS: рендеринг карточек, _vksLoadAll (Текущие), _vksLoadMore (Завершённые)
+        ├── vks-filters.js    # VKS: фильтры, pageInit, _vksRenderStats
+        ├── vks-board.js      # VKS: renderVksBoard, _vksFetch (Текущие limit=10000, Завершённые limit=50), _vksLoadMore
         ├── event-modal.js    # Модалка (загрузка через /api/events/{id}/single, _currentEvent)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
@@ -218,6 +218,9 @@ Dashboard             | Один endpoint         | Нет              | sseRef
 - Кэш свежий (TTL 5мин) → renderFn() мгновенно, без запросов
 - Кэш пустой/устарел → await fetchFn() → renderFn()
 - SSE обновляет кэш в фоне. При навигации данные берутся из кэша
+- **fetchFn** — только fetch + cacheSet, без render. Для VKS: `_vksFetch(filter)`, для Events: `_eventsFetch(status)`
+- **renderFn** — рендерит stats из кэша + board. Для VKS: `renderVksBoard()`, для Events: `eventsRenderBoard()`
+- **Пагинация**: scroll listener устанавливается ВСЕГДА для Завершённых (не только при пустом кэше)
 
 ### Единый in-memory кэш (`cache.js`)
 - **Объект**: `_dataCache` — хранит данные всех страниц
@@ -258,7 +261,7 @@ Dashboard             | Один endpoint         | Нет              | sseRef
 ### SSE — обновление страниц
 - **`sseRefreshPage()`** — единая функция для всех страниц (VKS, Events, Dashboard, Calendar)
 - **Hash check**: `_sseRerenderFromCache()` сравнивает hash по `id + completed + locked_by + date + time + description`. `force=true` пропускает проверку (SSE обновление всегда с `force=true`)
-- **VKS / Events**: один fetch `events + stats` параллельно → `cacheSet()` → render
+- **VKS / Events**: `_vksFetch` / `_eventsFetch` → `cacheSet()` → render. Текущие limit=10000, Завершённые limit=50
 - **Dashboard**: fetch `/api/dashboard` → `cacheSet()` → `renderDashboard()`
 - **Calendar**: `cacheInvalidate('calendar')` → `renderCalendar(false)`
 - **Справочники**: `_refreshLocations/Organizers/Users` → `cacheSet()` + обновление `store`
