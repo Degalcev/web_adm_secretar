@@ -12,26 +12,12 @@ function initEventsPage(completed = false) {
     _eventsTypeFilter = null;
     const title = document.getElementById('events-page-title');
     if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
-    // Скрыть карточки статистики для Завершённых
     const statsRow = document.getElementById('events-stats');
     if (statsRow) statsRow.style.display = completed ? 'none' : '';
     _eventsPopulateFilters();
 
     const cacheKey = completed ? 'eventsCompleted' : 'eventsActive';
-    const cached = cacheGet(cacheKey);
-
-    if (cached?.data?.loaded) {
-        _eventsPagination.events = cached.data.events || [];
-        _eventsPagination.cursorDate = cached.data.cursorDate || null;
-        _eventsPagination.cursorTime = cached.data.cursorTime || null;
-        _eventsPagination.cursorId = cached.data.cursorId || null;
-        _eventsPagination.hasMore = completed ? (cached.data.hasMore ?? true) : false;
-        eventsRenderBoard();
-        eventsUpdateStats();
-        return;
-    }
-
-    _eventsHardReset();
+    pageInit(cacheKey, eventsRenderBoard, _eventsHardReset);
 }
 
 

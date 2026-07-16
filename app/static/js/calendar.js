@@ -43,13 +43,19 @@ function initCalendar() {
     calWeekStart = getMonday(new Date());
     calActiveDay = new Date();
     preloadAllData().then(async () => {
-        renderCalendar(true);
+        const fetchCalendar = async () => {
+            const rangeStart = new Date(calWeekStart);
+            rangeStart.setDate(rangeStart.getDate() - 14);
+            const rangeEnd = new Date(calWeekStart);
+            rangeEnd.setDate(rangeEnd.getDate() + 20);
+            await _calLoadRange(localDateStr(rangeStart), localDateStr(rangeEnd));
+        };
+        await pageInit('calendar', () => renderCalendar(true), fetchCalendar);
         calStartNowLineTimer();
         document.getElementById('cal-day-tabs')?.addEventListener('transitionend', (e) => {
             if (e.propertyName === 'padding') _calScheduleShadowUpdate();
         });
     });
-    // Close date picker on outside click
     document.addEventListener('click', (e) => {
         const picker = document.getElementById('cal-date-picker');
         const trigger = document.querySelector('.cal-date-trigger');

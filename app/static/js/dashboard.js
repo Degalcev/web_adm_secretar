@@ -6,27 +6,17 @@ let _dashYear = new Date().getFullYear();
 
 async function initDashboard() {
     setupDashboardClicks();
-    if (cacheIsValid('dashboard')) {
-        renderDashboard();
-        refreshDashboard();
-        return;
-    }
-    await _dashFetch();
-    renderDashboard();
-}
-
-async function _dashFetch() {
-    try {
+    await pageInit('dashboard', renderDashboard, async () => {
         const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (!resp.ok) return;
-        cacheSet('dashboard', await resp.json());
-    } catch (e) {
-        console.error('Dashboard fetch error:', e);
-    }
+        if (resp.ok) cacheSet('dashboard', await resp.json());
+    });
 }
 
 async function refreshDashboard() {
-    await _dashFetch();
+    try {
+        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+        if (resp.ok) cacheSet('dashboard', await resp.json());
+    } catch (e) {}
     renderDashboard();
 }
 

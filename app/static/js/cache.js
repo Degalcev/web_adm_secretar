@@ -37,3 +37,17 @@ function cacheIsValid(page, ttl) {
 function cacheInvalidateAll() {
     Object.keys(_dataCache).forEach(k => { _dataCache[k] = null; });
 }
+
+// ─── Единый паттерн инициализации страниц ─────────────────────────
+// Кэш свежий → render мгновенно + background fetch → re-render
+// Кэш пустой → fetch → render
+
+async function pageInit(pageKey, renderFn, fetchFn) {
+    if (cacheIsValid(pageKey)) {
+        renderFn();
+        fetchFn().then(() => renderFn());
+        return;
+    }
+    await fetchFn();
+    renderFn();
+}

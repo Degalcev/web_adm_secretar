@@ -55,17 +55,12 @@ function matchDateFilter(eventDate, filter) {
 async function loadVksActive() {
     populateDateSelects('f-vks-active');
     populateVksFilters();
-    const cached = cacheGet('vksActive');
-    if (cached?.data?.stats) _vksRenderStats(cached.data.stats);
-    const board = document.getElementById('vks-board-active');
-    // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
-    if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-active', 'active');
+    await pageInit('vksActive', () => renderVksBoard('vks-board-active', 'active'), () => _vksLoadAll('vks-board-active', 'active'));
 
     // Apply pending filter from dashboard
     if (_pendingVksFilter) {
         const f = _pendingVksFilter;
         _pendingVksFilter = null;
-        // Reset quick filter state first
         _quickFilter = '';
         document.getElementById('f-vks-active-day').value = '';
         document.getElementById('f-vks-active-month').value = '';
@@ -79,25 +74,18 @@ async function loadVksActive() {
             if (!b || !b.children.length || b.querySelector('.empty-state')) {
                 if (retries > 0) { setTimeout(() => tryApply(retries - 1), 200); return; }
             }
-            // Apply the filter
-            if (f === 'active') {
-                _quickFilter = 'active';
-            } else if (f === 'missed') {
-                _quickFilter = 'missed';
-            } else if (f === 'today') {
+            if (f === 'active') _quickFilter = 'active';
+            else if (f === 'missed') _quickFilter = 'missed';
+            else if (f === 'today') {
                 _quickFilter = 'today';
                 if (document.getElementById('f-vks-active-day')) document.getElementById('f-vks-active-day').value = localDateStr(new Date());
-            } else if (f === 'soon') {
-                _quickFilter = 'soon';
-            }
-            // Highlight the correct stat card
+            } else if (f === 'soon') _quickFilter = 'soon';
             document.querySelectorAll('#vks-active-stats .stat-card').forEach(c => c.classList.remove('active'));
             if (_quickFilter) {
                 const idx = { all: 0, today: 1, soon: 2, missed: 3, active: 4 }[_quickFilter];
                 const cards = document.querySelectorAll('#vks-active-stats .stat-card');
                 if (cards[idx]) cards[idx].classList.add('active');
             }
-            // Handle location filter
             if (f.startsWith('location:')) {
                 const locId = f.split(':')[1];
                 const locSel = document.getElementById('f-vks-active-loc');
@@ -200,12 +188,7 @@ function filterVksByQuick(type) {
 async function loadVksCompleted() {
     populateDateSelects('f-vks-completed');
     populateVksFilters();
-    const cached = cacheGet('vksCompleted');
-    if (cached?.data?.stats) _vksRenderStats(cached.data.stats);
-    const board = document.getElementById('vks-board-completed');
-    // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
-    if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-completed', 'completed');
-    // Всегда обновить stats с сервера
+    await pageInit('vksCompleted', () => renderVksBoard('vks-board-completed', 'completed'), () => _vksLoadAll('vks-board-completed', 'completed'));
     updateVksStats();
 }
 
