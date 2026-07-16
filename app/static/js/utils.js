@@ -72,7 +72,6 @@ const BASE_URL = window.location.origin;
 
 // ─── Централизованное хранилище данных ────────────────────────────
 const store = {
-    allEvents: [],
     allLocations: [],
     allOrganizers: [],
     allUsers: [],

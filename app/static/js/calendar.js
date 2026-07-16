@@ -29,7 +29,6 @@ function _calGetTypeClass(type) {
 function _calIsMobile() { return window.innerWidth <= 768; }
 
 let _calMobileRoomFilter = null; // null = все аудитории
-let _calEventsCache = {}; // { 'YYYY-MM-DD_YYYY-MM-DD': events[] }
 let _calLoadingRange = false;
 
 function getMonday(d) {
@@ -84,7 +83,8 @@ function _calGetRangeKey(from, to) { return `${from}_${to}`; }
 
 async function _calLoadRange(from, to) {
     const key = _calGetRangeKey(from, to);
-    if (_calEventsCache[key]) return _calEventsCache[key];
+    const cached = cacheGet('calendar');
+    if (cached?.data?.ranges?.[key]) return cached.data.ranges[key];
     if (_calLoadingRange) return [];
     _calLoadingRange = true;
     try {
@@ -108,7 +108,8 @@ async function _calLoadRange(from, to) {
             cursorId = data.next_cursor_id || null;
             if (!hasMore || allEvents.length >= 2000) break; // safety limit
         }
-        _calEventsCache[key] = allEvents;
+        const existing = cacheGet('calendar')?.data?.ranges || {};
+        cacheSet('calendar', { ranges: { ...existing, [key]: allEvents } });
         return allEvents;
     } catch (e) {
         console.error('_calLoadRange error:', e);
@@ -129,7 +130,7 @@ function _calGetEventsForDate(ds) {
     const rangeEnd = new Date(calWeekStart);
     rangeEnd.setDate(rangeEnd.getDate() + 20);
     const wideKey = _calGetRangeKey(localDateStr(rangeStart), localDateStr(rangeEnd));
-    const rangeEvents = _calEventsCache[wideKey] || [];
+    const rangeEvents = cacheGet('calendar')?.data?.ranges?.[wideKey] || [];
     const expanded = expandSeries(rangeEvents, dateFrom, dateTo);
     return expanded.filter(e => e.date === ds);
 }

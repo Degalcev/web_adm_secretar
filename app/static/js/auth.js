@@ -121,9 +121,9 @@ async function logout() {
     window.currentUserName = '';
     window.currentUser = null;
     store.allUsers = [];
-    store.allEvents = [];
     store.allOrganizers = [];
     store.allLocations = [];
+    cacheInvalidateAll();
     const userEl = document.getElementById('topbar-user');
     if (userEl) userEl.style.display = 'none';
     // Сброс раскрытия меню

@@ -13,15 +13,8 @@ function restoreFromCache() {
         const c = JSON.parse(cached);
         store.allLocations = c.locations || [];
         store.allOrganizers = c.organizers || [];
-        // Обратная совместимость со старым кэшем
-        if (typeof _dashLocations !== 'undefined') {
-            _dashLocations = {};
-            store.allLocations.forEach(l => { _dashLocations[l.id] = l.name; });
-        }
-        if (typeof _dashOrganizers !== 'undefined') {
-            _dashOrganizers = {};
-            store.allOrganizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
-        }
+        cacheSet('locations', store.allLocations);
+        cacheSet('organizers', store.allOrganizers);
         return store.allLocations.length > 0 || store.allOrganizers.length > 0;
     } catch (e) { return false; }
 }
@@ -36,22 +29,15 @@ async function preloadAllData() {
         store.allLocations = data.locations || [];
         store.allOrganizers = data.organizers || [];
 
-        if (typeof _dashLocations !== 'undefined') {
-            _dashLocations = {};
-            store.allLocations.forEach(l => { _dashLocations[l.id] = l.name; });
-        }
-        if (typeof _dashOrganizers !== 'undefined') {
-            _dashOrganizers = {};
-            store.allOrganizers.forEach(o => { _dashOrganizers[o.id] = o.name; });
-        }
+        cacheSet('locations', store.allLocations);
+        cacheSet('organizers', store.allOrganizers);
 
-        // Кэшируем только справочники — они небольшие и редко меняются
         try {
             localStorage.setItem('dash_cache', JSON.stringify({
                 locations: store.allLocations,
                 organizers: store.allOrganizers,
             }));
-        } catch (e) { /* квота превышена — игнорируем */ }
+        } catch (e) {}
 
         _preloaded = true;
     } catch (e) {

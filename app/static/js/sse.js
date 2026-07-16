@@ -58,7 +58,7 @@ function _refreshEvents() {
     } else if (page === 'dashboard') {
         refreshDashboard();
     } else if (page === 'calendar') {
-        _calEventsCache = {};
+        cacheInvalidate('calendar');
         _calLoadingRange = false;
         renderCalendar(false);
     }
@@ -174,17 +174,12 @@ async function _refreshLocations() {
         if (!resp.ok) return;
         const locs = await resp.json();
         store.allLocations = locs;
+        cacheSet('locations', locs);
         if (typeof _dashLocations !== 'undefined') {
             _dashLocations = {};
             locs.forEach(l => { _dashLocations[l.id] = l.name; });
         }
-        _saveRefCache();
-
-        if ((currentPage || '') === 'locations') {
-            renderLocations(store.allLocations);
-            document.getElementById('stat-total-loc').textContent = store.allLocations.length;
-            document.getElementById('stat-shown-loc').textContent = store.allLocations.length;
-        }
+        if ((currentPage || '') === 'locations') renderLocations(store.allLocations);
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
 }
@@ -195,17 +190,12 @@ async function _refreshOrganizers() {
         if (!resp.ok) return;
         const orgs = await resp.json();
         store.allOrganizers = orgs;
+        cacheSet('organizers', orgs);
         if (typeof _dashOrganizers !== 'undefined') {
             _dashOrganizers = {};
-            orgs.forEach(o => { _dashOrganizers[o.id] = o.name; });
+            orgs.forEach(o => { _dashOrganizers[o.id] = o.short_name || o.name; });
         }
-        _saveRefCache();
-
-        if ((currentPage || '') === 'organizers') {
-            renderOrganizers(store.allOrganizers);
-            document.getElementById('stat-total-org').textContent = store.allOrganizers.length;
-            document.getElementById('stat-shown-org').textContent = store.allOrganizers.length;
-        }
+        if ((currentPage || '') === 'organizers') renderOrganizers(store.allOrganizers);
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
 }
@@ -216,19 +206,8 @@ async function _refreshUsers() {
         if (!resp.ok) return;
         const users = await resp.json();
         store.allUsers = users;
-        if ((currentPage || '') === 'users') {
-            renderUsers(store.allUsers);
-            updateStats(store.allUsers);
-        }
-    } catch (e) {}
-}
-
-function _saveRefCache() {
-    try {
-        localStorage.setItem('dash_cache', JSON.stringify({
-            locations: store.allLocations,
-            organizers: store.allOrganizers,
-        }));
+        cacheSet('users', users);
+        if ((currentPage || '') === 'users') renderUsers(store.allUsers);
     } catch (e) {}
 }
 
