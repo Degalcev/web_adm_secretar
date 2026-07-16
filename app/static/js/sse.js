@@ -132,8 +132,53 @@ function _sseRerenderFromCache(boardId, filter) {
     const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
 
     let filtered = events;
-    if (filter === 'active') filtered = events.filter(e => !e.completed);
-    else if (filter === 'completed') filtered = events.filter(e => e.completed);
+    if (filter === 'active') {
+        filtered = events.filter(e => !e.completed);
+
+        // Quick filter (today/soon/missed/active)
+        if (typeof _quickFilter !== 'undefined' && _quickFilter) {
+            if (_quickFilter === 'today') {
+                filtered = filtered.filter(e => e.date === today);
+            } else if (_quickFilter === 'soon') {
+                filtered = filtered.filter(e => e.date && e.date > today);
+            } else if (_quickFilter === 'missed') {
+                filtered = filtered.filter(e => !e.date || e.date < today);
+            } else if (_quickFilter === 'active') {
+                filtered = filtered.filter(e => e.date && e.date >= today);
+            }
+        }
+
+        // Date filter (day/month/year)
+        const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
+        const dayVal = document.getElementById(`${prefix}-day`)?.value || '';
+        const monthVal = document.getElementById(`${prefix}-month`)?.value || '';
+        const yearVal = document.getElementById(`${prefix}-year`)?.value || '';
+        if (dayVal || monthVal || yearVal) {
+            filtered = filtered.filter(e => {
+                if (!e.date) return false;
+                const d = new Date(e.date + 'T00:00:00');
+                if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
+                if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
+                if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
+                return true;
+            });
+        }
+
+        // Org / loc / desc filters
+        const orgVal = document.getElementById(`${prefix}-org`)?.value || '';
+        const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
+        const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
+        if (orgVal) filtered = filtered.filter(e => e.organizer_id === orgVal);
+        if (locVal) filtered = filtered.filter(e => e.location_id === locVal);
+        if (descVal) {
+            filtered = filtered.filter(e =>
+                (e.description || '').toLowerCase().includes(descVal) ||
+                (e.url || '').toLowerCase().includes(descVal)
+            );
+        }
+    } else if (filter === 'completed') {
+        filtered = events.filter(e => e.completed);
+    }
 
     const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
     filtered.forEach(e => {

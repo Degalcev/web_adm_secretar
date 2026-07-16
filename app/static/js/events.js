@@ -252,7 +252,11 @@ function eventsFilterType(type) {
     const typeSelect = document.getElementById('f-events-type');
     if (typeSelect) typeSelect.value = type || '';
     _eventsUpdateCardActive();
-    _eventsResetAndLoad();
+    if (_eventsCompleted) {
+        _eventsHardReset();
+    } else {
+        eventsRenderBoard();
+    }
     eventsUpdateStats();
 }
 
@@ -279,7 +283,11 @@ function _eventsUpdateCardActive() {
 }
 
 function eventsApplyFilters() {
-    _eventsResetAndLoad();
+    if (_eventsCompleted) {
+        _eventsHardReset();
+    } else {
+        eventsRenderBoard();
+    }
 }
 
 function eventsResetFilters() {
@@ -293,7 +301,11 @@ function eventsResetFilters() {
     _eventsTypeFilter = null;
     _eventsQuickFilter = '';
     _eventsUpdateCardActive();
-    _eventsResetAndLoad();
+    if (_eventsCompleted) {
+        _eventsHardReset();
+    } else {
+        eventsRenderBoard();
+    }
     eventsUpdateStats();
 }
 
