@@ -17,9 +17,28 @@ function initEventsPage(completed = false) {
     _eventsPopulateFilters();
 
     const cacheKey = completed ? 'eventsCompleted' : 'eventsActive';
-    pageInit(cacheKey, eventsRenderBoard, _eventsHardReset);
+    pageInit(cacheKey, eventsRenderBoard, () => _eventsFetch(completed ? 'completed' : 'active'));
 }
 
+async function _eventsFetch(status) {
+    const cacheKey = status === 'active' ? 'eventsActive' : 'eventsCompleted';
+    const params = new URLSearchParams({ status, limit: '10000', exclude_type: 'ВКС' });
+    if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
+    const statsParams = new URLSearchParams({ status });
+    if (_eventsTypeFilter) statsParams.set('type', _eventsTypeFilter);
+    else statsParams.set('exclude_type', 'ВКС');
+
+    const [eventsResp, statsResp] = await Promise.all([
+        fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
+        fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
+    ]);
+
+    const events = eventsResp.ok ? (await eventsResp.json()).events || [] : [];
+    const stats = statsResp.ok ? await statsResp.json() : null;
+
+    cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
+    return { events, stats };
+}
 
 function _eventsHardReset() {
     const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
