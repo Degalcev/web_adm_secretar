@@ -37,23 +37,17 @@ function handleSSEEvent(data) {
 
 function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
-    _sseDebounceTimer = setTimeout(() => {
-        console.log('[SSE] debounce fired');
-        sseRefreshPage();
-    }, 200);
+    _sseDebounceTimer = setTimeout(sseRefreshPage, 200);
 }
 
 // ─── Единая функция SSE обновления ─────────────────────────────────
 
 async function sseRefreshPage() {
     const page = currentPage;
-    if (!page) { console.log('[SSE] no currentPage'); return; }
+    if (!page) return;
 
     const modal = document.getElementById('event-modal');
-    const modalOpen = modal && modal.classList.contains('show');
-    if (modalOpen) { console.log('[SSE] modal still open, skip'); return; }
-
-    console.log('[SSE] sseRefreshPage →', page);
+    if (modal && modal.classList.contains('show')) return;
 
     // ── VKS / Мероприятия: один fetch events + stats ──
     if (page === 'vks-active' || page === 'vks-completed' ||
@@ -92,7 +86,8 @@ async function sseRefreshPage() {
         cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
 
         if (isVks) {
-            renderVksBoard(filter === 'active' ? 'vks-board-active' : 'vks-board-completed', filter);
+            const boardId = filter === 'active' ? 'vks-board-active' : 'vks-board-completed';
+            renderVksBoard(boardId, filter, true);
         } else {
             eventsRenderBoard();
         }
