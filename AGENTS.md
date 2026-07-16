@@ -68,7 +68,6 @@ base → layout → components → tables → modals → logs → vks → settin
 - `body { overflow: hidden }` in base.css affects all pages — calendar relies on this for layout. Removing it breaks `.cal-wrap` scroll
 - `overflow: clip` on tables — not `overflow: hidden` (avoids nested scroll context)
 - `event.stopPropagation()` on delete buttons — prevents opening edit modal
-- `organizers.py` has a duplicate `update_organizer_handler` function — pre-existing bug
 - `await` on sync functions causes TypeError — `start_listener()`/`stop_listener()` are sync
 - All IDs are UUID strings (not integers). Event locking uses `user.id` (UUID), NOT `max_id` (Integer)
 - Multipart for events: `keep_doc_ids` is comma-separated IDs for preserving documents on update
@@ -77,10 +76,11 @@ base → layout → components → tables → modals → logs → vks → settin
 
 - Vanilla JS, no framework. SPA routing via `router.js`
 - `checkAuth()` is the SINGLE source of truth for `isAuthenticated`
-- `window.store` — centralized data (allEvents, allLocations, allOrganizers, allUsers)
+- `window.store` — centralized data (allLocations, allOrganizers, allUsers). `store.allEvents` REMOVED
+- `_dataCache` in `cache.js` — unified in-memory cache for all pages (VKS, Events, Dashboard, Calendar, References)
 - `createCrudModule(config)` in utils.js — factory for CRUD modules
 - Modals loaded as HTML partials via `app/static/partials/*.html`
-- SSE updates 4 channels: events, users, locations, organizers
+- SSE updates 4 channels: events, users, locations, organizers → `cacheSet()` → render
 
 ## Reference Files
 
