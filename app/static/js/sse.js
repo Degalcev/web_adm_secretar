@@ -135,54 +135,6 @@ function _refreshEvents() {
     if (handler) handler();
 }
 
-async function _sseUpdateAndRender(boardId, filter) {
-    const p = _vksPagination[boardId];
-    if (!p) return;
-
-    // Загрузить события И stats параллельно
-    const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
-    const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(p.events.length || 50) });
-    const orgVal = document.getElementById(`${prefix}-org`)?.value;
-    const locVal = document.getElementById(`${prefix}-loc`)?.value;
-    const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
-    if (orgVal) params.set('organizer_id', orgVal);
-    if (locVal) params.set('location_id', locVal);
-    if (searchVal) params.set('search', searchVal);
-
-    const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
-
-    try {
-        const [eventsResp, statsResp] = await Promise.all([
-            fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
-            fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
-        ]);
-
-        if (eventsResp.ok) {
-            const data = await eventsResp.json();
-            p.events = data.events || [];
-            p.hasMore = !!data.has_more;
-            p.cursorDate = data.next_cursor_date || null;
-            p.cursorTime = data.next_cursor_time || null;
-            p.cursorId = data.next_cursor_id || null;
-        }
-
-        if (statsResp.ok) {
-            const stats = await statsResp.json();
-            _vksRenderStats(stats);
-            const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
-            cacheSet(cacheKey, {
-                events: p.events,
-                stats: stats,
-                hasMore: p.hasMore,
-                cursorDate: p.cursorDate,
-                cursorTime: p.cursorTime,
-                cursorId: p.cursorId,
-            });
-        }
-    } catch (e) {}
-
-    _sseRerenderFromCache(boardId, filter);
-}
 
 let _sseLastHash = {};
 

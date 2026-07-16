@@ -34,9 +34,6 @@ function initEventsPage(completed = false) {
     _eventsHardReset();
 }
 
-function _eventsResetAndLoad() {
-    _eventsHardReset();
-}
 
 function _eventsHardReset() {
     const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
