@@ -45,7 +45,6 @@ function cacheInvalidateAll() {
 async function pageInit(pageKey, renderFn, fetchFn) {
     if (cacheIsValid(pageKey)) {
         renderFn();
-        fetchFn().then(() => renderFn());
         return;
     }
     await fetchFn();

@@ -189,7 +189,6 @@ async function loadVksCompleted() {
     populateDateSelects('f-vks-completed');
     populateVksFilters();
     await pageInit('vksCompleted', () => renderVksBoard('vks-board-completed', 'completed'), () => _vksFetch('completed'));
-    updateVksStats();
 }
 
 function filterVksListActive() {
