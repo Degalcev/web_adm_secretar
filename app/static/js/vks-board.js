@@ -214,25 +214,28 @@ function _vksRenderBoard(boardId, filter) {
 
     const events = p.events;
 
-    // Группировка по дате (сервер уже отфильтровал и отсортировал)
-    const now = new Date();
-    const today = localDateStr(now);
-    const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-    const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
-
-    const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
-    events.forEach(e => {
-        if (!e.date || e.date < today) missed.push(e);
-        else if (e.date === today) todayEvents.push(e);
-        else if (e.date === tomorrow) tomorrowEvents.push(e);
-        else if (e.date === dayAfter) dayAfterEvents.push(e);
-        else soon.push(e);
-    });
-
     let html = '';
     if (!events.length && !p.hasMore) {
         html = '<div class="empty-state">Нет мероприятий</div>';
+    } else if (filter === 'completed') {
+        // Завершённые — единый список
+        html += renderVksBlock('Завершённые', events, 'completed');
     } else {
+        // Текущие — группировка по датам
+        const now = new Date();
+        const today = localDateStr(now);
+        const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+        const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
+
+        const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
+        events.forEach(e => {
+            if (!e.date || e.date < today) missed.push(e);
+            else if (e.date === today) todayEvents.push(e);
+            else if (e.date === tomorrow) tomorrowEvents.push(e);
+            else if (e.date === dayAfter) dayAfterEvents.push(e);
+            else soon.push(e);
+        });
+
         if (missed.length)       html += renderVksBlock('Пропущенные', missed, 'missed');
         if (todayEvents.length)  html += renderVksBlock('Сегодня', todayEvents, 'today');
         if (tomorrowEvents.length) html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');

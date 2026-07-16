@@ -203,6 +203,8 @@ async function loadVksCompleted() {
     const board = document.getElementById('vks-board-completed');
     // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
     if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-completed', 'completed');
+    // Всегда обновить stats с сервера
+    updateVksStats();
 }
 
 function filterVksListActive() {
