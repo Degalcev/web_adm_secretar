@@ -67,17 +67,18 @@ app/
     │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), getOrganizerName(), getLocationName(), getDocCardMeta(), _findScrollParent()
-        ├── auth.js           # Логин/выход/checkAuth() + очистка кэшей при logout
+        ├── cache.js          # Единый in-memory кэш: _dataCache, cacheGet/Set/Invalidate/IsValid
+        ├── auth.js           # Логин/выход/checkAuth() + cacheInvalidateAll() при logout
         ├── router.js         # SPA роутинг (handleAuthState)
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
-        ├── preloader.js      # preloadAllData() — ТОЛЬКО locations + organizers
-        ├── sse.js            # SSE обработчики + debounce + fetch events+stats параллельно
-        ├── dashboard.js      # Дашборд —单一 fetch /api/dashboard, _dashCache
+        ├── preloader.js      # preloadAllData() — locations + organizers, restoreFromCache() из localStorage
+        ├── sse.js            # SSE обработчики + debounce + fetch events+stats → cacheSet()
+        ├── dashboard.js      # Дашборд — cacheGet('dashboard'), locName/orgName из cacheGet
         ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line, expandSeries)
-        ├── events.js         # Мероприятия: VKS-style карточки, _eventsCache, stats, server filters
+        ├── events.js         # Мероприятия: cacheGet/set, Текущие полная загрузка, Завершённые пагинация
         ├── print.js          # Печать мероприятий (openPrintModal, generatePrintHTML)
-        ├── vks-filters.js    # VKS: фильтры, stats из кэша, _vksRenderStats()
-        ├── vks-board.js      # VKS: рендеринг карточек, localStorage кэш с TTL, _vksCacheGet/Set
+        ├── vks-filters.js    # VKS: фильтры, stats из cacheGet, _vksRenderStats()
+        ├── vks-board.js      # VKS: рендеринг карточек, _vksLoadAll (Текущие), _vksLoadMore (Завершённые)
         ├── event-modal.js    # Модалка (загрузка через /api/events/{id}/single, _currentEvent)
         ├── vks-actions.js    # VKS: завершение, удаление, подтверждения
         ├── users.js          # CRUD пользователей (через createCrudModule)
@@ -130,7 +131,7 @@ deploy/
 - `login()` отправляет `{ login, password, remember_me }` (поле text, не number)
 - `checkAuth()` → `loadCurrentUser()` → `showMain()` → `applyRoleRestrictions()` → `navigateTo()`
 - `applyRoleRestrictions()` показывает/скрывает "Администрирование" в зависимости от роли
-- `logout()` сбрасывает: SSE (`disconnectSSE()`), now-line таймер (`calStopNowLineTimer()`), `_preloaded`, `localStorage.dash_cache`, раскрытие меню, store
+- `logout()` сбрасывает: SSE (`disconnectSSE()`), now-line таймер (`calStopNowLineTimer()`), `_preloaded`, `cacheInvalidateAll()`, `localStorage.dash_cache`, раскрытие меню, store
 
 ### SPA routes (два списка!)
 - `SPA_PATHS` в `server.py` (для serving index.html)
@@ -177,8 +178,10 @@ deploy/
 - **Filter-bar**: Тип (select), Дата (день/месяц/год), Организатор, Локация, Описание
 - **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter и active state
 - **SSE**: обновления на `events-active`/`events-completed` страницах
-- **API**: `GET /admin/api/events?status=active&exclude_type=ВКС&limit=50` — серверная фильтрация + пагинация
-- **Кэш**: in-memory `_eventsCache` с TTL 5 минут, инвалидация через SSE
+- **API**: `GET /admin/api/events?status=active&exclude_type=ВКС&limit=10000` (Текущие) или `limit=50` (Завершённые)
+- **Кэш**: `_dataCache.eventsActive` / `_dataCache.eventsCompleted` — in-memory
+- **Текущие**: полная загрузка одним запросом, фильтрация client-side
+- **Завершённые**: пагинация по 50, фильтрация server-side
 
 ### Модалка VKS/Мероприятий — загрузка данных
 - `openEditEventModal(id)` загружает событие через `GET /api/events/{id}/single` (не из `store.allEvents`)
@@ -191,20 +194,34 @@ deploy/
 - **VKS-style карточки**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро)
 - **Filter-bar**: Дата (день/месяц/год), Организатор, Локация, Описание
 - **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter
-- **API**: `GET /admin/api/events?status=active&type=ВКС&limit=50` — серверная фильтрация + пагинация
-- **Кэш**: `localStorage` с TTL 5 минут. Ключи: `vks_cache_active`, `vks_cache_completed`
+- **API**: `GET /admin/api/events?status=active&type=ВКС&limit=10000` (Текущие) или `limit=50` (Завершённые)
+- **Кэш**: `_dataCache.vksActive` / `_dataCache.vksCompleted` — in-memory
+- **Текущие**: полная загрузка одним запросом, фильтрация client-side
+- **Завершённые**: пагинация по 50, фильтрация server-side
 - **Переключение страниц**: рендер из кэша мгновенно, без fetch
 
 ### Архитектура загрузки данных
 ```
-Страница          | Первый вход      | SSE update        | Повторный вход (< 5 мин)
-──────────────────┼──────────────────┼───────────────────┼──────────────────────────
-VKS-доска         | 1 fetch          | 1 fetch + stats   | localStorage кэш
-Мероприятия       | 1 fetch          | invalidate+fetch  | in-memory кэш
-Dashboard         | 1 fetch          | 1 fetch单一 endpoint| in-memory кэш
-Календарь         | 1 fetch          | invalidate+fetch  | кэш
-Справочники       | кэш              | fetch             | кэш
+Страница              | Загрузка              | Фильтрация      | SSE update
+──────────────────────┼───────────────────────┼─────────────────┼─────────────────────
+VKS Текущие           | Полная (limit=10000)  | Client-side     | Полный re-fetch
+VKS Завершённые       | Пагинация (limit=50)  | Server-side     | Fetch до количества
+Мероприятия Текущие   | Полная (limit=10000)  | Client-side     | Полный re-fetch
+Мероприятия Завершённые| Пагинация (limit=50)  | Server-side     | Invalidate + re-fetch
+Dashboard             | Один endpoint         | Нет              | Fetch → cacheSet
+Календарь             | Диапазон дат (±20д)   | Client-side      | Invalidate → re-fetch
+Справочники           | Полная загрузка       | Нет              | Fetch → cacheSet
 ```
+
+### Единый in-memory кэш (`cache.js`)
+- **Объект**: `_dataCache` — хранит данные всех страниц
+- **Ключи**: `vksActive`, `vksCompleted`, `eventsActive`, `eventsCompleted`, `dashboard`, `locations`, `organizers`, `users`, `calendar`
+- **API**: `cacheGet(page)`, `cacheSet(page, data)`, `cacheInvalidate(page)`, `cacheIsValid(page, ttl)`, `cacheInvalidateAll()`
+- **TTL**: 5 минут (`CACHE_TTL`)
+- **Поток**: вход → `cacheIsValid()`? → render из кэша / fetch → `cacheSet()` → render
+- **SSE**: fetch → `cacheSet()` → render (только если страница видима)
+- **Logout**: `cacheInvalidateAll()` + `localStorage.removeItem('dash_cache')`
+- **Preloader**: `restoreFromCache()` читает `localStorage.dash_cache` → `cacheSet('locations'/'organizers')` для быстрого старта
 
 ### Конфликт имён VKS vs Мероприятия
 - VKS модалка: `openAddEventModal`, `openEditEventModal`, `closeEventModal`, `saveEvent`
@@ -222,20 +239,23 @@ Dashboard         | 1 fetch          | 1 fetch单一 endpoint| in-memory кэш
 - **Dashboard chart**: `GET /admin/api/dashboard/chart?period=month&year=&month=` — для month/all
 - Backend лимит: `min(limit, 200)` — макс 200 событий за запрос
 
-### Кэширование (Stale-While-Revalidate)
-- **VKS доска**: `localStorage` с TTL 5 минут. Ключи: `vks_cache_active`, `vks_cache_completed`, `vks_cache_stats_active`, `vks_cache_stats_completed`
-- **Мероприятия**: in-memory `_eventsCache` с TTL 5 минут. Ключи: `active`, `completed`
-- **Dashboard**: in-memory `_dashCache`. Единый fetch `/api/dashboard`
-- **Справочники**: `localStorage['dash_cache']` — locations + organizers
-- **Logout**: очистка всех кэшей (localStorage + in-memory)
-- **SSE**: fetch events+stats параллельно (`Promise.all`), обновляет кэши
+### Кэширование (единый in-memory кэш)
+- **Единый объект**: `_dataCache` в `cache.js` — все страницы читают/пишут через `cacheGet`/`cacheSet`
+- **VKS Текущие/Мероприятия Текущие**: полная загрузка, кэш = все события, фильтрация client-side
+- **VKS Завершённые/Мероприятия Завершённые**: пагинация, кэш накапливает страницы, фильтрация server-side
+- **Dashboard**: один endpoint `/api/dashboard`, кэш = агрегаты + events
+- **Справочники**: `localStorage['dash_cache']` — locations + organizers (быстрый старт)
+- **Logout**: `cacheInvalidateAll()` + `localStorage.removeItem('dash_cache')`
+- **SSE**: fetch → `cacheSet()` → render (только если страница видима)
 
 ### SSE — обновление страниц
 - `_refreshEvents()` обрабатывает: `vks-active`, `vks-completed`, `events-active`, `events-completed`, `dashboard`, `calendar`
-- **VKS**: `_sseUpdateAndRender()` — fetch events+stats параллельно → update cache → `_sseRerenderFromCache()` с hash check (пропуск если данные не изменились)
-- **Events**: `_eventsInvalidateCache()` + `_eventsHardReset()` — сброс + полная перезагрузка
-- **Dashboard**: `refreshDashboard()` —单一 fetch `/api/dashboard`
-- **Calendar**: `_calEventsCache = {}` + `renderCalendar(false)`
+- **VKS**: `_sseUpdateAndRender()` — fetch events+stats параллельно → `cacheSet()` → `_sseRerenderFromCache()` с hash check
+- **Events Текущие**: `_eventsHardReset()` — полный re-fetch → `cacheSet()`
+- **Events Завершённые**: `cacheInvalidate()` + `_eventsHardReset()` — сброс + re-fetch
+- **Dashboard**: `refreshDashboard()` — fetch `/api/dashboard` → `cacheSet()`
+- **Calendar**: `cacheInvalidate('calendar')` + `renderCalendar(false)`
+- **Справочники**: `_refreshLocations/Organizers/Users` → `cacheSet()` + обновление `store`
 - **Lock/unlock**: SSE пропускается при открытой модалке (`event-modal.show`), refresh при закрытии через `setTimeout(_refreshEvents, 500)`
 
 ### Печать мероприятий
@@ -319,15 +339,16 @@ Dashboard         | 1 fetch          | 1 fetch单一 endpoint| in-memory кэш
 - Текущий порядок: base → layout → components → tables → modals → logs → vks → **events** → settings → filters → dashboard → responsive → **event-modal** → **calendar**
 
 ### Preloader
-- `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает справочники из `localStorage.dash_cache`
-- `preloadAllData()` — загружает ТОЛЬКО locations + organizers (`/admin/api/preload`), кэширует в localStorage
+- `initPreloader()` вызывается в `app.js` перед `checkAuth()` — восстанавливает справочники из `localStorage.dash_cache` → `cacheSet()`
+- `preloadAllData()` — загружает ТОЛЬКО locations + organizers (`/admin/api/preload`), кэширует в `cacheSet()` + localStorage
 - `_preloaded` флаг предотвращает повторную загрузку. Сбрасывается при logout
-- **`store.allEvents` УБРАН** — каждая страница сама запрашивает данные через серверную пагинацию
+- **`store.allEvents` УБРАН** — каждая страница сама запрашивает данные
 
 ### Store — централизованное хранилище
 - `store` — глобальная переменная = `{ allLocations, allOrganizers, allUsers }` в `utils.js`
 - **`store.allEvents` удалён** — данные загружаются постранично через `/api/events`
 - CRUD модули используют `storeKey` для автоматической записи в store
+- События хранятся в `_dataCache` (единый in-memory кэш), НЕ в store
 
 ### Frontend паттерны
 - `esc()` — экранирование HTML-сущностей для onclick-строк
