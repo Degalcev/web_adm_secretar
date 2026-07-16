@@ -37,17 +37,23 @@ function handleSSEEvent(data) {
 
 function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
-    _sseDebounceTimer = setTimeout(sseRefreshPage, 200);
+    _sseDebounceTimer = setTimeout(() => {
+        console.log('[SSE] debounce fired');
+        sseRefreshPage();
+    }, 200);
 }
 
 // ─── Единая функция SSE обновления ─────────────────────────────────
 
 async function sseRefreshPage() {
     const page = currentPage;
-    if (!page) return;
+    if (!page) { console.log('[SSE] no currentPage'); return; }
 
     const modal = document.getElementById('event-modal');
-    if (modal && modal.classList.contains('show')) return;
+    const modalOpen = modal && modal.classList.contains('show');
+    if (modalOpen) { console.log('[SSE] modal still open, skip'); return; }
+
+    console.log('[SSE] sseRefreshPage →', page);
 
     // ── VKS / Мероприятия: один fetch events + stats ──
     if (page === 'vks-active' || page === 'vks-completed' ||
