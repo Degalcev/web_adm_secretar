@@ -44,7 +44,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
         elif status == 'active':
             completed = False
 
-        limit = min(int(request.query.get('limit', '50')), 200)
+        limit = min(int(request.query.get('limit', '50')), 10000)
 
         events, has_more = await get_events(
             completed=completed,
