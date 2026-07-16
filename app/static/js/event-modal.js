@@ -461,6 +461,11 @@ async function saveEvent() {
 
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
+            // Инвалидировать кэш перед рендером — данные изменились
+            cacheInvalidate('vksActive');
+            cacheInvalidate('vksCompleted');
+            cacheInvalidate('eventsActive');
+            cacheInvalidate('eventsCompleted');
             if (activeBoard) renderVksBoard('vks-board-active', 'active', true);
             if (completedBoard) renderVksBoard('vks-board-completed', 'completed', true);
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
