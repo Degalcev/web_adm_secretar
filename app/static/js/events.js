@@ -218,6 +218,15 @@ async function eventsUpdateStats() {
         set('stat-evt-today', stats.today || 0);
         set('stat-evt-soon', stats.soon || 0);
         set('stat-evt-missed', stats.missed || 0);
+        // Кэшировать stats
+        const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
+        const existing = cacheGet(cacheKey);
+        if (existing) {
+            existing.data.stats = stats;
+            cacheSet(cacheKey, existing.data);
+        } else {
+            cacheSet(cacheKey, { events: [], stats, loaded: true, hasMore: true });
+        }
     } catch (e) {}
 }
 
@@ -374,7 +383,9 @@ function eventsRenderBoard() {
         // Завершённые — единый список без группировки по датам
         const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || '');
         events.sort(sortByDateThenTime);
-        html += _eventsRenderBlock('Завершённые', events, 'completed');
+        const stats = cacheGet('eventsCompleted')?.data?.stats;
+        const totalCount = stats?.total ?? events.length;
+        html += _eventsRenderBlock('Завершённые', events, 'completed', totalCount);
     } else {
         // Текущие — группировка по датам
         const now = new Date();
@@ -432,7 +443,7 @@ function eventsRenderBoard() {
     }
 }
 
-function _eventsRenderBlock(title, events, type) {
+function _eventsRenderBlock(title, events, type, totalCount) {
     let html = `<div class="vks-date-group vks-block-${type}">`;
     html += `<div class="vks-date-header">`;
 
@@ -442,10 +453,12 @@ function _eventsRenderBlock(title, events, type) {
         tomorrow: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
         'day-after': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
         soon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+        completed: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
     };
 
+    const count = totalCount !== undefined ? totalCount : events.length;
     html += icons[type] || icons.soon;
-    html += `${title} <span class="vks-date-count">${events.length}</span>`;
+    html += `${title} <span class="vks-date-count">${count}</span>`;
     html += `</div>`;
 
     events.forEach(e => {

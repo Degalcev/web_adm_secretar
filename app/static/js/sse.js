@@ -187,8 +187,10 @@ function _sseRerenderFromCache(boardId, filter, force) {
     if (!filtered.length) {
         html = '<div class="empty-state">Нет мероприятий</div>';
     } else if (filter === 'completed') {
-        // Завершённые — единый список без группировки по датам
-        html += renderVksBlock('Завершённые', filtered, 'completed');
+        // Завершённые — единый список, count из stats
+        const stats = cacheGet('vksCompleted')?.data?.stats;
+        const totalCount = stats?.total ?? filtered.length;
+        html += renderVksBlock('Завершённые', filtered, 'completed', totalCount);
     } else {
         const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
         filtered.forEach(e => {

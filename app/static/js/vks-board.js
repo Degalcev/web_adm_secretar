@@ -218,8 +218,10 @@ function _vksRenderBoard(boardId, filter) {
     if (!events.length && !p.hasMore) {
         html = '<div class="empty-state">Нет мероприятий</div>';
     } else if (filter === 'completed') {
-        // Завершённые — единый список
-        html += renderVksBlock('Завершённые', events, 'completed');
+        // Завершённые — единый список, count из stats
+        const stats = cacheGet('vksCompleted')?.data?.stats;
+        const totalCount = stats?.total ?? events.length;
+        html += renderVksBlock('Завершённые', events, 'completed', totalCount);
     } else {
         // Текущие — группировка по датам
         const now = new Date();
@@ -257,16 +259,18 @@ function _vksRenderBoard(boardId, filter) {
     board.appendChild(sentinel);
 }
 
-function renderVksBlock(title, events, type) {
+function renderVksBlock(title, events, type, totalCount) {
     const icons = {
         missed:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
         today:     `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
         tomorrow:  `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
         'day-after': `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
         soon:      `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+        completed: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--fg-muted)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
     };
+    const count = totalCount !== undefined ? totalCount : events.length;
     let html = `<div class="vks-date-group vks-block-${type}">`;
-    html += `<div class="vks-date-header">${icons[type] || icons.soon}${title} <span class="vks-date-count">${events.length}</span></div>`;
+    html += `<div class="vks-date-header">${icons[type] || icons.soon}${title} <span class="vks-date-count">${count}</span></div>`;
     events.forEach(e => { html += renderVksCard(e, type); });
     html += `</div>`;
     return html;

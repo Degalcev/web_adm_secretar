@@ -168,6 +168,8 @@ async function updateVksStats() {
         if (existing) {
             existing.data.stats = stats;
             cacheSet(cacheKey, existing.data);
+        } else {
+            cacheSet(cacheKey, { events: [], stats, hasMore: true });
         }
     } catch (e) {}
 }
