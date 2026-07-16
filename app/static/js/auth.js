@@ -132,10 +132,6 @@ async function logout() {
     if (typeof disconnectSSE === 'function') disconnectSSE();
     if (typeof calStopNowLineTimer === 'function') calStopNowLineTimer();
     if (typeof _preloaded !== 'undefined') _preloaded = false;
-    // Очистка кэшей
-    localStorage.removeItem('dash_cache');
-    if (typeof _dashCache !== 'undefined') _dashCache = null;
-    if (typeof cacheInvalidateAll === 'function') cacheInvalidateAll();
     showLogin();
     window.history.replaceState(null, '', '/');
 }

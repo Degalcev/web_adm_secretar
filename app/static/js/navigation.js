@@ -47,13 +47,6 @@ function switchPage(page) {
     const pageEl = document.getElementById(pageId);
     if (pageEl) pageEl.classList.add('active');
 
-    // VKS доски НЕ очищаем — renderVksBoard() рендерит из localStorage кэша мгновенно
-    // Только Events — _eventsHardReset() сам очищает board
-    if (page === 'events-active' || page === 'events-completed') {
-        const board = document.getElementById('events-board');
-        if (board) board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
-    }
-
     // Обновить видимость кнопки «Наверх»
     const scrollBtn = document.getElementById('scroll-top-btn');
     if (scrollBtn && pageEl) {

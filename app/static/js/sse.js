@@ -175,10 +175,6 @@ async function _refreshLocations() {
         const locs = await resp.json();
         store.allLocations = locs;
         cacheSet('locations', locs);
-        if (typeof _dashLocations !== 'undefined') {
-            _dashLocations = {};
-            locs.forEach(l => { _dashLocations[l.id] = l.name; });
-        }
         if ((currentPage || '') === 'locations') renderLocations(store.allLocations);
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
@@ -191,10 +187,6 @@ async function _refreshOrganizers() {
         const orgs = await resp.json();
         store.allOrganizers = orgs;
         cacheSet('organizers', orgs);
-        if (typeof _dashOrganizers !== 'undefined') {
-            _dashOrganizers = {};
-            orgs.forEach(o => { _dashOrganizers[o.id] = o.short_name || o.name; });
-        }
         if ((currentPage || '') === 'organizers') renderOrganizers(store.allOrganizers);
         if ((currentPage || '') === 'dashboard') renderDashboard();
     } catch (e) {}
