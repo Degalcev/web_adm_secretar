@@ -12,6 +12,9 @@ function initEventsPage(completed = false) {
     _eventsTypeFilter = null;
     const title = document.getElementById('events-page-title');
     if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
+    // Скрыть карточки статистики для Завершённых
+    const statsRow = document.getElementById('events-stats');
+    if (statsRow) statsRow.style.display = completed ? 'none' : '';
     _eventsPopulateFilters();
 
     const cacheKey = completed ? 'eventsCompleted' : 'eventsActive';

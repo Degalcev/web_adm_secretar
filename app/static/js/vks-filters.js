@@ -210,7 +210,10 @@ function filterVksListActive() {
 }
 
 function filterVksListCompleted() {
-    renderVksBoard('vks-board-completed', 'completed', true);
+    // Завершённые — фильтры через сервер, сбросить кэш и перезагрузить
+    cacheInvalidate('vksCompleted');
+    _vksPagination['vks-board-completed'] = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, loading: false };
+    renderVksBoard('vks-board-completed', 'completed');
 }
 
 function resetVksActiveFilters() {
@@ -232,7 +235,10 @@ function resetVksCompletedFilters() {
     document.getElementById('f-vks-completed-org').value = '';
     document.getElementById('f-vks-completed-loc').value = '';
     document.getElementById('f-vks-completed-desc').value = '';
-    filterVksListCompleted();
+    // Завершённые — сбросить кэш и перезагрузить
+    cacheInvalidate('vksCompleted');
+    _vksPagination['vks-board-completed'] = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, loading: false };
+    renderVksBoard('vks-board-completed', 'completed');
 }
 
 function populateVksFilters() {
