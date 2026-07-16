@@ -8,7 +8,7 @@ async function initDashboard() {
     setupDashboardClicks();
     if (cacheIsValid('dashboard')) {
         renderDashboard();
-        _dashRefreshInBackground();
+        refreshDashboard();
         return;
     }
     await _dashFetch();
@@ -23,11 +23,6 @@ async function _dashFetch() {
     } catch (e) {
         console.error('Dashboard fetch error:', e);
     }
-}
-
-async function _dashRefreshInBackground() {
-    await _dashFetch();
-    renderDashboard();
 }
 
 async function refreshDashboard() {

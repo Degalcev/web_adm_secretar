@@ -73,7 +73,7 @@ app/
         ├── router.js         # SPA роутинг (handleAuthState)
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
         ├── preloader.js      # preloadAllData() — locations + organizers, restoreFromCache() из localStorage
-        ├── sse.js            # SSE обработчики + debounce + fetch events+stats → cacheSet()
+        ├── sse.js            # SSE: sseRefreshPage() единая функция обновления + debounce + hash check
         ├── dashboard.js      # Дашборд — cacheGet('dashboard'), locName/orgName из cacheGet
         ├── calendar.js       # Календарь (initCalendar, renderCalendar, SVG shadow, hover, now-line, expandSeries)
         ├── events.js         # Мероприятия: cacheGet/set, Текущие полная загрузка, Завершённые пагинация
@@ -250,16 +250,14 @@ Dashboard             | Один endpoint         | Нет              | Fetch 
 - **SSE**: fetch → `cacheSet()` → render (только если страница видима)
 
 ### SSE — обновление страниц
-- `_refreshEvents()` обрабатывает: `vks-active`, `vks-completed`, `events-active`, `events-completed`, `dashboard`, `calendar`
-- **Hash check**: `_sseRerenderFromCache()` сравнивает hash по `id + completed + locked_by + date + time + description`. Пропуск re-render если данные не изменились. `force=true` пропускает проверку (при смене фильтра, после save)
-- **VKS**: `_sseUpdateAndRender()` — fetch events+stats параллельно → `cacheSet()` → `_sseRerenderFromCache()` с hash check
-- **Events Текущие**: `_eventsHardReset()` — полный re-fetch → `cacheSet()`
-- **Events Завершённые**: `cacheInvalidate()` + `_eventsHardReset()` — сброс + re-fetch
-- **Dashboard**: `refreshDashboard()` — fetch `/api/dashboard` → `cacheSet()`
-- **Calendar**: `cacheInvalidate('calendar')` + `renderCalendar(false)`
+- **`sseRefreshPage()`** — единая функция для всех страниц (VKS, Events, Dashboard, Calendar)
+- **Hash check**: `_sseRerenderFromCache()` сравнивает hash по `id + completed + locked_by + date + time + description`. `force=true` пропускает проверку (SSE обновление всегда с `force=true`)
+- **VKS / Events**: один fetch `events + stats` параллельно → `cacheSet()` → render
+- **Dashboard**: fetch `/api/dashboard` → `cacheSet()` → `renderDashboard()`
+- **Calendar**: `cacheInvalidate('calendar')` → `renderCalendar(false)`
 - **Справочники**: `_refreshLocations/Organizers/Users` → `cacheSet()` + обновление `store`
-- **Lock/unlock**: SSE пропускается при открытой модалке (`event-modal.show`), refresh при закрытии через `setTimeout(_refreshEvents, 500)`
-- **After save**: инвалидация всех кэшей перед re-render → `renderVksBoard()` загружает свежие данные с сервера
+- **Modal guard**: SSE пропускается при открытой модалке (`event-modal.show`). Закрытие модалки → unlock PUT → SSE event → `sseRefreshPage()`
+- **After save**: `saveEvent()` → `closeEventModal()` → unlock → SSE → `sseRefreshPage()`. Без ручной инвалидации кэша
 
 ### Печать мероприятий
 - `GET /admin/api/events/print?type=&from=&to=` — JSON с событиями + участниками
