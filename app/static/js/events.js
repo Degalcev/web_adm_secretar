@@ -17,7 +17,19 @@ function initEventsPage(completed = false) {
     _eventsPopulateFilters();
 
     const cacheKey = completed ? 'eventsCompleted' : 'eventsActive';
-    pageInit(cacheKey, eventsRenderBoard, () => _eventsFetch(completed ? 'completed' : 'active'));
+    pageInit(cacheKey, () => {
+        const cached = cacheGet(cacheKey);
+        if (cached?.data?.stats) _eventsRenderStats(cached.data.stats);
+        eventsRenderBoard();
+    }, () => _eventsFetch(completed ? 'completed' : 'active'));
+}
+
+function _eventsRenderStats(stats) {
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('stat-evt-total', stats.total || 0);
+    set('stat-evt-today', stats.today || 0);
+    set('stat-evt-soon', stats.soon || 0);
+    set('stat-evt-missed', stats.missed || 0);
 }
 
 async function _eventsFetch(status) {
@@ -215,12 +227,7 @@ async function eventsUpdateStats() {
         const resp = await fetch(`/admin/api/events/stats?${params}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const stats = await resp.json();
-        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        set('stat-evt-total', stats.total || 0);
-        set('stat-evt-today', stats.today || 0);
-        set('stat-evt-soon', stats.soon || 0);
-        set('stat-evt-missed', stats.missed || 0);
-        // Кэшировать stats
+        _eventsRenderStats(stats);
         const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
         const existing = cacheGet(cacheKey);
         if (existing) {
