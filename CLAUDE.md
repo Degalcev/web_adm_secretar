@@ -174,14 +174,13 @@ deploy/
 ### Страница Мероприятий
 - **SPA route**: `/events/` (текущие), `/events/completed/` (завершённые)
 - **Sidebar**: группа «Мероприятия» → Текущие / Завершённые
-- **VKS-style карточки**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро)
+- **Текущие**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро), quick-filter, stats карточки (с `exclude_type=ВКС`)
+- **Завершённые**: единый список "Завершённые" без группировки, stats карточки скрыты, заголовок показывает total из stats
 - **Filter-bar**: Тип (select), Дата (день/месяц/год), Организатор, Локация, Описание
-- **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter и active state
-- **SSE**: обновления на `events-active`/`events-completed` страницах
 - **API**: `GET /admin/api/events?status=active&exclude_type=ВКС&limit=10000` (Текущие) или `limit=50` (Завершённые)
-- **Кэш**: `_dataCache.eventsActive` / `_dataCache.eventsCompleted` — in-memory
+- **Кэш**: `_dataCache.eventsActive` / `_dataCache.eventsCompleted` — in-memory, включая stats
 - **Текущие**: полная загрузка одним запросом, фильтрация client-side
-- **Завершённые**: пагинация по 50, фильтрация server-side
+- **Завершённые**: пагинация по 50, фильтрация server-side, stats загружаются с сервера
 
 ### Модалка VKS/Мероприятий — загрузка данных
 - `openEditEventModal(id)` загружает событие через `GET /api/events/{id}/single` (не из `store.allEvents`)
@@ -191,13 +190,13 @@ deploy/
 ### Страница VKS (ВКС)
 - **SPA route**: `/conferences/` (активные), `/conferences/completed/` (завершённые)
 - **Sidebar**: группа «ВКС» → Текущие / Завершённые
-- **VKS-style карточки**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро)
+- **Текущие**: groups по датам (Пропущенные/Сегодня/Завтра/Послезавтра/Скоро), quick-filter, stats карточки
+- **Завершённые**: единый список "Завершённые" без группировки, заголовок показывает total из stats
 - **Filter-bar**: Дата (день/месяц/год), Организатор, Локация, Описание
-- **Stats**: карточки Всего/Сегодня/Скоро/Пропущенные с quick-filter
 - **API**: `GET /admin/api/events?status=active&type=ВКС&limit=10000` (Текущие) или `limit=50` (Завершённые)
-- **Кэш**: `_dataCache.vksActive` / `_dataCache.vksCompleted` — in-memory
+- **Кэш**: `_dataCache.vksActive` / `_dataCache.vksCompleted` — in-memory, включая stats
 - **Текущие**: полная загрузка одним запросом, фильтрация client-side
-- **Завершённые**: пагинация по 50, фильтрация server-side
+- **Завершённые**: пагинация по 50, фильтрация server-side, stats загружаются с сервера
 - **Переключение страниц**: рендер из кэша мгновенно, без fetch
 
 ### Архитектура загрузки данных
@@ -234,22 +233,24 @@ Dashboard             | Один endpoint         | Нет              | Fetch 
 - **Cursor-based пагинация**: `?cursor_date=&cursor_time=&cursor_id=` для детерминированного порядка
 - **Серверные фильтры**: `?status=active/completed`, `?type=ВКС`, `?exclude_type=ВКС`, `?organizer_id=`, `?location_id=`, `?search=`, `?from=&to=`
 - **Одно событие**: `GET /admin/api/events/{id}/single` — для SSE и модалки
-- **Stats**: `GET /admin/api/events/stats?status=active&type=ВКС` — COUNT запросы (O(1))
+- **Stats**: `GET /admin/api/events/stats?status=active&type=ВКС&exclude_type=ВКС` — COUNT запросы (O(1)), поддерживает `exclude_type`
 - **Dashboard**: `GET /admin/api/dashboard` — агрегаты + today/soon + locations + chart
 - **Dashboard chart**: `GET /admin/api/dashboard/chart?period=month&year=&month=` — для month/all
-- Backend лимит: `min(limit, 200)` — макс 200 событий за запрос
+- Backend лимит: `min(limit, 10000)` — макс 10000 событий за запрос
 
 ### Кэширование (единый in-memory кэш)
 - **Единый объект**: `_dataCache` в `cache.js` — все страницы читают/пишут через `cacheGet`/`cacheSet`
-- **VKS Текущие/Мероприятия Текущие**: полная загрузка, кэш = все события, фильтрация client-side
-- **VKS Завершённые/Мероприятия Завершённые**: пагинация, кэш накапливает страницы, фильтрация server-side
+- **VKS Текущие/Мероприятия Текущие**: полная загрузка, кэш = все события + stats, фильтрация client-side
+- **VKS Завершённые/Мероприятия Завершённые**: пагинация, кэш накапливает страницы + stats (total count), фильтрация server-side
 - **Dashboard**: один endpoint `/api/dashboard`, кэш = агрегаты + events
 - **Справочники**: `localStorage['dash_cache']` — locations + organizers (быстрый старт)
+- **After save**: инвалидация всех кэшей → `renderVksBoard()` загружает свежие данные
 - **Logout**: `cacheInvalidateAll()` + `localStorage.removeItem('dash_cache')`
 - **SSE**: fetch → `cacheSet()` → render (только если страница видима)
 
 ### SSE — обновление страниц
 - `_refreshEvents()` обрабатывает: `vks-active`, `vks-completed`, `events-active`, `events-completed`, `dashboard`, `calendar`
+- **Hash check**: `_sseRerenderFromCache()` сравнивает hash по `id + completed + locked_by + date + time + description`. Пропуск re-render если данные не изменились. `force=true` пропускает проверку (при смене фильтра, после save)
 - **VKS**: `_sseUpdateAndRender()` — fetch events+stats параллельно → `cacheSet()` → `_sseRerenderFromCache()` с hash check
 - **Events Текущие**: `_eventsHardReset()` — полный re-fetch → `cacheSet()`
 - **Events Завершённые**: `cacheInvalidate()` + `_eventsHardReset()` — сброс + re-fetch
@@ -257,6 +258,7 @@ Dashboard             | Один endpoint         | Нет              | Fetch 
 - **Calendar**: `cacheInvalidate('calendar')` + `renderCalendar(false)`
 - **Справочники**: `_refreshLocations/Organizers/Users` → `cacheSet()` + обновление `store`
 - **Lock/unlock**: SSE пропускается при открытой модалке (`event-modal.show`), refresh при закрытии через `setTimeout(_refreshEvents, 500)`
+- **After save**: инвалидация всех кэшей перед re-render → `renderVksBoard()` загружает свежие данные с сервера
 
 ### Печать мероприятий
 - `GET /admin/api/events/print?type=&from=&to=` — JSON с событиями + участниками
