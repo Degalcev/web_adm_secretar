@@ -7,50 +7,27 @@ const EVENT_TYPES = ['Совещание', 'Встреча', 'Заседание
 const _eventsPagination = { events: [], cursorDate: null, cursorTime: null, hasMore: true, loading: false, total: 0 };
 const EVENTS_PAGE_SIZE = 50;
 
-const _eventsCache = {
-    active: { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 },
-    completed: { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 },
-};
-const EVENTS_CACHE_TTL = 5 * 60 * 1000;
-
-function _eventsGetCache() {
-    return _eventsCompleted ? _eventsCache.completed : _eventsCache.active;
-}
-
-function _eventsIsCacheValid() {
-    const c = _eventsGetCache();
-    return c.events.length > 0 && (Date.now() - c.ts) < EVENTS_CACHE_TTL;
-}
-
-function _eventsWriteCache(data, append = false) {
-    const c = _eventsGetCache();
-    if (append) c.events.push(...(data.events || []));
-    else c.events = data.events || [];
-    c.cursorDate = data.next_cursor_date || null;
-    c.cursorTime = data.next_cursor_time || null;
-    c.cursorId = data.next_cursor_id || null;
-    c.hasMore = !!data.has_more;
-    c.ts = Date.now();
-}
-
-function _eventsInvalidateCache() {
-    const key = _eventsCompleted ? 'completed' : 'active';
-    _eventsCache[key] = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 };
-}
-
 function initEventsPage(completed = false) {
     _eventsCompleted = completed;
     _eventsTypeFilter = null;
-
     const title = document.getElementById('events-page-title');
     if (title) title.textContent = completed ? 'Завершённые мероприятия' : 'Текущие мероприятия';
-
     _eventsPopulateFilters();
-    if (_eventsIsCacheValid()) {
+
+    const cacheKey = completed ? 'eventsCompleted' : 'eventsActive';
+    const cached = cacheGet(cacheKey);
+
+    if (cached?.data?.loaded) {
+        _eventsPagination.events = cached.data.events || [];
+        _eventsPagination.cursorDate = cached.data.cursorDate || null;
+        _eventsPagination.cursorTime = cached.data.cursorTime || null;
+        _eventsPagination.cursorId = cached.data.cursorId || null;
+        _eventsPagination.hasMore = completed ? (cached.data.hasMore ?? true) : false;
         eventsRenderBoard();
         eventsUpdateStats();
         return;
     }
+
     _eventsHardReset();
 }
 
@@ -59,10 +36,12 @@ function _eventsResetAndLoad() {
 }
 
 function _eventsHardReset() {
-    _eventsInvalidateCache();
+    const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
+    cacheInvalidate(cacheKey);
     _eventsPagination.events = [];
     _eventsPagination.cursorDate = null;
     _eventsPagination.cursorTime = null;
+    _eventsPagination.cursorId = null;
     _eventsPagination.hasMore = true;
     _eventsPagination.loading = false;
 
@@ -70,15 +49,78 @@ function _eventsHardReset() {
     if (!board) return;
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    const scrollEl = _findScrollParent(board);
-    if (scrollEl) {
-        if (scrollEl._eventsScrollHandler) scrollEl.removeEventListener('scroll', scrollEl._eventsScrollHandler);
-        scrollEl._eventsScrollHandler = () => {
-            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) _eventsLoadMore();
-        };
-        scrollEl.addEventListener('scroll', scrollEl._eventsScrollHandler);
+    if (!_eventsCompleted) {
+        _eventsLoadAll();
+    } else {
+        const scrollEl = _findScrollParent(board);
+        if (scrollEl) {
+            if (scrollEl._eventsScrollHandler) scrollEl.removeEventListener('scroll', scrollEl._eventsScrollHandler);
+            scrollEl._eventsScrollHandler = () => {
+                if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) _eventsLoadMore();
+            };
+            scrollEl.addEventListener('scroll', scrollEl._eventsScrollHandler);
+        }
+        _eventsLoadMore();
     }
-    _eventsLoadMore();
+}
+
+async function _eventsLoadAll() {
+    const p = _eventsPagination;
+    if (p.loading) return;
+    p.loading = true;
+
+    const board = document.getElementById('events-board');
+    const sentinel = board?.querySelector('.scroll-sentinel');
+    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка…</div>';
+
+    try {
+        const params = new URLSearchParams({
+            status: 'active', limit: 10000, exclude_type: 'ВКС',
+        });
+        const orgVal = document.getElementById('f-events-org')?.value;
+        const locVal = document.getElementById('f-events-loc')?.value;
+        const searchVal = document.getElementById('f-events-desc')?.value?.trim();
+        if (orgVal) params.set('organizer_id', orgVal);
+        if (locVal) params.set('location_id', locVal);
+        if (searchVal) params.set('search', searchVal);
+
+        const dayVal = document.getElementById('f-events-day')?.value;
+        const monthVal = document.getElementById('f-events-month')?.value;
+        const yearVal = document.getElementById('f-events-year')?.value;
+        if (yearVal || monthVal || dayVal) {
+            const y = yearVal || new Date().getFullYear();
+            const m = monthVal ? String(monthVal).padStart(2, '0') : '01';
+            if (dayVal) {
+                params.set('from', `${y}-${m}-${String(dayVal).padStart(2, '0')}`);
+                params.set('to', `${y}-${m}-${String(dayVal).padStart(2, '0')}`);
+            } else {
+                const mEnd = monthVal ? String(monthVal).padStart(2, '0') : '12';
+                const lastDay = new Date(y, monthVal ? Number(monthVal) : 12, 0).getDate();
+                params.set('from', `${y}-${m}-01`);
+                params.set('to', `${y}-${mEnd}-${lastDay}`);
+            }
+        }
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        p.events = data.events || [];
+        p.hasMore = false;
+
+        cacheSet('eventsActive', {
+            events: p.events,
+            loaded: true,
+            hasMore: false,
+        });
+
+        eventsRenderBoard();
+        eventsUpdateStats();
+    } catch (e) {
+        console.error('_eventsLoadAll error:', e);
+    }
+    p.loading = false;
+    if (sentinel) sentinel.innerHTML = '';
 }
 
 async function _eventsLoadMore() {
@@ -139,7 +181,14 @@ async function _eventsLoadMore() {
         p.cursorId = data.next_cursor_id || null;
         p.hasMore = !!data.has_more;
 
-        _eventsWriteCache(data, true);
+        cacheSet('eventsCompleted', {
+            events: p.events,
+            cursorDate: p.cursorDate,
+            cursorTime: p.cursorTime,
+            cursorId: p.cursorId,
+            hasMore: p.hasMore,
+            loaded: true,
+        });
 
         eventsRenderBoard();
         eventsUpdateStats();
@@ -257,8 +306,9 @@ function eventsRenderBoard() {
     const locVal = document.getElementById('f-events-loc')?.value || '';
     const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
 
-    const cache = _eventsGetCache();
-    let events = [...cache.events];
+    const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
+    const cached = cacheGet(cacheKey);
+    let events = [...(cached?.data?.events || [])];
 
     // Quick filter (today/soon/missed)
     if (_eventsQuickFilter) {

@@ -135,10 +135,7 @@ async function logout() {
     // Очистка кэшей
     localStorage.removeItem('dash_cache');
     if (typeof _dashCache !== 'undefined') _dashCache = null;
-    if (typeof _eventsCache !== 'undefined') {
-        _eventsCache.active = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 };
-        _eventsCache.completed = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 };
-    }
+    if (typeof cacheInvalidateAll === 'function') cacheInvalidateAll();
     showLogin();
     window.history.replaceState(null, '', '/');
 }

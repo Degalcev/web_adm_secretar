@@ -50,8 +50,10 @@ function _refreshEvents() {
         _sseUpdateAndRender('vks-board-active', 'active');
     } else if (page === 'vks-completed') {
         _sseUpdateAndRender('vks-board-completed', 'completed');
-    } else if (page === 'events-active' || page === 'events-completed') {
-        _eventsInvalidateCache();
+    } else if (page === 'events-active') {
+        _eventsHardReset();
+    } else if (page === 'events-completed') {
+        cacheInvalidate('eventsCompleted');
         _eventsHardReset();
     } else if (page === 'dashboard') {
         refreshDashboard();
