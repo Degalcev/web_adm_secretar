@@ -123,10 +123,10 @@ function _sseRerenderFromCache(boardId, filter, force) {
     // Проверить изменились ли данные — пропустить рендер если нет
     // force=true пропускает проверку (вызывается при смене фильтра)
     if (!force) {
-        const hash = p.events.map(e => e.id + (e.completed ? '1' : '0')).join(',');
+        const hash = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
         if (_sseLastHash[boardId] === hash) return;
     }
-    _sseLastHash[boardId] = p.events.map(e => e.id + (e.completed ? '1' : '0')).join(',');
+    _sseLastHash[boardId] = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
 
     const events = p.events;
     const now = new Date();
