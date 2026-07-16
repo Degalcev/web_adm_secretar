@@ -34,7 +34,9 @@ function _eventsRenderStats(stats) {
 
 async function _eventsFetch(status) {
     const cacheKey = status === 'active' ? 'eventsActive' : 'eventsCompleted';
-    const params = new URLSearchParams({ status, limit: '10000', exclude_type: 'ВКС' });
+    const isCompleted = status === 'completed';
+    const limit = isCompleted ? 50 : 10000;
+    const params = new URLSearchParams({ status, limit: String(limit), exclude_type: 'ВКС' });
     if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
     const statsParams = new URLSearchParams({ status });
     if (_eventsTypeFilter) statsParams.set('type', _eventsTypeFilter);
@@ -45,10 +47,19 @@ async function _eventsFetch(status) {
         fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
     ]);
 
-    const events = eventsResp.ok ? (await eventsResp.json()).events || [] : [];
+    const data = eventsResp.ok ? await eventsResp.json() : {};
+    const events = data.events || [];
     const stats = statsResp.ok ? await statsResp.json() : null;
 
-    cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
+    cacheSet(cacheKey, {
+        events,
+        stats,
+        loaded: true,
+        hasMore: isCompleted ? (data.has_more ?? true) : false,
+        cursorDate: data.next_cursor_date || null,
+        cursorTime: data.next_cursor_time || null,
+        cursorId: data.next_cursor_id || null,
+    });
     return { events, stats };
 }
 

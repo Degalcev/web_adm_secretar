@@ -5,7 +5,9 @@ const VKS_PAGE_SIZE = 50;
 
 async function _vksFetch(filter) {
     const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
-    const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: '10000' });
+    const isCompleted = filter === 'completed';
+    const limit = isCompleted ? 50 : 10000;
+    const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(limit) });
     const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
 
     const [eventsResp, statsResp] = await Promise.all([
@@ -13,10 +15,19 @@ async function _vksFetch(filter) {
         fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
     ]);
 
-    const events = eventsResp.ok ? (await eventsResp.json()).events || [] : [];
+    const data = eventsResp.ok ? await eventsResp.json() : {};
+    const events = data.events || [];
     const stats = statsResp.ok ? await statsResp.json() : null;
 
-    cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
+    cacheSet(cacheKey, {
+        events,
+        stats,
+        loaded: true,
+        hasMore: isCompleted ? (data.has_more ?? true) : false,
+        cursorDate: data.next_cursor_date || null,
+        cursorTime: data.next_cursor_time || null,
+        cursorId: data.next_cursor_id || null,
+    });
     return { events, stats };
 }
 
