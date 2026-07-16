@@ -67,66 +67,6 @@ function _eventsHardReset() {
     }
 }
 
-async function eventsSoftRefresh() {
-    const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
-    const params = new URLSearchParams({
-        status: _eventsCompleted ? 'completed' : 'active',
-        limit: 10000,
-        exclude_type: 'ВКС',
-    });
-    if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
-    const orgVal = document.getElementById('f-events-org')?.value;
-    const locVal = document.getElementById('f-events-loc')?.value;
-    const searchVal = document.getElementById('f-events-desc')?.value?.trim();
-    if (orgVal) params.set('organizer_id', orgVal);
-    if (locVal) params.set('location_id', locVal);
-    if (searchVal) params.set('search', searchVal);
-
-    try {
-        const statsParams = new URLSearchParams({ status: _eventsCompleted ? 'completed' : 'active' });
-        if (_eventsTypeFilter) statsParams.set('type', _eventsTypeFilter);
-        else statsParams.set('exclude_type', 'ВКС');
-
-        const [eventsResp, statsResp] = await Promise.all([
-            fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
-            fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
-        ]);
-
-        if (eventsResp.ok) {
-            const data = await eventsResp.json();
-            _eventsPagination.events = data.events || [];
-            _eventsPagination.hasMore = _eventsCompleted ? (data.has_more ?? true) : false;
-            _eventsPagination.cursorDate = data.next_cursor_date || null;
-            _eventsPagination.cursorTime = data.next_cursor_time || null;
-            _eventsPagination.cursorId = data.next_cursor_id || null;
-
-            cacheSet(cacheKey, {
-                events: _eventsPagination.events,
-                loaded: true,
-                hasMore: _eventsPagination.hasMore,
-                cursorDate: _eventsPagination.cursorDate,
-                cursorTime: _eventsPagination.cursorTime,
-                cursorId: _eventsPagination.cursorId,
-            });
-        }
-
-        if (statsResp.ok) {
-            const stats = await statsResp.json();
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-            set('stat-evt-total', stats.total || 0);
-            set('stat-evt-today', stats.today || 0);
-            set('stat-evt-soon', stats.soon || 0);
-            set('stat-evt-missed', stats.missed || 0);
-            const existing = cacheGet(cacheKey);
-            if (existing) { existing.data.stats = stats; cacheSet(cacheKey, existing.data); }
-        }
-
-        eventsRenderBoard();
-    } catch (e) {
-        console.error('eventsSoftRefresh error:', e);
-    }
-}
-
 async function _eventsLoadAll() {
     const p = _eventsPagination;
     if (p.loading) return;
