@@ -206,6 +206,7 @@ async def get_events(
 async def count_events(
     completed: bool = None,
     event_type: str = None,
+    exclude_type: str = None,
     location_id: str = None,
     organizer_id: str = None,
     date_from: date = None,
@@ -219,6 +220,8 @@ async def count_events(
             query = query.where(Event.completed == completed)
         if event_type:
             query = query.where(Event.type == event_type)
+        if exclude_type:
+            query = query.where(Event.type != exclude_type)
         if location_id:
             query = query.where(Event.location_id == location_id)
         if organizer_id:

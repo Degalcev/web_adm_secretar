@@ -209,6 +209,7 @@ async function eventsUpdateStats() {
         const status = _eventsCompleted ? 'completed' : 'active';
         const params = new URLSearchParams({ status });
         if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
+        else params.set('exclude_type', 'ВКС');
         const resp = await fetch(`/admin/api/events/stats?${params}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const stats = await resp.json();

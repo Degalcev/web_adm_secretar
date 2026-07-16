@@ -640,16 +640,17 @@ async def get_events_stats(request: web.Request) -> web.Response:
     try:
         status = request.query.get('status', 'active')
         event_type = request.query.get('type', '').strip() or None
+        exclude_type = request.query.get('exclude_type', '').strip() or None
         today = date.today()
 
         completed = True if status == 'completed' else False
 
-        total = await count_events(completed=completed, event_type=event_type)
-        today_count = await count_events(completed=completed, event_type=event_type,
+        total = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type)
+        today_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
                                          date_from=today, date_to=today)
-        soon_count = await count_events(completed=completed, event_type=event_type,
+        soon_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
                                         date_from=today + timedelta(days=1))
-        missed_count = await count_events(completed=completed, event_type=event_type,
+        missed_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
                                           date_to=today - timedelta(days=1))
 
         return web.json_response({
