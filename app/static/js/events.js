@@ -456,6 +456,18 @@ function eventsRenderBoard() {
     while (board.firstChild) board.removeChild(board.firstChild);
     while (temp.firstChild) board.appendChild(temp.firstChild);
     board.appendChild(sentinel);
+
+    // Scroll listener для пагинации Завершённых
+    if (_eventsCompleted) {
+        const scrollEl = _findScrollParent(board);
+        if (scrollEl) {
+            if (scrollEl._eventsScrollHandler) scrollEl.removeEventListener('scroll', scrollEl._eventsScrollHandler);
+            scrollEl._eventsScrollHandler = () => {
+                if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) _eventsLoadMore();
+            };
+            scrollEl.addEventListener('scroll', scrollEl._eventsScrollHandler);
+        }
+    }
     } catch (e) {
         console.error('eventsRenderBoard error:', e);
         const board = document.getElementById('events-board');

@@ -50,14 +50,17 @@ function renderVksBoard(boardId, filter, force) {
 
     if (events.length) {
         _sseRerenderFromCache(boardId, filter, force);
-        return;
+    } else {
+        board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
+        if (filter === 'active') {
+            _vksLoadAll(boardId, filter);
+        } else {
+            _vksLoadMore(boardId, filter);
+        }
     }
 
-    board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
-
-    if (filter === 'active') {
-        _vksLoadAll(boardId, filter);
-    } else {
+    // Scroll listener для пагинации Завершённых
+    if (filter === 'completed') {
         const scrollEl = _findScrollParent(board);
         if (scrollEl) {
             const handlerKey = '_vksScroll_' + boardId;
@@ -69,7 +72,6 @@ function renderVksBoard(boardId, filter, force) {
             };
             scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
         }
-        _vksLoadMore(boardId, filter);
     }
 }
 
