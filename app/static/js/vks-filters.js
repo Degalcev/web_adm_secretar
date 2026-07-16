@@ -55,7 +55,7 @@ function matchDateFilter(eventDate, filter) {
 async function loadVksActive() {
     populateDateSelects('f-vks-active');
     populateVksFilters();
-    await pageInit('vksActive', () => renderVksBoard('vks-board-active', 'active'), () => _vksLoadAll('vks-board-active', 'active'));
+    await pageInit('vksActive', () => renderVksBoard('vks-board-active', 'active'), () => _vksFetch('active'));
 
     // Apply pending filter from dashboard
     if (_pendingVksFilter) {
@@ -188,7 +188,7 @@ function filterVksByQuick(type) {
 async function loadVksCompleted() {
     populateDateSelects('f-vks-completed');
     populateVksFilters();
-    await pageInit('vksCompleted', () => renderVksBoard('vks-board-completed', 'completed'), () => _vksLoadAll('vks-board-completed', 'completed'));
+    await pageInit('vksCompleted', () => renderVksBoard('vks-board-completed', 'completed'), () => _vksFetch('completed'));
     updateVksStats();
 }
 

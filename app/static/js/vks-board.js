@@ -3,6 +3,23 @@
 const _vksPagination = {};
 const VKS_PAGE_SIZE = 50;
 
+async function _vksFetch(filter) {
+    const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
+    const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: '10000' });
+    const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
+
+    const [eventsResp, statsResp] = await Promise.all([
+        fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
+        fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
+    ]);
+
+    const events = eventsResp.ok ? (await eventsResp.json()).events || [] : [];
+    const stats = statsResp.ok ? await statsResp.json() : null;
+
+    cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
+    return { events, stats };
+}
+
 function renderVksBoard(boardId, filter, force) {
     const board = document.getElementById(boardId);
     if (!board) return;
