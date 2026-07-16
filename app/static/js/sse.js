@@ -91,13 +91,20 @@ async function _sseUpdateAndRender(boardId, filter) {
             p.cursorDate = data.next_cursor_date || null;
             p.cursorTime = data.next_cursor_time || null;
             p.cursorId = data.next_cursor_id || null;
-            _vksCacheSet(filter, p.events);
         }
 
         if (statsResp.ok) {
             const stats = await statsResp.json();
             _vksRenderStats(stats);
-            _vksCacheSet(`stats_${filter}`, stats);
+            const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
+            cacheSet(cacheKey, {
+                events: p.events,
+                stats: stats,
+                hasMore: p.hasMore,
+                cursorDate: p.cursorDate,
+                cursorTime: p.cursorTime,
+                cursorId: p.cursorId,
+            });
         }
     } catch (e) {}
 

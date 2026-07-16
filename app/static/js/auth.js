@@ -134,7 +134,6 @@ async function logout() {
     if (typeof _preloaded !== 'undefined') _preloaded = false;
     // Очистка кэшей
     localStorage.removeItem('dash_cache');
-    Object.keys(localStorage).filter(k => k.startsWith('vks_cache_')).forEach(k => localStorage.removeItem(k));
     if (typeof _dashCache !== 'undefined') _dashCache = null;
     if (typeof _eventsCache !== 'undefined') {
         _eventsCache.active = { events: [], cursorDate: null, cursorTime: null, cursorId: null, hasMore: true, ts: 0 };

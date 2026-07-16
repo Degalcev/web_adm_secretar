@@ -55,9 +55,8 @@ function matchDateFilter(eventDate, filter) {
 async function loadVksActive() {
     populateDateSelects('f-vks-active');
     populateVksFilters();
-    // Stats из кэша мгновенно
-    const cached = _vksCacheGet('stats_active');
-    if (cached) _vksRenderStats(cached);
+    const cached = cacheGet('vksActive');
+    if (cached?.data?.stats) _vksRenderStats(cached.data.stats);
     const board = document.getElementById('vks-board-active');
     // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
     if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-active', 'active');
@@ -164,7 +163,12 @@ async function updateVksStats() {
         if (!resp.ok) return;
         const stats = await resp.json();
         _vksRenderStats(stats);
-        _vksCacheSet(`stats_${status}`, stats);
+        const cacheKey = status === 'active' ? 'vksActive' : 'vksCompleted';
+        const existing = cacheGet(cacheKey);
+        if (existing) {
+            existing.data.stats = stats;
+            cacheSet(cacheKey, existing.data);
+        }
     } catch (e) {}
 }
 
@@ -194,8 +198,8 @@ function filterVksByQuick(type) {
 async function loadVksCompleted() {
     populateDateSelects('f-vks-completed');
     populateVksFilters();
-    const cached = _vksCacheGet('stats_completed');
-    if (cached) _vksRenderStats(cached);
+    const cached = cacheGet('vksCompleted');
+    if (cached?.data?.stats) _vksRenderStats(cached.data.stats);
     const board = document.getElementById('vks-board-completed');
     // Рендерить ТОЛЬКО если доска пуста (нет карточек) — иначе не моргать
     if (board && !board.querySelector('.vks-card')) renderVksBoard('vks-board-completed', 'completed');

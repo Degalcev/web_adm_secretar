@@ -7,60 +7,113 @@ function renderVksBoard(boardId, filter) {
     const board = document.getElementById(boardId);
     if (!board) return;
 
-    // Восстановить из кэша (мгновенно)
-    const cacheKey = `vks_board_${filter}`;
-    const cached = _vksCacheGet(cacheKey);
+    const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
+    const cached = cacheGet(cacheKey);
+    const events = cached?.data?.events || [];
 
-    // Сброс состояния пагинации
     _vksPagination[boardId] = {
-        events: cached || [],
-        cursorDate: null,
-        cursorTime: null,
-        cursorId: null,
-        hasMore: !cached || cached.length === 0,
+        events: events,
+        cursorDate: cached?.data?.cursorDate || null,
+        cursorTime: cached?.data?.cursorTime || null,
+        cursorId: cached?.data?.cursorId || null,
+        hasMore: filter === 'active' ? false : (cached?.data?.hasMore ?? true),
         loading: false,
     };
 
-    // Рендер из кэша мгновенно — обновление только через SSE
-    if (cached && cached.length) {
+    if (events.length) {
         _sseRerenderFromCache(boardId, filter);
         return;
     }
 
-    // Первый запуск (кэш пуст) — загрузка с сервера
     board.innerHTML = '<div class="scroll-sentinel" style="height:1px"></div>';
 
-    const scrollEl = _findScrollParent(board);
-    if (scrollEl) {
-        const handlerKey = '_vksScroll_' + boardId;
-        if (scrollEl[handlerKey]) scrollEl.removeEventListener('scroll', scrollEl[handlerKey]);
-        scrollEl[handlerKey] = () => {
-            if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) {
-                _vksLoadMore(boardId, filter);
-            }
-        };
-        scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
+    if (filter === 'active') {
+        _vksLoadAll(boardId, filter);
+    } else {
+        const scrollEl = _findScrollParent(board);
+        if (scrollEl) {
+            const handlerKey = '_vksScroll_' + boardId;
+            if (scrollEl[handlerKey]) scrollEl.removeEventListener('scroll', scrollEl[handlerKey]);
+            scrollEl[handlerKey] = () => {
+                if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 300) {
+                    _vksLoadMore(boardId, filter);
+                }
+            };
+            scrollEl.addEventListener('scroll', scrollEl[handlerKey]);
+        }
+        _vksLoadMore(boardId, filter);
     }
-
-    _vksLoadMore(boardId, filter);
 }
 
-function _vksCacheGet(key) {
-    const TTL = 5 * 60 * 1000;
-    try {
-        const raw = localStorage.getItem('vks_cache_' + key);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed; // обратная совместимость
-        if (Date.now() - parsed.ts > TTL) return null;
-        return parsed.events;
-    } catch (e) { return null; }
-}
+async function _vksLoadAll(boardId, filter) {
+    const p = _vksPagination[boardId];
+    if (p.loading) return;
+    p.loading = true;
 
-function _vksCacheSet(key, events) {
+    const board = document.getElementById(boardId);
+    const sentinel = board?.querySelector('.scroll-sentinel');
+    if (sentinel) sentinel.innerHTML = '<div style="text-align:center;padding:12px;color:var(--fg-muted);font-size:0.8125rem">Загрузка…</div>';
+
     try {
-        localStorage.setItem('vks_cache_' + key, JSON.stringify({ events, ts: Date.now() }));
-    } catch (e) {}
+        const prefix = 'f-vks-active';
+        const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: 10000 });
+
+        const orgVal = document.getElementById(`${prefix}-org`)?.value;
+        const locVal = document.getElementById(`${prefix}-loc`)?.value;
+        const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
+        if (orgVal) params.set('organizer_id', orgVal);
+        if (locVal) params.set('location_id', locVal);
+        if (searchVal) params.set('search', searchVal);
+
+        const dateFilter = getDateFilter(prefix);
+        if (dateFilter.year || dateFilter.month || dateFilter.day) {
+            const y = dateFilter.year || new Date().getFullYear();
+            const m = dateFilter.month ? String(dateFilter.month).padStart(2, '0') : '01';
+            const mEnd = dateFilter.month ? String(dateFilter.month).padStart(2, '0') : '12';
+            if (dateFilter.day) {
+                const d = String(dateFilter.day).padStart(2, '0');
+                params.set('from', `${y}-${m}-${d}`);
+                params.set('to', `${y}-${m}-${d}`);
+            } else {
+                params.set('from', `${y}-${m}-01`);
+                const lastDay = new Date(y, dateFilter.month ? Number(dateFilter.month) : 12, 0).getDate();
+                params.set('to', `${y}-${mEnd}-${lastDay}`);
+            }
+        }
+
+        if (_quickFilter) {
+            const today = localDateStr(new Date());
+            const tomorrow = localDateStr(new Date(Date.now() + 86400000));
+            if (_quickFilter === 'today') {
+                params.set('from', today); params.set('to', today);
+            } else if (_quickFilter === 'soon') {
+                params.set('from', tomorrow);
+            } else if (_quickFilter === 'missed') {
+                params.set('to', localDateStr(new Date(Date.now() - 86400000)));
+            } else if (_quickFilter === 'active') {
+                params.set('from', today);
+            }
+        }
+
+        const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        p.events = data.events || [];
+        p.hasMore = false;
+
+        cacheSet('vksActive', {
+            events: p.events,
+            stats: cacheGet('vksActive')?.data?.stats || {},
+        });
+
+        _vksRenderBoard(boardId, filter);
+        updateVksStats();
+    } catch (e) {
+        console.error('_vksLoadAll error:', e);
+    }
+    p.loading = false;
+    if (sentinel) sentinel.innerHTML = '';
 }
 
 async function _vksLoadMore(boardId, filter) {
@@ -134,7 +187,16 @@ async function _vksLoadMore(boardId, filter) {
         p.hasMore    = !!data.has_more;
 
         _vksRenderBoard(boardId, filter);
-        _vksCacheSet(`${filter}`, p.events);
+        const cacheKey = 'vksCompleted';
+        const existing = cacheGet(cacheKey);
+        cacheSet(cacheKey, {
+            events: p.events,
+            stats: existing?.data?.stats || {},
+            cursorDate: p.cursorDate,
+            cursorTime: p.cursorTime,
+            cursorId: p.cursorId,
+            hasMore: p.hasMore,
+        });
         updateVksStats();
     } catch (e) {
         console.error('_vksLoadMore error:', e);
