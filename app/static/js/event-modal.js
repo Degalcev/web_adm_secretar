@@ -256,7 +256,13 @@ function closeEventModal() {
     removedDocIds = [];
     _currentEvent = null;
     // Обновить доску после закрытия модалки (unlock + SSE с задержкой)
-    setTimeout(_refreshEvents, 500);
+    setTimeout(() => {
+        if (_modalMode === 'events' && typeof eventsSoftRefresh === 'function') {
+            eventsSoftRefresh();
+        } else {
+            _refreshEvents();
+        }
+    }, 500);
 }
 
 function refreshEventDocs() {
@@ -461,19 +467,18 @@ async function saveEvent() {
 
             const activeBoard = document.getElementById('vks-board-active');
             const completedBoard = document.getElementById('vks-board-completed');
-            // Инвалидировать кэш перед рендером — данные изменились
-            cacheInvalidate('vksActive');
-            cacheInvalidate('vksCompleted');
-            cacheInvalidate('eventsActive');
-            cacheInvalidate('eventsCompleted');
-            if (activeBoard) renderVksBoard('vks-board-active', 'active', true);
-            if (completedBoard) renderVksBoard('vks-board-completed', 'completed', true);
+            // Инвалидировать кэш — данные изменились
+            if (_modalMode === 'vks') {
+                cacheInvalidate('vksActive');
+                cacheInvalidate('vksCompleted');
+                if (activeBoard) renderVksBoard('vks-board-active', 'active', true);
+                if (completedBoard) renderVksBoard('vks-board-completed', 'completed', true);
+            } else {
+                cacheInvalidate('eventsActive');
+                cacheInvalidate('eventsCompleted');
+            }
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
-            }
-            // Refresh events page if visible
-            if (_modalMode === 'events' && typeof eventsRenderBoard === 'function') {
-                eventsRenderBoard();
             }
             closeEventModal();
             showToast(wasEditing ? (_modalMode === 'events' ? 'Мероприятие обновлено' : 'ВКС обновлено') : (_modalMode === 'events' ? 'Мероприятие добавлено' : 'ВКС добавлено'), 'success');
