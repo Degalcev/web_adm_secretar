@@ -215,9 +215,9 @@ Dashboard             | Один endpoint         | Нет              | sseRef
 
 ### pageInit(pageKey, renderFn, fetchFn)
 Единый паттерн инициализации страниц при навигации:
-- Кэш свежий (TTL 5мин) → renderFn() мгновенно + background fetchFn() → re-render
+- Кэш свежий (TTL 5мин) → renderFn() мгновенно, без запросов
 - Кэш пустой/устарел → await fetchFn() → renderFn()
-- Используется: Dashboard, Events, VKS, Calendar
+- SSE обновляет кэш в фоне. При навигации данные берутся из кэша
 
 ### Единый in-memory кэш (`cache.js`)
 - **Объект**: `_dataCache` — хранит данные всех страниц
