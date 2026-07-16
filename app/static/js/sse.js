@@ -183,19 +183,21 @@ function _sseRerenderFromCache(boardId, filter, force) {
         filtered = events.filter(e => e.completed);
     }
 
-    const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
-    filtered.forEach(e => {
-        if (!e.date || e.date < today) missed.push(e);
-        else if (e.date === today) todayE.push(e);
-        else if (e.date === tomorrow) tomorrowE.push(e);
-        else if (e.date === dayAfter) dayAfterE.push(e);
-        else soon.push(e);
-    });
-
     let html = '';
     if (!filtered.length) {
         html = '<div class="empty-state">Нет мероприятий</div>';
+    } else if (filter === 'completed') {
+        // Завершённые — единый список без группировки по датам
+        html += renderVksBlock('Завершённые', filtered, 'completed');
     } else {
+        const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
+        filtered.forEach(e => {
+            if (!e.date || e.date < today) missed.push(e);
+            else if (e.date === today) todayE.push(e);
+            else if (e.date === tomorrow) tomorrowE.push(e);
+            else if (e.date === dayAfter) dayAfterE.push(e);
+            else soon.push(e);
+        });
         if (missed.length) html += renderVksBlock('Пропущенные', missed, 'missed');
         if (todayE.length) html += renderVksBlock('Сегодня', todayE, 'today');
         if (tomorrowE.length) html += renderVksBlock('Завтра', tomorrowE, 'tomorrow');

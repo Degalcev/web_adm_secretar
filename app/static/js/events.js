@@ -368,43 +368,50 @@ function eventsRenderBoard() {
         return;
     }
 
-    // Group by date blocks
-    const now = new Date();
-    const today = localDateStr(now);
-    const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const tomorrow = localDateStr(tmr);
-    const da = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
-    const dayAfter = localDateStr(da);
-
-    const missed = [];
-    const todayEvents = [];
-    const tomorrowEvents = [];
-    const dayAfterEvents = [];
-    const soon = [];
-
-    events.forEach(e => {
-        if (!e.date || e.date < today) missed.push(e);
-        else if (e.date === today) todayEvents.push(e);
-        else if (e.date === tomorrow) tomorrowEvents.push(e);
-        else if (e.date === dayAfter) dayAfterEvents.push(e);
-        else soon.push(e);
-    });
-
-    const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
-    const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
-    missed.sort(sortByDateThenTime);
-    todayEvents.sort(sortByTime);
-    tomorrowEvents.sort(sortByTime);
-    dayAfterEvents.sort(sortByTime);
-    soon.sort(sortByDateThenTime);
-
     let html = '';
 
-    if (missed.length) html += _eventsRenderBlock('Пропущенные', missed, 'missed');
-    if (todayEvents.length) html += _eventsRenderBlock('Сегодня', todayEvents, 'today');
-    if (tomorrowEvents.length) html += _eventsRenderBlock('Завтра', tomorrowEvents, 'tomorrow');
-    if (dayAfterEvents.length) html += _eventsRenderBlock('Послезавтра', dayAfterEvents, 'day-after');
-    if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
+    if (_eventsCompleted) {
+        // Завершённые — единый список без группировки по датам
+        const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || '');
+        events.sort(sortByDateThenTime);
+        html += _eventsRenderBlock('Завершённые', events, 'completed');
+    } else {
+        // Текущие — группировка по датам
+        const now = new Date();
+        const today = localDateStr(now);
+        const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+        const tomorrow = localDateStr(tmr);
+        const da = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
+        const dayAfter = localDateStr(da);
+
+        const missed = [];
+        const todayEvents = [];
+        const tomorrowEvents = [];
+        const dayAfterEvents = [];
+        const soon = [];
+
+        events.forEach(e => {
+            if (!e.date || e.date < today) missed.push(e);
+            else if (e.date === today) todayEvents.push(e);
+            else if (e.date === tomorrow) tomorrowEvents.push(e);
+            else if (e.date === dayAfter) dayAfterEvents.push(e);
+            else soon.push(e);
+        });
+
+        const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
+        const sortByDateThenTime2 = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
+        missed.sort(sortByDateThenTime2);
+        todayEvents.sort(sortByTime);
+        tomorrowEvents.sort(sortByTime);
+        dayAfterEvents.sort(sortByTime);
+        soon.sort(sortByDateThenTime2);
+
+        if (missed.length) html += _eventsRenderBlock('Пропущенные', missed, 'missed');
+        if (todayEvents.length) html += _eventsRenderBlock('Сегодня', todayEvents, 'today');
+        if (tomorrowEvents.length) html += _eventsRenderBlock('Завтра', tomorrowEvents, 'tomorrow');
+        if (dayAfterEvents.length) html += _eventsRenderBlock('Послезавтра', dayAfterEvents, 'day-after');
+        if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
+    }
 
     // Preserve sentinel — don't use innerHTML
     let sentinel = board.querySelector('.scroll-sentinel');
