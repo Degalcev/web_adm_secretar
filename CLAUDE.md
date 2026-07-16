@@ -68,7 +68,7 @@ app/
     │   └── calendar.css      # Календарь: panel, SVG shadow, tabs, grid, events, now-line, mobile
     └── js/
         ├── utils.js          # Store, ConfirmManager, CRUD-абстракция, getCsrfToken(), localDateStr(), getOrganizerName(), getLocationName(), getDocCardMeta(), _findScrollParent()
-        ├── cache.js          # Единый in-memory кэш: _dataCache, cacheGet/Set/Invalidate/IsValid
+        ├── cache.js          # Единый in-memory кэш: _dataCache, cacheGet/Set/Invalidate/IsValid, pageInit()
         ├── auth.js           # Логин/выход/checkAuth() + cacheInvalidateAll() при logout
         ├── router.js         # SPA роутинг (handleAuthState)
         ├── navigation.js     # Навигация, мобильное меню, role restrictions
@@ -202,16 +202,22 @@ deploy/
 
 ### Архитектура загрузки данных
 ```
-Страница              | Загрузка              | Фильтрация      | SSE update
-──────────────────────┼───────────────────────┼─────────────────┼─────────────────────
-VKS Текущие           | Полная (limit=10000)  | Client-side     | Полный re-fetch
-VKS Завершённые       | Пагинация (limit=50)  | Server-side     | Fetch до количества
-Мероприятия Текущие   | Полная (limit=10000)  | Client-side     | Полный re-fetch
-Мероприятия Завершённые| Пагинация (limit=50)  | Server-side     | Invalidate + re-fetch
-Dashboard             | Один endpoint         | Нет              | Fetch → cacheSet
-Календарь             | Диапазон дат (±20д)   | Client-side      | Invalidate → re-fetch
-Справочники           | Полная загрузка       | Нет              | Fetch → cacheSet
+Страница              | Загрузка              | Фильтрация      | SSE update        | Навигация
+──────────────────────┼───────────────────────┼─────────────────┼───────────────────┼──────────────
+VKS Текущие           | Полная (limit=10000)  | Client-side     | sseRefreshPage    | pageInit
+VKS Завершённые       | Пагинация (limit=50)  | Server-side     | sseRefreshPage    | pageInit
+Мероприятия Текущие   | Полная (limit=10000)  | Client-side     | sseRefreshPage    | pageInit
+Мероприятия Завершённые| Пагинация (limit=50)  | Server-side     | sseRefreshPage    | pageInit
+Dashboard             | Один endpoint         | Нет              | sseRefreshPage    | pageInit
+Календарь             | Диапазон дат (±20д)   | Client-side      | sseRefreshPage    | pageInit
+Справочники           | Полная загрузка       | Нет              | Fetch → cacheSet  | preloadAllData
 ```
+
+### pageInit(pageKey, renderFn, fetchFn)
+Единый паттерн инициализации страниц при навигации:
+- Кэш свежий (TTL 5мин) → renderFn() мгновенно + background fetchFn() → re-render
+- Кэш пустой/устарел → await fetchFn() → renderFn()
+- Используется: Dashboard, Events, VKS, Calendar
 
 ### Единый in-memory кэш (`cache.js`)
 - **Объект**: `_dataCache` — хранит данные всех страниц
