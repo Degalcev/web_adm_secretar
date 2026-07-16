@@ -132,6 +132,7 @@ async function logout() {
     if (typeof disconnectSSE === 'function') disconnectSSE();
     if (typeof calStopNowLineTimer === 'function') calStopNowLineTimer();
     if (typeof _preloaded !== 'undefined') _preloaded = false;
+    localStorage.removeItem('dash_cache');
     showLogin();
     window.history.replaceState(null, '', '/');
 }

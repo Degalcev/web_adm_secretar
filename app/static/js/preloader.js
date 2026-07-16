@@ -6,6 +6,19 @@
 
 let _preloaded = false;
 
+function restoreFromCache() {
+    const cached = localStorage.getItem('dash_cache');
+    if (!cached) return false;
+    try {
+        const c = JSON.parse(cached);
+        store.allLocations = c.locations || [];
+        store.allOrganizers = c.organizers || [];
+        cacheSet('locations', store.allLocations);
+        cacheSet('organizers', store.allOrganizers);
+        return store.allLocations.length > 0 || store.allOrganizers.length > 0;
+    } catch (e) { return false; }
+}
+
 async function preloadAllData() {
     if (_preloaded) return;
     try {
@@ -19,6 +32,13 @@ async function preloadAllData() {
         cacheSet('locations', store.allLocations);
         cacheSet('organizers', store.allOrganizers);
 
+        try {
+            localStorage.setItem('dash_cache', JSON.stringify({
+                locations: store.allLocations,
+                organizers: store.allOrganizers,
+            }));
+        } catch (e) {}
+
         _preloaded = true;
     } catch (e) {
         console.error('Preload error:', e);
@@ -26,5 +46,6 @@ async function preloadAllData() {
 }
 
 function initPreloader() {
+    restoreFromCache();
     preloadAllData();
 }
