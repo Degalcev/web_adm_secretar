@@ -1,17 +1,12 @@
 // ─── Dashboard / Обзор ──────────────────────────────────────────────
 
-let _dashEvents = [];
-let _dashLocations = {};
-let _dashOrganizers = {};
 let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 
-let _dashCache = null;
-
 async function initDashboard() {
     setupDashboardClicks();
-    if (_dashCache) {
+    if (cacheIsValid('dashboard')) {
         renderDashboard();
         _dashRefreshInBackground();
         return;
@@ -24,7 +19,7 @@ async function _dashFetch() {
     try {
         const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
         if (!resp.ok) return;
-        _dashCache = await resp.json();
+        cacheSet('dashboard', await resp.json());
     } catch (e) {
         console.error('Dashboard fetch error:', e);
     }
@@ -90,12 +85,21 @@ function renderSoonFromData(events) {
     checkUpcomingScroll(el);
 }
 
-function locName(id) { return _dashLocations[id] || '—'; }
-function orgName(id) { return _dashOrganizers[id] || '—'; }
+function locName(id) {
+    const locs = cacheGet('locations');
+    const loc = locs?.data?.find(l => l.id === id);
+    return loc?.name || '—';
+}
+function orgName(id) {
+    const orgs = cacheGet('organizers');
+    const org = orgs?.data?.find(o => o.id === id);
+    return org?.short_name || org?.name || '—';
+}
 
 function renderDashboard() {
-    if (!_dashCache) return;
-    const data = _dashCache;
+    const cached = cacheGet('dashboard');
+    if (!cached?.data) return;
+    const data = cached.data;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     set('dash-total', data.total);
     set('dash-active', data.active);
@@ -153,7 +157,7 @@ let _locPeriod = 'all';
 let _locYear = new Date().getFullYear();
 
 function renderDashLocations() {
-    _renderDashLocationsFromCache(_dashCache);
+    _renderDashLocationsFromCache(cacheGet('dashboard')?.data);
 }
 
 function _renderDashLocationsFromCache(data) {
@@ -287,7 +291,8 @@ function dashYearNav(dir) {
 }
 
 function drawChart() {
-    if (!_dashCache) return;
+    const dashData = cacheGet('dashboard')?.data;
+    if (!dashData) return;
     const el = document.getElementById('dash-chart');
     let labels = [], counts = [];
     const monthLabel = document.getElementById('dash-chart-month-label');
@@ -307,11 +312,11 @@ function drawChart() {
     if (_dashPeriod === 'week') {
         const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
         labels = dayNames;
-        counts = _dashCache.chart_week || new Array(7).fill(0);
+        counts = dashData.chart_week || new Array(7).fill(0);
     } else if (_dashPeriod === 'year') {
         const monthNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
         labels = monthNames;
-        counts = _dashCache.chart_year || new Array(12).fill(0);
+        counts = dashData.chart_year || new Array(12).fill(0);
     } else if (_dashPeriod === 'month') {
         _drawChartMonth();
         return;
