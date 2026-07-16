@@ -37,104 +37,82 @@ function handleSSEEvent(data) {
 
 function debounceRefreshEvents() {
     if (_sseDebounceTimer) clearTimeout(_sseDebounceTimer);
-    _sseDebounceTimer = setTimeout(_refreshEvents, 200);
+    _sseDebounceTimer = setTimeout(sseRefreshPage, 200);
 }
 
-async function sseFetchEvents(params) {
-    const { status, typeFilter, cacheKey, limit } = params;
-    const fetchParams = new URLSearchParams({ status, limit: String(limit || 50) });
-    if (typeFilter) fetchParams.set('type', typeFilter);
-    else fetchParams.set('exclude_type', 'ВКС');
-    const statsParams = new URLSearchParams({ status });
-    if (typeFilter) statsParams.set('type', typeFilter);
-    else statsParams.set('exclude_type', 'ВКС');
+// ─── Единая функция SSE обновления ─────────────────────────────────
 
-    const [eventsResp, statsResp] = await Promise.all([
-        fetch(`/admin/api/events?${fetchParams}`, { credentials: 'same-origin' }),
-        fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
-    ]);
+async function sseRefreshPage() {
+    const page = currentPage;
+    if (!page) return;
 
-    let events = [], stats = null;
-    if (eventsResp.ok) {
-        const data = await eventsResp.json();
-        events = data.events || [];
-    }
-    if (statsResp.ok) {
-        stats = await statsResp.json();
-    }
-    cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
-    return { events, stats };
-}
-
-function _sseRefreshVks(boardId, filter) {
-    const p = _vksPagination[boardId];
-    if (!p) return;
-    const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
-    const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
-    const orgVal = document.getElementById(`${prefix}-org`)?.value;
-    const locVal = document.getElementById(`${prefix}-loc`)?.value;
-    const searchVal = document.getElementById(`${prefix}-desc`)?.value?.trim();
-    const fetchParams = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(p.events.length || 50) });
-    if (orgVal) fetchParams.set('organizer_id', orgVal);
-    if (locVal) fetchParams.set('location_id', locVal);
-    if (searchVal) fetchParams.set('search', searchVal);
-    const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
-
-    Promise.all([
-        fetch(`/admin/api/events?${fetchParams}`, { credentials: 'same-origin' }),
-        fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
-    ]).then(([eventsResp, statsResp]) => {
-        if (eventsResp.ok) {
-            return eventsResp.json().then(data => {
-                p.events = data.events || [];
-                p.hasMore = !!data.has_more;
-                p.cursorDate = data.next_cursor_date || null;
-                p.cursorTime = data.next_cursor_time || null;
-                p.cursorId = data.next_cursor_id || null;
-                if (statsResp.ok) {
-                    return statsResp.json().then(stats => {
-                        _vksRenderStats(stats);
-                        cacheSet(cacheKey, { events: p.events, stats, hasMore: p.hasMore, cursorDate: p.cursorDate, cursorTime: p.cursorTime, cursorId: p.cursorId });
-                        _sseRerenderFromCache(boardId, filter);
-                    });
-                }
-                _sseRerenderFromCache(boardId, filter);
-            });
-        }
-    }).catch(() => {});
-}
-
-const _sseRefreshMap = {
-    'vks-active':     () => _sseRefreshVks('vks-board-active', 'active'),
-    'vks-completed':  () => _sseRefreshVks('vks-board-completed', 'completed'),
-    'events-active':  () => sseFetchEvents({ status: 'active', cacheKey: 'eventsActive', limit: 10000, typeFilter: _eventsTypeFilter }).then(() => eventsRenderBoard()),
-    'events-completed': () => sseFetchEvents({ status: 'completed', cacheKey: 'eventsCompleted', limit: 10000, typeFilter: _eventsTypeFilter }).then(() => eventsRenderBoard()),
-    'dashboard':      () => sseFetchDashboard(),
-    'calendar':       () => sseFetchCalendar(),
-};
-
-async function sseFetchDashboard() {
-    try {
-        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (resp.ok) cacheSet('dashboard', await resp.json());
-    } catch (e) {}
-    renderDashboard();
-}
-
-function sseFetchCalendar() {
-    cacheInvalidate('calendar');
-    _calLoadingRange = false;
-    renderCalendar(false);
-}
-
-function _refreshEvents() {
     const modal = document.getElementById('event-modal');
     if (modal && modal.classList.contains('show')) return;
-    const page = currentPage || '';
-    const handler = _sseRefreshMap[page];
-    if (handler) handler();
+
+    // ── VKS / Мероприятия: один fetch events + stats ──
+    if (page === 'vks-active' || page === 'vks-completed' ||
+        page === 'events-active' || page === 'events-completed') {
+
+        const isVks = page.startsWith('vks-');
+        const filter = page.endsWith('-active') ? 'active' : 'completed';
+        const cacheKey = isVks
+            ? (filter === 'active' ? 'vksActive' : 'vksCompleted')
+            : (filter === 'active' ? 'eventsActive' : 'eventsCompleted');
+
+        // Параметры запроса
+        const params = new URLSearchParams({ status: filter, limit: '10000' });
+        const statsParams = new URLSearchParams({ status: filter });
+        if (isVks) {
+            params.set('type', 'ВКС');
+            statsParams.set('type', 'ВКС');
+        } else {
+            params.set('exclude_type', 'ВКС');
+            if (_eventsTypeFilter) {
+                params.set('type', _eventsTypeFilter);
+                statsParams.set('type', _eventsTypeFilter);
+            } else {
+                statsParams.set('exclude_type', 'ВКС');
+            }
+        }
+
+        const [eventsResp, statsResp] = await Promise.all([
+            fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
+            fetch(`/admin/api/events/stats?${statsParams}`, { credentials: 'same-origin' }),
+        ]);
+
+        const events = eventsResp.ok ? (await eventsResp.json()).events || [] : [];
+        const stats = statsResp.ok ? await statsResp.json() : null;
+
+        cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
+
+        if (isVks) {
+            renderVksBoard(filter === 'active' ? 'vks-board-active' : 'vks-board-completed', filter);
+        } else {
+            eventsRenderBoard();
+        }
+        return;
+    }
+
+    // ── Dashboard ──
+    if (page === 'dashboard') {
+        try {
+            const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+            if (resp.ok) cacheSet('dashboard', await resp.json());
+        } catch (e) {}
+        renderDashboard();
+        return;
+    }
+
+    // ── Calendar ──
+    if (page === 'calendar') {
+        cacheInvalidate('calendar');
+        _calLoadingRange = false;
+        renderCalendar(false);
+        return;
+    }
 }
 
+// ─── VKS hash check + render ──────────────────────────────────────
 
 let _sseLastHash = {};
 
@@ -143,8 +121,6 @@ function _sseRerenderFromCache(boardId, filter, force) {
     const p = _vksPagination[boardId];
     if (!board || !p) return;
 
-    // Проверить изменились ли данные — пропустить рендер если нет
-    // force=true пропускает проверку (вызывается при смене фильтра)
     if (!force) {
         const hash = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
         if (_sseLastHash[boardId] === hash) return;
@@ -161,7 +137,6 @@ function _sseRerenderFromCache(boardId, filter, force) {
     if (filter === 'active') {
         filtered = events.filter(e => !e.completed);
 
-        // Quick filter (today/soon/missed/active)
         if (typeof _quickFilter !== 'undefined' && _quickFilter) {
             if (_quickFilter === 'today') {
                 filtered = filtered.filter(e => e.date === today);
@@ -174,7 +149,6 @@ function _sseRerenderFromCache(boardId, filter, force) {
             }
         }
 
-        // Date filter (day/month/year)
         const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
         const dayVal = document.getElementById(`${prefix}-day`)?.value || '';
         const monthVal = document.getElementById(`${prefix}-month`)?.value || '';
@@ -190,7 +164,6 @@ function _sseRerenderFromCache(boardId, filter, force) {
             });
         }
 
-        // Org / loc / desc filters
         const orgVal = document.getElementById(`${prefix}-org`)?.value || '';
         const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
         const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
@@ -210,7 +183,6 @@ function _sseRerenderFromCache(boardId, filter, force) {
     if (!filtered.length) {
         html = '<div class="empty-state">Нет мероприятий</div>';
     } else if (filter === 'completed') {
-        // Завершённые — единый список, count из stats
         const stats = cacheGet('vksCompleted')?.data?.stats;
         const totalCount = stats?.total ?? filtered.length;
         html += renderVksBlock('Завершённые', filtered, 'completed', totalCount);
@@ -242,6 +214,8 @@ function _sseRerenderFromCache(boardId, filter, force) {
     while (temp.firstChild) board.appendChild(temp.firstChild);
     board.appendChild(sentinel);
 }
+
+// ─── Справочники (locations, organizers, users) ────────────────────
 
 async function _refreshLocations() {
     try {
