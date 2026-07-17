@@ -30,6 +30,7 @@ function _calIsMobile() { return window.innerWidth <= 768; }
 
 let _calMobileRoomFilter = null; // null = все аудитории
 let _calLoadingRange = false;
+let _calCacheKey = null; // стабильный ключ загруженного диапазона
 
 function getMonday(d) {
     const r = new Date(d);
@@ -118,6 +119,7 @@ async function _calLoadRange(from, to) {
         if (allEvents.length > 0) {
             const existing = cacheGet('calendar')?.data?.ranges || {};
             cacheSet('calendar', { ranges: { ...existing, [key]: allEvents } });
+            _calCacheKey = key; // сохраняем ключ для _calGetEventsForDate
         }
         return allEvents;
     } catch (e) {
@@ -129,15 +131,12 @@ async function _calLoadRange(from, to) {
 }
 
 function _calGetEventsForDate(ds) {
-    // Ищем в кэше по ШИРОКОМУ диапазону (как загружал _calLoadRange)
-    const rangeStart = new Date(calWeekStart);
-    rangeStart.setDate(rangeStart.getDate() - 14);
-    const rangeEnd = new Date(calWeekStart);
-    rangeEnd.setDate(rangeEnd.getDate() + 20);
-    const wideKey = _calGetRangeKey(localDateStr(rangeStart), localDateStr(rangeEnd));
-    const rangeEvents = cacheGet('calendar')?.data?.ranges?.[wideKey] || [];
-    const wideFrom = localDateStr(rangeStart);
-    const wideTo = localDateStr(rangeEnd);
+    // Используем стабильный ключ загруженного диапазона (не зависит от calWeekStart)
+    if (!_calCacheKey) return [];
+    const rangeEvents = cacheGet('calendar')?.data?.ranges?.[_calCacheKey] || [];
+    if (!rangeEvents.length) return [];
+    // Определяем границы загруженного диапазона из ключа
+    const [wideFrom, wideTo] = _calCacheKey.split('_');
     const expanded = expandSeries(rangeEvents, wideFrom, wideTo);
     return expanded.filter(e => e.date === ds);
 }
