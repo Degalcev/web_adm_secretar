@@ -311,7 +311,7 @@ function renderVksBlock(title, events, type, totalCount) {
 
 function renderVksCard(e, blockType) {
     const time = e.time || '--:--';
-    const date = e.date || '';
+    const date = e._nextDate || e.date || '';
     const org  = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
     const loc  = e.location_id  ? getLocationName(e.location_id)  : '';
     const docs = e.documents || [];

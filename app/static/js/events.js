@@ -358,15 +358,25 @@ function eventsRenderBoard() {
     const cached = cacheGet(cacheKey);
     let events = [...(cached?.data?.events || [])];
 
+    // Для серий: заменить дату на ближайшее наступление
+    events.forEach(e => {
+        if (e.series_id && e.series && typeof getNextOccurrenceDate === 'function') {
+            const nextDate = getNextOccurrenceDate(e);
+            if (nextDate) e._nextDate = nextDate;
+        }
+    });
+
+    const getEDate = (e) => e._nextDate || e.date;
+
     // Quick filter (today/soon/missed)
     if (_eventsQuickFilter) {
         const today = localDateStr(new Date());
         if (_eventsQuickFilter === 'today') {
-            events = events.filter(e => e.date === today);
+            events = events.filter(e => getEDate(e) === today);
         } else if (_eventsQuickFilter === 'soon') {
-            events = events.filter(e => e.date && e.date > today);
+            events = events.filter(e => getEDate(e) && getEDate(e) > today);
         } else if (_eventsQuickFilter === 'missed') {
-            events = events.filter(e => !e.date || e.date < today);
+            events = events.filter(e => !getEDate(e) || getEDate(e) < today);
         }
     }
 
@@ -376,8 +386,9 @@ function eventsRenderBoard() {
     const yearVal = document.getElementById('f-events-year')?.value || '';
     if (dayVal || monthVal || yearVal) {
         events = events.filter(e => {
-            if (!e.date) return false;
-            const d = new Date(e.date + 'T00:00:00');
+            const ed = getEDate(e);
+            if (!ed) return false;
+            const d = new Date(ed + 'T00:00:00');
             if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
             if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
             if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
@@ -425,15 +436,16 @@ function eventsRenderBoard() {
         const soon = [];
 
         events.forEach(e => {
-            if (!e.date || e.date < today) missed.push(e);
-            else if (e.date === today) todayEvents.push(e);
-            else if (e.date === tomorrow) tomorrowEvents.push(e);
-            else if (e.date === dayAfter) dayAfterEvents.push(e);
+            const ed = getEDate(e);
+            if (!ed || ed < today) missed.push(e);
+            else if (ed === today) todayEvents.push(e);
+            else if (ed === tomorrow) tomorrowEvents.push(e);
+            else if (ed === dayAfter) dayAfterEvents.push(e);
             else soon.push(e);
         });
 
         const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
-        const sortByDateThenTime2 = (a, b) => (a.date || '').localeCompare(b.date || '') || sortByTime(a, b);
+        const sortByDateThenTime2 = (a, b) => (getEDate(a) || '').localeCompare(getEDate(b) || '') || sortByTime(a, b);
         missed.sort(sortByDateThenTime2);
         todayEvents.sort(sortByTime);
         tomorrowEvents.sort(sortByTime);
@@ -506,7 +518,7 @@ function _eventsRenderBlock(title, events, type, totalCount) {
 
 function _eventsRenderCard(e, blockType) {
     const time = e.time || '--:--';
-    const date = e.date || '';
+    const date = e._nextDate || e.date || '';
     const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
     const loc = e.location_id ? getLocationName(e.location_id) : '';
     const typeClass = _eventsGetTypeClass(e.type);

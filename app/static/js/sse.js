@@ -136,6 +136,14 @@ function _sseRerenderFromCache(boardId, filter, force) {
     const p = _vksPagination[boardId];
     if (!board || !p) return;
 
+    // Для серий: заменить дату на ближайшее наступление
+    p.events.forEach(e => {
+        if (e.series_id && e.series && typeof getNextOccurrenceDate === 'function') {
+            const nextDate = getNextOccurrenceDate(e);
+            if (nextDate) e._nextDate = nextDate;
+        }
+    });
+
     if (!force) {
         const hash = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
         if (_sseLastHash[boardId] === hash) return;
@@ -152,15 +160,18 @@ function _sseRerenderFromCache(boardId, filter, force) {
     if (filter === 'active') {
         filtered = events.filter(e => !e.completed);
 
+        // Для серийных событий использовать _nextDate для фильтрации
+        const getEDate = (e) => e._nextDate || e.date;
+
         if (typeof _quickFilter !== 'undefined' && _quickFilter) {
             if (_quickFilter === 'today') {
-                filtered = filtered.filter(e => e.date === today);
+                filtered = filtered.filter(e => getEDate(e) === today);
             } else if (_quickFilter === 'soon') {
-                filtered = filtered.filter(e => e.date && e.date > today);
+                filtered = filtered.filter(e => getEDate(e) && getEDate(e) > today);
             } else if (_quickFilter === 'missed') {
-                filtered = filtered.filter(e => !e.date || e.date < today);
+                filtered = filtered.filter(e => !getEDate(e) || getEDate(e) < today);
             } else if (_quickFilter === 'active') {
-                filtered = filtered.filter(e => e.date && e.date >= today);
+                filtered = filtered.filter(e => getEDate(e) && getEDate(e) >= today);
             }
         }
 
@@ -170,8 +181,9 @@ function _sseRerenderFromCache(boardId, filter, force) {
         const yearVal = document.getElementById(`${prefix}-year`)?.value || '';
         if (dayVal || monthVal || yearVal) {
             filtered = filtered.filter(e => {
-                if (!e.date) return false;
-                const d = new Date(e.date + 'T00:00:00');
+                const ed = getEDate(e);
+                if (!ed) return false;
+                const d = new Date(ed + 'T00:00:00');
                 if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
                 if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
                 if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
@@ -204,10 +216,11 @@ function _sseRerenderFromCache(boardId, filter, force) {
     } else {
         const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
         filtered.forEach(e => {
-            if (!e.date || e.date < today) missed.push(e);
-            else if (e.date === today) todayE.push(e);
-            else if (e.date === tomorrow) tomorrowE.push(e);
-            else if (e.date === dayAfter) dayAfterE.push(e);
+            const ed = getEDate(e);
+            if (!ed || ed < today) missed.push(e);
+            else if (ed === today) todayE.push(e);
+            else if (ed === tomorrow) tomorrowE.push(e);
+            else if (ed === dayAfter) dayAfterE.push(e);
             else soon.push(e);
         });
         if (missed.length) html += renderVksBlock('Пропущенные', missed, 'missed');

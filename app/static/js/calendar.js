@@ -166,6 +166,64 @@ function _calFindOverlapGroups(events) {
 
 // ─── Series expansion ───────────────────────────────────────────────
 
+// Вычисляет дату ближайшего наступления серии (для списков VKS/Мероприятий)
+function getNextOccurrenceDate(event) {
+    if (!event.series_id || !event.series) return event.date;
+    const series = event.series;
+    const baseDate = new Date(event.date + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const until = series.until ? new Date(series.until + 'T00:00:00') : null;
+    const interval = series.interval_val || 1;
+    const byDay = series.by_day || [];
+    const dayMap = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0,
+                     'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
+    const shortDays = { 'monday':'mon', 'tuesday':'tue', 'wednesday':'wed', 'thursday':'thu', 'friday':'fri', 'saturday':'sat', 'sunday':'sun' };
+    const normByDay = byDay.map(d => shortDays[d] || d);
+
+    // Начинаем с сегодня или с baseDate (если он в будущем)
+    let current = baseDate > today ? new Date(baseDate) : new Date(today);
+    const maxDate = until && until < current ? until : new Date(current);
+    maxDate.setFullYear(maxDate.getFullYear() + 1); // safety: не дальше года
+
+    if (series.freq === 'daily') {
+        // Каждые N дней
+        if (current <= baseDate) current = new Date(baseDate);
+        const diff = Math.ceil((current - baseDate) / (1000 * 60 * 60 * 24));
+        const stepsToAdvance = diff % interval === 0 ? 0 : interval - (diff % interval);
+        current.setDate(current.getDate() + stepsToAdvance);
+    } else if (series.freq === 'weekly') {
+        // Каждые N недель в указанные дни
+        if (current <= baseDate) current = new Date(baseDate);
+        // Найти ближайший подходящий день недели
+        for (let i = 0; i < 8; i++) {
+            const dow = current.getDay();
+            const dayName = Object.keys(dayMap).find(k => dayMap[k] === dow);
+            if (normByDay.length === 0 || normByDay.includes(dayName)) break;
+            current.setDate(current.getDate() + 1);
+        }
+        // Проверить interval
+        const weeksDiff = Math.round((current - baseDate) / (7 * 24 * 60 * 60 * 1000));
+        if (weeksDiff % interval !== 0) {
+            const remain = interval - (weeksDiff % interval);
+            current.setDate(current.getDate() + remain * 7);
+        }
+    } else if (series.freq === 'monthly') {
+        // Каждые N месяцев
+        if (current <= baseDate) current = new Date(baseDate);
+        const monthsDiff = (current.getFullYear() - baseDate.getFullYear()) * 12 + (current.getMonth() - baseDate.getMonth());
+        if (monthsDiff % interval !== 0) {
+            const remain = interval - (monthsDiff % interval);
+            current.setMonth(current.getMonth() + remain);
+        }
+        current.setDate(baseDate.getDate());
+    }
+
+    if (until && current > until) return null;
+    if (current < today) return null;
+    return localDateStr(current);
+}
+
 function expandSeries(events, dateFrom, dateTo) {
     const expanded = [];
     const seriesMap = {};
