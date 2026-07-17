@@ -136,21 +136,27 @@ function _sseRerenderFromCache(boardId, filter, force) {
     const p = _vksPagination[boardId];
     if (!board || !p) return;
 
-    // Для серий: заменить дату на ближайшее наступление
-    p.events.forEach(e => {
-        if (e.series_id && e.series && typeof getNextOccurrenceDate === 'function') {
-            const nextDate = getNextOccurrenceDate(e);
-            if (nextDate) e._nextDate = nextDate;
-        }
-    });
-
     if (!force) {
         const hash = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
         if (_sseLastHash[boardId] === hash) return;
     }
     _sseLastHash[boardId] = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
 
-    const events = p.events;
+    // Для серий: развернуть на ближайшие даты (14 дней)
+    const expandedEvents = [];
+    p.events.forEach(e => {
+        if (e.series_id && e.series && typeof expandSeriesForList === 'function') {
+            const dates = expandSeriesForList(e, 14);
+            dates.forEach(d => {
+                const copy = { ...e, _nextDate: d };
+                expandedEvents.push(copy);
+            });
+        } else {
+            expandedEvents.push(e);
+        }
+    });
+
+    const events = expandedEvents;
     const now = new Date();
     const today = localDateStr(now);
     const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));

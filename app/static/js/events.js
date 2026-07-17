@@ -356,13 +356,18 @@ function eventsRenderBoard() {
 
     const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
     const cached = cacheGet(cacheKey);
-    let events = [...(cached?.data?.events || [])];
+    const rawEvents = [...(cached?.data?.events || [])];
 
-    // Для серий: заменить дату на ближайшее наступление
-    events.forEach(e => {
-        if (e.series_id && e.series && typeof getNextOccurrenceDate === 'function') {
-            const nextDate = getNextOccurrenceDate(e);
-            if (nextDate) e._nextDate = nextDate;
+    // Для серий: развернуть на ближайшие даты (14 дней)
+    const events = [];
+    rawEvents.forEach(e => {
+        if (e.series_id && e.series && typeof expandSeriesForList === 'function') {
+            const dates = expandSeriesForList(e, 14);
+            dates.forEach(d => {
+                events.push({ ...e, _nextDate: d });
+            });
+        } else {
+            events.push(e);
         }
     });
 

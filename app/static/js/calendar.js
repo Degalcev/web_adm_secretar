@@ -166,9 +166,9 @@ function _calFindOverlapGroups(events) {
 
 // ─── Series expansion ───────────────────────────────────────────────
 
-// Вычисляет дату ближайшего наступления серии (для списков VKS/Мероприятий)
-function getNextOccurrenceDate(event) {
-    if (!event.series_id || !event.series) return event.date;
+// Генерирует даты наступлений серии в окне today..today+daysAhead (для списков)
+function expandSeriesForList(event, daysAhead = 14) {
+    if (!event.series_id || !event.series) return [event.date];
     const series = event.series;
     const baseDate = new Date(event.date + 'T00:00:00');
     const today = new Date();
@@ -180,20 +180,22 @@ function getNextOccurrenceDate(event) {
                      'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
     const shortDays = { 'monday':'mon', 'tuesday':'tue', 'wednesday':'wed', 'thursday':'thu', 'friday':'fri', 'saturday':'sat', 'sunday':'sun' };
     const normByDay = byDay.map(d => shortDays[d] || d);
+    const windowEnd = new Date(today);
+    windowEnd.setDate(windowEnd.getDate() + daysAhead);
 
-    // Начинаем с сегодня или с baseDate (если он в будущем)
+    const dates = [];
     let current = baseDate > today ? new Date(baseDate) : new Date(today);
-    const maxDate = until && until < current ? until : new Date(current);
-    maxDate.setFullYear(maxDate.getFullYear() + 1); // safety: не дальше года
 
     if (series.freq === 'daily') {
-        // Каждые N дней
         if (current <= baseDate) current = new Date(baseDate);
         const diff = Math.ceil((current - baseDate) / (1000 * 60 * 60 * 24));
         const stepsToAdvance = diff % interval === 0 ? 0 : interval - (diff % interval);
         current.setDate(current.getDate() + stepsToAdvance);
+        while (current <= windowEnd && (!until || current <= until)) {
+            dates.push(localDateStr(current));
+            current.setDate(current.getDate() + interval);
+        }
     } else if (series.freq === 'weekly') {
-        // Каждые N недель в указанные дни
         if (current <= baseDate) current = new Date(baseDate);
         // Найти ближайший подходящий день недели
         for (let i = 0; i < 8; i++) {
@@ -202,14 +204,16 @@ function getNextOccurrenceDate(event) {
             if (normByDay.length === 0 || normByDay.includes(dayName)) break;
             current.setDate(current.getDate() + 1);
         }
-        // Проверить interval
         const weeksDiff = Math.round((current - baseDate) / (7 * 24 * 60 * 60 * 1000));
         if (weeksDiff % interval !== 0) {
             const remain = interval - (weeksDiff % interval);
             current.setDate(current.getDate() + remain * 7);
         }
+        while (current <= windowEnd && (!until || current <= until)) {
+            dates.push(localDateStr(current));
+            current.setDate(current.getDate() + interval * 7);
+        }
     } else if (series.freq === 'monthly') {
-        // Каждые N месяцев
         if (current <= baseDate) current = new Date(baseDate);
         const monthsDiff = (current.getFullYear() - baseDate.getFullYear()) * 12 + (current.getMonth() - baseDate.getMonth());
         if (monthsDiff % interval !== 0) {
@@ -217,11 +221,17 @@ function getNextOccurrenceDate(event) {
             current.setMonth(current.getMonth() + remain);
         }
         current.setDate(baseDate.getDate());
+        while (current <= windowEnd && (!until || current <= until)) {
+            dates.push(localDateStr(current));
+            current.setMonth(current.getMonth() + interval);
+        }
     }
+    return dates.length ? dates : [event.date];
+}
 
-    if (until && current > until) return null;
-    if (current < today) return null;
-    return localDateStr(current);
+// Обратная совместимость — возвращает первую дату
+function getNextOccurrenceDate(event) {
+    return expandSeriesForList(event, 0)[0] || event.date;
 }
 
 function expandSeries(events, dateFrom, dateTo) {
