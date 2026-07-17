@@ -157,11 +157,10 @@ function _sseRerenderFromCache(boardId, filter, force) {
     const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
 
     let filtered = events;
+    const getEDate = (e) => e._nextDate || e.date;
+
     if (filter === 'active') {
         filtered = events.filter(e => !e.completed);
-
-        // Для серийных событий использовать _nextDate для фильтрации
-        const getEDate = (e) => e._nextDate || e.date;
 
         if (typeof _quickFilter !== 'undefined' && _quickFilter) {
             if (_quickFilter === 'today') {
