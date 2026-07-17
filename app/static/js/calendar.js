@@ -621,7 +621,18 @@ async function renderCalendar(full) {
         const tabsEl = document.getElementById('cal-day-tabs');
         const gridArea = document.getElementById('cal-grid-area');
         if (_calIsMobile()) {
-            if (tabsEl) tabsEl.innerHTML = _calRenderMobileTabs();
+            // Mobile: обновить active класс без замены innerHTML
+            if (tabsEl) {
+                const today = localDateStr(new Date());
+                const tabs = tabsEl.querySelectorAll('.cal-mob-day');
+                tabs.forEach((tab, i) => {
+                    const d = new Date(calWeekStart);
+                    d.setDate(d.getDate() + i);
+                    const ds = localDateStr(d);
+                    tab.classList.toggle('active', ds === localDateStr(calActiveDay));
+                    tab.classList.toggle('today', ds === today);
+                });
+            }
             if (gridArea) {
                 gridArea.innerHTML = _calRenderMobileRoomChips() + _calRenderMobileGrid();
                 calUpdateNowLine();
@@ -630,7 +641,18 @@ async function renderCalendar(full) {
                         if (wrap) wrap.scrollTop = 0;
             }
         } else {
-            if (tabsEl) tabsEl.innerHTML = _calRenderTabs();
+            // Обновить active класс на табах без замены innerHTML (без flash)
+            if (tabsEl) {
+                const today = localDateStr(new Date());
+                const tabs = tabsEl.querySelectorAll('.cal-day-tab');
+                tabs.forEach((tab, i) => {
+                    const d = new Date(calWeekStart);
+                    d.setDate(d.getDate() + i);
+                    const ds = localDateStr(d);
+                    tab.classList.toggle('active', ds === localDateStr(calActiveDay));
+                    tab.classList.toggle('today', ds === today);
+                });
+            }
             if (gridArea) {
                 gridArea.innerHTML = _calRenderGrid();
                 calUpdateNowLine();
