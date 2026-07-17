@@ -117,6 +117,11 @@ async function sseRefreshPage() {
     if (page === 'calendar') {
         cacheInvalidate('calendar');
         _calLoadingRange = false;
+        const rangeStart = new Date(calWeekStart);
+        rangeStart.setDate(rangeStart.getDate() - 14);
+        const rangeEnd = new Date(calWeekStart);
+        rangeEnd.setDate(rangeEnd.getDate() + 20);
+        await _calLoadRange(localDateStr(rangeStart), localDateStr(rangeEnd));
         renderCalendar(false);
         return;
     }
