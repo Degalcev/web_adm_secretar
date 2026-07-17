@@ -248,15 +248,6 @@ async function _addSeriesException(eventId, date, action) {
         showToast('Ошибка сети', 'error');
     }
 }
-            if (typeof eventsRenderBoard === 'function') eventsRenderBoard();
-            if (typeof renderCalendar === 'function') renderCalendar(false);
-        } else {
-            showToast(data.error || 'Ошибка', 'error');
-        }
-    } catch (e) {
-        showToast('Ошибка сети', 'error');
-    }
-}
 
 // ─── Оригинальные функции ──────────────────────────────────────────────
 
