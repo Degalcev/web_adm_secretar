@@ -15,9 +15,18 @@ function toggleEventComplete() {
             `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`,
             '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
             'rgba(74,222,128,0.1)', 'var(--success)',
-            // Только это — пропустить дату
-            async () => { await _addSeriesException(editingEventId, skipDate, 'skip'); closeEventModal(); },
-            // Вся серия — сохранить
+            // Только это
+            async () => {
+                if (checked) {
+                    // Завершить только эту дату → skip exception
+                    await _addSeriesException(editingEventId, skipDate, 'skip');
+                } else {
+                    // Снять завершение только с этой даты → unskip exception
+                    await _addSeriesException(editingEventId, skipDate, 'unskip');
+                }
+                closeEventModal();
+            },
+            // Вся серия
             async () => { await saveEvent(); }
         );
         return;
@@ -156,8 +165,14 @@ function confirmCompleteEvent(id, checked) {
                 `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`,
                 '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
                 'rgba(74,222,128,0.1)', 'var(--success)',
-                // Только это — пропустить дату
-                async () => { await _addSeriesException(id, skipDate, 'skip'); },
+                // Только это
+                async () => {
+                    if (checked) {
+                        await _addSeriesException(id, skipDate, 'skip');
+                    } else {
+                        await _addSeriesException(id, skipDate, 'unskip');
+                    }
+                },
                 // Вся серия — завершить
                 () => { completeEvent(id, checked); }
             );
@@ -196,24 +211,43 @@ function confirmCompleteEvent(id, checked) {
 async function _addSeriesException(eventId, date, action) {
     const csrfToken = getCsrfToken();
     try {
-        const resp = await fetch(`${BASE_URL}/admin/api/events/${eventId}/series/exception`, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date, action })
-        });
+        let resp;
+        if (action === 'unskip') {
+            // Удалить исключение
+            resp = await fetch(`${BASE_URL}/admin/api/events/${eventId}/series/exception`, {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ original_date: date })
+            });
+        } else {
+            // Добавить исключение (skip)
+            resp = await fetch(`${BASE_URL}/admin/api/events/${eventId}/series/exception`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ original_date: date, action })
+            });
+        }
         const data = await resp.json();
         if (data.ok) {
-            // Обновить кэш
             cacheInvalidate('vksActive');
             cacheInvalidate('eventsActive');
             cacheInvalidate('calendar');
-            showToast(action === 'skip' ? 'Дата пропущена' : 'Исключение добавлено', 'success');
-            // Перерисовать текущую страницу
+            showToast(action === 'skip' ? 'Дата пропущена' : 'Дата восстановлена', 'success');
             if (typeof renderVksBoard === 'function') {
                 renderVksBoard('vks-board-active', 'active', true);
                 renderVksBoard('vks-board-completed', 'completed', true);
             }
+            if (typeof eventsRenderBoard === 'function') eventsRenderBoard();
+            if (typeof renderCalendar === 'function') renderCalendar(false);
+        } else {
+            showToast(data.error || 'Ошибка', 'error');
+        }
+    } catch (e) {
+        showToast('Ошибка сети', 'error');
+    }
+}
             if (typeof eventsRenderBoard === 'function') eventsRenderBoard();
             if (typeof renderCalendar === 'function') renderCalendar(false);
         } else {

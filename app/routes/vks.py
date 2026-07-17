@@ -15,9 +15,11 @@ from database.requests import (
     get_series_exceptions,
 )
 from database.sending import (
-    add_event, update_event, delete_event, add_document, delete_document,
-    lock_event, unlock_event, add_event_participants, replace_event_participants,
-    create_event_series, delete_event_series, add_series_exception,
+    create_event, update_event, delete_event, lock_event, unlock_event,
+    create_event_participant, delete_event_participant, get_event_participants,
+    create_event_series, delete_event_series, add_series_exception, delete_series_exception,
+    add_pending_document, delete_document, update_document_event,
+    update_participant_user_ids,
 )
 
 
@@ -635,6 +637,23 @@ async def add_exception_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': False, 'error': str(e)}, status=500)
 
 
+async def delete_exception_handler(request: web.Request) -> web.Response:
+    try:
+        event_id = request.match_info['id']
+        data = await request.json()
+        event = await get_event_by_id(event_id)
+        if not event or not event.series_id:
+            return web.json_response({'ok': False, 'error': 'Серия не найдена'}, status=404)
+        await delete_series_exception(
+            series_id=event.series_id,
+            original_date=datetime.strptime(data['original_date'], '%Y-%m-%d').date(),
+        )
+        return web.json_response({'ok': True})
+    except Exception as e:
+        logger.error('Ошибка удаления исключения: {}', repr(e))
+        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+
+
 async def get_events_stats(request: web.Request) -> web.Response:
     """Счётчики из БД агрегатными запросами — без загрузки строк событий."""
     try:
@@ -680,3 +699,4 @@ def setup_vks_routes(app: web.Application):
     app.router.add_post('/admin/api/events/{id}/series', create_series_handler)
     app.router.add_delete('/admin/api/events/{id}/series', delete_series_handler)
     app.router.add_post('/admin/api/events/{id}/series/exception', add_exception_handler)
+    app.router.add_delete('/admin/api/events/{id}/series/exception', delete_exception_handler)

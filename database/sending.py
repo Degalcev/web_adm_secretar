@@ -473,6 +473,23 @@ async def delete_event_series(series_id: str):
             raise
 
 
+async def delete_series_exception(series_id: str, original_date):
+    async with async_session() as session:
+        try:
+            await session.execute(
+                sql_delete(EventSeriesException).where(
+                    EventSeriesException.series_id == series_id,
+                    EventSeriesException.original_date == original_date
+                )
+            )
+            await session.commit()
+            logger.info('Исключение серии удалено: series={} date={}', series_id, original_date)
+        except Exception as e:
+            await session.rollback()
+            logger.error('Ошибка удаления исключения серии: {}', repr(e))
+            raise
+
+
 async def add_series_exception(series_id: str, original_date, event_id: str = None, action: str = 'skip', new_date=None) -> str:
     new_id = str(uuid.uuid4())
     exc = EventSeriesException(
