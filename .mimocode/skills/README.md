@@ -1,57 +1,31 @@
-# Skills - Проект web_adm_secretar
+# Skills — web_adm_secretar
 
-Директория содержит скилы для разработки проекта.
+Проектные скилы для панели администратора VKS Secretar.
 
-## Доступные скилы
+## Актуальные скилы
 
-### Python разработка
-- **python-async** - Разработка async Python приложений с asyncio, aiohttp
-- **sqlalchemy-async** - Работа с async SQLAlchemy, моделями БД и asyncpg
+### Архитектура
+- **project-architecture** — стек, файловая структура, деплой, правила проекта
 
-### Веб-разработка
-- **web-frontend** - Создание HTML, CSS и JavaScript компонентов с тёмной темой
-- **java-development** - Разработка на Java, Spring Boot, JVM экосистема
+### Фронтенд
+- **frontend-spa** — SPA роутинг, pageInit, кэш, SSE, vanilla JS паттерны
+- **calendar-module** — календарь: загрузка диапазонов, рендер, табы, mobile
+- **vks-events** — VKS и Мероприятия: fetch, фильтры, пагинация, модалка
 
-### Базы данных
-- **sqlalchemy-async** - Async SQLAlchemy операции и модели
+### Бэкенд
+- **backend-api** — aiohttp роуты, auth middleware, БД паттерны, SSE
 
-### Безопасность
-- **security-auth** - Авторизация, хеширование паролей, CSRF защита
-
-### DevOps
-- **devops-ssh** - Деплой через SSH, управление VPS, nginx
-
-### Логирование
-- **loguru-logging** - Структурированное логирование с loguru
-
-### Дизайн
-- **graphics-ui** - SVG графика, CSS анимации, UI/UX проектирование
+## Устаревшие (можно удалить)
+- **frontend** — generic Tailwind patterns (не используются)
+- **web-frontend** — generic CSS (не отражает актуальную архитектуру)
+- **python-async** — generic asyncio (уже покрыто backend-api)
+- **sqlalchemy-async** — generic SQLAlchemy (уже покрыто backend-api)
+- **security-auth** — generic auth (уже покрыто backend-api)
+- **devops-ssh** — generic SSH (уже покрыто project-architecture)
+- **loguru-logging** — generic loguru (одно правило: use loguru)
+- **graphics-ui** — generic SVG (не относится)
+- **java-development** — Java (не относится к проекту)
 
 ## Использование
-
-Скилы автоматически загружаются агентами при выполнении соответствующих задач. Каждый скилл содержит:
-
-- **Назначение** - Для чего используется скилл
-- **Когда использовать** - В каких ситуациях применять
-- **Паттерны кода** - Готовые примеры для проекта
-- **Специфика проекта** - Особенности данного проекта
-- **Ссылки** - Дополнительные ресурсы
-
-## Структура скила
-
-```
-skill-name/
-├── SKILL.md           # Основной файл скила
-└── (дополнительные ресурсы)
-```
-
-## Добавление нового скила
-
-1. Создайте директорию `.mimocode/skills/new-skill/`
-2. Создайте файл `SKILL.md` с структурой:
-   - Назначение
-   - Когда использовать
-   - Паттерны кода
-   - Специфика проекта
-   - Ссылки
-3. Обновите этот README
+Скилы загружаются через `skill` tool или при вызове `/skill-name`.
+Каждый скилл содержит: назначение, когда использовать, паттерны кода, ловушки.
