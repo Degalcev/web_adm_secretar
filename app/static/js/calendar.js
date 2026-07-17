@@ -129,10 +129,6 @@ async function _calLoadRange(from, to) {
 }
 
 function _calGetEventsForDate(ds) {
-    const weekEnd = new Date(calWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    const dateFrom = localDateStr(calWeekStart);
-    const dateTo = localDateStr(weekEnd);
     // Ищем в кэше по ШИРОКОМУ диапазону (как загружал _calLoadRange)
     const rangeStart = new Date(calWeekStart);
     rangeStart.setDate(rangeStart.getDate() - 14);
@@ -140,7 +136,9 @@ function _calGetEventsForDate(ds) {
     rangeEnd.setDate(rangeEnd.getDate() + 20);
     const wideKey = _calGetRangeKey(localDateStr(rangeStart), localDateStr(rangeEnd));
     const rangeEvents = cacheGet('calendar')?.data?.ranges?.[wideKey] || [];
-    const expanded = expandSeries(rangeEvents, dateFrom, dateTo);
+    const wideFrom = localDateStr(rangeStart);
+    const wideTo = localDateStr(rangeEnd);
+    const expanded = expandSeries(rangeEvents, wideFrom, wideTo);
     return expanded.filter(e => e.date === ds);
 }
 
