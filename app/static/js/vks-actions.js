@@ -4,10 +4,30 @@ function toggleEventComplete() {
     if (!editingEventId) return;
     const cb = document.getElementById('f-event-completed');
     cb.checked = !cb.checked;
+    const checked = cb.checked;
+
+    // Проверить серию — показать подтверждение
+    const e = _currentEvent;
+    if (_isSeriesEvent(e)) {
+        const skipDate = e._nextDate || e.date;
+        const action = checked ? 'завершить' : 'снять завершение с';
+        _showSeriesConfirm(
+            `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`,
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
+            'rgba(74,222,128,0.1)', 'var(--success)',
+            // Только это — пропустить дату
+            async () => { await _addSeriesException(editingEventId, skipDate, 'skip'); closeEventModal(); },
+            // Вся серия — сохранить
+            async () => { await saveEvent(); }
+        );
+        return;
+    }
+
+    // Без серии — обычное сохранение
     const btn = document.getElementById('event-modal-complete-btn');
     const statusEl = document.getElementById('event-modal-status');
     const accent = document.getElementById('event-modal-accent');
-    if (cb.checked) {
+    if (checked) {
         btn.classList.add('done');
         btn.textContent = '✓ Завершено';
         statusEl.className = 'status-dot done';
@@ -15,7 +35,6 @@ function toggleEventComplete() {
     } else {
         btn.classList.remove('done');
         btn.textContent = '✓ Завершить';
-        const e = _currentEvent;
         const today = localDateStr(new Date());
         if (!e || !e.date || e.date < today) {
             statusEl.className = 'status-dot missed';
