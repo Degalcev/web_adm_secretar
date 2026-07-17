@@ -114,8 +114,11 @@ async function _calLoadRange(from, to) {
             cursorId = data.next_cursor_id || null;
             if (!hasMore || allEvents.length >= 2000) break; // safety limit
         }
-        const existing = cacheGet('calendar')?.data?.ranges || {};
-        cacheSet('calendar', { ranges: { ...existing, [key]: allEvents } });
+        // Не кэшировать пустой результат при ошибке — позволять повторить запрос
+        if (allEvents.length > 0) {
+            const existing = cacheGet('calendar')?.data?.ranges || {};
+            cacheSet('calendar', { ranges: { ...existing, [key]: allEvents } });
+        }
         return allEvents;
     } catch (e) {
         console.error('_calLoadRange error:', e);
@@ -505,13 +508,6 @@ function _calRenderGrid() {
 async function renderCalendar(full) {
     const container = document.getElementById('cal-container');
     if (!container) return;
-
-    // Load range events for visible week ± 2 weeks
-    const rangeStart = new Date(calWeekStart);
-    rangeStart.setDate(rangeStart.getDate() - 14);
-    const rangeEnd = new Date(calWeekStart);
-    rangeEnd.setDate(rangeEnd.getDate() + 20);
-    await _calLoadRange(localDateStr(rangeStart), localDateStr(rangeEnd));
 
     if (full) {
         _calNowLines = [];

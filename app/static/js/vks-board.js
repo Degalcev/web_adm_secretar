@@ -19,6 +19,9 @@ async function _vksFetch(filter) {
     const events = data.events || [];
     const stats = statsResp.ok ? await statsResp.json() : null;
 
+    // Не кэшировать пустой результат при ошибке — позволять повторить запрос
+    if (!eventsResp.ok && !events.length) return { events: [], stats };
+
     cacheSet(cacheKey, {
         events,
         stats,
