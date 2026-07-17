@@ -21,7 +21,10 @@ function toggleEventComplete() {
                     // Завершить только эту дату → skip exception
                     await _addSeriesException(editingEventId, skipDate, 'skip');
                 } else {
-                    // Снять завершение только с этой даты → unskip exception
+                    // Снять завершение с этой даты:
+                    // 1. Сбросить completed на оригинале (чтобы серия снова была активна)
+                    await completeEvent(editingEventId, false);
+                    // 2. Удалить skip exception для этой даты
                     await _addSeriesException(editingEventId, skipDate, 'unskip');
                 }
                 closeEventModal();
@@ -170,6 +173,7 @@ function confirmCompleteEvent(id, checked) {
                     if (checked) {
                         await _addSeriesException(id, skipDate, 'skip');
                     } else {
+                        await completeEvent(id, false);
                         await _addSeriesException(id, skipDate, 'unskip');
                     }
                 },
