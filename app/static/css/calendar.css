@@ -367,6 +367,12 @@
 .cal-ev:hover.type-board { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 55%, var(--bg)); }
 .cal-ev:hover.type-reception { border-color: var(--fg-muted); background: color-mix(in srgb, var(--fg-muted) 55%, var(--bg)); }
 
+.cal-ev.completed { opacity: 0.5; }
+.cal-ev.completed .ev-type,
+.cal-ev.completed .ev-time,
+.cal-ev.completed .ev-org,
+.cal-ev.completed .ev-desc { text-decoration: line-through; }
+
 /* ─── Now Line ─────────────────────────────────────────────────────── */
 .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 10; pointer-events: none; }
 

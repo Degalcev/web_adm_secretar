@@ -455,7 +455,7 @@ function _calRenderMobileGrid() {
             const orgName = (store.allOrganizers || []).find(o => o.id === e.organizer_id)?.name || '';
             const typeClass = _calGetTypeClass(e.type);
 
-            html += `<div class="cal-ev ${typeClass}" style="top:${top}px;height:${height}px;left:${left};width:${w};position:absolute" onclick="openEditEventModal('${e.id}')">`;
+            html += `<div class="cal-ev ${typeClass}${e.completed ? ' completed' : ''}" style="top:${top}px;height:${height}px;left:${left};width:${w};position:absolute" onclick="openEditEventModal('${e.id}')">`;
             html += `<div style="display:flex;align-items:center;gap:4px"><span class="ev-status ${status}"></span><span class="ev-type">${esc(e.type || 'ВКС')}</span></div>`;
             html += `<div class="ev-time">${esc(e.time || '')}${dur ? ' – ' + _calFmtEnd(e) : ''}</div>`;
             if (e._locName) html += `<div class="ev-org">${esc(e._locName)}</div>`;
@@ -541,7 +541,7 @@ function _calRenderGrid() {
                 const orgName = (store.allOrganizers || []).find(o => o.id === e.organizer_id)?.name || '';
                 const typeClass = _calGetTypeClass(e.type);
 
-                html += `<div class="cal-ev ${typeClass}${splitCls}" style="top:${top}px;height:${height}px;left:${left};width:${w}" onclick="openEditEventModal('${e.id}')">`;
+                html += `<div class="cal-ev ${typeClass}${splitCls}${e.completed ? ' completed' : ''}" style="top:${top}px;height:${height}px;left:${left};width:${w}" onclick="openEditEventModal('${e.id}')">`;
                 html += `<div style="display:flex;align-items:center;gap:4px"><span class="ev-status ${status}"></span><span class="ev-type">${esc(e.type || 'ВКС')}</span></div>`;
                 html += `<div class="ev-time">${esc(e.time || '')}${dur ? ' – ' + _calFmtEnd(e) : ''}</div>`;
                 if (orgName) html += `<div class="ev-org">${esc(orgName)}</div>`;
