@@ -359,7 +359,7 @@ function eventsRenderBoard() {
     const rawEvents = [...(cached?.data?.events || [])];
 
     // Для серий: развернуть на ближайшие даты (14 дней)
-    const events = [];
+    let events = [];
     rawEvents.forEach(e => {
         if (e.series_id && e.series && typeof expandSeriesForList === 'function') {
             const dates = expandSeriesForList(e, 14);
