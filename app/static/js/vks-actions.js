@@ -6,36 +6,23 @@ function toggleEventComplete() {
     cb.checked = !cb.checked;
     const checked = cb.checked;
 
-    // Проверить серию — показать подтверждение
     const e = _currentEvent;
     if (_isSeriesEvent(e)) {
-        const skipDate = e._nextDate || e.date;
         const action = checked ? 'завершить' : 'снять завершение с';
-        _showSeriesConfirm(
-            `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`,
+        _showSeriesInfo(
+            `${action.charAt(0).toUpperCase() + action.slice(1)} серию?`,
+            `Это повторяющееся мероприятие. Будет ${checked ? 'завершена' : 'снято завершение с'} вся серия.`,
             '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
             'rgba(74,222,128,0.1)', 'var(--success)',
-            // Только это
             async () => {
-                if (checked) {
-                    // Завершить только эту дату → skip exception
-                    await _addSeriesException(editingEventId, skipDate, 'skip');
-                } else {
-                    // Снять завершение с этой даты:
-                    // 1. Сбросить completed на оригинале (чтобы серия снова была активна)
-                    await completeEvent(editingEventId, false);
-                    // 2. Удалить skip exception для этой даты
-                    await _addSeriesException(editingEventId, skipDate, 'unskip');
-                }
+                await _disableSeries(editingEventId);
+                await completeEvent(editingEventId, checked);
                 closeEventModal();
-            },
-            // Вся серия
-            async () => { await saveEvent(); }
+            }
         );
         return;
     }
 
-    // Без серии — обычное сохранение
     const btn = document.getElementById('event-modal-complete-btn');
     const statusEl = document.getElementById('event-modal-status');
     const accent = document.getElementById('event-modal-accent');
@@ -59,19 +46,86 @@ function toggleEventComplete() {
     saveEvent();
 }
 
-// ─── Подтверждение для серий ──────────────────────────────────────────
+function confirmDeleteFromModal() {
+    if (!editingEventId) return;
+    const e = _currentEvent;
+    const desc = e ? (e.description || 'без описания') : '';
+
+    if (_isSeriesEvent(e)) {
+        _showSeriesInfo(
+            'Удалить серию?',
+            'Это повторяющееся мероприятие. Будет удалена вся серия.',
+            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
+            'rgba(248,113,113,0.1)', 'var(--danger)',
+            async () => {
+                await _disableSeries(editingEventId);
+                await deleteEvent(editingEventId);
+            }
+        );
+    } else {
+        ConfirmManager.open('event', editingEventId, desc, deleteEvent);
+    }
+}
+
+function confirmCompleteEvent(id, checked) {
+    try {
+        const cacheKeys = ['vksActive', 'eventsActive'];
+        let event = null;
+        for (const key of cacheKeys) {
+            const cached = cacheGet(key);
+            if (cached?.data?.events) {
+                event = cached.data.events.find(e => e.id === id);
+                if (event) break;
+            }
+        }
+
+        if (_isSeriesEvent(event)) {
+            const action = checked ? 'завершить' : 'снять завершение с';
+            _showSeriesInfo(
+                `${action.charAt(0).toUpperCase() + action.slice(1)} серию?`,
+                `Это повторяющееся мероприятие. Будет ${checked ? 'завершена' : 'снято завершение с'} вся серия.`,
+                '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
+                'rgba(74,222,128,0.1)', 'var(--success)',
+                async () => {
+                    await _disableSeries(id);
+                    await completeEvent(id, checked);
+                }
+            );
+        } else {
+            const action = checked ? 'завершить' : 'снять завершение с';
+            document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`;
+            document.getElementById('confirm-actions').innerHTML = `
+                <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
+                <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
+            `;
+            document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
+            document.getElementById('confirm-ok-btn').onclick = async function () {
+                this.disabled = true;
+                document.getElementById('confirm-cancel-btn').disabled = true;
+                await completeEvent(id, checked);
+                closeConfirm();
+            };
+            const overlay = document.getElementById('confirm-overlay');
+            overlay.querySelector('.confirm-icon').innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>';
+            overlay.querySelector('.confirm-icon').style.background = 'rgba(74, 222, 128, 0.1)';
+            overlay.querySelector('.confirm-icon').style.color = 'var(--success)';
+            overlay.querySelector('h3').textContent = checked ? 'Завершить?' : 'Снять завершение?';
+            overlay.classList.add('show');
+        }
+    } catch (err) {
+        console.error('[VKS] confirmCompleteEvent error:', err);
+        completeEvent(id, checked);
+    }
+}
+
+// ─── Серии ─────────────────────────────────────────────────────────────
 
 function _isSeriesEvent(event) {
     return event && event.series_id && event.series;
 }
 
-function _getSkipDate(event) {
-    // Дата для исключения: _nextDate (из expandSeriesForList) или оригинальная дата
-    return event._nextDate || event.date;
-}
-
-// Показать подтверждение с выбором "Только это / Вся серия" для серийных событий
-function _showSeriesConfirm(title, iconHtml, iconBg, iconColor, onThisEvent, onAllEvents) {
+// Инфо-модалка для серий: показать сообщение → подтвердить → действие
+function _showSeriesInfo(title, message, iconHtml, iconBg, iconColor, onConfirm) {
     const overlay = document.getElementById('confirm-overlay');
     const icon = overlay.querySelector('.confirm-icon');
     const h3 = overlay.querySelector('h3');
@@ -87,37 +141,29 @@ function _showSeriesConfirm(title, iconHtml, iconBg, iconColor, onThisEvent, onA
     icon.style.background = iconBg;
     icon.style.color = iconColor;
     h3.textContent = title;
-    if (p) p.textContent = 'Это повторяющееся событие';
+    if (p) p.textContent = message;
 
     document.getElementById('confirm-actions').innerHTML = `
         <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
-        <button class="btn" id="confirm-this-btn" style="border-color:var(--border)">Только это</button>
-        <button class="btn btn-primary" id="confirm-all-btn">Вся серия</button>
+        <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
     `;
 
     document.getElementById('confirm-cancel-btn').onclick = () => {
-        _restoreConfirmOverlay(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP);
+        _restoreConfirm(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP);
         closeConfirm();
     };
-    document.getElementById('confirm-this-btn').onclick = async function () {
+    document.getElementById('confirm-ok-btn').onclick = async function () {
         this.disabled = true;
-        document.getElementById('confirm-all-btn').disabled = true;
-        await onThisEvent();
-        _restoreConfirmOverlay(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP);
-        closeConfirm();
-    };
-    document.getElementById('confirm-all-btn').onclick = async function () {
-        this.disabled = true;
-        document.getElementById('confirm-this-btn').disabled = true;
-        await onAllEvents();
-        _restoreConfirmOverlay(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP);
+        document.getElementById('confirm-cancel-btn').disabled = true;
+        await onConfirm();
+        _restoreConfirm(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP);
         closeConfirm();
     };
 
     overlay.classList.add('show');
 }
 
-function _restoreConfirmOverlay(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP) {
+function _restoreConfirm(overlay, icon, h3, p, origIcon, origBg, origColor, origTitle, origP) {
     icon.innerHTML = origIcon;
     icon.style.background = origBg;
     icon.style.color = origColor;
@@ -125,131 +171,17 @@ function _restoreConfirmOverlay(overlay, icon, h3, p, origIcon, origBg, origColo
     if (p) p.textContent = origP;
 }
 
-// ─── Завершение ────────────────────────────────────────────────────────
-
-function confirmDeleteFromModal() {
-    if (!editingEventId) return;
-    const e = _currentEvent;
-    const desc = e ? (e.description || 'без описания') : '';
-
-    if (_isSeriesEvent(e)) {
-        const skipDate = _getSkipDate(e);
-        _showSeriesConfirm(
-            'Удалить событие?',
-            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
-            'rgba(248,113,113,0.1)', 'var(--danger)',
-            // Только это — пропустить дату
-            async () => { await _addSeriesException(editingEventId, skipDate, 'skip'); },
-            // Вся серия — удалить
-            () => { deleteEvent(editingEventId); }
-        );
-    } else {
-        ConfirmManager.open('event', editingEventId, desc, deleteEvent);
-    }
-}
-
-function confirmCompleteEvent(id, checked) {
-    try {
-        // Найти событие для проверки series_id
-        const cacheKeys = ['vksActive', 'eventsActive'];
-        let event = null;
-        for (const key of cacheKeys) {
-            const cached = cacheGet(key);
-            if (cached?.data?.events) {
-                event = cached.data.events.find(e => e.id === id);
-                if (event) break;
-            }
-        }
-
-        if (_isSeriesEvent(event)) {
-            const skipDate = event._nextDate || event.date;
-            const action = checked ? 'завершить' : 'снять завершение с';
-            _showSeriesConfirm(
-                `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`,
-                '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>',
-                'rgba(74,222,128,0.1)', 'var(--success)',
-                // Только это
-                async () => {
-                    if (checked) {
-                        await _addSeriesException(id, skipDate, 'skip');
-                    } else {
-                        await completeEvent(id, false);
-                        await _addSeriesException(id, skipDate, 'unskip');
-                    }
-                },
-                // Вся серия — завершить
-                () => { completeEvent(id, checked); }
-            );
-        } else {
-            // Обычное подтверждение
-            const action = checked ? 'завершить' : 'снять завершение с';
-            document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`;
-            document.getElementById('confirm-actions').innerHTML = `
-                <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
-                <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
-            `;
-            document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
-            document.getElementById('confirm-ok-btn').onclick = async function () {
-                this.disabled = true;
-                document.getElementById('confirm-cancel-btn').disabled = true;
-                await completeEvent(id, checked);
-                closeConfirm();
-            };
-            const overlay = document.getElementById('confirm-overlay');
-            const icon = overlay.querySelector('.confirm-icon');
-            const title = overlay.querySelector('h3');
-            icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>';
-            icon.style.background = 'rgba(74, 222, 128, 0.1)';
-            icon.style.color = 'var(--success)';
-            title.textContent = checked ? 'Завершить ВКС?' : 'Снять завершение?';
-            overlay.classList.add('show');
-        }
-    } catch (err) {
-        console.error('[VKS] confirmCompleteEvent error:', err);
-        completeEvent(id, checked);
-    }
-}
-
-// ─── Исключения серий ──────────────────────────────────────────────────
-
-async function _addSeriesException(eventId, date, action) {
+// Удалить серию (отключить повторение) — DELETE /api/events/{id}/series
+async function _disableSeries(eventId) {
     const csrfToken = getCsrfToken();
     try {
-        let resp;
-        if (action === 'unskip') {
-            // Удалить исключение
-            resp = await fetch(`${BASE_URL}/admin/api/events/${eventId}/series/exception`, {
-                method: 'DELETE',
-                credentials: 'same-origin',
-                headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ original_date: date })
-            });
-        } else {
-            // Добавить исключение (skip)
-            resp = await fetch(`${BASE_URL}/admin/api/events/${eventId}/series/exception`, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'X-CSRF-Token': csrfToken, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ original_date: date, action })
-            });
-        }
-        const data = await resp.json();
-        if (data.ok) {
-            cacheInvalidate('vksActive');
-            cacheInvalidate('eventsActive');
-            cacheInvalidate('calendar');
-            showToast(action === 'skip' ? 'Дата пропущена' : 'Дата восстановлена', 'success');
-            if (typeof renderVksBoard === 'function') {
-                renderVksBoard('vks-board-active', 'active', true);
-                renderVksBoard('vks-board-completed', 'completed', true);
-            }
-            if (typeof eventsRenderBoard === 'function') eventsRenderBoard();
-            if (typeof renderCalendar === 'function') renderCalendar(false);
-        } else {
-            showToast(data.error || 'Ошибка', 'error');
-        }
+        await fetch(`${BASE_URL}/admin/api/events/${eventId}/series`, {
+            method: 'DELETE',
+            credentials: 'same-origin',
+            headers: { 'X-CSRF-Token': csrfToken }
+        });
     } catch (e) {
-        showToast('Ошибка сети', 'error');
+        console.warn('Failed to disable series:', e);
     }
 }
 
@@ -273,7 +205,7 @@ async function completeEvent(id, checked) {
             if (document.getElementById('page-dashboard')?.classList.contains('active')) {
                 renderDashboard();
             }
-            showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
+            showToast(checked ? 'Завершено' : 'Восстановлено', 'success');
         }
     } catch (e) {
         showToast('Ошибка сети', 'error');
