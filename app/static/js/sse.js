@@ -49,6 +49,15 @@ async function sseRefreshPage() {
     const modal = document.getElementById('event-modal');
     if (modal && modal.classList.contains('show')) return;
 
+    // Инвалидировать все кэши событий — при переходе на другую страницу
+    // pageInit увидит пустой кэш и загрузит свежие данные
+    cacheInvalidate('vksActive');
+    cacheInvalidate('vksCompleted');
+    cacheInvalidate('eventsActive');
+    cacheInvalidate('eventsCompleted');
+    cacheInvalidate('dashboard');
+    cacheInvalidate('calendar');
+
     // ── VKS / Мероприятия: один fetch events + stats ──
     if (page === 'vks-active' || page === 'vks-completed' ||
         page === 'events-active' || page === 'events-completed') {
