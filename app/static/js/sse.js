@@ -200,7 +200,7 @@ function _sseRerenderFromCache(boardId, filter, force) {
         if (todayE.length) html += renderVksBlock('Сегодня', todayE, 'today');
         if (tomorrowE.length) html += renderVksBlock('Завтра', tomorrowE, 'tomorrow');
         if (dayAfterE.length) html += renderVksBlock('Послезавтра', dayAfterE, 'day-after');
-        if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');Как
+        if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
     }
 
     let sentinel = board.querySelector('.scroll-sentinel');
