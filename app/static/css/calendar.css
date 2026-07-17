@@ -367,7 +367,6 @@
 .cal-ev:hover.type-board { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 55%, var(--bg)); }
 .cal-ev:hover.type-reception { border-color: var(--fg-muted); background: color-mix(in srgb, var(--fg-muted) 55%, var(--bg)); }
 
-.cal-ev.completed { position: relative; }
 .cal-ev.completed::after {
   content: '';
   position: absolute;
