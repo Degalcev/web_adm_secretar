@@ -15,11 +15,10 @@ from database.requests import (
     get_series_exceptions,
 )
 from database.sending import (
-    create_event, update_event, delete_event, lock_event, unlock_event,
-    create_event_participant, delete_event_participant, get_event_participants,
+    add_event, update_event, delete_event, lock_event, unlock_event,
+    add_event_participants, remove_event_participant, replace_event_participants,
     create_event_series, delete_event_series, add_series_exception, delete_series_exception,
-    add_pending_document, delete_document, update_document_event,
-    update_participant_user_ids,
+    add_document, delete_document,
 )
 
 
