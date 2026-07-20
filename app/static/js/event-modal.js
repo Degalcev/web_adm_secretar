@@ -461,6 +461,8 @@ async function saveEvent() {
             }
 
             closeEventModal();
+            // Собственное действие: обновить доску/счётчики (SSE мог быть подавлен гейтом модалки)
+            if (typeof refreshCurrentBoard === 'function') refreshCurrentBoard();
             showToast(wasEditing ? (_modalMode === 'events' ? 'Мероприятие обновлено' : 'ВКС обновлено') : (_modalMode === 'events' ? 'Мероприятие добавлено' : 'ВКС добавлено'), 'success');
         } else {
             showToast(data.error || 'Ошибка', 'error');

@@ -200,11 +200,8 @@ async function completeEvent(id, checked) {
         });
         const data = await resp.json();
         if (data.ok) {
-            renderVksBoard('vks-board-active', 'active', true);
-            renderVksBoard('vks-board-completed', 'completed', true);
-            if (document.getElementById('page-dashboard')?.classList.contains('active')) {
-                renderDashboard();
-            }
+            // Единое обновление: список + СЧЁТЧИКИ + инвалидация кэша
+            if (typeof refreshCurrentBoard === 'function') refreshCurrentBoard();
             showToast(checked ? 'Завершено' : 'Восстановлено', 'success');
         }
     } catch (e) {
@@ -225,11 +222,8 @@ async function deleteEvent(id) {
         });
         const data = await resp.json();
         if (data.ok) {
-            renderVksBoard('vks-board-active', 'active', true);
-            renderVksBoard('vks-board-completed', 'completed', true);
-            if (document.getElementById('page-dashboard')?.classList.contains('active')) {
-                renderDashboard();
-            }
+            // Единое обновление: список + СЧЁТЧИКИ + инвалидация кэша
+            if (typeof refreshCurrentBoard === 'function') refreshCurrentBoard();
             ConfirmManager.close();
             closeEventModal();
             showToast('Удалено', 'success');

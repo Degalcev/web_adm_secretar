@@ -43,11 +43,17 @@ function debounceRefreshEvents() {
 // ─── Единая функция SSE обновления ─────────────────────────────────
 
 async function sseRefreshPage() {
-    const page = currentPage;
-    if (!page) return;
-
+    // Пока открыта модалка — НЕ трогаем кэш/доску (данные модалки берутся отдельно)
     const modal = document.getElementById('event-modal');
     if (modal && modal.classList.contains('show')) return;
+    await refreshCurrentBoard();
+}
+
+// Явное обновление текущей доски из БД с перезаписью кэша (без гейта на модалку).
+// Страницы по-прежнему рендерятся из кэша — здесь мы лишь обновляем кэш после мутации.
+async function refreshCurrentBoard() {
+    const page = currentPage;
+    if (!page) return;
 
     // Инвалидировать все кэши событий — при переходе на другую страницу
     // pageInit увидит пустой кэш и загрузит свежие данные
@@ -94,10 +100,13 @@ async function sseRefreshPage() {
 
         cacheSet(cacheKey, { events, stats, loaded: true, hasMore: false });
 
+        // Перерисовать СЧЁТЧИКИ (карточки статистики) — иначе доска обновится, а счётчики нет
         if (isVks) {
+            if (stats) _vksRenderStats(stats);
             const boardId = filter === 'active' ? 'vks-board-active' : 'vks-board-completed';
             renderVksBoard(boardId, filter, true);
         } else {
+            if (stats) _eventsRenderStats(stats);
             eventsRenderBoard();
         }
         return;
