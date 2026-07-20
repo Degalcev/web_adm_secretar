@@ -633,6 +633,7 @@ function _renderParticipants() {
     if (!list) return;
     list.innerHTML = _modalParticipants.map((p, i) =>
         `<div class="event-participant-tag">
+            <span class="ep-av">${esc((p.name||'?').charAt(0))}</span>
             <span>${esc(p.name)}</span>
             <button class="event-participant-remove" onclick="removeParticipant(${i})">✕</button>
         </div>`

@@ -142,3 +142,53 @@
   from { transform: translateY(100%); }
   to   { transform: translateY(0); }
 }
+
+/* ─── Полировка формы (как в превью) ───────────────────────────────── */
+.event-modal-modern .form-group label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--fg-subtle);
+  margin-bottom: 5px;
+}
+.event-modal-modern .form-group input,
+.event-modal-modern .form-group select,
+.event-modal-modern .form-group textarea {
+  border-radius: 10px;
+  transition: border-color 0.15s var(--ease-standard), box-shadow 0.15s var(--ease-standard);
+}
+.event-modal-modern .form-group input:focus,
+.event-modal-modern .form-group select:focus,
+.event-modal-modern .form-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Чипы участников — пилюли с аватаром-инициалом */
+.event-modal-modern .event-participant-tag {
+  border-radius: 99px;
+  padding: 3px 10px 3px 3px;
+  gap: 6px;
+}
+.event-modal-modern .event-participant-tag .ep-av {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent), var(--accent-ambient));
+  color: #03121a;
+  font-weight: 700;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Документы — чуть более скруглённые в современном скине */
+.event-modal-modern .doc-card { border-radius: 12px; }
+.event-modal-modern .doc-card-icon { border-radius: 10px; }
+
+/* Кнопка повтора — единый радиус */
+.event-modal-modern #event-repeat-btn { border-radius: 10px; }
