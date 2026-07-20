@@ -98,36 +98,8 @@ async function _vksLoadAll(boardId, filter) {
         if (locVal) params.set('location_id', locVal);
         if (searchVal) params.set('search', searchVal);
 
-        const dateFilter = getDateFilter(prefix);
-        if (dateFilter.year || dateFilter.month || dateFilter.day) {
-            const y = dateFilter.year || new Date().getFullYear();
-            const m = dateFilter.month ? String(dateFilter.month).padStart(2, '0') : '01';
-            const mEnd = dateFilter.month ? String(dateFilter.month).padStart(2, '0') : '12';
-            if (dateFilter.day) {
-                const d = String(dateFilter.day).padStart(2, '0');
-                params.set('from', `${y}-${m}-${d}`);
-                params.set('to', `${y}-${m}-${d}`);
-            } else {
-                params.set('from', `${y}-${m}-01`);
-                const lastDay = new Date(y, dateFilter.month ? Number(dateFilter.month) : 12, 0).getDate();
-                params.set('to', `${y}-${mEnd}-${lastDay}`);
-            }
-        }
-
-        if (_quickFilter) {
-            const today = localDateStr(new Date());
-            const tomorrow = localDateStr(new Date(Date.now() + 86400000));
-            if (_quickFilter === 'today') {
-                params.set('from', today); params.set('to', today);
-            } else if (_quickFilter === 'soon') {
-                params.set('from', tomorrow);
-            } else if (_quickFilter === 'missed') {
-                params.set('to', localDateStr(new Date(Date.now() - 86400000)));
-            } else if (_quickFilter === 'active') {
-                params.set('from', today);
-            }
-        }
-
+        // Фильтры по дате/быстрые фильтры применяются клиентски после развёртки серий (общее ядро),
+        // поэтому здесь грузим ВСЕ базовые строки (иначе серии вне окна потеряются).
         const resp = await fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' });
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data = await resp.json();
@@ -240,58 +212,9 @@ async function _vksLoadMore(boardId, filter) {
 }
 
 function _vksRenderBoard(boardId, filter) {
-    const board = document.getElementById(boardId);
-    if (!board) return;
-    const p = _vksPagination[boardId];
-    if (!p) return;
-
-    const events = p.events;
-
-    let html = '';
-    if (!events.length && !p.hasMore) {
-        html = '<div class="empty-state">Нет мероприятий</div>';
-    } else if (filter === 'completed') {
-        // Завершённые — единый список, count из stats
-        const stats = cacheGet('vksCompleted')?.data?.stats;
-        const totalCount = stats?.total ?? events.length;
-        html += renderVksBlock('Завершённые', events, 'completed', totalCount);
-    } else {
-        // Текущие — группировка по датам
-        const now = new Date();
-        const today = localDateStr(now);
-        const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-        const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
-
-        const missed = [], todayEvents = [], tomorrowEvents = [], dayAfterEvents = [], soon = [];
-        events.forEach(e => {
-            if (!e.date || e.date < today) missed.push(e);
-            else if (e.date === today) todayEvents.push(e);
-            else if (e.date === tomorrow) tomorrowEvents.push(e);
-            else if (e.date === dayAfter) dayAfterEvents.push(e);
-            else soon.push(e);
-        });
-
-        if (missed.length)       html += renderVksBlock('Пропущенные', missed, 'missed');
-        if (todayEvents.length)  html += renderVksBlock('Сегодня', todayEvents, 'today');
-        if (tomorrowEvents.length) html += renderVksBlock('Завтра', tomorrowEvents, 'tomorrow');
-        if (dayAfterEvents.length) html += renderVksBlock('Послезавтра', dayAfterEvents, 'day-after');
-        if (soon.length)         html += renderVksBlock('Скоро', soon, 'soon');
-    }
-
-    // Сохраняем sentinel
-    let sentinel = board.querySelector('.scroll-sentinel');
-    if (!sentinel) {
-        sentinel = document.createElement('div');
-        sentinel.className = 'scroll-sentinel';
-        sentinel.style.height = '1px';
-    }
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    while (board.firstChild) board.removeChild(board.firstChild);
-    while (temp.firstChild) board.appendChild(temp.firstChild);
-    board.appendChild(sentinel);
+    // Единый путь рендера через общее ядро (_sseRerenderFromCache)
+    _sseRerenderFromCache(boardId, filter, true);
 }
-
 function renderVksBlock(title, events, type, totalCount) {
     const icons = {
         missed:    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,

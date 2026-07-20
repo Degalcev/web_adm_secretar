@@ -1,4 +1,5 @@
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
+import calendar as _calmod
 from loguru import logger
 from sqlalchemy import select, update, and_, or_, func
 
@@ -263,6 +264,163 @@ async def get_event_counts_by_date(completed: bool = False) -> dict:
         soon = (await session.execute(soon_q)).scalar() or 0
         missed = (await session.execute(missed_q)).scalar() or 0
         return {'total': total, 'today': today_count, 'soon': soon, 'missed': missed}
+
+
+# ─ Развёртка серий (единый источник для счётчиков) ─
+# Порт JS _seriesOccurrences из calendar.js — должен совпадать 1:1.
+_WD_SHORT = {'monday': 'mon', 'tuesday': 'tue', 'wednesday': 'wed', 'thursday': 'thu',
+             'friday': 'fri', 'saturday': 'sat', 'sunday': 'sun'}
+_WD = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']  # weekday(): Mon=0..Sun=6
+
+
+def expand_series_dates(freq, interval_val, by_day, until, base_date,
+                        range_start, range_end, skip_dates=None):
+    if not base_date or not range_start or not range_end:
+        return []
+    skip_dates = skip_dates or set()
+    freq = freq or 'weekly'
+    try:
+        interval = max(1, int(interval_val or 1))
+    except (TypeError, ValueError):
+        interval = 1
+    days = [_WD_SHORT.get(d, d) for d in (by_day or [])]
+    end = range_end
+    if until and until < end:
+        end = until
+    if base_date > end:
+        return []
+    out = []
+
+    def push_if(d):
+        if d < base_date or d > end or d < range_start:
+            return
+        if d in skip_dates:
+            return
+        out.append(d)
+
+    if freq == 'daily':
+        d = base_date
+        while d <= end:
+            push_if(d)
+            d = d + timedelta(days=interval)
+    elif freq == 'weekly':
+        wanted = days if days else [_WD[base_date.weekday()]]
+        anchor = base_date - timedelta(days=base_date.weekday())
+        week = anchor
+        guard = 0
+        while week <= end and guard < 4000:
+            guard += 1
+            weeks_diff = (week - anchor).days // 7
+            if weeks_diff % interval == 0:
+                for i in range(7):
+                    if _WD[i] not in wanted:
+                        continue
+                    push_if(week + timedelta(days=i))
+            week = week + timedelta(days=7)
+    elif freq == 'monthly':
+        dom = base_date.day
+        y, m = base_date.year, base_date.month
+        guard = 0
+        while guard < 4000:
+            guard += 1
+            dim = _calmod.monthrange(y, m)[1]
+            d = date(y, m, min(dom, dim))
+            if d > end:
+                break
+            push_if(d)
+            m += interval
+            y += (m - 1) // 12
+            m = ((m - 1) % 12) + 1
+
+    out.sort()
+    return out
+
+
+async def count_event_occurrences(
+    completed: bool = False,
+    event_type: str = None,
+    exclude_type: str = None,
+    location_id: str = None,
+    organizer_id: str = None,
+    search: str = None,
+    date_from: date = None,
+    date_to: date = None,
+    horizon_days: int = 60,
+    past_days: int = 365,
+) -> dict:
+    today = date.today()
+    window_start = date_from if date_from else (today - timedelta(days=past_days))
+    window_end = date_to if date_to else (today + timedelta(days=horizon_days))
+
+    def base_filters(q):
+        if completed is not None:
+            q = q.where(Event.completed == completed)
+        if event_type:
+            q = q.where(Event.type == event_type)
+        if exclude_type:
+            q = q.where(Event.type != exclude_type)
+        if location_id:
+            q = q.where(Event.location_id == location_id)
+        if organizer_id:
+            q = q.where(Event.organizer_id == organizer_id)
+        if search:
+            q = q.where(or_(Event.description.ilike(f'%{search}%'),
+                            Event.url.ilike(f'%{search}%')))
+        return q
+
+    today_c = soon_c = missed_c = 0
+    async with async_session() as session:
+        base_ns = base_filters(select(func.count(Event.id)).where(Event.series_id.is_(None)))
+        if window_start <= today <= window_end:
+            today_c += (await session.execute(base_ns.where(Event.date == today))).scalar() or 0
+        if window_end > today:
+            s_start = max(window_start, today + timedelta(days=1))
+            soon_c += (await session.execute(
+                base_ns.where(Event.date >= s_start, Event.date <= window_end))).scalar() or 0
+        if window_start < today:
+            m_end = min(window_end, today - timedelta(days=1))
+            missed_c += (await session.execute(
+                base_ns.where(Event.date >= window_start, Event.date <= m_end))).scalar() or 0
+
+        series_rows = list(await session.scalars(
+            base_filters(select(Event).where(Event.series_id.is_not(None)))))
+        sids = list({e.series_id for e in series_rows})
+        series_by_id = {}
+        exc_by_series = {}
+        if sids:
+            for srow in await session.scalars(select(EventSeries).where(EventSeries.id.in_(sids))):
+                series_by_id[srow.id] = srow
+            for x in await session.scalars(
+                select(EventSeriesException).where(EventSeriesException.series_id.in_(sids))):
+                if x.action == 'skip':
+                    exc_by_series.setdefault(x.series_id, set()).add(x.original_date)
+
+    def bucket(d):
+        nonlocal today_c, soon_c, missed_c
+        if d == today:
+            today_c += 1
+        elif d > today:
+            soon_c += 1
+        else:
+            missed_c += 1
+
+    for e in series_rows:
+        s = series_by_id.get(e.series_id)
+        if not s:
+            if window_start <= e.date <= window_end:
+                bucket(e.date)
+            continue
+        for d in expand_series_dates(
+            s.freq, s.interval_val, s.by_day, s.until, e.date,
+            window_start, window_end, exc_by_series.get(e.series_id, set())):
+            bucket(d)
+
+    return {
+        'total': today_c + soon_c + missed_c,
+        'today': today_c,
+        'soon': soon_c,
+        'missed': missed_c,
+    }
 
 
 async def get_events_by_date_range(start_date: date, end_date: date):

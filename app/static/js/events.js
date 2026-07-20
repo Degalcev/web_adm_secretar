@@ -32,6 +32,32 @@ function _eventsRenderStats(stats) {
     set('stat-evt-missed', stats.missed || 0);
 }
 
+// Проброс активных фильтров в запрос счётчиков (чтобы карточки совпадали со списком)
+function _eventsAppendFilters(params) {
+    const org = document.getElementById('f-events-org')?.value || '';
+    const loc = document.getElementById('f-events-loc')?.value || '';
+    const desc = (document.getElementById('f-events-desc')?.value || '').trim();
+    if (org) params.set('organizer_id', org);
+    if (loc) params.set('location_id', loc);
+    if (desc) params.set('search', desc);
+    const monF = document.getElementById('f-events-month')?.value || '';
+    const yearF = document.getElementById('f-events-year')?.value || '';
+    if (yearF || monF) {
+        const y = yearF ? parseInt(yearF, 10) : new Date().getFullYear();
+        const pad = n => String(n).padStart(2, '0');
+        if (monF) {
+            const m = parseInt(monF, 10);
+            const last = new Date(y, m, 0).getDate();
+            params.set('from', `${y}-${pad(m)}-01`);
+            params.set('to', `${y}-${pad(m)}-${pad(last)}`);
+        } else {
+            params.set('from', `${y}-01-01`);
+            params.set('to', `${y}-12-31`);
+        }
+    }
+    return params;
+}
+
 async function _eventsFetch(status) {
     const cacheKey = status === 'active' ? 'eventsActive' : 'eventsCompleted';
     const isCompleted = status === 'completed';
@@ -41,6 +67,7 @@ async function _eventsFetch(status) {
     const statsParams = new URLSearchParams({ status });
     if (_eventsTypeFilter) statsParams.set('type', _eventsTypeFilter);
     else statsParams.set('exclude_type', 'ВКС');
+    _eventsAppendFilters(statsParams);
 
     const [eventsResp, statsResp] = await Promise.all([
         fetch(`/admin/api/events?${params}`, { credentials: 'same-origin' }),
@@ -238,6 +265,7 @@ async function eventsUpdateStats() {
         const params = new URLSearchParams({ status });
         if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
         else params.set('exclude_type', 'ВКС');
+        _eventsAppendFilters(params);
         const resp = await fetch(`/admin/api/events/stats?${params}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const stats = await resp.json();
@@ -350,143 +378,31 @@ function eventsRenderBoard() {
     const board = document.getElementById('events-board');
     if (!board) return;
 
-    const orgVal = document.getElementById('f-events-org')?.value || '';
-    const locVal = document.getElementById('f-events-loc')?.value || '';
-    const descVal = (document.getElementById('f-events-desc')?.value || '').toLowerCase();
-
     const cacheKey = _eventsCompleted ? 'eventsCompleted' : 'eventsActive';
     const cached = cacheGet(cacheKey);
-    const rawEvents = [...(cached?.data?.events || [])];
+    const rawEvents = cached?.data?.events || [];
 
-    // Серии: окно развёртки — по активным фильтрам, иначе ближайший период
-    const _dayF = document.getElementById('f-events-day')?.value || '';
-    const _monF = document.getElementById('f-events-month')?.value || '';
-    const _yearF = document.getElementById('f-events-year')?.value || '';
-    const _today0 = new Date(); _today0.setHours(0, 0, 0, 0);
-    let _winStart, _winEnd;
-    if (_yearF || _monF) {
-        const _y = _yearF ? parseInt(_yearF, 10) : _today0.getFullYear();
-        if (_monF) {
-            const _m = parseInt(_monF, 10) - 1;
-            _winStart = new Date(_y, _m, 1);
-            _winEnd = new Date(_y, _m + 1, 0);
-        } else {
-            _winStart = new Date(_y, 0, 1);
-            _winEnd = new Date(_y, 11, 31);
-        }
-    } else if (_eventsCompleted || _eventsQuickFilter === 'missed' || _dayF) {
-        _winStart = new Date(_today0); _winStart.setFullYear(_winStart.getFullYear() - 1);
-        _winEnd = new Date(_today0); _winEnd.setDate(_winEnd.getDate() + 366);
-    } else {
-        _winStart = new Date(_today0);
-        _winEnd = new Date(_today0); _winEnd.setDate(_winEnd.getDate() + 60);
-    }
-    const _winStartStr = localDateStr(_winStart);
-    const _winEndStr = localDateStr(_winEnd);
-
-    let events = [];
-    rawEvents.forEach(e => {
-        if (e.series_id && e.series && typeof expandSeriesInRange === 'function') {
-            const dates = expandSeriesInRange(e, _winStartStr, _winEndStr);
-            (dates.length ? dates : [e.date]).forEach(d => {
-                events.push({ ...e, _nextDate: d });
-            });
-        } else {
-            events.push(e);
-        }
+    // Единое ядро: развёртка серий + фильтры + группировка
+    const filters = readBoardFilters('f-events', {
+        statusFilter: _eventsCompleted ? 'completed' : 'active',
+        quickFilter: _eventsQuickFilter,
     });
+    const { list, buckets } = processBoardEvents(rawEvents, filters);
 
-    const getEDate = (e) => e._nextDate || e.date;
-
-    // Quick filter (today/soon/missed)
-    if (_eventsQuickFilter) {
-        const today = localDateStr(new Date());
-        if (_eventsQuickFilter === 'today') {
-            events = events.filter(e => getEDate(e) === today);
-        } else if (_eventsQuickFilter === 'soon') {
-            events = events.filter(e => getEDate(e) && getEDate(e) > today);
-        } else if (_eventsQuickFilter === 'missed') {
-            events = events.filter(e => !getEDate(e) || getEDate(e) < today);
-        }
-    }
-
-    // Date filter (day/month/year)
-    const dayVal = document.getElementById('f-events-day')?.value || '';
-    const monthVal = document.getElementById('f-events-month')?.value || '';
-    const yearVal = document.getElementById('f-events-year')?.value || '';
-    if (dayVal || monthVal || yearVal) {
-        events = events.filter(e => {
-            const ed = getEDate(e);
-            if (!ed) return false;
-            const d = new Date(ed + 'T00:00:00');
-            if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
-            if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
-            if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
-            return true;
-        });
-    }
-
-    // Apply filters
-    if (orgVal) events = events.filter(e => e.organizer_id === orgVal);
-    if (locVal) events = events.filter(e => e.location_id === locVal);
-    if (descVal) {
-        events = events.filter(e =>
-            (e.description || '').toLowerCase().includes(descVal) ||
-            (e.url || '').toLowerCase().includes(descVal)
-        );
-    }
-
-    if (!events.length) {
+    if (!list.length) {
         board.innerHTML = '<div class="empty-state">Нет мероприятий</div>';
         return;
     }
 
     let html = '';
-
     if (_eventsCompleted) {
-        // Завершённые — единый список без группировки по датам
         const sortByDateThenTime = (a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '').localeCompare(b.time || '');
-        events.sort(sortByDateThenTime);
+        list.sort(sortByDateThenTime);
         const stats = cacheGet('eventsCompleted')?.data?.stats;
-        const totalCount = stats?.total ?? events.length;
-        html += _eventsRenderBlock('Завершённые', events, 'completed', totalCount);
+        const totalCount = stats?.total ?? list.length;
+        html += _eventsRenderBlock('Завершённые', list, 'completed', totalCount);
     } else {
-        // Текущие — группировка по датам
-        const now = new Date();
-        const today = localDateStr(now);
-        const tmr = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-        const tomorrow = localDateStr(tmr);
-        const da = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
-        const dayAfter = localDateStr(da);
-
-        const missed = [];
-        const todayEvents = [];
-        const tomorrowEvents = [];
-        const dayAfterEvents = [];
-        const soon = [];
-
-        events.forEach(e => {
-            const ed = getEDate(e);
-            if (!ed || ed < today) missed.push(e);
-            else if (ed === today) todayEvents.push(e);
-            else if (ed === tomorrow) tomorrowEvents.push(e);
-            else if (ed === dayAfter) dayAfterEvents.push(e);
-            else soon.push(e);
-        });
-
-        const sortByTime = (a, b) => (a.time || '99:99').localeCompare(b.time || '99:99');
-        const sortByDateThenTime2 = (a, b) => (getEDate(a) || '').localeCompare(getEDate(b) || '') || sortByTime(a, b);
-        missed.sort(sortByDateThenTime2);
-        todayEvents.sort(sortByTime);
-        tomorrowEvents.sort(sortByTime);
-        dayAfterEvents.sort(sortByTime);
-        soon.sort(sortByDateThenTime2);
-
-        if (missed.length) html += _eventsRenderBlock('Пропущенные', missed, 'missed');
-        if (todayEvents.length) html += _eventsRenderBlock('Сегодня', todayEvents, 'today');
-        if (tomorrowEvents.length) html += _eventsRenderBlock('Завтра', tomorrowEvents, 'tomorrow');
-        if (dayAfterEvents.length) html += _eventsRenderBlock('Послезавтра', dayAfterEvents, 'day-after');
-        if (soon.length) html += _eventsRenderBlock('Скоро', soon, 'soon');
+        html += renderActiveBoardBlocks(buckets, _eventsRenderBlock);
     }
 
     // Preserve sentinel — don't use innerHTML

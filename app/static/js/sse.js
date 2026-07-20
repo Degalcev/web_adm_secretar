@@ -142,97 +142,22 @@ function _sseRerenderFromCache(boardId, filter, force) {
     }
     _sseLastHash[boardId] = p.events.map(e => e.id + (e.completed ? '1' : '0') + (e.locked_by || '') + (e.date || '') + (e.time || '') + (e.description || '')).join(',');
 
-    // Для серий: развернуть на ближайшие даты (14 дней)
-    const expandedEvents = [];
-    p.events.forEach(e => {
-        if (e.series_id && e.series && typeof expandSeriesForList === 'function') {
-            const dates = expandSeriesForList(e, 14);
-            dates.forEach(d => {
-                const copy = { ...e, _nextDate: d };
-                expandedEvents.push(copy);
-            });
-        } else {
-            expandedEvents.push(e);
-        }
-    });
-
-    const events = expandedEvents;
-    const now = new Date();
-    const today = localDateStr(now);
-    const tomorrow = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
-    const dayAfter = localDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
-
-    let filtered = events;
-    const getEDate = (e) => e._nextDate || e.date;
-
-    if (filter === 'active') {
-        filtered = events.filter(e => !e.completed);
-
-        if (typeof _quickFilter !== 'undefined' && _quickFilter) {
-            if (_quickFilter === 'today') {
-                filtered = filtered.filter(e => getEDate(e) === today);
-            } else if (_quickFilter === 'soon') {
-                filtered = filtered.filter(e => getEDate(e) && getEDate(e) > today);
-            } else if (_quickFilter === 'missed') {
-                filtered = filtered.filter(e => !getEDate(e) || getEDate(e) < today);
-            } else if (_quickFilter === 'active') {
-                filtered = filtered.filter(e => getEDate(e) && getEDate(e) >= today);
-            }
-        }
-
-        const prefix = boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed';
-        const dayVal = document.getElementById(`${prefix}-day`)?.value || '';
-        const monthVal = document.getElementById(`${prefix}-month`)?.value || '';
-        const yearVal = document.getElementById(`${prefix}-year`)?.value || '';
-        if (dayVal || monthVal || yearVal) {
-            filtered = filtered.filter(e => {
-                const ed = getEDate(e);
-                if (!ed) return false;
-                const d = new Date(ed + 'T00:00:00');
-                if (dayVal && d.getDate() !== parseInt(dayVal)) return false;
-                if (monthVal && (d.getMonth() + 1) !== parseInt(monthVal)) return false;
-                if (yearVal && d.getFullYear() !== parseInt(yearVal)) return false;
-                return true;
-            });
-        }
-
-        const orgVal = document.getElementById(`${prefix}-org`)?.value || '';
-        const locVal = document.getElementById(`${prefix}-loc`)?.value || '';
-        const descVal = (document.getElementById(`${prefix}-desc`)?.value || '').toLowerCase();
-        if (orgVal) filtered = filtered.filter(e => e.organizer_id === orgVal);
-        if (locVal) filtered = filtered.filter(e => e.location_id === locVal);
-        if (descVal) {
-            filtered = filtered.filter(e =>
-                (e.description || '').toLowerCase().includes(descVal) ||
-                (e.url || '').toLowerCase().includes(descVal)
-            );
-        }
-    } else if (filter === 'completed') {
-        filtered = events.filter(e => e.completed);
-    }
+    // Развёртка/фильтрация/группировка — через общее ядро (event-board-core.js)
+    const filters = readBoardFilters(
+        boardId === 'vks-board-active' ? 'f-vks-active' : 'f-vks-completed',
+        { statusFilter: filter, quickFilter: (typeof _quickFilter !== 'undefined' ? _quickFilter : '') }
+    );
+    const { list, buckets } = processBoardEvents(p.events, filters);
 
     let html = '';
-    if (!filtered.length) {
+    if (!list.length) {
         html = '<div class="empty-state">Нет мероприятий</div>';
     } else if (filter === 'completed') {
         const stats = cacheGet('vksCompleted')?.data?.stats;
-        const totalCount = stats?.total ?? filtered.length;
-        html += renderVksBlock('Завершённые', filtered, 'completed', totalCount);
+        const totalCount = stats?.total ?? list.length;
+        html += renderVksBlock('Завершённые', list, 'completed', totalCount);
     } else {
-        const missed = [], todayE = [], tomorrowE = [], dayAfterE = [], soon = [];
-        filtered.forEach(e => {
-            const ed = getEDate(e);
-            if (!ed || ed < today) missed.push(e);
-            else if (ed === today) todayE.push(e);
-            else if (ed === tomorrow) tomorrowE.push(e);
-            else if (ed === dayAfter) dayAfterE.push(e);
-            else soon.push(e);
-        });
-        if (missed.length) html += renderVksBlock('Пропущенные', missed, 'missed');
-        if (todayE.length) html += renderVksBlock('Сегодня', todayE, 'today');
-        if (tomorrowE.length) html += renderVksBlock('Завтра', tomorrowE, 'tomorrow');
-        if (dayAfterE.length) html += renderVksBlock('Послезавтра', dayAfterE, 'day-after');
-        if (soon.length) html += renderVksBlock('Скоро', soon, 'soon');
+        html += renderActiveBoardBlocks(buckets, renderVksBlock);
     }
 
     let sentinel = board.querySelector('.scroll-sentinel');

@@ -151,7 +151,29 @@ async function updateVksStats() {
     try {
         const isCompleted = (currentPage || '').includes('completed');
         const status = isCompleted ? 'completed' : 'active';
-        const resp = await fetch(`/admin/api/events/stats?status=${status}&type=ВКС`, { credentials: 'same-origin' });
+        const prefix = isCompleted ? 'f-vks-completed' : 'f-vks-active';
+        const params = new URLSearchParams({ status, type: 'ВКС' });
+        const org = document.getElementById(`${prefix}-org`)?.value || '';
+        const loc = document.getElementById(`${prefix}-loc`)?.value || '';
+        const search = (document.getElementById(`${prefix}-desc`)?.value || '').trim();
+        if (org) params.set('organizer_id', org);
+        if (loc) params.set('location_id', loc);
+        if (search) params.set('search', search);
+        const df = getDateFilter(prefix);
+        if (df.year || df.month) {
+            const y = df.year || new Date().getFullYear();
+            const pad = n => String(n).padStart(2, '0');
+            if (df.month) {
+                const m = parseInt(df.month, 10);
+                const last = new Date(y, m, 0).getDate();
+                params.set('from', `${y}-${pad(m)}-01`);
+                params.set('to', `${y}-${pad(m)}-${pad(last)}`);
+            } else {
+                params.set('from', `${y}-01-01`);
+                params.set('to', `${y}-12-31`);
+            }
+        }
+        const resp = await fetch(`/admin/api/events/stats?${params}`, { credentials: 'same-origin' });
         if (!resp.ok) return;
         const stats = await resp.json();
         _vksRenderStats(stats);

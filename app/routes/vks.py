@@ -9,7 +9,7 @@ from app.event_logger import capture_event_state, log_event_change, get_event_hi
 from app.event_types import validate_event_type
 from database.models import async_session, Event
 from database.requests import (
-    get_events, count_events, get_event_counts_by_date,
+    get_events, count_events, get_event_counts_by_date, count_event_occurrences,
     get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids,
     get_user_by_id, get_event_participants, get_event_series,
     get_series_exceptions,
@@ -687,24 +687,50 @@ async def get_events_stats(request: web.Request) -> web.Response:
         status = request.query.get('status', 'active')
         event_type = request.query.get('type', '').strip() or None
         exclude_type = request.query.get('exclude_type', '').strip() or None
+        organizer_id = request.query.get('organizer_id', '').strip() or None
+        location_id = request.query.get('location_id', '').strip() or None
+        search = request.query.get('search', '').strip() or None
+        date_from = _parse_date(request.query.get('from', ''))
+        date_to = _parse_date(request.query.get('to', ''))
         today = date.today()
 
-        completed = True if status == 'completed' else False
+        # Симметрия: и ВКС, и Мероприятия — это одна таблица с фильтром по типу.
+        # Активные списки разворачивают серии (общее ядро) — считаем по occurrences одной функцией.
+        # Завершённые не разворачиваются — считаем по строкам (base-row).
+        if status == 'completed':
+            completed = (status == 'completed')
+            common = dict(completed=completed, event_type=event_type, exclude_type=exclude_type,
+                          location_id=location_id, organizer_id=organizer_id, search=search)
 
-        total = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type)
-        today_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
-                                         date_from=today, date_to=today)
-        soon_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
-                                        date_from=today + timedelta(days=1))
-        missed_count = await count_events(completed=completed, event_type=event_type, exclude_type=exclude_type,
-                                          date_to=today - timedelta(days=1))
+            def _clip(lo, hi):
+                # Пересечение [lo, hi] с фильтром [date_from, date_to]; None — без границы
+                if date_from and (lo is None or date_from > lo):
+                    lo = date_from
+                if date_to and (hi is None or date_to < hi):
+                    hi = date_to
+                return lo, hi
 
-        return web.json_response({
-            'total': total,
-            'today': today_count,
-            'soon': soon_count,
-            'missed': missed_count,
-        })
+            async def _cnt(lo, hi):
+                if lo is not None and hi is not None and lo > hi:
+                    return 0
+                return await count_events(date_from=lo, date_to=hi, **common)
+
+            total = await _cnt(*_clip(None, None))
+            today_count = await _cnt(*_clip(today, today))
+            soon_count = await _cnt(*_clip(today + timedelta(days=1), None))
+            missed_count = await _cnt(*_clip(None, today - timedelta(days=1)))
+            return web.json_response({
+                'total': total, 'today': today_count,
+                'soon': soon_count, 'missed': missed_count,
+            })
+
+        # «Мероприятия» (активные, не-ВКС) — occurrence-based с учётом повторов
+        stats = await count_event_occurrences(
+            completed=False, event_type=event_type, exclude_type=exclude_type,
+            location_id=location_id, organizer_id=organizer_id, search=search,
+            date_from=date_from, date_to=date_to,
+        )
+        return web.json_response(stats)
     except Exception as e:
         logger.error('Ошибка stats: {}', repr(e))
         return web.json_response({'total': 0, 'today': 0, 'soon': 0, 'missed': 0})
