@@ -622,6 +622,8 @@ function onOrganizerTypeChange() {
 function _renderParticipants() {
     const list = document.getElementById('event-participants-list');
     if (!list) return;
+    const _pcEl = document.getElementById('event-participants-count');
+    if (_pcEl) _pcEl.textContent = _modalParticipants.length ? ('· ' + _modalParticipants.length) : '';
     list.innerHTML = _modalParticipants.map((p, i) =>
         `<div class="event-participant-tag">
             <span class="ep-av">${esc((p.name||'?').charAt(0))}</span>

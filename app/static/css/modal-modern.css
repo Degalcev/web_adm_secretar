@@ -282,3 +282,70 @@
 @media (max-width: 768px) {
   .event-modal-modern .em-grid2 { grid-template-columns: 1fr; }
 }
+
+/* ═══ Модалка повтора — привести к превью (компактно) ═══ */
+.repeat-modal {
+  max-width: 380px;
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.repeat-modal-header { padding: 14px 16px; }
+.repeat-modal-header h3 { font-size: 0.9rem; font-weight: 700; }
+.repeat-modal-body { padding: 16px; }
+.repeat-modal-footer { padding: 12px 16px; }
+
+/* Сегмент-переключатель типа */
+.repeat-modal .evt-repeat-type-row { gap: 6px; margin-bottom: 14px; }
+.repeat-modal .evt-repeat-type-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.repeat-modal .evt-repeat-type-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #03121a;
+}
+
+/* Дни недели — равномерно на всю ширину */
+.repeat-modal .evt-weekday-row { gap: 5px; }
+.repeat-modal .evt-wd-btn {
+  flex: 1;
+  width: auto;
+  height: auto;
+  padding: 8px 0;
+  border-radius: 8px;
+  background: transparent;
+}
+.repeat-modal .evt-wd-btn.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Числовой инпут */
+.repeat-modal .evt-repeat-num-input { width: 64px; }
+
+/* «До даты» — метка сверху, инпут на всю ширину */
+.repeat-modal .evt-repeat-until-row {
+  display: block;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.repeat-modal .evt-repeat-until-row label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--fg-subtle);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.repeat-modal .evt-repeat-until-row .form-input { width: 100%; }

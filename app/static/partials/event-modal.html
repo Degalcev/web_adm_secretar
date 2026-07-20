@@ -127,26 +127,13 @@
               <div class="em-card-head">
                 <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
                 <span class="em-card-title">Участники</span>
+                <span class="docs-label" id="event-participants-count"></span>
               </div>
               <div class="event-participants-list" id="event-participants-list"></div>
               <div class="event-participant-add">
                 <input type="text" id="event-participant-search" class="form-input" placeholder="Поиск сотрудника..." oninput="searchParticipants(this.value)">
                 <div class="event-participant-dropdown" id="event-participant-dropdown" style="display:none"></div>
               </div>
-            </section>
-
-            <!-- Повторять -->
-            <section class="em-card" data-sec="repeat">
-              <div class="em-card-head">
-                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>
-                <span class="em-card-title">Повтор</span>
-              </div>
-              <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-                <span class="pill-label" id="event-repeat-label">Повторять</span>
-              </button>
-              <input type="hidden" id="event-repeat-active" value="false">
-              <input type="hidden" id="event-repeat-type" value="daily">
             </section>
 
             <!-- Документы -->
@@ -166,6 +153,20 @@
                 Добавить документ
                 <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
               </label>
+            </section>
+
+            <!-- Повторять -->
+            <section class="em-card" data-sec="repeat">
+              <div class="em-card-head">
+                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>
+                <span class="em-card-title">Повтор</span>
+              </div>
+              <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                <span class="pill-label" id="event-repeat-label">Повторять</span>
+              </button>
+              <input type="hidden" id="event-repeat-active" value="false">
+              <input type="hidden" id="event-repeat-type" value="daily">
             </section>
           </div>
         </div>
