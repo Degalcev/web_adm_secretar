@@ -186,7 +186,16 @@
         <button class="btn btn-primary" id="event-modal-save-btn" onclick="saveEvent()">Сохранить</button>
       </div>
     </div>
+    <!-- История изменений — выезжающая панель внутри модалки -->
+    <div class="event-timeline-backdrop" id="event-modal-audit-backdrop" style="display:none" onclick="hideEventHistory()"></div>
+    <div class="event-timeline" id="event-modal-audit" style="display:none">
+      <div class="tl-head">
+        <h4>История изменений</h4>
+        <button type="button" class="icon-btn" onclick="hideEventHistory()" title="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="tl-body" id="event-modal-audit-body"></div>
+    </div>
   </div>
-  <!-- Timeline drawer (outside modal for overflow escape) -->
-  <div class="event-timeline" id="event-modal-audit" style="display:none"></div>
 </div>

@@ -180,7 +180,7 @@ async function openEditEventModal(id, mode = 'vks') {
         auditBtn.style.display = 'inline-flex';
         auditBtn.onclick = () => {
             const container = document.getElementById('event-modal-audit');
-            if (container.style.display === 'block') {
+            if (container.classList.contains('drawer-open')) {
                 hideEventHistory();
             } else {
                 loadEventHistory(e.id);
@@ -471,33 +471,17 @@ async function saveEvent() {
 }
 
 async function loadEventHistory(eventId) {
-    const container = document.getElementById('event-modal-audit');
-    if (!container) return;
+    const drawer = document.getElementById('event-modal-audit');
+    if (!drawer) return;
+    const body = document.getElementById('event-modal-audit-body') || drawer;
+    const backdrop = document.getElementById('event-modal-audit-backdrop');
 
-    container.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
-    // Position drawer at right edge of modal-body, 3/4 width
-    const body = document.querySelector('.event-modal-flat .modal-body');
-    if (body) {
-        const rect = body.getBoundingClientRect();
-        if (window.innerWidth <= 768) {
-            // Мобильный — панель на всю ширину тела модалки
-            container.style.top = rect.top + 'px';
-            container.style.left = rect.left + 'px';
-            container.style.width = rect.width + 'px';
-            container.style.height = rect.height + 'px';
-        } else {
-            const w = Math.round(rect.width * 0.75);
-            container.style.top = (rect.top + 1) + 'px';
-            container.style.left = (rect.right - w) + 'px';
-            container.style.width = w + 'px';
-            container.style.height = (rect.height - 2) + 'px';
-        }
-    }
-    container.style.display = 'block';
+    body.innerHTML = '<div class="timeline-loading">Загрузка...</div>';
+    if (backdrop) backdrop.style.display = 'block';
+    drawer.style.display = 'flex';
     requestAnimationFrame(() => {
-        container.classList.add('drawer-open');
-        const wrapper = container.closest('.event-modal-body-wrapper') || document.querySelector('.event-modal-body-wrapper');
-        if (wrapper) wrapper.classList.add('timeline-dimmed');
+        drawer.classList.add('drawer-open');
+        if (backdrop) backdrop.classList.add('show');
     });
 
     try {
@@ -508,7 +492,7 @@ async function loadEventHistory(eventId) {
         const data = await res.json();
 
         if (!data.ok || !data.history || data.history.length === 0) {
-            container.innerHTML = '<div class="timeline-empty">История изменений пуста</div>';
+            body.innerHTML = '<div class="timeline-empty">История изменений пуста</div>';
             return;
         }
 
@@ -583,20 +567,24 @@ async function loadEventHistory(eventId) {
             html += '</div></div>';
         }
 
-        container.innerHTML = html;
+        body.innerHTML = html;
     } catch (err) {
-        container.innerHTML = '<div class="timeline-error">Ошибка загрузки истории</div>';
+        body.innerHTML = '<div class="timeline-error">Ошибка загрузки истории</div>';
     }
 }
 
 function hideEventHistory() {
-    const container = document.getElementById('event-modal-audit');
-    if (container) {
-        container.classList.remove('drawer-open');
-        container.style.display = 'none';
-        container.innerHTML = '';
-        const wrapper = document.querySelector('.event-modal-body-wrapper');
-        if (wrapper) wrapper.classList.remove('timeline-dimmed');
+    const drawer = document.getElementById('event-modal-audit');
+    const backdrop = document.getElementById('event-modal-audit-backdrop');
+    if (drawer) {
+        drawer.classList.remove('drawer-open');
+        drawer.style.display = 'none';
+        const body = document.getElementById('event-modal-audit-body');
+        if (body) body.innerHTML = '';
+    }
+    if (backdrop) {
+        backdrop.classList.remove('show');
+        backdrop.style.display = 'none';
     }
 }
 
