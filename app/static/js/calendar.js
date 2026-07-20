@@ -166,157 +166,130 @@ function _calFindOverlapGroups(events) {
 
 // ─── Series expansion ───────────────────────────────────────────────
 
-// Генерирует даты наступлений серии в окне today..today+daysAhead (для списков)
-function expandSeriesForList(event, daysAhead = 14) {
-    if (!event.series_id || !event.series) return [event.date];
-    const series = event.series;
-    const baseDate = new Date(event.date + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const until = series.until ? new Date(series.until + 'T00:00:00') : null;
-    const interval = series.interval_val || 1;
-    const byDay = series.by_day || [];
-    const dayMap = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0,
-                     'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
-    const shortDays = { 'monday':'mon', 'tuesday':'tue', 'wednesday':'wed', 'thursday':'thu', 'friday':'fri', 'saturday':'sat', 'sunday':'sun' };
-    const normByDay = byDay.map(d => shortDays[d] || d);
-    const windowEnd = new Date(today);
-    windowEnd.setDate(windowEnd.getDate() + daysAhead);
+// Приводит дату (строку YYYY-MM-DD или Date) к локальной полуночи
+function _dOnly(v) {
+    if (!v) return null;
+    if (v instanceof Date) { const d = new Date(v); d.setHours(0, 0, 0, 0); return d; }
+    const d = new Date(String(v).slice(0, 10) + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+}
 
-    const dates = [];
-    let current = baseDate > today ? new Date(baseDate) : new Date(today);
+// ─── Единый генератор дат серии ────────────────────
+// Возвращает массив дат (YYYY-MM-DD) в окне [rangeStart, rangeEnd] включительно.
+// Учитывает freq/interval/by_day/until и исключения (skip). Общий для списка и календаря.
+function _seriesOccurrences(series, baseDateStr, rangeStart, rangeEnd, exceptions) {
+    if (!series || !baseDateStr) return [];
+    const SHORT = { monday: 'mon', tuesday: 'tue', wednesday: 'wed', thursday: 'thu', friday: 'fri', saturday: 'sat', sunday: 'sun' };
+    const WD = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']; // индекс = getDay()
+    const freq = series.freq || 'weekly';
+    const interval = Math.max(1, parseInt(series.interval_val, 10) || 1);
+    const byDay = (series.by_day || []).map(d => SHORT[d] || d);
+    const base = _dOnly(baseDateStr);
+    const until = series.until ? _dOnly(series.until) : null;
+    const start = _dOnly(rangeStart);
+    let end = _dOnly(rangeEnd);
+    if (!base || !start || !end) return [];
+    if (until && until < end) end = until;
+    if (base > end) return [];
+    const exc = exceptions instanceof Map ? exceptions : new Map();
+    const out = [];
 
-    if (series.freq === 'daily') {
-        if (current <= baseDate) current = new Date(baseDate);
-        const diff = Math.ceil((current - baseDate) / (1000 * 60 * 60 * 24));
-        const stepsToAdvance = diff % interval === 0 ? 0 : interval - (diff % interval);
-        current.setDate(current.getDate() + stepsToAdvance);
-        while (current <= windowEnd && (!until || current <= until)) {
-            dates.push(localDateStr(current));
-            current.setDate(current.getDate() + interval);
+    const pushIf = (d) => {
+        if (d < base || d > end || d < start) return;
+        const ds = localDateStr(d);
+        const ex = exc.get(ds);
+        if (ex && ex.action === 'skip') return;
+        out.push(ds);
+    };
+
+    if (freq === 'daily') {
+        const d = new Date(base);
+        while (d <= end) { pushIf(d); d.setDate(d.getDate() + interval); }
+    } else if (freq === 'weekly') {
+        const days = byDay.length ? byDay : [WD[base.getDay()]];
+        // Понедельник недели базовой даты — точка отсчёта интервала недель
+        const anchor = new Date(base);
+        anchor.setDate(anchor.getDate() - ((base.getDay() + 6) % 7));
+        const week = new Date(anchor);
+        let guard = 0;
+        while (week <= end && guard++ < 4000) {
+            const weeksDiff = Math.round((week - anchor) / (7 * 24 * 3600 * 1000));
+            if (weeksDiff % interval === 0) {
+                for (let i = 0; i < 7; i++) {
+                    if (!days.includes(WD[(i + 1) % 7])) continue; // i: 0=Пн..6=Вс
+                    const d = new Date(week);
+                    d.setDate(d.getDate() + i);
+                    pushIf(d);
+                }
+            }
+            week.setDate(week.getDate() + 7);
         }
-    } else if (series.freq === 'weekly') {
-        if (current <= baseDate) current = new Date(baseDate);
-        // Найти ближайший подходящий день недели
-        for (let i = 0; i < 8; i++) {
-            const dow = current.getDay();
-            const dayName = Object.keys(dayMap).find(k => dayMap[k] === dow);
-            if (normByDay.length === 0 || normByDay.includes(dayName)) break;
-            current.setDate(current.getDate() + 1);
-        }
-        const weeksDiff = Math.round((current - baseDate) / (7 * 24 * 60 * 60 * 1000));
-        if (weeksDiff % interval !== 0) {
-            const remain = interval - (weeksDiff % interval);
-            current.setDate(current.getDate() + remain * 7);
-        }
-        while (current <= windowEnd && (!until || current <= until)) {
-            dates.push(localDateStr(current));
-            current.setDate(current.getDate() + interval * 7);
-        }
-    } else if (series.freq === 'monthly') {
-        if (current <= baseDate) current = new Date(baseDate);
-        const monthsDiff = (current.getFullYear() - baseDate.getFullYear()) * 12 + (current.getMonth() - baseDate.getMonth());
-        if (monthsDiff % interval !== 0) {
-            const remain = interval - (monthsDiff % interval);
-            current.setMonth(current.getMonth() + remain);
-        }
-        current.setDate(baseDate.getDate());
-        while (current <= windowEnd && (!until || current <= until)) {
-            dates.push(localDateStr(current));
-            current.setMonth(current.getMonth() + interval);
+    } else if (freq === 'monthly') {
+        const dom = base.getDate();
+        let y = base.getFullYear();
+        let m = base.getMonth();
+        let guard = 0;
+        while (guard++ < 4000) {
+            const dim = new Date(y, m + 1, 0).getDate(); // дней в месяце (клэмп 29–31)
+            const d = new Date(y, m, Math.min(dom, dim));
+            if (d > end) break;
+            pushIf(d);
+            m += interval;
+            y += Math.floor(m / 12);
+            m = ((m % 12) + 12) % 12;
         }
     }
+
+    out.sort();
+    return out;
+}
+
+// Развернуть серию в конкретные даты в произвольном окне (строки YYYY-MM-DD)
+function expandSeriesInRange(event, startStr, endStr) {
+    if (!event.series_id || !event.series) {
+        return (event.date >= startStr && event.date <= endStr) ? [event.date] : [];
+    }
+    const exc = new Map();
+    (event.series_exceptions || []).forEach(x => exc.set(x.original_date, x));
+    return _seriesOccurrences(event.series, event.date, startStr, endStr, exc);
+}
+
+// Совместимость: даты серии на ближайшие daysAhead дней (для списков)
+function expandSeriesForList(event, daysAhead = 14) {
+    if (!event.series_id || !event.series) return [event.date];
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const end = new Date(today); end.setDate(end.getDate() + daysAhead);
+    const dates = expandSeriesInRange(event, localDateStr(today), localDateStr(end));
     return dates.length ? dates : [event.date];
 }
 
 // Обратная совместимость — возвращает первую дату
 function getNextOccurrenceDate(event) {
-    return expandSeriesForList(event, 0)[0] || event.date;
+    if (!event.series_id || !event.series) return event.date;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const end = new Date(today); end.setFullYear(end.getFullYear() + 2);
+    const dates = expandSeriesInRange(event, localDateStr(today), localDateStr(end));
+    return dates[0] || event.date;
 }
 
+// Развернуть все серии в наборе событий на окно [dateFrom, dateTo] (для календаря)
 function expandSeries(events, dateFrom, dateTo) {
     const expanded = [];
-    const seriesMap = {};
-
+    const seen = {};
     events.forEach(e => {
-        if (e.series_id) {
-            if (!seriesMap[e.series_id]) seriesMap[e.series_id] = [];
-            seriesMap[e.series_id].push(e);
+        if (e.series_id && e.series) {
+            if (seen[e.series_id]) return;
+            seen[e.series_id] = true;
+            const exc = new Map();
+            (e.series_exceptions || []).forEach(x => exc.set(x.original_date, x));
+            const dates = _seriesOccurrences(e.series, e.date, dateFrom, dateTo, exc);
+            dates.forEach(ds => {
+                expanded.push({ ...e, date: ds, series_id: e.series_id, is_exception: exc.has(ds) });
+            });
         } else {
             expanded.push(e);
         }
     });
-
-    Object.keys(seriesMap).forEach(seriesId => {
-        const seriesEvents = seriesMap[seriesId];
-        const baseEvent = seriesEvents[0];
-        if (!baseEvent || !baseEvent.series) return;
-
-        const series = baseEvent.series;
-        const exceptions = new Map();
-        (baseEvent.series_exceptions || []).forEach(exc => {
-            exceptions.set(exc.original_date, exc);
-        });
-
-        const baseDate = new Date(baseEvent.date + 'T00:00:00');
-        const until = series.until ? new Date(series.until + 'T00:00:00') : new Date(dateTo + 'T23:59:59');
-        const interval = series.interval_val || 1;
-        const byDay = series.by_day || [];
-
-        const dayMap = { 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'sun': 0,
-                         'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 0 };
-        const shortDays = { 'monday':'mon', 'tuesday':'tue', 'wednesday':'wed', 'thursday':'thu', 'friday':'fri', 'saturday':'sat', 'sunday':'sun' };
-        const normByDay = byDay.map(d => shortDays[d] || d);
-
-        let current = new Date(baseDate);
-        const dateToFull = new Date(dateTo + 'T23:59:59');
-        while (current <= until && current <= dateToFull) {
-            const dateStr = `${current.getFullYear()}-${String(current.getMonth()+1).padStart(2,'0')}-${String(current.getDate()).padStart(2,'0')}`;
-
-            if (current >= new Date(dateFrom + 'T00:00:00') && current <= until) {
-                const dayOfWeek = current.getDay();
-                const dayName = Object.keys(dayMap).find(k => dayMap[k] === dayOfWeek);
-
-                if (series.freq === 'weekly' && normByDay.length > 0) {
-                    if (normByDay.includes(dayName)) {
-                        const exc = exceptions.get(dateStr);
-                        if (exc && exc.action === 'skip') {
-                            current.setDate(current.getDate() + 1);
-                            continue;
-                        }
-                        expanded.push({
-                            ...baseEvent,
-                            date: dateStr,
-                            series_id: seriesId,
-                            is_exception: !!exc,
-                        });
-                    }
-                } else {
-                    const exc = exceptions.get(dateStr);
-                    if (exc && exc.action === 'skip') {
-                        current.setDate(current.getDate() + interval * 7);
-                        continue;
-                    }
-                    expanded.push({
-                        ...baseEvent,
-                        date: dateStr,
-                        series_id: seriesId,
-                        is_exception: !!exc,
-                    });
-                }
-            }
-
-            if (series.freq === 'weekly') {
-                current.setDate(current.getDate() + 1);
-                if (current.getDay() === 1) current.setDate(current.getDate() + (interval - 1) * 7);
-            } else if (series.freq === 'monthly') {
-                current.setMonth(current.getMonth() + interval);
-            } else {
-                current.setDate(current.getDate() + interval);
-            }
-        }
-    });
-
     return expanded;
 }
 

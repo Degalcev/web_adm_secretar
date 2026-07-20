@@ -358,12 +358,37 @@ function eventsRenderBoard() {
     const cached = cacheGet(cacheKey);
     const rawEvents = [...(cached?.data?.events || [])];
 
-    // Для серий: развернуть на ближайшие даты (14 дней)
+    // Серии: окно развёртки — по активным фильтрам, иначе ближайший период
+    const _dayF = document.getElementById('f-events-day')?.value || '';
+    const _monF = document.getElementById('f-events-month')?.value || '';
+    const _yearF = document.getElementById('f-events-year')?.value || '';
+    const _today0 = new Date(); _today0.setHours(0, 0, 0, 0);
+    let _winStart, _winEnd;
+    if (_yearF || _monF) {
+        const _y = _yearF ? parseInt(_yearF, 10) : _today0.getFullYear();
+        if (_monF) {
+            const _m = parseInt(_monF, 10) - 1;
+            _winStart = new Date(_y, _m, 1);
+            _winEnd = new Date(_y, _m + 1, 0);
+        } else {
+            _winStart = new Date(_y, 0, 1);
+            _winEnd = new Date(_y, 11, 31);
+        }
+    } else if (_eventsCompleted || _eventsQuickFilter === 'missed' || _dayF) {
+        _winStart = new Date(_today0); _winStart.setFullYear(_winStart.getFullYear() - 1);
+        _winEnd = new Date(_today0); _winEnd.setDate(_winEnd.getDate() + 366);
+    } else {
+        _winStart = new Date(_today0);
+        _winEnd = new Date(_today0); _winEnd.setDate(_winEnd.getDate() + 60);
+    }
+    const _winStartStr = localDateStr(_winStart);
+    const _winEndStr = localDateStr(_winEnd);
+
     let events = [];
     rawEvents.forEach(e => {
-        if (e.series_id && e.series && typeof expandSeriesForList === 'function') {
-            const dates = expandSeriesForList(e, 14);
-            dates.forEach(d => {
+        if (e.series_id && e.series && typeof expandSeriesInRange === 'function') {
+            const dates = expandSeriesInRange(e, _winStartStr, _winEndStr);
+            (dates.length ? dates : [e.date]).forEach(d => {
                 events.push({ ...e, _nextDate: d });
             });
         } else {

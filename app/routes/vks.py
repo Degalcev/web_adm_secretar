@@ -68,6 +68,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
 
         series_ids = set(e.series_id for e in events if e.series_id)
         series_map = {}
+        series_exc_map = {}
         for sid in series_ids:
             s = await get_event_series(sid)
             if s:
@@ -76,6 +77,16 @@ async def get_events_handler(request: web.Request) -> web.Response:
                     'by_day': s.by_day or [],
                     'until': s.until.isoformat() if s.until else None,
                 }
+                excs = await get_series_exceptions(sid)
+                series_exc_map[sid] = [
+                    {
+                        'original_date': x.original_date.isoformat(),
+                        'action': x.action,
+                        'new_date': x.new_date.isoformat() if x.new_date else None,
+                        'event_id': x.event_id,
+                    }
+                    for x in excs
+                ]
 
         # Batch-resolve user names
         audit_user_ids = set()
@@ -111,6 +122,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
                 'participants': participants,
                 'series_id': e.series_id,
                 'series': series_map.get(e.series_id),
+                'series_exceptions': series_exc_map.get(e.series_id, []),
                 'last_changed_by': audit_users.get(e.last_changed_by, '') if e.last_changed_by else '',
                 'last_changed_at': e.last_changed_at.isoformat() if e.last_changed_at else None,
                 'last_change_action': e.last_change_action or '',
@@ -163,6 +175,7 @@ async def get_event_handler(request: web.Request) -> web.Response:
                 locked_by_name = ' '.join(p for p in name_parts if p).strip() or lock_user.name or lock_user.username or str(lock_user.max_id)
 
         series = None
+        series_exceptions = []
         if e.series_id:
             s = await get_event_series(e.series_id)
             if s:
@@ -171,6 +184,16 @@ async def get_event_handler(request: web.Request) -> web.Response:
                     'by_day': s.by_day or [],
                     'until': s.until.isoformat() if s.until else None,
                 }
+                excs = await get_series_exceptions(e.series_id)
+                series_exceptions = [
+                    {
+                        'original_date': x.original_date.isoformat(),
+                        'action': x.action,
+                        'new_date': x.new_date.isoformat() if x.new_date else None,
+                        'event_id': x.event_id,
+                    }
+                    for x in excs
+                ]
 
         return web.json_response({
             'ok': True,
@@ -191,6 +214,7 @@ async def get_event_handler(request: web.Request) -> web.Response:
                 'participants': participants,
                 'series_id': e.series_id,
                 'series': series,
+                'series_exceptions': series_exceptions,
                 'locked_by': locked_by_name,
                 'locked_by_id': e.locked_by,
             }
@@ -587,6 +611,8 @@ async def create_series_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
         data = await request.json()
+        prev_event = await get_event_by_id(event_id)
+        old_series_id = prev_event.series_id if prev_event else None
         series_id = await create_event_series(
             freq=data.get('freq', 'weekly'),
             interval_val=data.get('interval_val', 1),
@@ -594,6 +620,8 @@ async def create_series_handler(request: web.Request) -> web.Response:
             until=datetime.strptime(data['until'], '%Y-%m-%d').date() if data.get('until') else None,
         )
         await update_event(event_id=event_id, series_id=series_id)
+        if old_series_id and old_series_id != series_id:
+            await delete_event_series(old_series_id)
         return web.json_response({'ok': True, 'series_id': series_id})
     except Exception as e:
         logger.error('Ошибка создания серии: {}', repr(e))
