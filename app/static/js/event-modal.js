@@ -270,6 +270,9 @@ function refreshEventDocs() {
         ...pendingFiles.map((f, i) => ({ id: `pending-${i}`, name: f.name, size: f.size, pending: true }))
     ];
 
+    const _docsCountEl = document.getElementById('f-event-docs-count');
+    if (_docsCountEl) _docsCountEl.textContent = all.length ? ('· ' + all.length) : '';
+
     if (all.length) {
         docsContainer.innerHTML = all.map(d => {
             const ext = (d.name || '').split('.').pop().toLowerCase();

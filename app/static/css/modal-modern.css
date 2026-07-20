@@ -271,3 +271,14 @@
     transform: none;
   }
 }
+
+/* Сетка 2×2 для основных полей (как grid2 в превью) */
+.event-modal-modern .em-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px 14px;
+}
+.event-modal-modern .em-grid2 .form-group { margin-bottom: 0; }
+@media (max-width: 768px) {
+  .event-modal-modern .em-grid2 { grid-template-columns: 1fr; }
+}
