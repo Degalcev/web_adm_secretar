@@ -297,16 +297,26 @@
 .repeat-modal-footer { padding: 12px 16px; }
 
 /* Сегмент-переключатель типа */
-.repeat-modal .evt-repeat-type-row { gap: 6px; margin-bottom: 14px; }
+.repeat-modal .evt-repeat-type-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
 .repeat-modal .evt-repeat-type-btn {
-  flex: 1;
-  padding: 8px;
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  padding: 8px 4px;
   border-radius: 9px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--fg-muted);
   font-size: 0.76rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .repeat-modal .evt-repeat-type-btn.active {
   background: var(--accent);
@@ -315,10 +325,15 @@
 }
 
 /* Дни недели — равномерно на всю ширину */
-.repeat-modal .evt-weekday-row { gap: 5px; }
+.repeat-modal .evt-weekday-row {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
 .repeat-modal .evt-wd-btn {
-  flex: 1;
-  width: auto;
+  flex: none;
+  width: 100%;
+  min-width: 0;
   height: auto;
   padding: 8px 0;
   border-radius: 8px;
@@ -349,3 +364,45 @@
   letter-spacing: 0.03em;
 }
 .repeat-modal .evt-repeat-until-row .form-input { width: 100%; }
+
+/* ═══ Кнопки футера модалки повтора — плоские, как в превью ═══ */
+.repeat-modal-footer .btn {
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg);
+  font-size: 0.82rem;
+  font-weight: 600;
+  min-height: 0;
+}
+.repeat-modal-footer .btn::before { display: none !important; }
+.repeat-modal-footer .btn:hover {
+  border-color: var(--accent);
+  color: var(--fg);
+  transform: none;
+}
+.repeat-modal-footer .btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #03121a;
+}
+.repeat-modal-footer .btn-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #03121a;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  opacity: 1;
+}
+.repeat-modal-footer .btn-danger-text,
+.repeat-modal-footer #repeat-delete-btn {
+  border-color: transparent;
+  background: transparent;
+  color: var(--danger) !important;
+  margin-right: auto;
+}
+.repeat-modal-footer .btn-danger-text:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  border-color: transparent;
+}
