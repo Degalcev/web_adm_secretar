@@ -100,7 +100,7 @@ async function _calLoadRange(from, to) {
         let cursorDate = null, cursorTime = null, cursorId = null;
         let hasMore = true;
         while (hasMore) {
-            const params = new URLSearchParams({ limit: '200', from, to });
+            const params = new URLSearchParams({ limit: '200', from, to, include_series_anchors: '1' });
             if (cursorDate) params.set('cursor_date', cursorDate);
             if (cursorTime) params.set('cursor_time', cursorTime);
             if (cursorId) params.set('cursor_id', cursorId);

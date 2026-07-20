@@ -60,6 +60,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
             cursor_date=_parse_date(request.query.get('cursor_date', '')),
             cursor_time=_parse_time(request.query.get('cursor_time', '')),
             cursor_id=request.query.get('cursor_id', '').strip() or None,
+            include_series_anchors=request.query.get('include_series_anchors', '') in ('1', 'true', 'True'),
             limit=limit,
         )
 

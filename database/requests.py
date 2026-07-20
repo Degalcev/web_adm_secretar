@@ -107,6 +107,7 @@ async def get_events(
     cursor_date: date = None,
     cursor_time: time = None,
     cursor_id: str = None,
+    include_series_anchors: bool = False,
     limit: int = 50,
 ):
     """
@@ -134,7 +135,12 @@ async def get_events(
         if organizer_id:
             query = query.where(Event.organizer_id == organizer_id)
         if date_from:
-            query = query.where(Event.date >= date_from)
+            if include_series_anchors:
+                # Календарь: серии с якорем в прошлом всё равно нужны,
+                # чтобы развернуть их occurrences в видимом окне.
+                query = query.where(or_(Event.date >= date_from, Event.series_id.isnot(None)))
+            else:
+                query = query.where(Event.date >= date_from)
         if date_to:
             query = query.where(Event.date <= date_to)
         if search:
