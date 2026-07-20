@@ -1,0 +1,144 @@
+/* ═══ Event Modal — Modern responsive skin ════════════════════════════
+   Desktop → Split (две колонки) · Mobile → Cards (шторка снизу)
+   Загружается ПОСЛЕ event-modal.css и переопределяет плоскую верстку.
+   Работает во всех темах через существующие CSS-переменные проекта.
+   ==================================================================== */
+
+/* ─── Grabber (ручка мобильной шторки) ─────────────────────────────── */
+.em-grabber {
+  display: none;
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 99px;
+  background: var(--fg-subtle);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+/* ─── Заголовок секции-карточки (иконка + подпись) ─────────────────── */
+.em-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.em-card-ic {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.em-card-ic svg { width: 14px; height: 14px; }
+.em-card-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+}
+.em-card-head .docs-label {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  color: var(--fg-subtle);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Тело модалки становится обычным блоком — раскладку задаёт .em-grid */
+.event-modal-modern .modal-body { display: block; }
+.em-card { margin-bottom: 14px; }
+.em-card:last-child { margin-bottom: 0; }
+
+/* ════════════════════ DESKTOP · SPLIT ════════════════════ */
+@media (min-width: 769px) {
+  .event-modal-modern {
+    max-width: 780px !important;
+  }
+  .event-modal-modern .modal-body { padding: 0; }
+
+  .em-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    align-items: stretch;
+  }
+  .em-col-main { padding: 16px 18px; min-width: 0; }
+  .em-col-aside {
+    padding: 16px 18px;
+    background: color-mix(in srgb, var(--surface) 50%, transparent);
+    border-left: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  /* На десктопе карточки плоские — только отступы и подписи секций */
+  .em-col-main .em-card { margin-bottom: 0; }
+  .em-col-aside .em-card + .em-card {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Кнопка повтора на всю ширину боковой колонки */
+  .em-col-aside #event-repeat-btn { width: 100%; justify-content: center; }
+}
+
+/* ════════════════════ MOBILE · CARDS (шторка снизу) ════════════════════ */
+@media (max-width: 768px) {
+  #event-modal.modal-overlay {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+  .event-modal-modern {
+    max-width: 100% !important;
+    width: 100%;
+    max-height: 94vh !important;
+    border-radius: 18px 18px 0 0 !important;
+    animation: emSlideUp 0.34s cubic-bezier(.22, 1, .36, 1);
+  }
+  .em-grabber { display: block; }
+
+  .event-modal-modern .modal-body { padding: 4px 12px 12px; }
+  .em-grid { display: block; }
+  .em-col,
+  .em-col-main,
+  .em-col-aside {
+    padding: 0;
+    background: transparent;
+    border-left: none;
+  }
+
+  /* Сгруппированные карточки в стиле iOS */
+  .em-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+  .em-card:last-child { margin-bottom: 0; }
+
+  #event-repeat-btn { width: 100%; justify-content: center; }
+
+  /* 16px у полей — чтобы iOS не зумил при фокусе */
+  .event-modal-modern .form-group input,
+  .event-modal-modern .form-group select,
+  .event-modal-modern .form-group textarea { font-size: 16px; }
+
+  /* Кнопки футера крупнее под палец */
+  .event-modal-modern .modal-footer .btn-primary,
+  .event-modal-modern .modal-footer .btn-ghost { min-height: 44px; }
+
+  /* Панель истории — как выезжающий лист */
+  .event-timeline { box-shadow: -4px 0 24px rgba(0,0,0,0.35); }
+}
+
+@keyframes emSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}

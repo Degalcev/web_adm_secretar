@@ -1,8 +1,10 @@
-<!-- ─── Modal: Event (Compact Flat) ─────────────────────────────────── -->
+<!-- ─── Modal: Event (Modern · Split desktop / Cards mobile) ────────── -->
 <div class="modal-overlay" id="event-modal">
-  <div class="modal modal-lg event-modal-flat">
+  <div class="modal modal-lg event-modal-flat event-modal-modern">
     <!-- Accent bar -->
     <div class="event-modal-accent" id="event-modal-accent"></div>
+    <!-- Grabber (mobile bottom-sheet handle) -->
+    <div class="em-grabber"></div>
 
     <!-- Header -->
     <div class="modal-header">
@@ -35,117 +37,139 @@
         <!-- Скрытые контейнеры для совместимости с JS -->
         <div class="modal-event-actions" id="event-modal-actions" style="display:none"></div>
 
-        <!-- Тип мероприятия -->
-        <div class="form-separator form-group" id="f-event-type-group">
-          <label>Тип мероприятия</label>
-          <select id="f-event-type" class="form-input" onchange="onEventTypeChange()">
-            <option value="ВКС">ВКС</option>
-            <option value="Совещание">Совещание</option>
-            <option value="Встреча">Встреча</option>
-            <option value="Заседание">Заседание</option>
-            <option value="Приём">Личный приём</option>
-          </select>
-        </div>
+        <!-- Split (desktop) / Cards (mobile) grid -->
+        <div class="em-grid">
+          <!-- ─── Основная колонка ─── -->
+          <div class="em-col em-col-main">
+            <section class="em-card" data-sec="main">
+              <div class="em-card-head">
+                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+                <span class="em-card-title">Основное</span>
+              </div>
 
-        <!-- Дата, время и продолжительность -->
-        <div class="form-row form-separator">
-          <div class="form-group flex-2">
-            <label>Дата *</label>
-            <input type="date" id="f-event-date" required>
-          </div>
-          <div class="form-group">
-            <label>Время *</label>
-            <input type="time" id="f-event-time" required>
-          </div>
-          <div class="form-group">
-            <label>Продолжительность</label>
-            <select id="f-event-duration" class="form-input">
-              <option value="30">30 мин</option>
-              <option value="60" selected>1 час</option>
-              <option value="90">1.5 часа</option>
-              <option value="120">2 часа</option>
-              <option value="180">3 часа</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Организатор и локация -->
-        <div class="form-row form-separator">
-          <div class="form-group">
-            <label>Локация *</label>
-            <select id="f-event-location" required><option value="">Не указана</option></select>
-          </div>
-          <div class="form-group">
-            <label>Организатор *</label>
-            <div class="form-row">
-              <div class="form-group" style="flex:0 0 110px">
-                <select id="f-event-organizer-type" class="form-input" onchange="onOrganizerTypeChange()">
-                  <option value="org">Организация</option>
-                  <option value="user">Сотрудник</option>
+              <!-- Тип мероприятия -->
+              <div class="form-group" id="f-event-type-group">
+                <label>Тип мероприятия</label>
+                <select id="f-event-type" class="form-input" onchange="onEventTypeChange()">
+                  <option value="ВКС">ВКС</option>
+                  <option value="Совещание">Совещание</option>
+                  <option value="Встреча">Встреча</option>
+                  <option value="Заседание">Заседание</option>
+                  <option value="Приём">Личный приём</option>
                 </select>
               </div>
-              <div class="form-group" style="flex:1">
-                <select id="f-event-organizer" class="form-input" required><option value="">Не указан</option></select>
+
+              <!-- Дата, время и продолжительность -->
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label>Дата *</label>
+                  <input type="date" id="f-event-date" required>
+                </div>
+                <div class="form-group">
+                  <label>Время *</label>
+                  <input type="time" id="f-event-time" required>
+                </div>
+                <div class="form-group">
+                  <label>Продолжительность</label>
+                  <select id="f-event-duration" class="form-input">
+                    <option value="30">30 мин</option>
+                    <option value="60" selected>1 час</option>
+                    <option value="90">1.5 часа</option>
+                    <option value="120">2 часа</option>
+                    <option value="180">3 часа</option>
+                  </select>
+                </div>
               </div>
-            </div>
+
+              <!-- Локация и организатор -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Локация *</label>
+                  <select id="f-event-location" required><option value="">Не указана</option></select>
+                </div>
+                <div class="form-group">
+                  <label>Организатор *</label>
+                  <div class="form-row">
+                    <div class="form-group" style="flex:0 0 110px">
+                      <select id="f-event-organizer-type" class="form-input" onchange="onOrganizerTypeChange()">
+                        <option value="org">Организация</option>
+                        <option value="user">Сотрудник</option>
+                      </select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                      <select id="f-event-organizer" class="form-input" required><option value="">Не указан</option></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Описание -->
+              <div class="form-group">
+                <label>Описание</label>
+                <textarea id="f-event-desc" rows="2" placeholder="Описание встречи..." maxlength="200"></textarea>
+                <span class="form-hint">Максимум 200 символов</span>
+              </div>
+
+              <!-- Ссылка (только для ВКС) -->
+              <div class="form-group" id="f-event-url-group">
+                <label>Ссылка</label>
+                <div class="url-row">
+                  <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
+                  <a class="url-go-btn" id="event-url-go" href="#" target="_blank" rel="noopener" title="Открыть ссылку" style="display:none">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </a>
+                </div>
+              </div>
+            </section>
           </div>
-        </div>
 
-        <!-- Описание -->
-        <div class="form-separator form-group">
-          <label>Описание</label>
-          <textarea id="f-event-desc" rows="2" placeholder="Описание встречи..." maxlength="200"></textarea>
-          <span class="form-hint">Максимум 200 символов</span>
-        </div>
+          <!-- ─── Боковая колонка ─── -->
+          <div class="em-col em-col-aside">
+            <!-- Участники -->
+            <section class="em-card" data-sec="participants">
+              <div class="em-card-head">
+                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span>
+                <span class="em-card-title">Участники</span>
+              </div>
+              <div class="event-participants-list" id="event-participants-list"></div>
+              <div class="event-participant-add">
+                <input type="text" id="event-participant-search" class="form-input" placeholder="Поиск сотрудника..." oninput="searchParticipants(this.value)">
+                <div class="event-participant-dropdown" id="event-participant-dropdown" style="display:none"></div>
+              </div>
+            </section>
 
-        <!-- Ссылка (только для ВКС) -->
-        <div class="form-separator form-group" id="f-event-url-group">
-          <label>Ссылка</label>
-          <div class="url-row">
-            <input type="text" id="f-event-url" placeholder="https://meet.example.com/...">
-            <a class="url-go-btn" id="event-url-go" href="#" target="_blank" rel="noopener" title="Открыть ссылку" style="display:none">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            </a>
-          </div>
-        </div>
+            <!-- Повторять -->
+            <section class="em-card" data-sec="repeat">
+              <div class="em-card-head">
+                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>
+                <span class="em-card-title">Повтор</span>
+              </div>
+              <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                <span class="pill-label" id="event-repeat-label">Повторять</span>
+              </button>
+              <input type="hidden" id="event-repeat-active" value="false">
+              <input type="hidden" id="event-repeat-type" value="daily">
+            </section>
 
-        <!-- Участники -->
-        <div class="form-separator form-group">
-          <label>Участники</label>
-          <div class="event-participants-list" id="event-participants-list"></div>
-          <div class="event-participant-add">
-            <input type="text" id="event-participant-search" class="form-input" placeholder="Поиск сотрудника..." oninput="searchParticipants(this.value)">
-            <div class="event-participant-dropdown" id="event-participant-dropdown" style="display:none"></div>
-          </div>
-        </div>
-
-        <!-- Повторять -->
-        <div class="form-separator form-group">
-          <label>Повторять</label>
-          <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-            <span class="pill-label" id="event-repeat-label">Повторять</span>
-          </button>
-          <input type="hidden" id="event-repeat-active" value="false">
-          <input type="hidden" id="event-repeat-type" value="daily">
-        </div>
-
-        <!-- Документы -->
-        <div id="f-event-docs-group" style="display:none">
-          <div class="form-separator">
-            <div class="docs-header">
-              <span class="docs-label" id="f-event-docs-count"></span>
-            </div>
-            <div class="doc-scroll-wrap">
-              <div class="doc-scroll-fade-top" id="doc-fade-top"></div>
-              <div id="f-event-docs" class="doc-card-list"></div>
-              <div class="doc-scroll-fade-bottom" id="doc-fade-bottom"></div>
-            </div>
-            <label class="doc-add-btn" id="event-doc-upload-label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Добавить документ
-              <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
-            </label>
+            <!-- Документы -->
+            <section class="em-card" data-sec="docs" id="f-event-docs-group" style="display:none">
+              <div class="em-card-head">
+                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+                <span class="em-card-title">Документы</span>
+                <span class="docs-label" id="f-event-docs-count"></span>
+              </div>
+              <div class="doc-scroll-wrap">
+                <div class="doc-scroll-fade-top" id="doc-fade-top"></div>
+                <div id="f-event-docs" class="doc-card-list"></div>
+                <div class="doc-scroll-fade-bottom" id="doc-fade-bottom"></div>
+              </div>
+              <label class="doc-add-btn" id="event-doc-upload-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Добавить документ
+                <input type="file" id="event-doc-upload" style="display:none" multiple onchange="addPendingFiles(this.files); this.value=''">
+              </label>
+            </section>
           </div>
         </div>
       </div>
