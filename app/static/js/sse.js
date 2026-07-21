@@ -7,6 +7,10 @@ function connectSSE() {
     if (_eventSource) _eventSource.close();
     _eventSource = new EventSource('/admin/api/events/stream');
 
+    _eventSource.onopen = () => {
+        if (typeof dashboardSseConnected === 'function') dashboardSseConnected();
+    };
+
     _eventSource.onmessage = (e) => {
         try {
             const data = JSON.parse(e.data);
@@ -15,6 +19,7 @@ function connectSSE() {
     };
 
     _eventSource.onerror = () => {
+        if (typeof dashboardSseDisconnected === 'function') dashboardSseDisconnected();
         _eventSource.close();
         setTimeout(connectSSE, 5000);
     };
@@ -45,7 +50,12 @@ function debounceRefreshEvents() {
 async function sseRefreshPage() {
     // Пока открыта модалка — НЕ трогаем кэш/доску (данные модалки берутся отдельно)
     const modal = document.getElementById('event-modal');
-    if (modal && modal.classList.contains('show')) return;
+    if (modal && modal.classList.contains('show')) {
+        if ((currentPage || '') === 'dashboard' && typeof setDashboardSyncStatus === 'function') {
+            setDashboardSyncStatus('stale');
+        }
+        return;
+    }
     await refreshCurrentBoard();
 }
 
@@ -114,10 +124,15 @@ async function refreshCurrentBoard() {
 
     // ── Dashboard ──
     if (page === 'dashboard') {
-        try {
-            const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-            if (resp.ok) cacheSet('dashboard', await resp.json());
-        } catch (e) {}
+        if (typeof _fetchDashboardToCache === 'function') {
+            await _fetchDashboardToCache();
+        } else {
+            try {
+                const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+                if (!resp.ok) throw new Error('Dashboard HTTP ' + resp.status);
+                cacheSet('dashboard', await resp.json());
+            } catch (e) {}
+        }
         renderDashboard();
         return;
     }

@@ -159,9 +159,11 @@
     <div class="page active" id="page-dashboard">
       <header class="dash-ops-head">
         <div>
-          <div class="dash-eyebrow">Операционный центр</div>
           <h1 class="dash-title" id="dash-greeting">Обзор</h1>
-          <div class="dash-date"><span id="dash-current-date"></span><span class="dash-live">данные актуальны</span></div>
+          <div class="dash-date">
+            <span id="dash-current-date"></span>
+            <span class="dash-sync-status is-syncing" id="dash-sync-status" role="status" aria-live="polite" data-state="syncing"><i></i><span>Обновление…</span></span>
+          </div>
         </div>
         <div class="dash-quicknav" id="dash-quicknav">
           <button class="dash-qbtn accent" data-qaction="new-vks"><span class="dash-qplus">+</span>ВКС</button>
@@ -212,7 +214,11 @@
               <button class="dash-toggle-btn" data-rfilter="events">Мероприятия</button>
             </div>
           </div>
-          <div class="dash-rooms" id="dash-rooms"></div>
+          <div class="dash-scroll-shell" data-scroll-shell>
+            <span class="dash-scroll-hint up" aria-hidden="true">⌃</span>
+            <div class="dash-rooms" id="dash-rooms" data-dash-scroll></div>
+            <span class="dash-scroll-hint down" aria-hidden="true">⌄</span>
+          </div>
         </article>
 
         <aside class="dash-panel dash-soon-section">
@@ -220,7 +226,11 @@
             <div><div class="dash-sec-title">Ближайшие</div><div class="dash-sec-sub" id="dash-soon-subtitle">Следующие 60 дней</div></div>
             <div class="dash-mini-legend"><span><i class="dash-dot vks"></i>ВКС</span><span><i class="dash-dot evt"></i>События</span></div>
           </div>
-          <div class="dash-soon-body" id="dash-soon"></div>
+          <div class="dash-scroll-shell" data-scroll-shell>
+            <span class="dash-scroll-hint up" aria-hidden="true">⌃</span>
+            <div class="dash-soon-body" id="dash-soon" data-dash-scroll></div>
+            <span class="dash-scroll-hint down" aria-hidden="true">⌄</span>
+          </div>
           <button class="dash-more-btn" data-qaction="calendar" onclick="navigateTo('/calendar/')">Открыть календарь →</button>
         </aside>
       </section>
@@ -254,7 +264,11 @@
               <button class="dash-toggle-btn" data-locp="year">Год</button>
             </div>
           </div>
-          <div class="dash-bar-list" id="dash-loc-total"></div>
+          <div class="dash-scroll-shell" data-scroll-shell>
+            <span class="dash-scroll-hint up" aria-hidden="true">⌃</span>
+            <div class="dash-bar-list" id="dash-loc-total" data-dash-scroll></div>
+            <span class="dash-scroll-hint down" aria-hidden="true">⌄</span>
+          </div>
         </article>
       </section>
     </div>

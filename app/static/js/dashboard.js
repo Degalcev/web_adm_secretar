@@ -5,28 +5,121 @@ let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
 let _locPeriod = 'today';      // загрузка залов: today | month | year
 let _dashRoomFilter = 'all';   // сегодня по залам: all | vks | events
+let _dashLastSyncAt = 0;
+let _dashSyncState = 'syncing';
+let _dashScrollResizeBound = false;
+let _dashScrollObserver = null;
 
 const DASH_REPEAT_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
 const DASH_USER_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
 const DASH_LINK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
 const DASH_DOC_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
 
+function setDashboardSyncStatus(state, syncedAt) {
+    _dashSyncState = state;
+    if (syncedAt) _dashLastSyncAt = syncedAt;
+    const el = document.getElementById('dash-sync-status');
+    if (!el) return;
+
+    const labels = {
+        syncing: 'Обновление…',
+        stale: 'Есть обновления',
+        offline: 'Нет соединения',
+        error: 'Не удалось обновить',
+    };
+    let label = labels[state] || labels.syncing;
+    if (state === 'ok') {
+        const ts = _dashLastSyncAt || Date.now();
+        const time = new Intl.DateTimeFormat('ru-RU', {
+            hour: '2-digit', minute: '2-digit'
+        }).format(new Date(ts));
+        label = 'Данные актуальны · ' + time;
+        el.title = 'Последнее успешное обновление: ' + new Date(ts).toLocaleString('ru-RU');
+    } else {
+        el.title = label;
+    }
+    el.className = 'dash-sync-status is-' + state;
+    el.dataset.state = state;
+    const text = el.querySelector('span');
+    if (text) text.textContent = label;
+}
+
+function dashboardSseConnected() {
+    const cached = cacheGet('dashboard');
+    if (_dashSyncState === 'stale') return;
+    if (cached && cached.data) setDashboardSyncStatus('ok', cached.ts || Date.now());
+    else setDashboardSyncStatus('syncing');
+}
+
+function dashboardSseDisconnected() {
+    setDashboardSyncStatus('offline');
+}
+
+function _dashUpdateScrollHint(scroller) {
+    if (!scroller) return;
+    const shell = scroller.closest('[data-scroll-shell]');
+    if (!shell) return;
+    const epsilon = 3;
+    const overflow = scroller.scrollHeight - scroller.clientHeight > epsilon;
+    shell.classList.toggle('can-scroll-up', overflow && scroller.scrollTop > epsilon);
+    shell.classList.toggle('can-scroll-down', overflow && scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - epsilon);
+}
+
+function updateDashboardScrollHints() {
+    document.querySelectorAll('#page-dashboard [data-dash-scroll]').forEach(_dashUpdateScrollHint);
+}
+
+function _dashScheduleScrollHints() {
+    requestAnimationFrame(updateDashboardScrollHints);
+}
+
+function setupDashboardScrollHints() {
+    document.querySelectorAll('#page-dashboard [data-dash-scroll]').forEach(scroller => {
+        if (!scroller.dataset.scrollHintBound) {
+            scroller.dataset.scrollHintBound = '1';
+            scroller.addEventListener('scroll', () => _dashUpdateScrollHint(scroller), { passive: true });
+            if (typeof ResizeObserver !== 'undefined') {
+                if (!_dashScrollObserver) _dashScrollObserver = new ResizeObserver(entries => entries.forEach(entry => _dashUpdateScrollHint(entry.target)));
+                _dashScrollObserver.observe(scroller);
+            }
+        }
+        _dashUpdateScrollHint(scroller);
+    });
+    if (!_dashScrollResizeBound) {
+        window.addEventListener('resize', _dashScheduleScrollHints, { passive: true });
+        _dashScrollResizeBound = true;
+    }
+}
+
+async function _fetchDashboardToCache() {
+    setDashboardSyncStatus('syncing');
+    try {
+        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('Dashboard HTTP ' + resp.status);
+        cacheSet('dashboard', await resp.json());
+        const cached = cacheGet('dashboard');
+        setDashboardSyncStatus('ok', cached ? cached.ts : Date.now());
+        return true;
+    } catch (e) {
+        setDashboardSyncStatus('error');
+        return false;
+    }
+}
+
 async function initDashboard() {
     setupDashboardQuickNav();
     setupRoomToggle();
     setupChartToggle();
     setupLocToggle();
-    await pageInit('dashboard', renderDashboard, async () => {
-        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (resp.ok) cacheSet('dashboard', await resp.json());
-    });
+    setupDashboardScrollHints();
+    const cached = cacheGet('dashboard');
+    if (cacheIsValid('dashboard')) setDashboardSyncStatus('ok', cached.ts);
+    else setDashboardSyncStatus('syncing');
+    await pageInit('dashboard', renderDashboard, _fetchDashboardToCache);
 }
 
 async function refreshDashboard() {
-    try {
-        const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
-        if (resp.ok) cacheSet('dashboard', await resp.json());
-    } catch (e) {}
+    await _fetchDashboardToCache();
     renderDashboard();
 }
 
@@ -72,9 +165,9 @@ function _dashRenderHeader() {
     if (dateEl) {
         const now = new Date();
         const formatted = new Intl.DateTimeFormat('ru-RU', {
-            weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Vladivostok'
+            weekday: 'long', day: 'numeric', month: 'long'
         }).format(now);
-        dateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1) + ' · Владивосток';
+        dateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1);
     }
 }
 
@@ -90,6 +183,9 @@ function renderDashboard() {
     const cached = cacheGet('dashboard');
     if (!cached || !cached.data) return;
     const d = cached.data;
+    if (_dashSyncState !== 'offline' && _dashSyncState !== 'error' && _dashSyncState !== 'stale') {
+        setDashboardSyncStatus('ok', cached.ts || Date.now());
+    }
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const vks = d.vks || {}, evt = d.events || {}, sum = d.summary || {};
     const vksActive = vks.active || 0;
@@ -117,6 +213,7 @@ function renderDashboard() {
     renderDashRing(sum.completed || 0, sum.total || 0);
     _renderDashLocationsFromCache(d);
     drawChart();
+    _dashScheduleScrollHints();
 }
 
 function _dashSparkline(elId, arr) {
@@ -144,6 +241,7 @@ function setupRoomToggle() {
             _dashRoomFilter = btn.dataset.rfilter;
             const d = cacheGet('dashboard');
             if (d && d.data) renderDashRooms(d.data.today || []);
+            _dashScheduleScrollHints();
         };
     });
 }
@@ -278,6 +376,7 @@ function setupLocToggle() {
             btn.classList.add('active');
             _locPeriod = btn.dataset.locp;
             renderDashLocations();
+            _dashScheduleScrollHints();
         };
     });
 }
