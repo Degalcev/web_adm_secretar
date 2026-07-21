@@ -75,7 +75,7 @@ async function refreshCurrentBoard() {
             : (filter === 'active' ? 'eventsActive' : 'eventsCompleted');
 
         // Параметры запроса
-        const params = new URLSearchParams({ status: filter, limit: '10000' });
+        const params = new URLSearchParams({ status: filter, limit: '200' });
         const statsParams = new URLSearchParams({ status: filter });
         if (isVks) {
             params.set('type', 'ВКС');

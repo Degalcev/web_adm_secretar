@@ -61,7 +61,7 @@ function _eventsAppendFilters(params) {
 async function _eventsFetch(status) {
     const cacheKey = status === 'active' ? 'eventsActive' : 'eventsCompleted';
     const isCompleted = status === 'completed';
-    const limit = isCompleted ? 50 : 10000;
+    const limit = isCompleted ? 50 : 200;
     const params = new URLSearchParams({ status, limit: String(limit), exclude_type: 'ВКС' });
     if (_eventsTypeFilter) params.set('type', _eventsTypeFilter);
     const statsParams = new URLSearchParams({ status });
@@ -133,7 +133,7 @@ async function _eventsLoadAll() {
 
     try {
         const params = new URLSearchParams({
-            status: 'active', limit: 10000, exclude_type: 'ВКС',
+            status: 'active', limit: 200, exclude_type: 'ВКС',
         });
         const orgVal = document.getElementById('f-events-org')?.value;
         const locVal = document.getElementById('f-events-loc')?.value;

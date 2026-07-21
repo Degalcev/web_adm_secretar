@@ -6,7 +6,7 @@ const VKS_PAGE_SIZE = 50;
 async function _vksFetch(filter) {
     const cacheKey = filter === 'active' ? 'vksActive' : 'vksCompleted';
     const isCompleted = filter === 'completed';
-    const limit = isCompleted ? 50 : 10000;
+    const limit = isCompleted ? 50 : 200;
     const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: String(limit) });
     const statsParams = new URLSearchParams({ status: filter, type: 'ВКС' });
 
@@ -89,7 +89,7 @@ async function _vksLoadAll(boardId, filter) {
 
     try {
         const prefix = 'f-vks-active';
-        const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: 10000 });
+        const params = new URLSearchParams({ status: filter, type: 'ВКС', limit: 200 });
 
         const orgVal = document.getElementById(`${prefix}-org`)?.value;
         const locVal = document.getElementById(`${prefix}-loc`)?.value;

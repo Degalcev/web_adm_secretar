@@ -588,3 +588,83 @@ async def get_exception_for_series_date(series_id: str, original_date: date):
                 EventSeriesException.original_date == original_date,
             )
         )
+
+
+# ─── Batch loading ────────────────────────────────────────────────
+
+async def get_participants_by_event_ids(event_ids: list) -> dict:
+    """Batch-загрузка участников: 1 запрос вместо N."""
+    if not event_ids:
+        return {}
+    async with async_session() as session:
+        result = await session.execute(
+            select(
+                EventParticipant.id, EventParticipant.user_id, EventParticipant.event_id,
+                EventParticipant.role,
+                User.name, User.username, User.last_name, User.first_name, User.patronymic,
+            )
+            .join(User, EventParticipant.user_id == User.id, isouter=True)
+            .where(EventParticipant.event_id.in_(event_ids))
+        )
+        p_map = {}
+        for row in result:
+            eid = row.event_id
+            if eid not in p_map:
+                p_map[eid] = []
+            user_parts = [row.last_name or '', row.first_name or '', row.patronymic or '']
+            user_name = ' '.join(p for p in user_parts if p).strip() or row.name or row.username or ''
+            p_map[eid].append({'id': row.id, 'user_id': row.user_id, 'name': user_name, 'role': row.role})
+        return p_map
+
+
+async def get_series_by_ids(series_ids: list) -> dict:
+    """Batch-загрузка серий по списку ID: 1 запрос вместо N."""
+    if not series_ids:
+        return {}
+    async with async_session() as session:
+        rows = await session.scalars(
+            select(EventSeries).where(EventSeries.id.in_(series_ids))
+        )
+        return {
+            s.id: {
+                'freq': s.freq, 'interval_val': s.interval_val,
+                'by_day': s.by_day or [],
+                'until': s.until.isoformat() if s.until else None,
+            }
+            for s in rows
+        }
+
+
+async def get_series_exceptions_by_ids(series_ids: list) -> dict:
+    """Batch-загрузка исключений серий: 1 запрос вместо N."""
+    if not series_ids:
+        return {}
+    async with async_session() as session:
+        rows = await session.scalars(
+            select(EventSeriesException).where(EventSeriesException.series_id.in_(series_ids))
+        )
+        exc_map = {}
+        for x in rows:
+            sid = x.series_id
+            if sid not in exc_map:
+                exc_map[sid] = []
+            exc_map[sid].append({
+                'original_date': x.original_date.isoformat(),
+                'action': x.action,
+                'new_date': x.new_date.isoformat() if x.new_date else None,
+                'event_id': x.event_id,
+            })
+        return exc_map
+
+
+async def get_users_by_ids(user_ids: list) -> dict:
+    """Batch-загрузка пользователей: 1 запрос вместо N."""
+    if not user_ids:
+        return {}
+    async with async_session() as session:
+        rows = await session.scalars(select(User).where(User.id.in_(user_ids)))
+        result = {}
+        for u in rows:
+            name_parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
+            result[u.id] = ' '.join(p for p in name_parts if p).strip() or u.name or u.username or str(u.max_id)
+        return result
