@@ -175,8 +175,12 @@ function _seriesLabel(series) {
         return interval === 1 ? 'Ежедневно' : `Каждые ${interval} дн.`;
     }
     if (freq === 'weekly') {
-        const SHORT = { monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср', thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс' };
-        const days = (series.by_day || []).map(d => SHORT[d] || d);
+        const SHORT = { mon: 'Пн', tue: 'Вт', wed: 'Ср', thu: 'Чт', fri: 'Пт', sat: 'Сб', sun: 'Вс', monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср', thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс' };
+        const raw = (series.by_day || []).map(d => String(d).toLowerCase());
+        if (interval === 1 && raw.length === 5 && ['mon', 'tue', 'wed', 'thu', 'fri'].every(d => raw.includes(d))) {
+            return 'Рабочие дни';
+        }
+        const days = raw.map(d => SHORT[d] || d);
         const base = interval === 1 ? 'Еженедельно' : `Каждые ${interval} нед.`;
         return days.length ? `${base} · ${days.join(', ')}` : base;
     }
