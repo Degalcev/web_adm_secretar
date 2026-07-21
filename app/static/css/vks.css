@@ -853,3 +853,32 @@
 .scroll-sentinel {
     height: 1px;
 }
+
+/* Recurring series marker (A+C): soft card tint + filled frequency chip */
+.vks-card.series {
+    background: linear-gradient(0deg, color-mix(in oklab, var(--accent-ambient) 5%, transparent), color-mix(in oklab, var(--accent-ambient) 5%, transparent)), var(--bg-elevated);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--accent-ambient) 22%, transparent);
+}
+.vks-card-end {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.vks-tag.series {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--accent-ambient);
+    color: var(--bg);
+    border: 1px solid var(--accent-ambient);
+    font-weight: 700;
+}
+.vks-tag.series svg {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+}
+

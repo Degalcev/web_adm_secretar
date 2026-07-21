@@ -238,18 +238,21 @@ function renderVksCard(e, blockType) {
     const org  = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
     const loc  = e.location_id  ? getLocationName(e.location_id)  : '';
     const docs = e.documents || [];
+    const isSeries = !!(e.series_id && e.series);
 
     let stripeClass = 'active';
     if (blockType === 'missed' && !e.completed) stripeClass = 'missed';
     else if (e.completed) stripeClass = 'completed';
 
-    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}" data-event-id="${e.id}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
+    let html = `<div class="vks-card ${e.completed ? 'completed' : ''} ${blockType === 'missed' ? 'vks-missed' : ''}${isSeries ? ' series' : ''}" data-event-id="${e.id}" onclick="openEditEventModal('${e.id}')" style="cursor:pointer">`;
     html += `<div class="vks-stripe ${stripeClass}"></div>`;
     html += `<div class="vks-card-content">`;
 
     // Блок времени
     html += `<div class="vks-time-block">`;
     html += `<div class="vks-card-time">${time}</div>`;
+    const _endTime = _eventEndTime(e.time, e.duration);
+    if (_endTime) html += `<div class="vks-card-end">–${_endTime}</div>`;
     if (date) {
         const d = new Date(date + 'T00:00:00');
         const monthNames = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -262,6 +265,7 @@ function renderVksCard(e, blockType) {
     if (e.description) html += `<div class="vks-card-desc">${esc(e.description)}</div>`;
 
     html += `<div class="vks-card-meta">`;
+    if (isSeries) html += `<span class="vks-tag series">${REPEAT_SVG}${_seriesLabel(e.series)}</span>`;
     if (org) html += `<span class="vks-tag org"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>${esc(org)}</span>`;
     if (loc) html += `<span class="vks-tag loc"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(loc)}</span>`;
     if (e.url) html += `<a class="vks-link-icon" href="${esc(e.url)}" target="_blank" onclick="event.stopPropagation()" title="Открыть ссылку"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>`;

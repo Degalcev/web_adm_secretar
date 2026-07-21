@@ -162,3 +162,40 @@ function renderActiveBoardBlocks(buckets, renderBlockFn) {
     if (buckets.soon.length) html += renderBlockFn('Скоро', buckets.soon, 'soon');
     return html;
 }
+
+
+// === Recurring series helpers (shared by VKS & Events boards) ===
+const REPEAT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+
+function _seriesLabel(series) {
+    if (!series) return '';
+    const freq = series.freq || 'weekly';
+    const interval = Math.max(1, parseInt(series.interval_val, 10) || 1);
+    if (freq === 'daily') {
+        return interval === 1 ? 'Ежедневно' : `Каждые ${interval} дн.`;
+    }
+    if (freq === 'weekly') {
+        const SHORT = { monday: 'Пн', tuesday: 'Вт', wednesday: 'Ср', thursday: 'Чт', friday: 'Пт', saturday: 'Сб', sunday: 'Вс' };
+        const days = (series.by_day || []).map(d => SHORT[d] || d);
+        const base = interval === 1 ? 'Еженедельно' : `Каждые ${interval} нед.`;
+        return days.length ? `${base} · ${days.join(', ')}` : base;
+    }
+    if (freq === 'monthly') {
+        return interval === 1 ? 'Ежемесячно' : `Каждые ${interval} мес.`;
+    }
+    return 'Повтор';
+}
+
+function _eventEndTime(time, duration) {
+    if (!time || !/^\d{1,2}:\d{2}/.test(time)) return '';
+    const dur = parseInt(duration, 10);
+    if (!dur || dur <= 0) return '';
+    const parts = time.split(':');
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h) || isNaN(m)) return '';
+    const total = h * 60 + m + dur;
+    const eh = Math.floor(total / 60) % 24;
+    const em = total % 60;
+    return String(eh).padStart(2, '0') + ':' + String(em).padStart(2, '0');
+}
