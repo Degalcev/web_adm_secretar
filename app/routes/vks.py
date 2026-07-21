@@ -474,10 +474,21 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             e, d = item
             return (d, e.time.strftime('%H:%M') if e.time else '99:99')
 
+        # Один годовой набор occurrences используется для залов и основных графиков.
+        # Ближайшие могут пересекать границу года, поэтому для них отдельное окно.
+        import calendar as _cal
+        month_start = today.replace(day=1)
+        month_end = today.replace(day=_cal.monthrange(today.year, today.month)[1])
+        year_start = date(today.year, 1, 1)
+        year_end = date(today.year, 12, 31)
         soon_horizon = today + timedelta(days=60)
+
         async with async_session() as session:
-            today_occ = await _collect_occurrences(session, today, today)
+            year_occ = await _collect_occurrences(session, year_start, year_end)
             soon_occ = await _collect_occurrences(session, tomorrow, soon_horizon)
+
+        today_occ = [(e, d) for e, d in year_occ if d == today]
+        month_occ = [(e, d) for e, d in year_occ if month_start <= d <= month_end]
 
         today_occ.sort(key=_occ_key)
         soon_occ.sort(key=_occ_key)
@@ -489,45 +500,38 @@ async def dashboard_stats(request: web.Request) -> web.Response:
         today_events = [_serialize(e, docs_map, d) for e, d in today_occ[:100]]
         soon_events = [_serialize(e, docs_map, d) for e, d in soon_occ]
 
-        # Залы на сегодня — из occurrences (включая серии)
-        locations_today = {}
-        for e, d in today_occ:
-            if e.location_id:
-                k = str(e.location_id)
-                locations_today[k] = locations_today.get(k, 0) + 1
+        def _location_counts(occurrences):
+            result = {}
+            for event, _occ_date in occurrences:
+                if event.location_id:
+                    key = str(event.location_id)
+                    result[key] = result.get(key, 0) + 1
+            return result
 
-        async with async_session() as session:
+        # Загрузка залов: только активные фактические occurrences.
+        locations_today = _location_counts(today_occ)
+        locations_month = _location_counts(month_occ)
+        locations_year = _location_counts(year_occ)
 
-            loc_total_q = await session.execute(
-                select(Event.location_id, func.count(Event.id))
-                .where(Event.completed == False)
-                .group_by(Event.location_id)
-            )
-            locations_total = {str(row[0]): row[1] for row in loc_total_q if row[0]}
+        # Основные графики также строятся по occurrences, включая серии.
+        monday = today - timedelta(days=today.weekday())
+        sunday = monday + timedelta(days=6)
+        week_vks = {monday + timedelta(days=i): 0 for i in range(7)}
+        week_events = {monday + timedelta(days=i): 0 for i in range(7)}
+        year_vks = {m: 0 for m in range(1, 13)}
+        year_events = {m: 0 for m in range(1, 13)}
 
-            vks_id = case((Event.type == 'ВКС', Event.id))
-            evt_id = case((Event.type != 'ВКС', Event.id))
+        for event, occ_date in year_occ:
+            target_year = year_vks if (event.type or 'ВКС') == 'ВКС' else year_events
+            target_year[occ_date.month] += 1
+            if monday <= occ_date <= sunday:
+                target_week = week_vks if (event.type or 'ВКС') == 'ВКС' else week_events
+                target_week[occ_date] += 1
 
-            monday = today - timedelta(days=today.weekday())
-            sunday = monday + timedelta(days=6)
-            week_q = await session.execute(
-                select(Event.date, func.count(vks_id), func.count(evt_id))
-                .where(Event.date >= monday, Event.date <= sunday)
-                .group_by(Event.date)
-            )
-            wk = {row[0]: (row[1], row[2]) for row in week_q}
-            chart_week_vks = [wk.get(monday + timedelta(days=i), (0, 0))[0] for i in range(7)]
-            chart_week_events = [wk.get(monday + timedelta(days=i), (0, 0))[1] for i in range(7)]
-
-            year_q = await session.execute(
-                select(extract('month', Event.date).label('month'),
-                       func.count(vks_id), func.count(evt_id))
-                .where(extract('year', Event.date) == today.year)
-                .group_by(extract('month', Event.date))
-            )
-            yr = {int(row[0]): (row[1], row[2]) for row in year_q}
-            chart_year_vks = [yr.get(m, (0, 0))[0] for m in range(1, 13)]
-            chart_year_events = [yr.get(m, (0, 0))[1] for m in range(1, 13)]
+        chart_week_vks = [week_vks[monday + timedelta(days=i)] for i in range(7)]
+        chart_week_events = [week_events[monday + timedelta(days=i)] for i in range(7)]
+        chart_year_vks = [year_vks[m] for m in range(1, 13)]
+        chart_year_events = [year_events[m] for m in range(1, 13)]
 
         active_total = (vks_active['today'] + vks_active['soon']
                         + evt_active['today'] + evt_active['soon'])
@@ -538,12 +542,16 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             'vks': {
                 'total': vks_active['total'],
                 'active': vks_active['today'] + vks_active['soon'],
+                'today': vks_active['today'],
+                'soon': vks_active['soon'],
                 'missed': vks_active['missed'],
                 'completed': vks_completed,
             },
             'events': {
                 'total': evt_active['total'],
                 'active': evt_active['today'] + evt_active['soon'],
+                'today': evt_active['today'],
+                'soon': evt_active['soon'],
                 'missed': evt_active['missed'],
                 'completed': evt_completed,
             },
@@ -555,8 +563,20 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             },
             'today': today_events,
             'soon': soon_events,
+            # Новый контракт + legacy-поля для обратной совместимости.
+            'locations': {
+                'today': locations_today,
+                'month': locations_month,
+                'year': locations_year,
+            },
             'locations_today': locations_today,
-            'locations_total': locations_total,
+            'locations_month': locations_month,
+            'locations_year': locations_year,
+            'locations_total': locations_year,
+            'location_period': {
+                'month': today.month,
+                'year': today.year,
+            },
             'chart_week': {'vks': chart_week_vks, 'events': chart_week_events},
             'chart_year': {'vks': chart_year_vks, 'events': chart_year_events},
         })

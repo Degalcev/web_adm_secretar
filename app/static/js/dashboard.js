@@ -3,7 +3,7 @@
 let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
-let _locPeriod = 'all';        // рейтинг залов: all | today
+let _locPeriod = 'today';      // загрузка залов: today | month | year
 let _dashRoomFilter = 'all';   // сегодня по залам: all | vks | events
 
 const DASH_REPEAT_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
@@ -63,23 +63,57 @@ function _dashEndTime(time, duration) {
 }
 
 // ─── Главный рендер ───
+function _dashRenderHeader() {
+    const greeting = document.getElementById('dash-greeting');
+    const dateEl = document.getElementById('dash-current-date');
+    const user = window.currentUser || {};
+    const firstName = user.first_name || '';
+    greeting.textContent = firstName ? ('Добрый день, ' + firstName) : 'Обзор';
+    if (dateEl) {
+        const now = new Date();
+        const formatted = new Intl.DateTimeFormat('ru-RU', {
+            weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Vladivostok'
+        }).format(now);
+        dateEl.textContent = formatted.charAt(0).toUpperCase() + formatted.slice(1) + ' · Владивосток';
+    }
+}
+
+function _dashEventWord(count) {
+    const n10 = count % 10, n100 = count % 100;
+    if (n10 === 1 && n100 !== 11) return 'событие';
+    if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return 'события';
+    return 'событий';
+}
+
+// ─── Главный рендер ───
 function renderDashboard() {
     const cached = cacheGet('dashboard');
     if (!cached || !cached.data) return;
     const d = cached.data;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
     const vks = d.vks || {}, evt = d.events || {}, sum = d.summary || {};
-    set('dash-kpi-vks', vks.total || 0);
-    set('dash-kpi-events', evt.total || 0);
-    set('dash-kpi-active', sum.active || 0);
-    set('dash-kpi-completed', sum.completed || 0);
+    const vksActive = vks.active || 0;
+    const evtActive = evt.active || 0;
+    const vksOverall = vksActive + (vks.completed || 0);
+    const evtOverall = evtActive + (evt.completed || 0);
+
+    _dashRenderHeader();
+    set('dash-kpi-total', sum.total || (vksOverall + evtOverall));
+    set('dash-hero-vks', vksOverall);
+    set('dash-hero-events', evtOverall);
+    set('dash-kpi-vks', vksActive);
+    set('dash-kpi-events', evtActive);
     set('dash-kpi-missed', sum.missed || 0);
-    set('dash-nav-vks-cnt', vks.total || 0);
-    set('dash-nav-events-cnt', evt.total || 0);
-    _dashSparkline('dash-spark-vks', (d.chart_week && d.chart_week.vks) || []);
-    _dashSparkline('dash-spark-events', (d.chart_week && d.chart_week.events) || []);
-    renderDashRooms(d.today || []);
-    renderDashSoon(d.soon || []);
+    set('dash-kpi-vks-sub', (vks.today || 0) + ' сегодня · ' + (vks.soon || 0) + ' скоро');
+    set('dash-kpi-events-sub', (evt.today || 0) + ' сегодня · ' + (evt.soon || 0) + ' скоро');
+
+    const todayEvents = d.today || [];
+    const soonEvents = d.soon || [];
+    set('dash-today-subtitle', todayEvents.length ? (todayEvents.length + ' ' + _dashEventWord(todayEvents.length)) : 'Нет событий');
+    set('dash-soon-subtitle', soonEvents.length ? (soonEvents.length + ' ближайших · следующие 60 дней') : 'Следующие 60 дней');
+
+    renderDashRooms(todayEvents);
+    renderDashSoon(soonEvents);
     renderDashRing(sum.completed || 0, sum.total || 0);
     _renderDashLocationsFromCache(d);
     drawChart();
@@ -215,11 +249,25 @@ function renderDashLocations() {
 
 function _renderDashLocationsFromCache(data) {
     if (!data) return;
-    const src = _locPeriod === 'today' ? (data.locations_today || {}) : (data.locations_total || {});
+    const periods = data.locations || {
+        today: data.locations_today || {},
+        month: data.locations_month || {},
+        year: data.locations_year || data.locations_total || {},
+    };
+    const src = periods[_locPeriod] || {};
     const entries = Object.keys(src)
         .map(id => ({ name: getLocationName(id) || 'Зал', count: src[id] || 0 }))
         .filter(e => e.count > 0)
         .sort((a, b) => b.count - a.count);
+
+    const subtitle = document.getElementById('dash-loc-subtitle');
+    if (subtitle) {
+        const period = data.location_period || {};
+        const monthNames = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+        if (_locPeriod === 'today') subtitle.textContent = 'Фактические occurrences сегодня';
+        else if (_locPeriod === 'month') subtitle.textContent = 'Фактические occurrences за ' + (monthNames[(period.month || (new Date().getMonth() + 1)) - 1] || 'месяц');
+        else subtitle.textContent = 'Фактические occurrences за ' + (period.year || new Date().getFullYear()) + ' год';
+    }
     renderBarList('dash-loc-total', entries, 'accent');
 }
 
@@ -238,17 +286,18 @@ function renderBarList(elId, entries, colorVar) {
     const el = document.getElementById(elId);
     if (!el) return;
     if (!entries.length) {
-        el.innerHTML = '<div class="dash-empty">Нет данных</div>';
+        el.innerHTML = '<div class="dash-empty">Нет данных за выбранный период</div>';
         return;
     }
     const max = entries[0].count || 1;
-    el.innerHTML = entries.map(e =>
-        '<div class="dash-bar-row">' +
+    el.innerHTML = entries.map(e => {
+        const pct = Math.round(e.count / max * 100);
+        return '<div class="dash-bar-row">' +
             '<div class="dash-bar-name">' + esc(e.name) + '</div>' +
-            '<div class="dash-bar-wrap"><div class="dash-bar" style="width:' + (e.count / max * 100) + '%; background: var(--' + colorVar + ');"></div></div>' +
-            '<div class="dash-bar-count">' + e.count + '</div>' +
-        '</div>'
-    ).join('');
+            '<div class="dash-bar-count">' + e.count + ' · ' + pct + '%</div>' +
+            '<div class="dash-bar-wrap"><div class="dash-bar" style="width:' + pct + '%; background: var(--' + colorVar + ');"></div></div>' +
+        '</div>';
+    }).join('');
 }
 
 // ─── График (две серии) ───

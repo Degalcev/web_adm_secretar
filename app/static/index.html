@@ -157,51 +157,55 @@
 
     <!-- ─── Dashboard Page ──────────────────────────────────────────── -->
     <div class="page active" id="page-dashboard">
+      <header class="dash-ops-head">
+        <div>
+          <div class="dash-eyebrow">Операционный центр</div>
+          <h1 class="dash-title" id="dash-greeting">Обзор</h1>
+          <div class="dash-date"><span id="dash-current-date"></span><span class="dash-live">данные актуальны</span></div>
+        </div>
+        <div class="dash-quicknav" id="dash-quicknav">
+          <button class="dash-qbtn accent" data-qaction="new-vks"><span class="dash-qplus">+</span>ВКС</button>
+          <button class="dash-qbtn accent2" data-qaction="new-event"><span class="dash-qplus">+</span>Мероприятие</button>
+          <button class="dash-qbtn calendar" data-qaction="calendar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>Календарь</span></button>
+        </div>
+      </header>
 
-      <!-- Быстрые переходы -->
-      <div class="dash-quicknav" id="dash-quicknav">
-        <button class="dash-qbtn accent" data-qaction="new-vks">+ ВКС</button>
-        <button class="dash-qbtn accent2" data-qaction="new-event">+ Мероприятие</button>
-        <button class="dash-qbtn" data-qaction="calendar">Календарь</button>
-        <span class="dash-qsep"></span>
-        <button class="dash-qbtn" data-qaction="vks"><span class="dash-qdot vks"></span>ВКС<b class="dash-qcnt" id="dash-nav-vks-cnt">0</b></button>
-        <button class="dash-qbtn" data-qaction="events"><span class="dash-qdot evt"></span>Мероприятия<b class="dash-qcnt" id="dash-nav-events-cnt">0</b></button>
-      </div>
+      <section class="dash-overview">
+        <article class="dash-hero-card">
+          <div class="dash-hero-main">
+            <div class="dash-card-label">Все мероприятия</div>
+            <div class="dash-hero-value" id="dash-kpi-total">0</div>
+            <div class="dash-hero-split">
+              <span><i class="dash-dot vks"></i><b id="dash-hero-vks">0</b> ВКС</span>
+              <span><i class="dash-dot evt"></i><b id="dash-hero-events">0</b> мероприятий</span>
+            </div>
+          </div>
+          <div class="dash-ring-wrap" id="dash-ring"></div>
+        </article>
 
-      <!-- KPI -->
-      <div class="dash-kstrip">
-        <div class="dash-kpi">
-          <div class="dash-kpi-top"><span class="dash-kpi-ic cyan"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span><svg class="dash-spark" id="dash-spark-vks" viewBox="0 0 100 28" preserveAspectRatio="none"></svg></div>
-          <div class="dash-kpi-v" id="dash-kpi-vks">0</div>
-          <div class="dash-kpi-l">ВКС активны</div>
-        </div>
-        <div class="dash-kpi">
-          <div class="dash-kpi-top"><span class="dash-kpi-ic purple"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><svg class="dash-spark alt" id="dash-spark-events" viewBox="0 0 100 28" preserveAspectRatio="none"></svg></div>
-          <div class="dash-kpi-v" id="dash-kpi-events">0</div>
-          <div class="dash-kpi-l">Мероприятия активны</div>
-        </div>
-        <div class="dash-kpi">
-          <div class="dash-kpi-top"><span class="dash-kpi-ic blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span></div>
-          <div class="dash-kpi-v" id="dash-kpi-active">0</div>
-          <div class="dash-kpi-l">Активные (сегодня + скоро)</div>
-        </div>
-        <div class="dash-kpi">
-          <div class="dash-kpi-top"><span class="dash-kpi-ic green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></span></div>
-          <div class="dash-kpi-v" id="dash-kpi-completed">0</div>
-          <div class="dash-kpi-l">Завершено</div>
-        </div>
-        <div class="dash-kpi">
-          <div class="dash-kpi-top"><span class="dash-kpi-ic amber"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span></div>
-          <div class="dash-kpi-v" id="dash-kpi-missed">0</div>
-          <div class="dash-kpi-l">Пропущено</div>
-        </div>
-      </div>
+        <article class="dash-metric">
+          <div class="dash-metric-top"><span class="dash-card-label">Активные ВКС</span><span class="dash-metric-ic vks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span></div>
+          <div class="dash-metric-value" id="dash-kpi-vks">0</div>
+          <div class="dash-metric-sub" id="dash-kpi-vks-sub">0 сегодня · 0 скоро</div>
+        </article>
 
-      <!-- Операционный ряд -->
-      <div class="dash-mid">
-        <div class="dash-section dash-today-section">
+        <article class="dash-metric">
+          <div class="dash-metric-top"><span class="dash-card-label">Мероприятия</span><span class="dash-metric-ic evt"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></span></div>
+          <div class="dash-metric-value" id="dash-kpi-events">0</div>
+          <div class="dash-metric-sub" id="dash-kpi-events-sub">0 сегодня · 0 скоро</div>
+        </article>
+
+        <article class="dash-metric">
+          <div class="dash-metric-top"><span class="dash-card-label">Требуют внимания</span><span class="dash-metric-ic warn">!</span></div>
+          <div class="dash-metric-value" id="dash-kpi-missed">0</div>
+          <div class="dash-metric-sub">пропущены и не завершены</div>
+        </article>
+      </section>
+
+      <section class="dash-workspace">
+        <article class="dash-panel dash-today-section">
           <div class="dash-sec-head">
-            <div class="dash-sec-title">Сегодня по залам</div>
+            <div><div class="dash-sec-title">Сегодня по залам</div><div class="dash-sec-sub" id="dash-today-subtitle">Нет событий</div></div>
             <div class="dash-toggle" id="dash-room-toggle">
               <button class="dash-toggle-btn active" data-rfilter="all">Все</button>
               <button class="dash-toggle-btn" data-rfilter="vks">ВКС</button>
@@ -209,29 +213,25 @@
             </div>
           </div>
           <div class="dash-rooms" id="dash-rooms"></div>
-        </div>
-        <div class="dash-side">
-          <div class="dash-section dash-ring-section">
-            <div class="dash-sec-title">Завершённость</div>
-            <div class="dash-ring-wrap" id="dash-ring"></div>
-          </div>
-          <div class="dash-section dash-soon-section">
-            <div class="dash-sec-title">Скоро</div>
-            <div class="dash-soon-body" id="dash-soon"></div>
-          </div>
-        </div>
-      </div>
+        </article>
 
-      <!-- Аналитический ряд -->
-      <div class="dash-bottom">
-        <div class="dash-section dash-chart-section">
+        <aside class="dash-panel dash-soon-section">
           <div class="dash-sec-head">
-            <div class="dash-sec-title">Динамика · ВКС и Мероприятия</div>
+            <div><div class="dash-sec-title">Ближайшие</div><div class="dash-sec-sub" id="dash-soon-subtitle">Следующие 60 дней</div></div>
+            <div class="dash-mini-legend"><span><i class="dash-dot vks"></i>ВКС</span><span><i class="dash-dot evt"></i>События</span></div>
+          </div>
+          <div class="dash-soon-body" id="dash-soon"></div>
+          <button class="dash-more-btn" data-qaction="calendar" onclick="navigateTo('/calendar/')">Открыть календарь →</button>
+        </aside>
+      </section>
+
+      <section class="dash-analytics">
+        <article class="dash-panel dash-chart-section">
+          <div class="dash-sec-head">
+            <div><div class="dash-sec-title">Динамика мероприятий</div><div class="dash-sec-sub">ВКС и мероприятия за выбранный период</div></div>
             <div class="dash-chart-ctrls">
               <div class="dash-navgrp" id="dash-month-nav" style="display:none">
-                <button class="dash-nav-btn" onclick="dashMonthNav(-1)">‹</button>
-                <span id="dash-chart-month-label"></span>
-                <button class="dash-nav-btn" onclick="dashMonthNav(1)">›</button>
+                <button class="dash-nav-btn" onclick="dashMonthNav(-1)">‹</button><span id="dash-chart-month-label"></span><button class="dash-nav-btn" onclick="dashMonthNav(1)">›</button>
               </div>
               <div class="dash-toggle" id="dash-chart-toggle">
                 <button class="dash-toggle-btn active" data-period="week">Неделя</button>
@@ -241,23 +241,22 @@
               </div>
             </div>
           </div>
-          <div class="dash-legend">
-            <span><i class="lg vks"></i>ВКС</span>
-            <span><i class="lg evt"></i>Мероприятия</span>
-          </div>
+          <div class="dash-legend"><span><i class="lg vks"></i>ВКС</span><span><i class="lg evt"></i>Мероприятия</span></div>
           <div class="dash-chart" id="dash-chart"></div>
-        </div>
-        <div class="dash-section dash-rank-section">
+        </article>
+
+        <article class="dash-panel dash-rank-section">
           <div class="dash-sec-head">
-            <div class="dash-sec-title">Рейтинг залов</div>
+            <div><div class="dash-sec-title">Загрузка залов</div><div class="dash-sec-sub" id="dash-loc-subtitle">Фактические occurrences сегодня</div></div>
             <div class="dash-toggle" id="dash-loc-toggle">
-              <button class="dash-toggle-btn active" data-locp="all">Все</button>
-              <button class="dash-toggle-btn" data-locp="today">Сегодня</button>
+              <button class="dash-toggle-btn active" data-locp="today">Сегодня</button>
+              <button class="dash-toggle-btn" data-locp="month">Месяц</button>
+              <button class="dash-toggle-btn" data-locp="year">Год</button>
             </div>
           </div>
           <div class="dash-bar-list" id="dash-loc-total"></div>
-        </div>
-      </div>
+        </article>
+      </section>
     </div>
 
     <!-- ─── Users Page ───────────────────────────────────────────────── -->
