@@ -13,7 +13,10 @@ async def get_participants_handler(request: web.Request) -> web.Response:
         return web.json_response(participants)
     except Exception as e:
         logger.error('Ошибка получения участников: {}', repr(e))
-        return web.json_response([], status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -26,7 +29,10 @@ async def add_participants_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'ids': ids})
     except Exception as e:
         logger.error('Ошибка добавления участников: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -37,7 +43,10 @@ async def remove_participant_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления участника: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def search_users_handler(request: web.Request) -> web.Response:

@@ -23,6 +23,10 @@ WEBAPP_PORT = int(os.getenv('WEBAPP_PORT', 8080))
 DEFAULT_ADMIN_PASSWORD = os.getenv('DEFAULT_ADMIN_PASSWORD', 'ivc212')
 COOKIE_DOMAIN = os.getenv('COOKIE_DOMAIN', '')
 
+APP_ENV = os.getenv('APP_ENV', 'development')
+COOKIE_SECURE = APP_ENV == 'production'
+COOKIE_SAMESITE = os.getenv('COOKIE_SAMESITE', 'Lax')
+
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 BOT_LOGS_DIR = os.getenv('BOT_LOGS_DIR', '/opt/bot/logs')
 DOCUMENTS_DIR = os.getenv('DOCUMENTS_DIR', os.path.join(PROJECT_ROOT, 'uploads', 'documents'))

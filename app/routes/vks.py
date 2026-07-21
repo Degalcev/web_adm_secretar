@@ -14,6 +14,8 @@ from database.requests import (
     get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids,
     get_user_by_id, get_event_participants, get_event_series,
     get_series_exceptions,
+    get_participants_by_event_ids, get_series_by_ids, get_series_exceptions_by_ids,
+    get_users_by_ids,
 )
 from database.sending import (
     add_event, update_event, delete_event, lock_event, unlock_event,
@@ -46,7 +48,7 @@ async def get_events_handler(request: web.Request) -> web.Response:
         elif status == 'active':
             completed = False
 
-        limit = min(int(request.query.get('limit', '50')), 10000)
+        limit = min(int(request.query.get('limit', '50')), 200)
 
         events, has_more = await get_events(
             completed=completed,
@@ -68,45 +70,26 @@ async def get_events_handler(request: web.Request) -> web.Response:
         event_ids = [e.id for e in events]
         docs_map = await get_documents_by_event_ids(event_ids) if event_ids else {}
 
-        series_ids = set(e.series_id for e in events if e.series_id)
-        series_map = {}
-        series_exc_map = {}
-        for sid in series_ids:
-            s = await get_event_series(sid)
-            if s:
-                series_map[sid] = {
-                    'freq': s.freq, 'interval_val': s.interval_val,
-                    'by_day': s.by_day or [],
-                    'until': s.until.isoformat() if s.until else None,
-                }
-                excs = await get_series_exceptions(sid)
-                series_exc_map[sid] = [
-                    {
-                        'original_date': x.original_date.isoformat(),
-                        'action': x.action,
-                        'new_date': x.new_date.isoformat() if x.new_date else None,
-                        'event_id': x.event_id,
-                    }
-                    for x in excs
-                ]
+        # Batch: series + exceptions (1+1 запрос вместо 2N)
+        series_ids = list(set(e.series_id for e in events if e.series_id))
+        series_map = await get_series_by_ids(series_ids) if series_ids else {}
+        series_exc_map = await get_series_exceptions_by_ids(series_ids) if series_ids else {}
 
-        # Batch-resolve user names
+        # Batch: audit users (1 запрос вместо N)
         audit_user_ids = set()
         for e in events:
             if e.last_changed_by:
                 audit_user_ids.add(e.last_changed_by)
             if e.locked_by:
                 audit_user_ids.add(e.locked_by)
-        audit_users = {}
-        for uid in audit_user_ids:
-            u = await get_user_by_id(uid)
-            if u:
-                name_parts = [u.last_name or '', u.first_name or '', u.patronymic or '']
-                audit_users[uid] = ' '.join(p for p in name_parts if p).strip() or u.name or u.username or str(u.max_id)
+        audit_users = await get_users_by_ids(list(audit_user_ids)) if audit_user_ids else {}
+
+        # Batch: participants (1 запрос вместо N)
+        participants_map = await get_participants_by_event_ids(event_ids) if event_ids else {}
 
         data = []
         for e in events:
-            participants = await get_event_participants(e.id)
+            participants = participants_map.get(e.id, [])
             data.append({
                 'id': e.id,
                 'type': e.type or 'ВКС',
@@ -223,7 +206,10 @@ async def get_event_handler(request: web.Request) -> web.Response:
         })
     except Exception as e:
         logger.error('Ошибка получения события: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def _parse_event_from_multipart(request: web.Request) -> dict:
@@ -300,7 +286,10 @@ async def create_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'id': event_id})
     except Exception as e:
         logger.error('Ошибка создания события: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -380,7 +369,10 @@ async def update_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка обновления события: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -400,7 +392,10 @@ async def delete_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления события: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def dashboard_stats(request: web.Request) -> web.Response:
@@ -567,7 +562,10 @@ async def dashboard_stats(request: web.Request) -> web.Response:
         })
     except Exception as e:
         logger.error('Dashboard stats error: {}', repr(e))
-        return web.json_response({'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def dashboard_chart(request: web.Request) -> web.Response:
@@ -617,7 +615,10 @@ async def get_event_history_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'history': history})
     except Exception as e:
         logger.error('Ошибка получения истории: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -631,7 +632,10 @@ async def lock_event_handler(request: web.Request) -> web.Response:
         return web.json_response(result)
     except Exception as e:
         logger.error('Ошибка lock: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -642,7 +646,10 @@ async def unlock_event_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка unlock: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 # ─── Event Series ────────────────────────────────────────────────────
@@ -696,7 +703,10 @@ async def create_series_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'series_id': series_id})
     except Exception as e:
         logger.error('Ошибка создания серии: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -711,7 +721,10 @@ async def delete_series_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления серии: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -732,9 +745,13 @@ async def add_exception_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'exception_id': exc_id})
     except Exception as e:
         logger.error('Ошибка добавления исключения: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_csrf
 async def delete_exception_handler(request: web.Request) -> web.Response:
     try:
         event_id = request.match_info['id']
@@ -749,7 +766,10 @@ async def delete_exception_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления исключения: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def get_events_stats(request: web.Request) -> web.Response:

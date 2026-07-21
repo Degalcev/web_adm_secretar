@@ -12,7 +12,10 @@ async def download_document(request: web.Request) -> web.Response:
         doc = await get_document_by_id(doc_id)
         if not doc:
             logger.warning('Документ не найден: {}', doc_id)
-            return web.json_response({'error': 'Документ не найден'}, status=404)
+            return web.json_response(
+            {'ok': False, 'code': 'NOT_FOUND', 'message': 'Документ не найден'},
+            status=404,
+        )
 
         logger.debug('Скачивание документа: {} ({})', doc.get('name'), doc_id)
 
@@ -24,10 +27,16 @@ async def download_document(request: web.Request) -> web.Response:
             )
 
         logger.warning('Файл недоступен: {} ({})', doc.get('name'), doc_id)
-        return web.json_response({'error': 'Файл недоступен'}, status=404)
+        return web.json_response(
+            {'ok': False, 'code': 'NOT_FOUND', 'message': 'Файл недоступен'},
+            status=404,
+        )
     except Exception as e:
         logger.error('Ошибка скачивания документа {}: {}', doc_id, repr(e))
-        return web.json_response({'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -37,7 +46,10 @@ async def upload_document(request: web.Request) -> web.Response:
         field = await reader.next()
         if not field or field.name != 'file':
             logger.warning('Загрузка документа: файл не найден в запросе')
-            return web.json_response({'error': 'Файл не найден'}, status=400)
+            return web.json_response(
+                {'ok': False, 'code': 'VALIDATION_ERROR', 'message': 'Файл не найден'},
+                status=400,
+            )
 
         filename = field.filename
         content = await field.read()
@@ -55,7 +67,10 @@ async def upload_document(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'id': doc_id, 'name': filename, 'size': len(content)})
     except Exception as e:
         logger.error('Ошибка загрузки документа: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 @require_csrf
@@ -69,7 +84,10 @@ async def delete_document(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления документа {}: {}', doc_id, repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 def setup_document_routes(app: web.Application):

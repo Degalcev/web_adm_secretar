@@ -37,7 +37,8 @@ async def update_user(user_id: str, **kwargs):
                 .values(**kwargs)
             )
             await session.commit()
-            logger.info('Пользователь {} обновлён: {}', user_id, kwargs)
+            safe_keys = [k for k in kwargs if k != 'password']
+            logger.info('Пользователь {} обновлён: fields={}', user_id, safe_keys)
         except Exception as e:
             await session.rollback()
             logger.error('Ошибка обновления пользователя: {}', repr(e))

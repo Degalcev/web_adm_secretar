@@ -4,6 +4,7 @@ import re
 from aiohttp import web
 from loguru import logger
 
+from app.auth import require_role
 from config import PROJECT_ROOT, BOT_LOGS_DIR
 
 LOGS_DIR = os.path.join(PROJECT_ROOT, 'logs')
@@ -44,19 +45,27 @@ def _scan_dates() -> list[dict]:
     return sorted(dates.values(), key=lambda x: x['date'], reverse=True)
 
 
+@require_role('admin')
 async def get_log_dates(request: web.Request) -> web.Response:
     try:
         return web.json_response(_scan_dates())
     except Exception as e:
         logger.error('Ошибка получения списка дат: {}', repr(e))
-        return web.json_response([], status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_role('admin')
 async def get_log_by_date(request: web.Request) -> web.Response:
     try:
         date_str = request.match_info['date']
         if not re.match(r'^\d{4}-\d{2}-\d{2}$', date_str):
-            return web.json_response({'error': 'Неверный формат даты'}, status=400)
+            return web.json_response(
+                {'ok': False, 'code': 'VALIDATION_ERROR', 'message': 'Неверный формат даты'},
+                status=400,
+            )
 
         try:
             n = max(1, int(request.query.get('lines', '500')))
@@ -105,7 +114,10 @@ async def get_log_by_date(request: web.Request) -> web.Response:
 
     except Exception as e:
         logger.error('Ошибка чтения лога: {}', repr(e))
-        return web.json_response({'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 def setup_logs_routes(app: web.Application):

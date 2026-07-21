@@ -18,7 +18,7 @@ from database.sending import (
     update_session_expiry,
 )
 from database.models import async_session, User, Session
-from config import DEFAULT_ADMIN_PASSWORD, COOKIE_DOMAIN
+from config import DEFAULT_ADMIN_PASSWORD, COOKIE_DOMAIN, COOKIE_SECURE, COOKIE_SAMESITE
 
 from sqlalchemy import select
 from datetime import datetime
@@ -44,6 +44,29 @@ class RateLimiter:
 
 
 login_limiter = RateLimiter(max_requests=5, window=60)
+
+
+# --- Role-based access control ---
+
+def require_role(*allowed_roles):
+    """Декоратор для проверки роли пользователя на backend."""
+    def decorator(handler):
+        @wraps(handler)
+        async def wrapper(request: web.Request):
+            user = request.get('user')
+            if not user:
+                return web.json_response(
+                    {'ok': False, 'code': 'UNAUTHORIZED', 'message': 'Не авторизован'},
+                    status=401,
+                )
+            if user.status not in allowed_roles:
+                return web.json_response(
+                    {'ok': False, 'code': 'FORBIDDEN', 'message': 'Недостаточно прав'},
+                    status=403,
+                )
+            return await handler(request)
+        return wrapper
+    return decorator
 
 
 # --- CSRF ---
@@ -78,8 +101,11 @@ def require_csrf(handler):
                     pass
 
             if not cookie_token or cookie_token != header_token:
-                logger.warning('CSRF token invalid: cookie={}, form={}', cookie_token, header_token)
-                return web.json_response({'error': 'CSRF token invalid'}, status=403)
+                logger.warning('CSRF token mismatch: path={}', request.path)
+                return web.json_response(
+                    {'ok': False, 'code': 'CSRF_INVALID', 'message': 'CSRF token invalid'},
+                    status=403,
+                )
         return await handler(request)
     return wrapper
 
@@ -151,7 +177,10 @@ async def auth_middleware(request: web.Request, handler):
     user = await validate_session(token)
 
     if not user:
-        return web.json_response({'error': 'Не авторизован'}, status=401)
+        return web.json_response(
+            {'ok': False, 'code': 'UNAUTHORIZED', 'message': 'Не авторизован'},
+            status=401,
+        )
 
     request['user'] = user
 
@@ -166,9 +195,9 @@ async def auth_middleware(request: web.Request, handler):
 def _set_cookie(response: web.Response, name: str, value: str, httponly: bool = True, max_age: int = 86400):
     kwargs = {
         'httponly': httponly,
-        'secure': False,
+        'secure': COOKIE_SECURE,
         'max_age': max_age,
-        'samesite': 'Lax',
+        'samesite': COOKIE_SAMESITE,
     }
     if COOKIE_DOMAIN:
         kwargs['domain'] = COOKIE_DOMAIN
@@ -180,7 +209,10 @@ async def admin_login(request: web.Request) -> web.Response:
 
     if not login_limiter.is_allowed(client_ip):
         logger.warning('Rate limit exceeded for IP: {}', client_ip)
-        return web.json_response({'ok': False, 'error': 'Слишком много попыток. Попробуйте через минуту.'}, status=429)
+        return web.json_response(
+            {'ok': False, 'code': 'RATE_LIMITED', 'message': 'Слишком много попыток. Попробуйте через минуту.'},
+            status=429,
+        )
 
     try:
         data = await request.json()
@@ -188,24 +220,36 @@ async def admin_login(request: web.Request) -> web.Response:
         password = data.get('password')
 
         if not login_value or not password:
-            return web.json_response({'ok': False, 'error': 'Введите логин и пароль'}, status=400)
+            return web.json_response(
+                {'ok': False, 'code': 'VALIDATION_ERROR', 'message': 'Введите логин и пароль'},
+                status=400,
+            )
 
         user = await get_user_by_login(login_value)
 
         if not user:
-            logger.warning('Пользователь не найден: {}', login_value)
-            return web.json_response({'ok': False, 'error': 'Пользователь не найден'}, status=404)
+            logger.warning('Login attempt for unknown user: path={}', request.path)
+            return web.json_response(
+                {'ok': False, 'code': 'AUTH_FAILED', 'message': 'Неверный логин или пароль'},
+                status=401,
+            )
 
         if not user.password:
             if password != DEFAULT_ADMIN_PASSWORD:
-                logger.warning('Неверный пароль по умолчанию для пользователя {}', login_value)
-                return web.json_response({'ok': False, 'error': 'Неверный логин или пароль'}, status=401)
+                logger.warning('Failed default password login: path={}', request.path)
+                return web.json_response(
+                    {'ok': False, 'code': 'AUTH_FAILED', 'message': 'Неверный логин или пароль'},
+                    status=401,
+                )
         else:
             try:
                 ph.verify(user.password, password)
             except VerifyMismatchError:
-                logger.warning('Неверный пароль для пользователя {}', login_value)
-                return web.json_response({'ok': False, 'error': 'Неверный логин или пароль'}, status=401)
+                logger.warning('Failed password login: path={}', request.path)
+                return web.json_response(
+                    {'ok': False, 'code': 'AUTH_FAILED', 'message': 'Неверный логин или пароль'},
+                    status=401,
+                )
 
         token = secrets.token_hex(32)
         remember_me = data.get('remember_me', False)
@@ -223,7 +267,10 @@ async def admin_login(request: web.Request) -> web.Response:
 
     except Exception as e:
         logger.error('Ошибка входа: {}', repr(e))
-        return web.json_response({'ok': False, 'error': 'Внутренняя ошибка сервера'}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def admin_logout(request: web.Request) -> web.Response:

@@ -2,7 +2,7 @@ from aiohttp import web
 from loguru import logger
 from argon2 import PasswordHasher
 
-from app.auth import require_csrf
+from app.auth import require_csrf, require_role
 from database.requests import get_user, get_user_by_max_id
 from database.sending import add_user, update_user, delete_user
 
@@ -24,7 +24,10 @@ async def get_current_user(request: web.Request) -> web.Response:
         })
     except Exception as e:
         logger.error('Ошибка получения текущего пользователя: {}', repr(e))
-        return web.json_response({'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 async def check_auth(request: web.Request) -> web.Response:
@@ -32,6 +35,7 @@ async def check_auth(request: web.Request) -> web.Response:
     return web.json_response({'ok': True})
 
 
+@require_role('admin')
 async def get_users(request: web.Request) -> web.Response:
     try:
         users = await get_user()
@@ -52,9 +56,13 @@ async def get_users(request: web.Request) -> web.Response:
         return web.json_response(data)
     except Exception as e:
         logger.error('Ошибка получения пользователей: {}', repr(e))
-        return web.json_response([], status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_role('admin')
 @require_csrf
 async def create_user(request: web.Request) -> web.Response:
     try:
@@ -81,9 +89,13 @@ async def create_user(request: web.Request) -> web.Response:
         return web.json_response({'ok': True, 'id': user_id})
     except Exception as e:
         logger.error('Ошибка создания пользователя: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_role('admin')
 @require_csrf
 async def update_user_handler(request: web.Request) -> web.Response:
     try:
@@ -111,9 +123,13 @@ async def update_user_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка обновления пользователя: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_role('admin')
 @require_csrf
 async def delete_user_handler(request: web.Request) -> web.Response:
     try:
@@ -123,9 +139,13 @@ async def delete_user_handler(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка удаления пользователя: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
+@require_role('admin')
 async def check_admin_status(request: web.Request) -> web.Response:
     max_id = request.match_info.get('max_id')
     if not max_id:
@@ -170,7 +190,10 @@ async def change_password(request: web.Request) -> web.Response:
         return web.json_response({'ok': True})
     except Exception as e:
         logger.error('Ошибка смены пароля: {}', repr(e))
-        return web.json_response({'ok': False, 'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 def setup_users_routes(app: web.Application):

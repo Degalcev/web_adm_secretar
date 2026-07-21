@@ -25,7 +25,10 @@ async def preload_data(request: web.Request) -> web.Response:
         })
     except Exception as e:
         logger.error('Preload error: {}', repr(e))
-        return web.json_response({'error': str(e)}, status=500)
+        return web.json_response(
+            {'ok': False, 'code': 'INTERNAL_ERROR', 'message': 'Внутренняя ошибка сервера'},
+            status=500,
+        )
 
 
 def setup_preload_routes(app: web.Application):
