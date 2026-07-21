@@ -2,7 +2,7 @@ from aiohttp import web
 from loguru import logger
 from datetime import date, datetime, timedelta, time
 
-from sqlalchemy import select, func, extract
+from sqlalchemy import select, func, extract, case
 
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
@@ -404,54 +404,50 @@ async def delete_event_handler(request: web.Request) -> web.Response:
 
 async def dashboard_stats(request: web.Request) -> web.Response:
     """
-    Dashboard: агрегаты + up to 8 событий на сегодня и скоро.
-    Не загружает весь массив событий — использует get_event_counts_by_date
-    и отдельные маленькие выборки.
+    Комбо-дашборд: раздельные агрегаты ВКС и Мероприятий,
+    события на сегодня (оба типа, для группировки по залам),
+    ближайшие, локации и двухсерийные графики.
+    ВКС: type == 'ВКС'; Мероприятия: type != 'ВКС'.
     """
     try:
         today = date.today()
-        counts = await get_event_counts_by_date(completed=False)
-
-        # Today events (лимит 8)
-        today_events_raw, _ = await get_events(
-            completed=False, date_from=today, date_to=today, limit=8
-        )
-        today_event_ids = [e.id for e in today_events_raw]
-        today_docs = await get_documents_by_event_ids(today_event_ids) if today_event_ids else {}
-        today_events = [
-            {
-                'id': e.id, 'date': e.date.isoformat(),
-                'time': e.time.strftime('%H:%M') if e.time else None,
-                'description': e.description or '',
-                'organizer_id': e.organizer_id, 'location_id': e.location_id,
-                'url': e.url or '', 'completed': e.completed,
-                'documents': today_docs.get(e.id, []),
-            }
-            for e in today_events_raw
-        ]
-
-        # Soon events (лимит 8, начиная с завтра)
         tomorrow = today + timedelta(days=1)
-        soon_events_raw, _ = await get_events(
-            completed=False, date_from=tomorrow, limit=8
-        )
-        soon_event_ids = [e.id for e in soon_events_raw]
-        soon_docs = await get_documents_by_event_ids(soon_event_ids) if soon_event_ids else {}
-        soon_events = [
-            {
-                'id': e.id, 'date': e.date.isoformat(),
-                'time': e.time.strftime('%H:%M') if e.time else None,
-                'description': e.description or '',
-                'organizer_id': e.organizer_id, 'location_id': e.location_id,
-                'url': e.url or '', 'completed': e.completed,
-                'documents': soon_docs.get(e.id, []),
-            }
-            for e in soon_events_raw
-        ]
 
-        # Локации и графики
+        # Агрегаты по модулям (активные — occurrence-based; завершённые — по строкам)
+        vks_active = await count_event_occurrences(completed=False, event_type='ВКС')
+        evt_active = await count_event_occurrences(completed=False, exclude_type='ВКС')
+        vks_completed = await count_events(completed=True, event_type='ВКС')
+        evt_completed = await count_events(completed=True, exclude_type='ВКС')
+
+        def _serialize(e, docs_map):
+            return {
+                'id': e.id,
+                'type': e.type or 'ВКС',
+                'date': e.date.isoformat() if e.date else None,
+                'time': e.time.strftime('%H:%M') if e.time else None,
+                'duration': e.duration,
+                'description': e.description or '',
+                'organizer_id': e.organizer_id,
+                'location_id': e.location_id,
+                'url': e.url or '',
+                'completed': e.completed,
+                'series_id': e.series_id,
+                'documents': docs_map.get(e.id, []),
+            }
+
+        # События на сегодня (оба типа) — до 100 для группировки по залам
+        today_raw, _ = await get_events(completed=False, date_from=today, date_to=today, limit=100)
+        today_ids = [e.id for e in today_raw]
+        today_docs = await get_documents_by_event_ids(today_ids) if today_ids else {}
+        today_events = [_serialize(e, today_docs) for e in today_raw]
+
+        # Ближайшие (оба типа) — до 12, начиная с завтра
+        soon_raw, _ = await get_events(completed=False, date_from=tomorrow, limit=12)
+        soon_ids = [e.id for e in soon_raw]
+        soon_docs = await get_documents_by_event_ids(soon_ids) if soon_ids else {}
+        soon_events = [_serialize(e, soon_docs) for e in soon_raw]
+
         async with async_session() as session:
-            # Локации сегодня
             loc_today_q = await session.execute(
                 select(Event.location_id, func.count(Event.id))
                 .where(Event.date == today, Event.completed == False)
@@ -459,7 +455,6 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             )
             locations_today = {str(row[0]): row[1] for row in loc_today_q if row[0]}
 
-            # Локации все active
             loc_total_q = await session.execute(
                 select(Event.location_id, func.count(Event.id))
                 .where(Event.completed == False)
@@ -467,40 +462,60 @@ async def dashboard_stats(request: web.Request) -> web.Response:
             )
             locations_total = {str(row[0]): row[1] for row in loc_total_q if row[0]}
 
-            # График — неделя
+            vks_id = case((Event.type == 'ВКС', Event.id))
+            evt_id = case((Event.type != 'ВКС', Event.id))
+
             monday = today - timedelta(days=today.weekday())
             sunday = monday + timedelta(days=6)
             week_q = await session.execute(
-                select(Event.date, func.count(Event.id))
+                select(Event.date, func.count(vks_id), func.count(evt_id))
                 .where(Event.date >= monday, Event.date <= sunday)
                 .group_by(Event.date)
             )
-            week_by_date = {row[0]: row[1] for row in week_q}
-            chart_week = [week_by_date.get(monday + timedelta(days=i), 0) for i in range(7)]
+            wk = {row[0]: (row[1], row[2]) for row in week_q}
+            chart_week_vks = [wk.get(monday + timedelta(days=i), (0, 0))[0] for i in range(7)]
+            chart_week_events = [wk.get(monday + timedelta(days=i), (0, 0))[1] for i in range(7)]
 
-            # График — год по месяцам
             year_q = await session.execute(
-                select(
-                    extract('month', Event.date).label('month'),
-                    func.count(Event.id)
-                )
+                select(extract('month', Event.date).label('month'),
+                       func.count(vks_id), func.count(evt_id))
                 .where(extract('year', Event.date) == today.year)
                 .group_by(extract('month', Event.date))
             )
-            year_by_month = {int(row[0]): row[1] for row in year_q}
-            chart_year = [year_by_month.get(m, 0) for m in range(1, 13)]
+            yr = {int(row[0]): (row[1], row[2]) for row in year_q}
+            chart_year_vks = [yr.get(m, (0, 0))[0] for m in range(1, 13)]
+            chart_year_events = [yr.get(m, (0, 0))[1] for m in range(1, 13)]
+
+        active_total = (vks_active['today'] + vks_active['soon']
+                        + evt_active['today'] + evt_active['soon'])
+        missed_total = vks_active['missed'] + evt_active['missed']
+        completed_total = vks_completed + evt_completed
 
         return web.json_response({
-            'total': counts['total'],
-            'completed': await count_events(completed=True),
-            'active': counts['total'] - counts['missed'],
-            'missed': counts['missed'],
+            'vks': {
+                'total': vks_active['total'],
+                'active': vks_active['today'] + vks_active['soon'],
+                'missed': vks_active['missed'],
+                'completed': vks_completed,
+            },
+            'events': {
+                'total': evt_active['total'],
+                'active': evt_active['today'] + evt_active['soon'],
+                'missed': evt_active['missed'],
+                'completed': evt_completed,
+            },
+            'summary': {
+                'active': active_total,
+                'missed': missed_total,
+                'completed': completed_total,
+                'total': active_total + completed_total,
+            },
             'today': today_events,
             'soon': soon_events,
             'locations_today': locations_today,
             'locations_total': locations_total,
-            'chart_week': chart_week,
-            'chart_year': chart_year,
+            'chart_week': {'vks': chart_week_vks, 'events': chart_week_events},
+            'chart_year': {'vks': chart_year_vks, 'events': chart_year_events},
         })
     except Exception as e:
         logger.error('Dashboard stats error: {}', repr(e))
@@ -508,36 +523,43 @@ async def dashboard_stats(request: web.Request) -> web.Response:
 
 
 async def dashboard_chart(request: web.Request) -> web.Response:
+    """Двухсерийный график (ВКС и Мероприятия) за месяц / всё время."""
     period = request.query.get('period', 'month')
     year = int(request.query.get('year', date.today().year))
     month = int(request.query.get('month', date.today().month))
-    today = date.today()
+
+    vks_id = case((Event.type == 'ВКС', Event.id))
+    evt_id = case((Event.type != 'ВКС', Event.id))
 
     async with async_session() as session:
         if period == 'month':
-            import calendar as cal
+            import calendar as _cal
             q = await session.execute(
-                select(Event.date, func.count(Event.id))
-                .where(extract('year', Event.date) == year, extract('month', Event.date) == month)
+                select(Event.date, func.count(vks_id), func.count(evt_id))
+                .where(extract('year', Event.date) == year,
+                       extract('month', Event.date) == month)
                 .group_by(Event.date)
             )
-            by_date = {row[0].day: row[1] for row in q}
-            days_in_month = cal.monthrange(year, month)[1]
-            counts = [by_date.get(d, 0) for d in range(1, days_in_month + 1)]
+            by_date = {row[0].day: (row[1], row[2]) for row in q}
+            days_in_month = _cal.monthrange(year, month)[1]
             labels = [str(d) for d in range(1, days_in_month + 1)]
+            vks = [by_date.get(d, (0, 0))[0] for d in range(1, days_in_month + 1)]
+            events = [by_date.get(d, (0, 0))[1] for d in range(1, days_in_month + 1)]
         elif period == 'all':
             q = await session.execute(
-                select(extract('year', Event.date).label('y'), func.count(Event.id))
+                select(extract('year', Event.date).label('y'),
+                       func.count(vks_id), func.count(evt_id))
                 .group_by(extract('year', Event.date))
                 .order_by(extract('year', Event.date))
             )
             rows = list(q)
             labels = [str(int(r[0])) for r in rows]
-            counts = [r[1] for r in rows]
+            vks = [r[1] for r in rows]
+            events = [r[2] for r in rows]
         else:
-            return web.json_response({'labels': [], 'counts': []})
+            return web.json_response({'labels': [], 'vks': [], 'events': []})
 
-    return web.json_response({'labels': labels, 'counts': counts})
+    return web.json_response({'labels': labels, 'vks': vks, 'events': events})
 
 
 async def get_event_history_handler(request: web.Request) -> web.Response:

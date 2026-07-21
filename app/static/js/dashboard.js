@@ -1,11 +1,18 @@
-// ─── Dashboard / Обзор ──────────────────────────────────────────────
+// ─── Dashboard / Обзор (combo: операционный + аналитика · ВКС и Мероприятия) ───
 
 let _dashPeriod = 'week';
 let _dashMonth = new Date().getMonth();
 let _dashYear = new Date().getFullYear();
+let _locPeriod = 'all';        // рейтинг залов: all | today
+let _dashRoomFilter = 'all';   // сегодня по залам: all | vks | events
+
+const DASH_REPEAT_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
 
 async function initDashboard() {
-    setupDashboardClicks();
+    setupDashboardQuickNav();
+    setupRoomToggle();
+    setupChartToggle();
+    setupLocToggle();
     await pageInit('dashboard', renderDashboard, async () => {
         const resp = await fetch('/admin/api/dashboard', { credentials: 'same-origin' });
         if (resp.ok) cacheSet('dashboard', await resp.json());
@@ -20,147 +27,195 @@ async function refreshDashboard() {
     renderDashboard();
 }
 
-function setupDashboardClicks() {
-    document.querySelectorAll('.dash-card[data-href]').forEach(el => {
-        el.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const href = el.dataset.href;
-            const filter = el.dataset.filter;
-            if (!href) return;
-            if (filter && typeof _pendingVksFilter !== 'undefined') {
-                _pendingVksFilter = filter;
+// ─── Быстрые переходы ───
+function setupDashboardQuickNav() {
+    document.querySelectorAll('#dash-quicknav [data-qaction]').forEach(btn => {
+        btn.onclick = () => {
+            const a = btn.dataset.qaction;
+            if (a === 'new-vks') {
+                navigateTo('/conferences/');
+                setTimeout(() => { if (typeof openAddEventModal === 'function') openAddEventModal('vks'); }, 150);
+            } else if (a === 'new-event') {
+                navigateTo('/events/');
+                setTimeout(() => { if (typeof openAddEventModal === 'function') openAddEventModal('events'); }, 150);
+            } else if (a === 'calendar') {
+                navigateTo('/calendar/');
+            } else if (a === 'vks') {
+                navigateTo('/conferences/');
+            } else if (a === 'events') {
+                navigateTo('/events/');
+            } else if (a === 'missed') {
+                if (typeof _pendingVksFilter !== 'undefined') _pendingVksFilter = 'missed';
+                navigateTo('/conferences/');
             }
-            navigateTo(href);
-        });
+        };
     });
 }
 
-function renderTodayFromData(events) {
-    const el = document.getElementById('dash-today');
-    if (!el) return;
-    if (events.length === 0) {
-        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет мероприятий на сегодня</div>';
-        el.classList.remove('has-scroll');
-        return;
-    }
-    const items = events.map(e => renderUpcomingItem(e)).join('');
-    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
-    checkUpcomingScroll(el);
+// ─── Хелперы ───
+function _dashIsVks(e) { return (e.type || 'ВКС') === 'ВКС'; }
+
+function _dashEndTime(time, duration) {
+    if (!time) return '';
+    const m = /^(\d{1,2}):(\d{2})/.exec(time);
+    if (!m) return '';
+    let total = (+m[1]) * 60 + (+m[2]) + (duration || 0);
+    total = ((total % 1440) + 1440) % 1440;
+    return String(Math.floor(total / 60)).padStart(2, '0') + ':' + String(total % 60).padStart(2, '0');
 }
 
-function renderSoonFromData(events) {
-    const el = document.getElementById('dash-soon');
-    if (!el) return;
-    if (events.length === 0) {
-        el.innerHTML = '<div class="dash-upcoming-fade"></div><div class="dash-empty">Нет ближайших мероприятий</div>';
-        el.classList.remove('has-scroll');
-        return;
-    }
-    const items = events.map(e => {
-        const d = new Date(e.date);
-        const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-        return renderUpcomingItem(e, {
-            showDate: true,
-            dayName: dayNames[d.getDay()],
-            dateStr: `${d.getDate()}.${d.getMonth()+1}`
-        });
-    }).join('');
-    el.innerHTML = items + '<div class="dash-upcoming-fade"></div>';
-    checkUpcomingScroll(el);
-}
-
-function locName(id) {
-    const locs = cacheGet('locations');
-    const loc = locs?.data?.find(l => l.id === id);
-    return loc?.name || '—';
-}
-function orgName(id) {
-    const orgs = cacheGet('organizers');
-    const org = orgs?.data?.find(o => o.id === id);
-    return org?.short_name || org?.name || '—';
-}
-
+// ─── Главный рендер ───
 function renderDashboard() {
     const cached = cacheGet('dashboard');
-    if (!cached?.data) return;
-    const data = cached.data;
+    if (!cached || !cached.data) return;
+    const d = cached.data;
     const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('dash-total', data.total);
-    set('dash-active', data.active);
-    set('dash-completed', data.completed);
-    set('dash-missed', data.missed);
-    renderTodayFromData(data.today || []);
-    renderSoonFromData(data.soon || []);
-    _renderDashLocationsFromCache(data);
+    const vks = d.vks || {}, evt = d.events || {}, sum = d.summary || {};
+    set('dash-kpi-vks', vks.total || 0);
+    set('dash-kpi-events', evt.total || 0);
+    set('dash-kpi-active', sum.active || 0);
+    set('dash-kpi-completed', sum.completed || 0);
+    set('dash-kpi-missed', sum.missed || 0);
+    set('dash-nav-vks-cnt', vks.total || 0);
+    set('dash-nav-events-cnt', evt.total || 0);
+    set('dash-nav-missed-cnt', sum.missed || 0);
+    _dashSparkline('dash-spark-vks', (d.chart_week && d.chart_week.vks) || []);
+    _dashSparkline('dash-spark-events', (d.chart_week && d.chart_week.events) || []);
+    renderDashRooms(d.today || []);
+    renderDashSoon(d.soon || []);
+    renderDashRing(sum.completed || 0, sum.total || 0);
+    _renderDashLocationsFromCache(d);
     drawChart();
-    setupChartToggle();
 }
 
-function checkUpcomingScroll(el) {
-    requestAnimationFrame(() => {
-        const fade = el.querySelector('.dash-upcoming-fade');
-        if (fade) fade.remove();
-        if (el.scrollHeight > el.clientHeight + 5) {
-            el.classList.add('has-scroll');
-            const f = document.createElement('div');
-            f.className = 'dash-upcoming-fade';
-            el.appendChild(f);
-        } else {
-            el.classList.remove('has-scroll');
-        }
+function _dashSparkline(elId, arr) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (!arr || !arr.length || arr.every(v => !v)) { el.innerHTML = ''; return; }
+    const max = Math.max.apply(null, arr.concat([1]));
+    const n = arr.length;
+    const pts = arr.map((v, i) => {
+        const x = n === 1 ? 50 : (i / (n - 1)) * 100;
+        const y = 26 - (v / max) * 23;
+        return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+    const area = '0,28 ' + pts.join(' ') + ' 100,28';
+    el.innerHTML = '<polygon class="dash-spark-area" points="' + area + '"></polygon>' +
+                   '<polyline class="dash-spark-line" points="' + pts.join(' ') + '"></polyline>';
+}
+
+// ─── Сегодня по залам ───
+function setupRoomToggle() {
+    document.querySelectorAll('#dash-room-toggle .dash-toggle-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('#dash-room-toggle .dash-toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            _dashRoomFilter = btn.dataset.rfilter;
+            const d = cacheGet('dashboard');
+            if (d && d.data) renderDashRooms(d.data.today || []);
+        };
     });
 }
 
-function renderUpcomingItem(e, opts = {}) {
-    const docCount = (e.documents || []).length;
-    const hasUrl = e.url && e.url.trim().length > 0;
-    const badges = [];
-    if (docCount > 0) badges.push(`<span class="dash-indicator dash-indicator-doc" title="${docCount} док."><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${docCount}</span>`);
-    if (hasUrl) badges.push(`<span class="dash-indicator dash-indicator-link" title="Есть ссылка"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>`);
-
-    const meta = `${locName(e.location_id)} · ${orgName(e.organizer_id)}`;
-
-    const timeHtml = opts.showDate
-        ? `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? `<span class="dash-upcoming-lock">${LOCK_SVG}</span>` : ''}${opts.dateStr} ${e.time || '--:--'}</div>`
-        : `<div class="dash-upcoming-time">${e.locked_by && e.locked_by_id !== (window.currentUser && window.currentUser.id) ? `<span class="dash-upcoming-lock">${LOCK_SVG}</span>` : ''}${e.time || '--:--'}</div>`;
-
-    return `
-        <div class="dash-upcoming-item ${e.completed ? 'completed' : ''}" onclick="openEditEventModal('${e.id}');" style="cursor:pointer">
-            <div class="dash-upcoming-time-col">${timeHtml}</div>
-            <div class="dash-upcoming-info">
-                <div class="dash-upcoming-desc">${e.description || ''}</div>
-                <div class="dash-upcoming-meta">${meta}</div>
-            </div>
-            <div class="dash-indicators">${badges.join('')}</div>
-            <button class="vks-complete-btn ${e.completed ? 'active' : ''}" onclick="event.stopPropagation();dashConfirmCompleteEvent('${e.id}', ${!e.completed})" title="${e.completed ? 'Снять завершение' : 'Завершить'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>
-        </div>
-    `;
+function renderDashRooms(events) {
+    const el = document.getElementById('dash-rooms');
+    if (!el) return;
+    let list = events.slice();
+    if (_dashRoomFilter === 'vks') list = list.filter(_dashIsVks);
+    else if (_dashRoomFilter === 'events') list = list.filter(e => !_dashIsVks(e));
+    if (!list.length) {
+        el.innerHTML = '<div class="dash-empty">Нет мероприятий на сегодня</div>';
+        return;
+    }
+    const groups = {};
+    list.forEach(e => {
+        const key = (e.location_id == null) ? '__none__' : String(e.location_id);
+        (groups[key] = groups[key] || []).push(e);
+    });
+    const timeVal = e => e.time ? parseInt(e.time.replace(':', ''), 10) : 99999;
+    const keys = Object.keys(groups).sort((a, b) => {
+        const ma = Math.min.apply(null, groups[a].map(timeVal));
+        const mb = Math.min.apply(null, groups[b].map(timeVal));
+        return ma - mb;
+    });
+    el.innerHTML = keys.map(k => {
+        const evs = groups[k].sort((a, b) => timeVal(a) - timeVal(b));
+        const roomName = (k === '__none__') ? 'Онлайн / без зала' : (getLocationName(parseInt(k, 10)) || 'Зал');
+        return '<div class="dash-room">' +
+            '<div class="dash-room-head"><span class="dash-room-name">' + esc(roomName) + '</span><span class="dash-room-cnt">' + evs.length + '</span></div>' +
+            '<div class="dash-room-evs">' + evs.map(_dashEventChip).join('') + '</div>' +
+            '</div>';
+    }).join('');
 }
 
-let _locPeriod = 'all';
-let _locYear = new Date().getFullYear();
+function _dashEventChip(e) {
+    const isVks = _dashIsVks(e);
+    const mode = isVks ? 'vks' : 'events';
+    const end = _dashEndTime(e.time, e.duration);
+    const timeStr = e.time ? (e.time + (end ? '<span class="dash-ev-end">–' + end + '</span>' : '')) : '--:--';
+    const isSeries = e.series_id != null;
+    const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
+    const cls = ['dash-ev', isVks ? 'vks' : 'evt', e.completed ? 'completed' : '', isSeries ? 'series' : ''].filter(Boolean).join(' ');
+    return '<div class="' + cls + '" onclick="openEditEventModal(\'' + e.id + '\', \'' + mode + '\')">' +
+        '<span class="dash-ev-time">' + timeStr + '</span>' +
+        '<span class="dash-ev-body">' +
+            '<span class="dash-ev-desc">' + (isSeries ? DASH_REPEAT_SVG : '') + esc(e.description || '') + '</span>' +
+            (org ? '<span class="dash-ev-org">' + esc(org) + '</span>' : '') +
+        '</span>' +
+        '<span class="dash-ev-tag">' + (isVks ? 'ВКС' : 'Мер.') + '</span>' +
+        '<button class="dash-ev-done ' + (e.completed ? 'active' : '') + '" onclick="event.stopPropagation();dashConfirmCompleteEvent(\'' + e.id + '\', ' + (!e.completed) + ')" title="' + (e.completed ? 'Снять завершение' : 'Завершить') + '"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button>' +
+        '</div>';
+}
 
+// ─── Скоро ───
+function renderDashSoon(events) {
+    const el = document.getElementById('dash-soon');
+    if (!el) return;
+    if (!events.length) { el.innerHTML = '<div class="dash-empty">Нет ближайших</div>'; return; }
+    const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    el.innerHTML = events.map(e => {
+        const isVks = _dashIsVks(e);
+        const mode = isVks ? 'vks' : 'events';
+        const d = e.date ? new Date(e.date) : null;
+        const dateStr = d ? (dayNames[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth() + 1)) : '';
+        const isSeries = e.series_id != null;
+        return '<div class="dash-soon-item ' + (isVks ? 'vks' : 'evt') + ' ' + (e.completed ? 'completed' : '') + '" onclick="openEditEventModal(\'' + e.id + '\', \'' + mode + '\')">' +
+            '<span class="dash-soon-when"><b>' + dateStr + '</b>' + (e.time || '--:--') + '</span>' +
+            '<span class="dash-soon-desc">' + (isSeries ? DASH_REPEAT_SVG : '') + esc(e.description || '') + '</span>' +
+            '<span class="dash-ev-tag">' + (isVks ? 'ВКС' : 'Мер.') + '</span>' +
+            '</div>';
+    }).join('');
+}
+
+// ─── Кольцо завершённости ───
+function renderDashRing(completed, total) {
+    const el = document.getElementById('dash-ring');
+    if (!el) return;
+    const pct = total > 0 ? Math.round(completed / total * 100) : 0;
+    const rest = Math.max(total - completed, 0);
+    el.innerHTML = '<div class="dash-ring" style="--pct:' + pct + '">' +
+            '<div class="dash-ring-hole"><span class="dash-ring-pct">' + pct + '%</span><span class="dash-ring-sub">' + completed + ' из ' + total + '</span></div>' +
+        '</div>' +
+        '<div class="dash-ring-legend">' +
+            '<span><i class="lg done"></i>Завершено ' + completed + '</span>' +
+            '<span><i class="lg rest"></i>Осталось ' + rest + '</span>' +
+        '</div>';
+}
+
+// ─── Рейтинг залов ───
 function renderDashLocations() {
-    _renderDashLocationsFromCache(cacheGet('dashboard')?.data);
+    const c = cacheGet('dashboard');
+    _renderDashLocationsFromCache(c && c.data);
 }
 
 function _renderDashLocationsFromCache(data) {
     if (!data) return;
-    const locs = data.locations_total || {};
-    const locsToday = data.locations_today || {};
-    const allIds = new Set([...Object.keys(locs), ...Object.keys(locsToday)]);
-    const todayEntries = [...allIds]
-        .map(id => ({ name: getLocationName(id), id, count: locsToday[id] || 0 }))
+    const src = _locPeriod === 'today' ? (data.locations_today || {}) : (data.locations_total || {});
+    const entries = Object.keys(src)
+        .map(id => ({ name: getLocationName(parseInt(id, 10)) || 'Зал', count: src[id] || 0 }))
         .filter(e => e.count > 0)
         .sort((a, b) => b.count - a.count);
-    const totalEntries = [...allIds]
-        .map(id => ({ name: getLocationName(id), id, count: locs[id] || 0 }))
-        .filter(e => e.count > 0)
-        .sort((a, b) => b.count - a.count);
-    renderBarList('dash-loc-today', todayEntries, 'accent');
-    renderBarList('dash-loc-total', totalEntries, 'accent-ambient');
-    setupLocToggle();
+    renderBarList('dash-loc-total', entries, 'accent');
 }
 
 function setupLocToggle() {
@@ -168,81 +223,30 @@ function setupLocToggle() {
         btn.onclick = () => {
             document.querySelectorAll('#dash-loc-toggle .dash-toggle-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            _locPeriod = btn.dataset.period;
-            updateLocControls();
+            _locPeriod = btn.dataset.locp;
             renderDashLocations();
         };
     });
-    updateLocControls();
-}
-
-function dashLocYearNav(dir) {
-    _locYear += dir;
-    renderDashLocations();
-}
-
-function dashLocMonthNav(dir) {
-    _dashMonth += dir;
-    if (_dashMonth < 0) { _dashMonth = 11; _locYear--; }
-    if (_dashMonth > 11) { _dashMonth = 0; _locYear++; }
-    renderDashLocations();
-}
-
-function updateLocControls() {
-    const showYearNav = _locPeriod === 'year' || _locPeriod === 'month';
-    const showMonthNav = _locPeriod === 'month';
-    const yearLabel = document.getElementById('dash-loc-year-label');
-    const yearPrev = document.getElementById('dash-loc-year-prev');
-    const yearNext = document.getElementById('dash-loc-year-next');
-    const monthLabel = document.getElementById('dash-loc-month-label');
-    const monthPrev = document.getElementById('dash-loc-month-prev');
-    const monthNext = document.getElementById('dash-loc-month-next');
-
-    if (yearLabel) { yearLabel.style.display = showYearNav ? 'inline' : 'none'; yearLabel.textContent = _locYear; }
-    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
-    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
-    if (monthLabel) {
-        monthLabel.style.display = showMonthNav ? 'inline' : 'none';
-        if (showMonthNav) {
-            const monthNames = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
-            monthLabel.textContent = monthNames[_dashMonth];
-        }
-    }
-    if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
-    if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
-}
-
-function updateLocYearLabel() {
-    const el = document.getElementById('dash-loc-year-label');
-    if (el) el.textContent = _locYear;
 }
 
 function renderBarList(elId, entries, colorVar) {
     const el = document.getElementById(elId);
     if (!el) return;
-    if (entries.length === 0) {
+    if (!entries.length) {
         el.innerHTML = '<div class="dash-empty">Нет данных</div>';
         return;
     }
     const max = entries[0].count || 1;
-    el.innerHTML = entries.map(e => `
-        <div class="dash-bar-row">
-            <div class="dash-bar-name">${e.name}</div>
-            <div class="dash-bar-wrap">
-                <div class="dash-bar" style="width: ${(e.count / max * 100)}%; background: var(--${colorVar});"></div>
-            </div>
-            <div class="dash-bar-count">${e.count}</div>
-        </div>
-    `).join('');
+    el.innerHTML = entries.map(e =>
+        '<div class="dash-bar-row">' +
+            '<div class="dash-bar-name">' + esc(e.name) + '</div>' +
+            '<div class="dash-bar-wrap"><div class="dash-bar" style="width:' + (e.count / max * 100) + '%; background: var(--' + colorVar + ');"></div></div>' +
+            '<div class="dash-bar-count">' + e.count + '</div>' +
+        '</div>'
+    ).join('');
 }
 
-function onDashLocClick(locId) {
-    if (typeof _pendingVksFilter !== 'undefined') {
-        _pendingVksFilter = 'location:' + locId;
-    }
-    navigateTo('/conferences/');
-}
-
+// ─── График (две серии) ───
 function setupChartToggle() {
     document.querySelectorAll('#dash-chart-toggle .dash-toggle-btn').forEach(btn => {
         btn.onclick = () => {
@@ -254,114 +258,73 @@ function setupChartToggle() {
     });
 }
 
-function prevMonth() {
-    _dashMonth--;
-    if (_dashMonth < 0) { _dashMonth = 11; _dashYear--; }
-    drawChart();
+function _dashRenderChart(labels, vks, events) {
+    const el = document.getElementById('dash-chart');
+    if (!el) return;
+    if (!labels.length) { el.innerHTML = '<div class="dash-empty">Нет данных</div>'; return; }
+    const max = Math.max.apply(null, vks.concat(events).concat([1]));
+    el.innerHTML = '<div class="dash-chart-bars">' + labels.map((lb, i) => {
+        const v = vks[i] || 0, m = events[i] || 0;
+        return '<div class="dash-chart-col">' +
+            '<div class="dash-chart-pair">' +
+                '<div class="dash-chart-bar vks" style="height:' + (v / max * 100) + '%" title="ВКС: ' + v + '"><span class="dash-chart-cnt">' + (v || '') + '</span></div>' +
+                '<div class="dash-chart-bar evt" style="height:' + (m / max * 100) + '%" title="Мероприятия: ' + m + '"><span class="dash-chart-cnt">' + (m || '') + '</span></div>' +
+            '</div>' +
+            '<div class="dash-chart-label">' + lb + '</div>' +
+        '</div>';
+    }).join('') + '</div>';
 }
 
-function nextMonth() {
-    _dashMonth++;
+function drawChart() {
+    const c = cacheGet('dashboard');
+    if (!c || !c.data) return;
+    const d = c.data;
+    const monthNav = document.getElementById('dash-month-nav');
+    const monthLabel = document.getElementById('dash-chart-month-label');
+    const showMonthNav = _dashPeriod === 'month';
+    if (monthNav) monthNav.style.display = showMonthNav ? 'flex' : 'none';
+    if (_dashPeriod === 'week') {
+        _dashRenderChart(['Пн','Вт','Ср','Чт','Пт','Сб','Вс'], (d.chart_week && d.chart_week.vks) || [], (d.chart_week && d.chart_week.events) || []);
+    } else if (_dashPeriod === 'year') {
+        _dashRenderChart(['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'], (d.chart_year && d.chart_year.vks) || [], (d.chart_year && d.chart_year.events) || []);
+    } else if (_dashPeriod === 'month') {
+        _drawChartRemote('month', monthLabel);
+    } else if (_dashPeriod === 'all') {
+        _drawChartRemote('all', null);
+    }
+}
+
+async function _drawChartRemote(period, monthLabel) {
+    const el = document.getElementById('dash-chart');
+    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    let url = '/admin/api/dashboard/chart?period=' + period;
+    if (period === 'month') {
+        url += '&year=' + _dashYear + '&month=' + (_dashMonth + 1);
+        if (monthLabel) monthLabel.textContent = monthNames[_dashMonth] + ' ' + _dashYear;
+    }
+    try {
+        const resp = await fetch(url, { credentials: 'same-origin' });
+        const data = await resp.json();
+        _dashRenderChart(data.labels || [], data.vks || [], data.events || []);
+    } catch (e) {
+        if (el) el.innerHTML = '<div class="dash-empty">Ошибка загрузки</div>';
+    }
+}
+
+function dashMonthNav(dir) {
+    _dashMonth += dir;
+    if (_dashMonth < 0) { _dashMonth = 11; _dashYear--; }
     if (_dashMonth > 11) { _dashMonth = 0; _dashYear++; }
     drawChart();
 }
 
-function dashMonthNav(dir) {
-    if (dir < 0) prevMonth(); else nextMonth();
-}
-
-function dashYearNav(dir) {
-    _dashYear += dir;
-    drawChart();
-}
-
-function drawChart() {
-    const dashData = cacheGet('dashboard')?.data;
-    if (!dashData) return;
-    const el = document.getElementById('dash-chart');
-    let labels = [], counts = [];
-    const monthLabel = document.getElementById('dash-chart-month-label');
-    const monthPrev = document.getElementById('dash-month-prev');
-    const monthNext = document.getElementById('dash-month-next');
-    const yearLabel = document.getElementById('dash-chart-year-label');
-    const yearPrev = document.getElementById('dash-year-prev');
-    const yearNext = document.getElementById('dash-year-next');
-    const showMonthNav = _dashPeriod === 'month';
-    if (monthLabel) monthLabel.style.display = showMonthNav ? 'inline' : 'none';
-    if (monthPrev) monthPrev.style.display = showMonthNav ? 'flex' : 'none';
-    if (monthNext) monthNext.style.display = showMonthNav ? 'flex' : 'none';
-    const showYearNav = _dashPeriod === 'month' || _dashPeriod === 'year';
-    if (yearLabel) yearLabel.style.display = showYearNav ? 'inline' : 'none';
-    if (yearPrev) yearPrev.style.display = showYearNav ? 'flex' : 'none';
-    if (yearNext) yearNext.style.display = showYearNav ? 'flex' : 'none';
-    if (_dashPeriod === 'week') {
-        const dayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-        labels = dayNames;
-        counts = dashData.chart_week || new Array(7).fill(0);
-    } else if (_dashPeriod === 'year') {
-        const monthNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
-        labels = monthNames;
-        counts = dashData.chart_year || new Array(12).fill(0);
-    } else if (_dashPeriod === 'month') {
-        _drawChartMonth();
-        return;
-    } else if (_dashPeriod === 'all') {
-        _drawChartAll();
-        return;
-    }
-    if (yearLabel && yearLabel.style.display !== 'none') yearLabel.textContent = _dashYear;
-    const max = Math.max(...counts, 1);
-    el.innerHTML = `<div class="dash-chart-bars">${counts.map((c, i) => `
-        <div class="dash-chart-col">
-            <div class="dash-chart-count">${c || ''}</div>
-            <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
-            <div class="dash-chart-label">${labels[i]}</div>
-        </div>`).join('')}
-    </div>`;
-}
-
-async function _drawChartMonth() {
-    const el = document.getElementById('dash-chart');
-    const monthLabel = document.getElementById('dash-chart-month-label');
-    const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-    if (monthLabel) { monthLabel.style.display = 'inline'; monthLabel.textContent = monthNames[_dashMonth]; }
-    try {
-        const resp = await fetch(`/admin/api/dashboard/chart?period=month&year=${_dashYear}&month=${_dashMonth + 1}`, { credentials: 'same-origin' });
-        const data = await resp.json();
-        const max = Math.max(...data.counts, 1);
-        el.innerHTML = `<div class="dash-chart-bars">${data.counts.map((c, i) => `
-            <div class="dash-chart-col">
-                <div class="dash-chart-count">${c || ''}</div>
-                <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
-                <div class="dash-chart-label">${data.labels[i]}</div>
-            </div>`).join('')}
-        </div>`;
-    } catch (e) { el.innerHTML = '<div class="dash-empty">Ошибка загрузки</div>'; }
-}
-
-async function _drawChartAll() {
-    const el = document.getElementById('dash-chart');
-    try {
-        const resp = await fetch(`/admin/api/dashboard/chart?period=all`, { credentials: 'same-origin' });
-        const data = await resp.json();
-        const max = Math.max(...data.counts, 1);
-        el.innerHTML = `<div class="dash-chart-bars">${data.counts.map((c, i) => `
-            <div class="dash-chart-col">
-                <div class="dash-chart-count">${c || ''}</div>
-                <div class="dash-chart-bar-wrap"><div class="dash-chart-bar" style="height: ${(c / max * 100)}%"></div></div>
-                <div class="dash-chart-label">${data.labels[i]}</div>
-            </div>`).join('')}
-        </div>`;
-    } catch (e) { el.innerHTML = '<div class="dash-empty">Ошибка загрузки</div>'; }
-}
-
+// ─── Завершение события из дашборда ───
 function dashConfirmCompleteEvent(id, checked) {
     const action = checked ? 'завершить' : 'снять завершение с';
-    document.getElementById('confirm-text').textContent = `${action.charAt(0).toUpperCase() + action.slice(1)} событие?`;
-    document.getElementById('confirm-actions').innerHTML = `
-        <button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>
-        <button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>
-    `;
+    document.getElementById('confirm-text').textContent = action.charAt(0).toUpperCase() + action.slice(1) + ' событие?';
+    document.getElementById('confirm-actions').innerHTML =
+        '<button class="btn btn-ghost" id="confirm-cancel-btn">Отмена</button>' +
+        '<button class="btn btn-primary" id="confirm-ok-btn">Подтвердить</button>';
     document.getElementById('confirm-cancel-btn').onclick = closeConfirm;
     document.getElementById('confirm-ok-btn').onclick = async function () {
         this.disabled = true;
@@ -385,7 +348,7 @@ function dashConfirmCompleteEvent(id, checked) {
     icon.innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>';
     icon.style.background = 'rgba(74, 222, 128, 0.1)';
     icon.style.color = 'var(--success)';
-    title.textContent = checked ? 'Завершить ВКС?' : 'Снять завершение?';
+    title.textContent = checked ? 'Завершить событие?' : 'Снять завершение?';
     overlay.classList.add('show');
     const observer = new MutationObserver(() => {
         if (!overlay.classList.contains('show')) {
@@ -405,7 +368,7 @@ async function dashCompleteEvent(id, checked) {
         const formData = new FormData();
         formData.append('completed', checked ? 'true' : 'false');
         formData.append('csrf_token', csrfToken);
-        const resp = await fetch(`/admin/api/events/${id}`, {
+        const resp = await fetch('/admin/api/events/' + id, {
             method: 'PUT',
             headers: { 'X-CSRF-Token': csrfToken },
             body: formData
@@ -413,7 +376,7 @@ async function dashCompleteEvent(id, checked) {
         const data = await resp.json();
         if (data.ok) {
             refreshDashboard();
-            showToast(checked ? 'ВКС завершено' : 'ВКС восстановлено', 'success');
+            showToast(checked ? 'Событие завершено' : 'Событие восстановлено', 'success');
         }
     } catch (e) {
         showToast('Ошибка сети', 'error');
