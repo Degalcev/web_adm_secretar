@@ -105,28 +105,34 @@
     padding: 8px 10px; border-radius: 10px;
     background: var(--surface-strong); border: 1px solid var(--border);
     border-left: 3px solid var(--accent); cursor: pointer;
-    transition: all .12s ease;
+    transition: background .12s ease, border-color .12s ease;
 }
 .dash-ev.evt { border-left-color: var(--accent-ambient); }
-.dash-ev:hover { border-color: var(--border-strong); transform: translateX(2px); }
-.dash-ev.completed { opacity: .5; }
+.dash-ev:hover { border-color: var(--border-strong); background: var(--surface); }
+.dash-ev.completed { opacity: .55; }
 .dash-ev.completed .dash-ev-desc { text-decoration: line-through; }
 .dash-ev-time {
+    display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;
     font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; color: var(--fg);
-    white-space: nowrap; min-width: 44px;
+    white-space: nowrap; min-width: 46px;
 }
-.dash-ev-end { color: var(--fg-subtle); font-weight: 500; font-size: 0.6875rem; }
-.dash-ev-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.dash-ev-end { color: var(--fg-subtle); font-weight: 500; font-size: 0.625rem; }
+.dash-ev-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .dash-ev-desc {
     font-size: 0.8125rem; color: var(--fg); font-weight: 500;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    display: flex; align-items: center; gap: 5px;
 }
-.dash-ev-desc svg { color: var(--accent); flex-shrink: 0; }
-.dash-ev.evt .dash-ev-desc svg { color: var(--accent-ambient); }
-.dash-ev-org { font-size: 0.6875rem; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-ev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.dash-ev-chip { display: inline-flex; align-items: center; gap: 3px; font-size: 0.625rem; color: var(--fg-muted); white-space: nowrap; }
+.dash-ev-chip svg { flex-shrink: 0; }
+.dash-ev-chip.series { color: var(--accent); }
+.dash-ev.evt .dash-ev-chip.series { color: var(--accent-ambient); }
+.dash-ev-icons { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.dash-ev-ic { display: inline-flex; align-items: center; gap: 2px; color: var(--fg-subtle); transition: color .12s ease; }
+.dash-ev-ic:hover { color: var(--fg); }
+.dash-ev-ic.doc b { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; }
 .dash-ev-tag {
-    font-size: 0.625rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap;
+    font-size: 0.625rem; font-weight: 700; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0;
     color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 .dash-ev.evt .dash-ev-tag { color: var(--accent-ambient); background: color-mix(in srgb, var(--accent-ambient) 16%, transparent); }
@@ -185,7 +191,7 @@
 .dash-legend .lg.evt { background: var(--accent-ambient); }
 .dash-chart { height: 230px; }
 .dash-chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 100%; }
-.dash-chart-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.dash-chart-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
 .dash-chart-pair { flex: 1; display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 100%; min-height: 0; }
 .dash-chart-bar {
     width: 42%; max-width: 16px; border-radius: 4px 4px 0 0; position: relative;
@@ -193,10 +199,9 @@
 }
 .dash-chart-bar.vks { background: var(--accent); }
 .dash-chart-bar.evt { background: var(--accent-ambient); }
-.dash-chart-cnt {
-    position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
-    font-size: 0.625rem; font-family: var(--font-mono); color: var(--fg-muted); white-space: nowrap;
-}
+.dash-chart-vals { display: flex; justify-content: center; gap: 6px; margin-bottom: 4px; min-height: 11px; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 700; line-height: 1; }
+.dash-chart-vals .cv.vks { color: var(--accent); }
+.dash-chart-vals .cv.evt { color: var(--accent-ambient); }
 .dash-chart-label { margin-top: 6px; font-size: 0.6875rem; color: var(--fg-muted); white-space: nowrap; }
 
 /* \u2500\u2500\u2500 \u0420\u0435\u0439\u0442\u0438\u043d\u0433 \u0437\u0430\u043b\u043e\u0432 \u2500\u2500\u2500 */

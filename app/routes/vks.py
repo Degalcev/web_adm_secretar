@@ -7,9 +7,10 @@ from sqlalchemy import select, func, extract, case
 from app.auth import require_csrf
 from app.event_logger import capture_event_state, log_event_change, get_event_history, _compare_states
 from app.event_types import validate_event_type
-from database.models import async_session, Event
+from database.models import async_session, Event, EventSeries, EventSeriesException
 from database.requests import (
     get_events, count_events, get_event_counts_by_date, count_event_occurrences,
+    expand_series_dates,
     get_event_by_id, get_documents_by_event_id, get_documents_by_event_ids,
     get_user_by_id, get_event_participants, get_event_series,
     get_series_exceptions,
@@ -419,11 +420,12 @@ async def dashboard_stats(request: web.Request) -> web.Response:
         vks_completed = await count_events(completed=True, event_type='ВКС')
         evt_completed = await count_events(completed=True, exclude_type='ВКС')
 
-        def _serialize(e, docs_map):
+        def _serialize(e, docs_map, occ_date=None):
+            d = occ_date or e.date
             return {
                 'id': e.id,
                 'type': e.type or 'ВКС',
-                'date': e.date.isoformat() if e.date else None,
+                'date': d.isoformat() if d else None,
                 'time': e.time.strftime('%H:%M') if e.time else None,
                 'duration': e.duration,
                 'description': e.description or '',
@@ -435,25 +437,71 @@ async def dashboard_stats(request: web.Request) -> web.Response:
                 'documents': docs_map.get(e.id, []),
             }
 
-        # События на сегодня (оба типа) — до 100 для группировки по залам
-        today_raw, _ = await get_events(completed=False, date_from=today, date_to=today, limit=100)
-        today_ids = [e.id for e in today_raw]
-        today_docs = await get_documents_by_event_ids(today_ids) if today_ids else {}
-        today_events = [_serialize(e, today_docs) for e in today_raw]
+        # Разворачиваем occurrences в окне — включая серии,
+        # базовая дата которых в прошлом (напр. серия из пропущенного).
+        async def _collect_occurrences(session, win_start, win_end):
+            occ = []  # [(event, occ_date), ...]
+            ns_rows = list(await session.scalars(
+                select(Event).where(
+                    Event.series_id.is_(None),
+                    Event.completed == False,
+                    Event.date >= win_start,
+                    Event.date <= win_end,
+                )
+            ))
+            for e in ns_rows:
+                occ.append((e, e.date))
+            series_rows = list(await session.scalars(
+                select(Event).where(Event.series_id.is_not(None), Event.completed == False)
+            ))
+            sids = list({e.series_id for e in series_rows})
+            series_by_id, exc_by_series = {}, {}
+            if sids:
+                for srow in await session.scalars(select(EventSeries).where(EventSeries.id.in_(sids))):
+                    series_by_id[srow.id] = srow
+                for x in await session.scalars(
+                    select(EventSeriesException).where(EventSeriesException.series_id.in_(sids))):
+                    if x.action == 'skip':
+                        exc_by_series.setdefault(x.series_id, set()).add(x.original_date)
+            for e in series_rows:
+                srow = series_by_id.get(e.series_id)
+                if not srow:
+                    if win_start <= e.date <= win_end:
+                        occ.append((e, e.date))
+                    continue
+                for d in expand_series_dates(
+                    srow.freq, srow.interval_val, srow.by_day, srow.until, e.date,
+                    win_start, win_end, exc_by_series.get(e.series_id, set())):
+                    occ.append((e, d))
+            return occ
 
-        # Ближайшие (оба типа) — до 12, начиная с завтра
-        soon_raw, _ = await get_events(completed=False, date_from=tomorrow, limit=12)
-        soon_ids = [e.id for e in soon_raw]
-        soon_docs = await get_documents_by_event_ids(soon_ids) if soon_ids else {}
-        soon_events = [_serialize(e, soon_docs) for e in soon_raw]
+        def _occ_key(item):
+            e, d = item
+            return (d, e.time.strftime('%H:%M') if e.time else '99:99')
+
+        soon_horizon = today + timedelta(days=60)
+        async with async_session() as session:
+            today_occ = await _collect_occurrences(session, today, today)
+            soon_occ = await _collect_occurrences(session, tomorrow, soon_horizon)
+
+        today_occ.sort(key=_occ_key)
+        soon_occ.sort(key=_occ_key)
+        soon_occ = soon_occ[:12]
+
+        all_ids = list({e.id for e, _ in today_occ} | {e.id for e, _ in soon_occ})
+        docs_map = await get_documents_by_event_ids(all_ids) if all_ids else {}
+
+        today_events = [_serialize(e, docs_map, d) for e, d in today_occ[:100]]
+        soon_events = [_serialize(e, docs_map, d) for e, d in soon_occ]
+
+        # Залы на сегодня — из occurrences (включая серии)
+        locations_today = {}
+        for e, d in today_occ:
+            if e.location_id:
+                k = str(e.location_id)
+                locations_today[k] = locations_today.get(k, 0) + 1
 
         async with async_session() as session:
-            loc_today_q = await session.execute(
-                select(Event.location_id, func.count(Event.id))
-                .where(Event.date == today, Event.completed == False)
-                .group_by(Event.location_id)
-            )
-            locations_today = {str(row[0]): row[1] for row in loc_today_q if row[0]}
 
             loc_total_q = await session.execute(
                 select(Event.location_id, func.count(Event.id))

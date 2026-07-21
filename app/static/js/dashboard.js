@@ -7,6 +7,9 @@ let _locPeriod = 'all';        // рейтинг залов: all | today
 let _dashRoomFilter = 'all';   // сегодня по залам: all | vks | events
 
 const DASH_REPEAT_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+const DASH_USER_SVG = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+const DASH_LINK_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+const DASH_DOC_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
 
 async function initDashboard() {
     setupDashboardQuickNav();
@@ -33,20 +36,15 @@ function setupDashboardQuickNav() {
         btn.onclick = () => {
             const a = btn.dataset.qaction;
             if (a === 'new-vks') {
-                navigateTo('/conferences/');
-                setTimeout(() => { if (typeof openAddEventModal === 'function') openAddEventModal('vks'); }, 150);
+                if (typeof openAddEventModal === 'function') openAddEventModal('vks');
             } else if (a === 'new-event') {
-                navigateTo('/events/');
-                setTimeout(() => { if (typeof openAddEventModal === 'function') openAddEventModal('events'); }, 150);
+                if (typeof openAddEventModal === 'function') openAddEventModal('events');
             } else if (a === 'calendar') {
                 navigateTo('/calendar/');
             } else if (a === 'vks') {
                 navigateTo('/conferences/');
             } else if (a === 'events') {
                 navigateTo('/events/');
-            } else if (a === 'missed') {
-                if (typeof _pendingVksFilter !== 'undefined') _pendingVksFilter = 'missed';
-                navigateTo('/conferences/');
             }
         };
     });
@@ -78,7 +76,6 @@ function renderDashboard() {
     set('dash-kpi-missed', sum.missed || 0);
     set('dash-nav-vks-cnt', vks.total || 0);
     set('dash-nav-events-cnt', evt.total || 0);
-    set('dash-nav-missed-cnt', sum.missed || 0);
     _dashSparkline('dash-spark-vks', (d.chart_week && d.chart_week.vks) || []);
     _dashSparkline('dash-spark-events', (d.chart_week && d.chart_week.events) || []);
     renderDashRooms(d.today || []);
@@ -140,7 +137,7 @@ function renderDashRooms(events) {
     });
     el.innerHTML = keys.map(k => {
         const evs = groups[k].sort((a, b) => timeVal(a) - timeVal(b));
-        const roomName = (k === '__none__') ? 'Онлайн / без зала' : (getLocationName(parseInt(k, 10)) || 'Зал');
+        const roomName = (k === '__none__') ? 'Онлайн / без зала' : (getLocationName(k) || 'Зал');
         return '<div class="dash-room">' +
             '<div class="dash-room-head"><span class="dash-room-name">' + esc(roomName) + '</span><span class="dash-room-cnt">' + evs.length + '</span></div>' +
             '<div class="dash-room-evs">' + evs.map(_dashEventChip).join('') + '</div>' +
@@ -152,16 +149,24 @@ function _dashEventChip(e) {
     const isVks = _dashIsVks(e);
     const mode = isVks ? 'vks' : 'events';
     const end = _dashEndTime(e.time, e.duration);
-    const timeStr = e.time ? (e.time + (end ? '<span class="dash-ev-end">–' + end + '</span>' : '')) : '--:--';
+    const timeStr = (e.time || '--:--') + (end ? '<span class="dash-ev-end">–' + end + '</span>' : '');
     const isSeries = e.series_id != null;
     const org = e.organizer_id ? getOrganizerName(e.organizer_id) : '';
+    const docs = e.documents || [];
     const cls = ['dash-ev', isVks ? 'vks' : 'evt', e.completed ? 'completed' : '', isSeries ? 'series' : ''].filter(Boolean).join(' ');
+    let meta = '';
+    if (isSeries) meta += '<span class="dash-ev-chip series">' + DASH_REPEAT_SVG + 'Серия</span>';
+    if (org) meta += '<span class="dash-ev-chip">' + DASH_USER_SVG + esc(org) + '</span>';
+    let icons = '';
+    if (e.url) icons += '<a class="dash-ev-ic" href="' + esc(e.url) + '" target="_blank" onclick="event.stopPropagation()" title="Открыть ссылку">' + DASH_LINK_SVG + '</a>';
+    if (docs.length) icons += '<span class="dash-ev-ic doc" title="Документов: ' + docs.length + '">' + DASH_DOC_SVG + (docs.length > 1 ? '<b>' + docs.length + '</b>' : '') + '</span>';
     return '<div class="' + cls + '" onclick="openEditEventModal(\'' + e.id + '\', \'' + mode + '\')">' +
         '<span class="dash-ev-time">' + timeStr + '</span>' +
         '<span class="dash-ev-body">' +
-            '<span class="dash-ev-desc">' + (isSeries ? DASH_REPEAT_SVG : '') + esc(e.description || '') + '</span>' +
-            (org ? '<span class="dash-ev-org">' + esc(org) + '</span>' : '') +
+            '<span class="dash-ev-desc">' + esc(e.description || '(без описания)') + '</span>' +
+            (meta ? '<span class="dash-ev-meta">' + meta + '</span>' : '') +
         '</span>' +
+        (icons ? '<span class="dash-ev-icons">' + icons + '</span>' : '') +
         '<span class="dash-ev-tag">' + (isVks ? 'ВКС' : 'Мер.') + '</span>' +
         '<button class="dash-ev-done ' + (e.completed ? 'active' : '') + '" onclick="event.stopPropagation();dashConfirmCompleteEvent(\'' + e.id + '\', ' + (!e.completed) + ')" title="' + (e.completed ? 'Снять завершение' : 'Завершить') + '"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"/></svg></button>' +
         '</div>';
@@ -176,12 +181,12 @@ function renderDashSoon(events) {
     el.innerHTML = events.map(e => {
         const isVks = _dashIsVks(e);
         const mode = isVks ? 'vks' : 'events';
-        const d = e.date ? new Date(e.date) : null;
+        const d = e.date ? new Date(e.date + 'T00:00:00') : null;
         const dateStr = d ? (dayNames[d.getDay()] + ' ' + d.getDate() + '.' + (d.getMonth() + 1)) : '';
         const isSeries = e.series_id != null;
         return '<div class="dash-soon-item ' + (isVks ? 'vks' : 'evt') + ' ' + (e.completed ? 'completed' : '') + '" onclick="openEditEventModal(\'' + e.id + '\', \'' + mode + '\')">' +
             '<span class="dash-soon-when"><b>' + dateStr + '</b>' + (e.time || '--:--') + '</span>' +
-            '<span class="dash-soon-desc">' + (isSeries ? DASH_REPEAT_SVG : '') + esc(e.description || '') + '</span>' +
+            '<span class="dash-soon-desc">' + (isSeries ? DASH_REPEAT_SVG : '') + esc(e.description || '(без описания)') + '</span>' +
             '<span class="dash-ev-tag">' + (isVks ? 'ВКС' : 'Мер.') + '</span>' +
             '</div>';
     }).join('');
@@ -212,7 +217,7 @@ function _renderDashLocationsFromCache(data) {
     if (!data) return;
     const src = _locPeriod === 'today' ? (data.locations_today || {}) : (data.locations_total || {});
     const entries = Object.keys(src)
-        .map(id => ({ name: getLocationName(parseInt(id, 10)) || 'Зал', count: src[id] || 0 }))
+        .map(id => ({ name: getLocationName(id) || 'Зал', count: src[id] || 0 }))
         .filter(e => e.count > 0)
         .sort((a, b) => b.count - a.count);
     renderBarList('dash-loc-total', entries, 'accent');
@@ -263,12 +268,17 @@ function _dashRenderChart(labels, vks, events) {
     if (!el) return;
     if (!labels.length) { el.innerHTML = '<div class="dash-empty">Нет данных</div>'; return; }
     const max = Math.max.apply(null, vks.concat(events).concat([1]));
+    const showVals = labels.length <= 13;   // чтобы цифры не налезали друг на друга в плотных режимах
     el.innerHTML = '<div class="dash-chart-bars">' + labels.map((lb, i) => {
         const v = vks[i] || 0, m = events[i] || 0;
+        const vals = showVals
+            ? '<div class="dash-chart-vals"><span class="cv vks">' + (v || '') + '</span><span class="cv evt">' + (m || '') + '</span></div>'
+            : '';
         return '<div class="dash-chart-col">' +
+            vals +
             '<div class="dash-chart-pair">' +
-                '<div class="dash-chart-bar vks" style="height:' + (v / max * 100) + '%" title="ВКС: ' + v + '"><span class="dash-chart-cnt">' + (v || '') + '</span></div>' +
-                '<div class="dash-chart-bar evt" style="height:' + (m / max * 100) + '%" title="Мероприятия: ' + m + '"><span class="dash-chart-cnt">' + (m || '') + '</span></div>' +
+                '<div class="dash-chart-bar vks" style="height:' + (v / max * 100) + '%" title="ВКС: ' + v + '"></div>' +
+                '<div class="dash-chart-bar evt" style="height:' + (m / max * 100) + '%" title="Мероприятия: ' + m + '"></div>' +
             '</div>' +
             '<div class="dash-chart-label">' + lb + '</div>' +
         '</div>';
