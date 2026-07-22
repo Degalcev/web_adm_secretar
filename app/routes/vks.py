@@ -672,6 +672,30 @@ async def unlock_event_handler(request: web.Request) -> web.Response:
         )
 
 
+
+@require_csrf
+async def preview_series_handler(request: web.Request) -> web.Response:
+    try:
+        data = await request.json()
+        base_date = _parse_date(data.get('base_date'))
+        if not base_date:
+            return web.json_response({'ok': False, 'error': 'Укажите дату события'}, status=400)
+        until = _parse_date(data.get('until'))
+        if data.get('until') and not until:
+            return web.json_response({'ok': False, 'error': 'Некорректная дата окончания'}, status=400)
+        interval_val = max(1, min(365, int(data.get('interval_val') or 1)))
+        by_day = [str(day).lower() for day in (data.get('by_day') or []) if str(day).lower() in {'mon','tue','wed','thu','fri','sat','sun'}]
+        horizon_end = base_date + timedelta(days=366)
+        range_end = min(until, horizon_end) if until else horizon_end
+        dates = expand_series_dates(data.get('freq', 'weekly'), interval_val, by_day, until, base_date, base_date + timedelta(days=1), range_end) if range_end >= base_date else []
+        return web.json_response({'ok': True, 'dates': [d.isoformat() for d in dates[:3]], 'total': len(dates), 'truncated': until is None or until > horizon_end})
+    except (TypeError, ValueError):
+        return web.json_response({'ok': False, 'error': 'Некорректные параметры повтора'}, status=400)
+    except Exception as exc:
+        logger.error('Ошибка preview серии: {}', repr(exc))
+        return web.json_response({'ok': False, 'error': 'Не удалось рассчитать повтор'}, status=500)
+
+
 # ─── Event Series ────────────────────────────────────────────────────
 
 async def get_series_handler(request: web.Request) -> web.Response:
@@ -859,6 +883,7 @@ def setup_vks_routes(app: web.Application):
     app.router.add_get('/admin/api/events/{event_id}/history', get_event_history_handler)
     app.router.add_put('/admin/api/events/{id}/lock', lock_event_handler)
     app.router.add_put('/admin/api/events/{id}/unlock', unlock_event_handler)
+    app.router.add_post('/admin/api/events/series/preview', preview_series_handler)
     app.router.add_get('/admin/api/events/{id}/series', get_series_handler)
     app.router.add_post('/admin/api/events/{id}/series', create_series_handler)
     app.router.add_delete('/admin/api/events/{id}/series', delete_series_handler)

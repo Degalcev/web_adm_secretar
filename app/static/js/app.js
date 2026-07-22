@@ -8,8 +8,7 @@ window._modalsLoaded = new Promise((resolve) => {
                 '/static/partials/event-modal.html',
                 '/static/partials/user-modal.html',
                 '/static/partials/organizer-modal.html',
-                '/static/partials/location-modal.html',
-                '/static/partials/repeat-modal.html'
+                '/static/partials/location-modal.html'
             ];
             for (const url of files) {
                 const resp = await fetch(url + '?v=' + (window.__VERSION || ''));

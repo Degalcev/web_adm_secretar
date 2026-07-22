@@ -4,6 +4,7 @@ function toggleEventComplete() {
     if (!editingEventId) return;
     const cb = document.getElementById('f-event-completed');
     cb.checked = !cb.checked;
+    if (typeof updateEventDirtyState === 'function') updateEventDirtyState();
     const checked = cb.checked;
 
     const e = _currentEvent;
@@ -17,7 +18,7 @@ function toggleEventComplete() {
             async () => {
                 await _disableSeries(editingEventId);
                 await completeEvent(editingEventId, checked);
-                closeEventModal();
+                closeEventModal(true);
             }
         );
         return;
@@ -225,7 +226,7 @@ async function deleteEvent(id) {
             // Единое обновление: список + СЧЁТЧИКИ + инвалидация кэша
             if (typeof refreshCurrentBoard === 'function') refreshCurrentBoard();
             ConfirmManager.close();
-            closeEventModal();
+            closeEventModal(true);
             showToast('Удалено', 'success');
         } else {
             ConfirmManager.close();

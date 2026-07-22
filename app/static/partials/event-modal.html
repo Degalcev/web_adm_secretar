@@ -20,7 +20,7 @@
         <button class="icon-btn danger" id="event-modal-delete-btn" onclick="confirmDeleteFromModal()" style="display:none" title="Удалить событие">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         </button>
-        <button class="icon-btn" onclick="closeEventModal()" title="Закрыть">
+        <button class="icon-btn" onclick="requestCloseEventModal()" title="Закрыть">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -47,55 +47,34 @@
                 <span class="em-card-title">Основное</span>
               </div>
 
-              <!-- Тип мероприятия -->
-              <div class="form-group" id="f-event-type-group">
-                <label>Тип мероприятия</label>
-                <select id="f-event-type" class="form-input" onchange="onEventTypeChange()">
-                  <option value="ВКС">ВКС</option>
-                  <option value="Совещание">Совещание</option>
-                  <option value="Встреча">Встреча</option>
-                  <option value="Заседание">Заседание</option>
-                  <option value="Приём">Личный приём</option>
-                </select>
-              </div>
-
-                            <!-- Дата, время, продолжительность, локация — сетка 2×2 -->
-              <div class="em-grid2">
-                <div class="form-group">
-                  <label>Дата *</label>
-                  <input type="date" id="f-event-date" required>
-                </div>
-                <div class="form-group">
-                  <label>Время *</label>
-                  <input type="time" id="f-event-time" required>
-                </div>
-                <div class="form-group">
-                  <label>Продолжительность</label>
-                  <select id="f-event-duration" class="form-input">
-                    <option value="30">30 мин</option>
-                    <option value="60" selected>1 час</option>
-                    <option value="90">1.5 часа</option>
-                    <option value="120">2 часа</option>
-                    <option value="180">3 часа</option>
+              <!-- Основные поля: 2×2 -->
+              <div class="em-grid2 em-schedule-grid">
+                <div class="form-group" id="f-event-type-group">
+                  <label>Тип мероприятия</label>
+                  <select id="f-event-type" class="form-input" onchange="onEventTypeChange()">
+                    <option value="ВКС">ВКС</option><option value="Совещание">Совещание</option><option value="Встреча">Встреча</option><option value="Заседание">Заседание</option><option value="Приём">Личный приём</option>
                   </select>
                 </div>
-                <div class="form-group">
-                  <label>Локация *</label>
-                  <select id="f-event-location" required><option value="">Не указана</option></select>
-                </div>
+                <div class="form-group"><label>Дата *</label><input type="date" id="f-event-date" required></div>
+                <div class="form-group"><label>Время *</label><input type="time" id="f-event-time" required></div>
+                <div class="form-group"><label>Продолжительность</label><select id="f-event-duration" class="form-input"><option value="30">30 мин</option><option value="60" selected>1 час</option><option value="90">1.5 часа</option><option value="120">2 часа</option><option value="180">3 часа</option></select></div>
               </div>
 
-              <!-- Организатор -->
-              <div class="form-row">
-                <div class="form-group" style="flex:0 0 118px">
-                  <label>Организатор *</label>
-                  <select id="f-event-organizer-type" class="form-input" onchange="onOrganizerTypeChange()">
-                    <option value="org">Организация</option>
-                    <option value="user">Сотрудник</option>
-                  </select>
+              <!-- Локация и организатор: общая линия подписей и контролов -->
+              <div class="em-grid2 em-identity-grid">
+                <div class="form-group">
+                  <div class="em-field-label-row"><label>Локация *</label></div>
+                  <select id="f-event-location" class="form-input" required><option value="">Не указана</option></select>
                 </div>
-                <div class="form-group" style="flex:1">
-                  <label>&nbsp;</label>
+                <div class="form-group">
+                  <div class="em-field-label-row">
+                    <label>Организатор *</label>
+                    <div class="em-organizer-toggle" role="group" aria-label="Тип организатора">
+                      <button type="button" data-organizer-type="org" onclick="setEventOrganizerType('org')">Организация</button>
+                      <button type="button" data-organizer-type="user" onclick="setEventOrganizerType('user')">Сотрудник</button>
+                    </div>
+                  </div>
+                  <select id="f-event-organizer-type" class="form-input" hidden onchange="onOrganizerTypeChange()"><option value="org">Организация</option><option value="user">Сотрудник</option></select>
                   <select id="f-event-organizer" class="form-input" required><option value="">Не указан</option></select>
                 </div>
               </div>
@@ -155,18 +134,34 @@
               </label>
             </section>
 
-            <!-- Повторять -->
-            <section class="em-card" data-sec="repeat">
-              <div class="em-card-head">
-                <span class="em-card-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></span>
-                <span class="em-card-title">Повтор</span>
-              </div>
-              <button type="button" class="pill-btn" id="event-repeat-btn" onclick="openRepeatModal()">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-                <span class="pill-label" id="event-repeat-label">Повторять</span>
+            <!-- Повтор -->
+            <section class="em-card em-repeat-card" data-sec="repeat" id="event-repeat-card">
+              <button type="button" class="em-repeat-summary" id="event-repeat-btn" onclick="openRepeatModal()" aria-expanded="false">
+                <span class="em-card-ic">↻</span><span><strong>Повтор</strong><small id="event-repeat-label">Один раз</small></span><span class="em-repeat-chevron">⌄</span>
               </button>
-              <input type="hidden" id="event-repeat-active" value="false">
-              <input type="hidden" id="event-repeat-type" value="daily">
+              <input type="hidden" id="event-repeat-active" value="false"><input type="hidden" id="event-repeat-type" value="once">
+              <div class="em-repeat-editor" id="event-repeat-editor">
+                <div class="evt-repeat-type-row">
+                  <button type="button" class="evt-repeat-type-btn active" data-type="once" onclick="switchRepeatType('once')">Один раз</button>
+                  <button type="button" class="evt-repeat-type-btn" data-type="daily" onclick="switchRepeatType('daily')">День</button>
+                  <button type="button" class="evt-repeat-type-btn" data-type="weekly" onclick="switchRepeatType('weekly')">Неделя</button>
+                  <button type="button" class="evt-repeat-type-btn" data-type="monthly" onclick="switchRepeatType('monthly')">Месяц</button>
+                </div>
+                <div class="evt-repeat-panel" id="repeat-panel-daily" style="display:none">
+                  <label class="evt-repeat-option"><input type="radio" name="repeat-daily-mode" value="interval" checked onchange="onRepeatDailyModeChange()">Каждый <input type="number" id="repeat-daily-interval" class="evt-repeat-num-input" value="1" min="1" max="365" oninput="onRepeatRuleChange()"> день</label>
+                  <label class="evt-repeat-option"><input type="radio" name="repeat-daily-mode" value="workdays" onchange="onRepeatDailyModeChange()">В рабочие дни (Пн–Пт)</label>
+                </div>
+                <div class="evt-repeat-panel" id="repeat-panel-weekly" style="display:none">
+                  <div class="evt-repeat-inline">Каждую <input type="number" id="repeat-weekly-interval" class="evt-repeat-num-input" value="1" min="1" max="52" oninput="onRepeatRuleChange()"> неделю</div>
+                  <div class="evt-weekday-row" id="repeat-weekday-row">
+                    <button type="button" class="evt-wd-btn" data-day="mon" onclick="toggleRepeatWeekday(this)">Пн</button><button type="button" class="evt-wd-btn" data-day="tue" onclick="toggleRepeatWeekday(this)">Вт</button><button type="button" class="evt-wd-btn" data-day="wed" onclick="toggleRepeatWeekday(this)">Ср</button><button type="button" class="evt-wd-btn" data-day="thu" onclick="toggleRepeatWeekday(this)">Чт</button><button type="button" class="evt-wd-btn" data-day="fri" onclick="toggleRepeatWeekday(this)">Пт</button><button type="button" class="evt-wd-btn" data-day="sat" onclick="toggleRepeatWeekday(this)">Сб</button><button type="button" class="evt-wd-btn" data-day="sun" onclick="toggleRepeatWeekday(this)">Вс</button>
+                  </div>
+                </div>
+                <div class="evt-repeat-panel" id="repeat-panel-monthly" style="display:none"><div class="evt-repeat-inline">Каждые <input type="number" id="repeat-monthly-interval" class="evt-repeat-num-input" value="1" min="1" max="12" oninput="onRepeatRuleChange()"> мес., <span id="repeat-monthly-day" class="evt-repeat-day-badge">—</span> числа</div></div>
+                <div class="evt-repeat-until-row"><label>До даты</label><input type="date" id="event-repeat-until" class="form-input" onchange="onRepeatRuleChange()"></div>
+                <div class="em-repeat-preview"><div class="em-repeat-preview-head"><span>Ближайшие события</span><span id="event-repeat-preview-more"></span></div><div id="event-repeat-preview-dates" class="em-repeat-preview-dates"><span class="em-repeat-preview-empty">Повтор отключён</span></div></div>
+                <button type="button" class="em-repeat-remove" id="repeat-delete-btn" onclick="deleteRepeatModal()">Отключить повтор</button>
+              </div>
             </section>
           </div>
         </div>
@@ -175,7 +170,8 @@
 
     <!-- Footer -->
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeEventModal()">Отмена</button>
+      <span class="event-modal-dirty" id="event-modal-dirty" aria-live="polite"><i></i>Есть несохранённые изменения</span>
+      <button class="btn btn-ghost" onclick="requestCloseEventModal()">Отмена</button>
       <div class="footer-right">
         <button class="pill-btn complete" id="event-modal-complete-btn" onclick="toggleEventComplete()" style="display:none">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
