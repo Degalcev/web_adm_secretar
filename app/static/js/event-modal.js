@@ -882,43 +882,10 @@ function setEventOrganizerType(type){const field=document.getElementById('f-even
 function syncEventOrganizerToggle(){const type=_value('f-event-organizer-type')||'org';document.querySelectorAll('[data-organizer-type]').forEach(b=>b.classList.toggle('active',b.dataset.organizerType===type));}
 const _onOrganizerTypeChangeBase=onOrganizerTypeChange; onOrganizerTypeChange=function(...args){const out=_onOrganizerTypeChangeBase(...args);syncEventOrganizerToggle();return out;};
 function openRepeatModal(){const card=document.getElementById('event-repeat-card');if(!card)return;card.classList.toggle('open');document.getElementById('event-repeat-btn')?.setAttribute('aria-expanded',String(card.classList.contains('open')));if(card.classList.contains('open'))scheduleRepeatPreview();}
-function closeRepeatModal(){
-    const card=document.getElementById('event-repeat-card');
-    if(!card) return;
-    // Smooth close animation
-    if(card.classList.contains('open')){
-        card.classList.add('closing');
-        card.classList.remove('open');
-        window.setTimeout(()=>card.classList.remove('closing'),260);
-    } else {
-        card.classList.remove('closing');
-    }
-    document.getElementById('event-repeat-btn')?.setAttribute('aria-expanded','false');
-}
+function closeRepeatModal(){const card=document.getElementById('event-repeat-card');card?.classList.remove('open');document.getElementById('event-repeat-btn')?.setAttribute('aria-expanded','false');}
 function deleteRepeatModal(){switchRepeatType('once');}
 function saveRepeatModal(){updateRepeatSummary();closeRepeatModal();updateEventDirtyState();}
-function switchRepeatType(type){
-    const active=type!=='once';
-    document.getElementById('event-repeat-active').value=String(active);
-    document.getElementById('event-repeat-type').value=type;
-    document.querySelectorAll('#event-repeat-card .evt-repeat-type-btn').forEach(b=>{
-        b.classList.toggle('active',b.dataset.type===type);
-    });
-
-    // Prevent layout jump: keep panels in flow and fade/slide them instead of hard display switches
-    ['daily','weekly','monthly'].forEach(t=>{
-        const el=document.getElementById(`repeat-panel-${t}`);
-        if(!el) return;
-        const shouldShow = (type===t);
-        el.classList.toggle('is-hidden', !shouldShow);
-        // Still ensure only one visible for screen readers
-        el.setAttribute('aria-hidden', String(!shouldShow));
-    });
-
-    updateRepeatSummary();
-    scheduleRepeatPreview();
-    updateEventDirtyState();
-}
+function switchRepeatType(type){const active=type!=='once';document.getElementById('event-repeat-active').value=String(active);document.getElementById('event-repeat-type').value=type;document.querySelectorAll('#event-repeat-card .evt-repeat-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));['daily','weekly','monthly'].forEach(t=>{const el=document.getElementById(`repeat-panel-${t}`);if(el)el.style.display=type===t?'':'none';});updateRepeatSummary();scheduleRepeatPreview();updateEventDirtyState();}
 function toggleRepeatWeekday(btn){btn.classList.toggle('active');onRepeatRuleChange();}
 function onRepeatDailyModeChange(){const mode=document.querySelector('input[name="repeat-daily-mode"]:checked')?.value;const input=document.getElementById('repeat-daily-interval');if(input)input.disabled=mode!=='interval';onRepeatRuleChange();}
 function onRepeatRuleChange(){updateRepeatSummary();scheduleRepeatPreview();updateEventDirtyState();}
@@ -926,13 +893,66 @@ function _getRepeatData(){if(_value('event-repeat-active')!=='true')return null;
 function updateRepeatSummary(){const label=document.getElementById('event-repeat-label');const data=_getRepeatData();if(!label)return;if(!data){label.textContent='Один раз';return;}const days={mon:'Пн',tue:'Вт',wed:'Ср',thu:'Чт',fri:'Пт',sat:'Сб',sun:'Вс'};if(data.freq==='weekly'&&data.interval_val===1&&data.by_day.length===5&&['mon','tue','wed','thu','fri'].every(d=>data.by_day.includes(d))){label.textContent='Рабочие дни';return;}if(data.freq==='daily')label.textContent=data.interval_val===1?'Ежедневно':`Каждые ${data.interval_val} дн.`;else if(data.freq==='weekly')label.textContent=`Каждую ${data.interval_val} нед. (${data.by_day.map(d=>days[d]).join(', ')||'день события'})`;else label.textContent=`Каждые ${data.interval_val} мес.`;}
 function _setRepeatUI(series){document.querySelectorAll('#repeat-weekday-row .evt-wd-btn').forEach(b=>b.classList.remove('active'));document.getElementById('event-repeat-until').value=series?.until||'';if(!series){document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked=true;document.getElementById('repeat-daily-interval').value='1';switchRepeatType('once');return;}const by=series.by_day||[];let type=series.freq;if(series.freq==='weekly'&&series.interval_val===1&&by.length===5&&['mon','tue','wed','thu','fri'].every(d=>by.includes(d))){type='daily';document.querySelector('input[name="repeat-daily-mode"][value="workdays"]').checked=true;}else if(type==='daily'){document.querySelector('input[name="repeat-daily-mode"][value="interval"]').checked=true;document.getElementById('repeat-daily-interval').value=series.interval_val||1;}else if(type==='weekly'){document.getElementById('repeat-weekly-interval').value=series.interval_val||1;document.querySelectorAll('#repeat-weekday-row .evt-wd-btn').forEach(b=>b.classList.toggle('active',by.includes(b.dataset.day)));}else if(type==='monthly'){document.getElementById('repeat-monthly-interval').value=series.interval_val||1;}switchRepeatType(type);}
 function scheduleRepeatPreview(){clearTimeout(_repeatPreviewTimer);_repeatPreviewTimer=setTimeout(loadRepeatPreview,220);}
-async function loadRepeatPreview(){const box=document.getElementById('event-repeat-preview-dates'),more=document.getElementById('event-repeat-preview-more'),data=_getRepeatData(),baseDate=_value('f-event-date');if(!box)return;if(!data||!baseDate){box.innerHTML='<span class="em-repeat-preview-empty">Повтор отключён</span>';if(more)more.textContent='';return;}if(_repeatPreviewController)_repeatPreviewController.abort();_repeatPreviewController=new AbortController();box.innerHTML='<span class="em-repeat-preview-empty">Расчёт…</span>';try{const res=await fetch(`${BASE_URL}/admin/api/events/series/preview`,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRF-Token':getCsrfToken()},body:JSON.stringify({...data,base_date:baseDate}),signal:_repeatPreviewController.signal});const payload=await res.json();if(!res.ok||!payload.ok)throw new Error(payload.error||'preview');const time=_value('f-event-time');box.innerHTML=payload.dates.length?payload.dates.map(value=>{const d=new Date(`${value}T12:00:00`);const text=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});return `<span class="em-repeat-date"><strong>${text}</strong>${time||'—'}</span>`;}).join(''):'<span class="em-repeat-preview-empty">Нет событий в выбранном периоде</span>';if(more)more.textContent=payload.total>payload.dates.length?`ещё ${payload.total-payload.dates.length}${payload.truncated?' в пределах года':''}`:'';}catch(err){if(err.name!=='AbortError'){box.innerHTML='<span class="em-repeat-preview-empty">Не удалось рассчитать даты</span>';if(more)more.textContent='';}}}
+async function loadRepeatPreview(){
+    const box=document.getElementById('event-repeat-preview-dates'),
+          more=document.getElementById('event-repeat-preview-more'),
+          data=_getRepeatData(),
+          baseDate=_value('f-event-date');
+    if(!box) return;
+
+    const setEmpty=(txt)=>{
+        box.classList.remove('loading','swapping');
+        box.innerHTML=`<span class="em-repeat-preview-empty">${txt}</span>`;
+        if(more) more.textContent='';
+    };
+
+    if(!data||!baseDate){
+        setEmpty('Повтор отключён');
+        return;
+    }
+
+    if(_repeatPreviewController) _repeatPreviewController.abort();
+    _repeatPreviewController=new AbortController();
+
+    // Do not clear preview grid (prevents layout jump). Just mark loading.
+    box.classList.add('loading');
+
+    try{
+        const res=await fetch(`${BASE_URL}/admin/api/events/series/preview`,{
+            method:'POST',
+            credentials:'same-origin',
+            headers:{'Content-Type':'application/json','X-CSRF-Token':getCsrfToken()},
+            body:JSON.stringify({...data,base_date:baseDate}),
+            signal:_repeatPreviewController.signal
+        });
+        const payload=await res.json();
+        if(!res.ok||!payload.ok) throw new Error(payload.error||'preview');
+
+        const time=_value('f-event-time');
+
+        // Small fade swap to avoid visible delete→add
+        box.classList.add('swapping');
+        window.setTimeout(()=>{
+            box.classList.remove('swapping');
+            box.classList.remove('loading');
+
+            if(payload.dates && payload.dates.length){
+                box.innerHTML = payload.dates.map(value=>{
+                    const d=new Date(`${value}T12:00:00`);
+                    const text=d.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+                    return `<span class="em-repeat-date"><strong>${text}</strong>${time||'—'}</span>`;
+                }).join('');
+            } else {
+                box.innerHTML='<span class="em-repeat-preview-empty">Нет событий в выбранном периоде</span>';
+            }
+
+            if(more){
+                more.textContent = payload.total>payload.dates.length ? `ещё ${payload.total-payload.dates.length}${payload.truncated?' в пределах года':''}` : '';
+            }
+        }, 110);
+    } catch(err){
+        if(err.name==='AbortError') return;
+        setEmpty('Не удалось рассчитать даты');
+    }
+}
 window.addEventListener('beforeunload',e=>{if(document.getElementById('event-modal')?.classList.contains('show')&&hasEventFormChanges()){e.preventDefault();e.returnValue='';}});
-
-
-// Exact V4 header synchronisation
-function syncExactV4Header(){const modal=document.querySelector('#event-modal .event-workspace-v4-exact');const type=document.getElementById('f-event-type')?.value||(_modalMode==='events'?'Совещание':'ВКС');const isVks=type==='ВКС';modal?.classList.toggle('events',!isVks);const kind=document.getElementById('event-modal-kind');if(kind)kind.textContent=isVks?'ВКС':'МЕРОПРИЯТИЕ';const date=document.getElementById('f-event-date')?.value||'';const time=document.getElementById('f-event-time')?.value||'';const location=document.getElementById('f-event-location')?.selectedOptions?.[0]?.textContent||'';const subtitle=document.getElementById('event-modal-subtitle');if(subtitle)subtitle.textContent=[date,time,location&&location!=='Не указана'?location:''].filter(Boolean).join(' · ')||'Новое событие';}
-const _exactV4TypeBase=onEventTypeChange;onEventTypeChange=function(...args){const out=_exactV4TypeBase(...args);syncExactV4Header();return out;};
-const _exactV4AddBase=openAddEventModal;openAddEventModal=async function(...args){const out=await _exactV4AddBase(...args);syncExactV4Header();return out;};
-const _exactV4EditBase=openEditEventModal;openEditEventModal=async function(...args){const out=await _exactV4EditBase(...args);syncExactV4Header();return out;};
-document.addEventListener('change',e=>{if(e.target?.closest?.('#event-modal')&&['f-event-date','f-event-time','f-event-location','f-event-type'].includes(e.target.id))syncExactV4Header();});
