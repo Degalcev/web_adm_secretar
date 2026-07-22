@@ -422,12 +422,15 @@
 .em-repeat-summary>span:nth-child(2) { min-width:0; flex:1; display:grid; gap:2px; }
 .em-repeat-summary strong { font-size:.75rem; }.em-repeat-summary small { color:var(--fg-muted); font-size:.66rem; }
 .em-repeat-chevron { color:var(--fg-muted); transition:transform .18s ease; }.em-repeat-card.open .em-repeat-chevron { transform:rotate(180deg); }
-.em-repeat-editor { max-height:0; overflow:hidden; border-top:0 solid var(--border); transition:max-height .25s ease; }
+.em-repeat-editor { max-height:0; overflow:hidden; border-top:0 solid var(--border); transition:max-height .25s ease, padding .25s ease, border-top-width .25s ease; will-change:max-height; }
 .em-repeat-card.open .em-repeat-editor { max-height:620px; padding:12px 13px 13px; border-top-width:1px; }
+.em-repeat-card.closing .em-repeat-editor{max-height:0!important;padding:0 13px 0!important;border-top-width:0!important}
 .em-repeat-editor .evt-repeat-type-row { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; padding:3px; border-radius:9px; background:var(--bg-elevated); }
 .em-repeat-editor .evt-repeat-type-btn { height:30px; min-width:0; padding:0 4px; border:0; border-radius:7px; background:transparent; color:var(--fg-muted); font-size:.62rem; font-weight:700; cursor:pointer; }
 .em-repeat-editor .evt-repeat-type-btn.active { background:var(--surface-strong); color:var(--fg); box-shadow:0 2px 7px rgba(0,0,0,.16); }
-.em-repeat-editor .evt-repeat-panel { margin-top:11px; }.em-repeat-editor .evt-repeat-option { display:flex; align-items:center; gap:6px; margin-top:7px; color:var(--fg-muted); font-size:.68rem; }
+.em-repeat-editor .evt-repeat-panel { margin-top:11px; transition:opacity .18s ease, transform .18s ease; transform:translateY(0); opacity:1; }
+.em-repeat-editor .evt-repeat-panel.is-hidden{opacity:0;transform:translateY(-4px);pointer-events:none;position:absolute;left:-9999px;top:auto;}
+.em-repeat-editor .evt-repeat-option { display:flex; align-items:center; gap:6px; margin-top:7px; color:var(--fg-muted); font-size:.68rem; }
 .em-repeat-editor .evt-repeat-inline { display:flex; align-items:center; gap:6px; color:var(--fg-muted); font-size:.68rem; }
 .em-repeat-editor .evt-repeat-num-input { width:52px; height:32px; border:1px solid var(--border); border-radius:8px; background:var(--bg-elevated); color:var(--fg); text-align:center; }
 .em-repeat-editor .evt-weekday-row { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:9px; }
