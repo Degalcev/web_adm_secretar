@@ -1,18 +1,22 @@
 <!-- ─── Modal: Event (Modern · Split desktop / Cards mobile) ────────── -->
 <div class="modal-overlay" id="event-modal">
-  <div class="modal modal-lg event-modal-flat event-modal-modern">
+  <div class="modal modal-lg event-modal-flat event-modal-modern event-workspace-v4-exact">
     <!-- Accent bar -->
     <div class="event-modal-accent" id="event-modal-accent"></div>
     <!-- Grabber (mobile bottom-sheet handle) -->
     <div class="em-grabber"></div>
 
-    <!-- Header -->
-    <div class="modal-header">
-      <div class="event-modal-header-left">
-        <div class="modal-event-status" id="event-modal-status" style="display:none"></div>
-        <h3 id="event-modal-title" class="event-modal-title">Добавить ВКС</h3>
+    <!-- Header (Exact V4) -->
+    <div class="emw-header">
+      <div class="emw-title-zone">
+        <div class="emw-kind" id="event-modal-kind">ВКС</div>
+        <div class="emw-heading">
+          <h3 id="event-modal-title">Добавить ВКС</h3>
+          <div class="emw-subtitle" id="event-modal-subtitle">Новое событие</div>
+        </div>
       </div>
-      <div class="modal-header-actions">
+      <div class="emw-head-actions">
+        <div class="modal-event-status" id="event-modal-status" style="display:none"></div>
         <input type="checkbox" id="f-event-completed" style="display:none">
         <button class="icon-btn info" id="event-modal-audit-btn" style="display:none" title="История изменений">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
